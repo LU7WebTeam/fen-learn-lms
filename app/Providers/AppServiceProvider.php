@@ -19,9 +19,10 @@ class AppServiceProvider extends ServiceProvider
 
         // When running on Replit, the proxy forwards requests as HTTP internally
         // but the public URL is HTTPS. Force HTTPS so asset URLs are browser-accessible.
-        if (env('REPLIT_DEV_DOMAIN')) {
+        // Use config() — env() returns null after config:cache.
+        if ($root = config('app.asset_url')) {
             URL::forceScheme('https');
-            URL::forceRootUrl('https://' . env('REPLIT_DEV_DOMAIN'));
+            URL::forceRootUrl($root);
         }
     }
 }
