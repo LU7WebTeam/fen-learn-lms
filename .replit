@@ -1,0 +1,66 @@
+run = "php -S 0.0.0.0:8000 -t ."
+
+entrypoint = "index.php"
+modules = ["php-8.4", "nodejs-22"]
+
+[nix]
+channel = "stable-22_11"
+
+[deployment]
+run = ["php", "-S", "0.0.0.0:8000", "-t", "."]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 5173
+
+[[ports]]
+localPort = 8000
+externalPort = 80
+
+[agent]
+expertMode = true
+
+[userenv]
+
+[userenv.shared]
+DB_CONNECTION = "mysql"
+DB_HOST = "127.0.0.1"
+DB_PORT = "3306"
+DB_DATABASE = "lms"
+DB_USERNAME = "root"
+APP_NAME = "Free LMS"
+APP_URL = "http://localhost:5000"
+APP_ENV = "local"
+APP_DEBUG = "true"
+SESSION_DRIVER = "database"
+CACHE_STORE = "database"
+QUEUE_CONNECTION = "database"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start.sh"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
