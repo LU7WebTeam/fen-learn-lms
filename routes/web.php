@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/learn/{course:slug}', [LearnController::class, 'index'])->name('learn.index');
     Route::get('/learn/{course:slug}/lesson/{lesson}', [LearnController::class, 'show'])->name('learn.lesson');
     Route::post('/learn/{course:slug}/lesson/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
+    Route::post('/learn/{course:slug}/lesson/{lesson}/quiz',    [LearnController::class, 'submitQuiz'])->name('learn.quiz.submit');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

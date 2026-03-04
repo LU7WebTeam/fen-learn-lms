@@ -39,4 +39,9 @@ class Lesson extends Model
     {
         return $this->hasMany(LessonProgress::class);
     }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(\App\Models\QuizAttempt::class);
+    }
 }

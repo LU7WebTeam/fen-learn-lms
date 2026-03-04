@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,34 +16,34 @@ import {
 import { cn } from '@/lib/utils';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
-const PASS_THRESHOLD = 0.7;
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
-function QuizPlayer({ lesson, onPass }) {
-    let questions = [];
+function QuizPlayer({ lesson, course, lastAttempt }) {
+    const { flash } = usePage().props;
+    const result = flash?.quiz_result ?? null;
+
+    let quizData = { questions: [], passing_score: 70 };
     try {
-        const parsed = JSON.parse(lesson.content || '{}');
-        questions = Array.isArray(parsed.questions) ? parsed.questions : [];
+        quizData = JSON.parse(lesson.content || '{}');
+        if (!Array.isArray(quizData.questions)) quizData.questions = [];
     } catch { /* empty */ }
 
-    const [answers, setAnswers]     = useState({});
-    const [submitted, setSubmitted] = useState(false);
-    const [score, setScore]         = useState(null);
+    const questions    = quizData.questions;
+    const passingScore = quizData.passing_score ?? 70;
+
+    const { data, setData, post, processing } = useForm({ answers: {} });
 
     function handleSubmit() {
-        let correct = 0;
-        questions.forEach((q, i) => { if (answers[i] === q.correct) correct++; });
-        const pct = questions.length > 0 ? correct / questions.length : 0;
-        setScore({ correct, total: questions.length, pct });
-        setSubmitted(true);
-        if (pct >= PASS_THRESHOLD) onPass();
+        post(route('learn.quiz.submit', [course.slug, lesson.id]), {
+            preserveScroll: true,
+        });
     }
 
     function handleRetry() {
-        setAnswers({});
-        setSubmitted(false);
-        setScore(null);
+        setData('answers', {});
+        // Clear flash by navigating to self (Inertia reload)
+        router.reload({ only: ['flash'] });
     }
 
     if (questions.length === 0) {
@@ -55,78 +55,104 @@ function QuizPlayer({ lesson, onPass }) {
         );
     }
 
+    const showResult = !!result;
+
     return (
         <div className="space-y-6">
-            {submitted && score && (
+            {/* Previous attempt banner (shown before any submission this session) */}
+            {!showResult && lastAttempt && (
                 <div className={cn(
-                    'rounded-xl border p-5 text-center',
-                    score.pct >= PASS_THRESHOLD
-                        ? 'border-green-200 bg-green-50 text-green-800'
-                        : 'border-red-200 bg-red-50 text-red-800'
+                    'rounded-lg border px-4 py-3 text-sm',
+                    lastAttempt.passed
+                        ? 'border-green-200 bg-green-50 text-green-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-700'
                 )}>
-                    <p className="text-2xl font-bold mb-1">{score.correct} / {score.total}</p>
-                    <p className="text-sm">
-                        {score.pct >= PASS_THRESHOLD
-                            ? 'Great job! You passed this quiz.'
-                            : `You need ${Math.ceil(PASS_THRESHOLD * 100)}% to pass. Try again!`}
+                    <span className="font-medium">Last attempt:</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
+                    {lastAttempt.passed ? ' — Passed ✓' : ` — Need ${passingScore}% to pass`}
+                </div>
+            )}
+
+            {/* Result panel (shown after submission) */}
+            {showResult && (
+                <div className={cn(
+                    'rounded-xl border p-6 text-center',
+                    result.passed
+                        ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800'
+                        : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
+                )}>
+                    <p className={cn('text-3xl font-bold mb-1', result.passed ? 'text-green-700' : 'text-red-700')}>
+                        {result.score} / {result.max_score}
                     </p>
-                    {score.pct < PASS_THRESHOLD && (
-                        <Button onClick={handleRetry} variant="outline" size="sm" className="mt-3">
+                    <p className={cn('text-sm font-medium mb-1', result.passed ? 'text-green-600' : 'text-red-600')}>
+                        {result.percentage}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        {result.passed
+                            ? '🎉 Great job! You passed this quiz.'
+                            : `You need ${result.passing_score}% to pass. Review the answers below and try again.`}
+                    </p>
+                    {!result.passed && (
+                        <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
                             Try Again
                         </Button>
                     )}
                 </div>
             )}
 
-            {questions.map((q, qi) => (
-                <div key={qi} className="space-y-3">
-                    <p className="font-medium">
-                        <span className="mr-2 text-muted-foreground">Q{qi + 1}.</span>
-                        {q.question}
-                    </p>
-                    <div className="space-y-2">
-                        {q.options.map((opt, oi) => {
-                            const chosen  = answers[qi] === oi;
-                            const correct = submitted && oi === q.correct;
-                            const wrong   = submitted && chosen && oi !== q.correct;
-                            return (
-                                <label
-                                    key={oi}
-                                    className={cn(
-                                        'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors',
-                                        !submitted && chosen  && 'border-primary bg-primary/5',
-                                        !submitted && !chosen && 'hover:bg-muted/50',
-                                        correct  && 'border-green-500 bg-green-50 text-green-800',
-                                        wrong    && 'border-red-400 bg-red-50 text-red-800',
-                                        submitted && 'cursor-default'
-                                    )}
-                                >
-                                    <input
-                                        type="radio"
-                                        name={`q-${qi}`}
-                                        value={oi}
-                                        disabled={submitted}
-                                        checked={chosen}
-                                        onChange={() => setAnswers({ ...answers, [qi]: oi })}
-                                        className="accent-primary"
-                                    />
-                                    <span className="flex-1">{opt}</span>
-                                    {correct && <Check className="h-4 w-4 text-green-600 shrink-0" />}
-                                </label>
-                            );
-                        })}
+            {/* Questions */}
+            {(showResult ? result.results : questions).map((q, qi) => {
+                const chosen  = showResult ? q.selected : data.answers[qi];
+                const correct = showResult ? q.correct  : null;
+                return (
+                    <div key={qi} className="space-y-3">
+                        <p className="font-medium">
+                            <span className="mr-2 text-muted-foreground text-sm">Q{qi + 1}.</span>
+                            {q.question}
+                        </p>
+                        <div className="space-y-2">
+                            {q.options.map((opt, oi) => {
+                                const isChosen      = chosen === oi;
+                                const isCorrect     = showResult && oi === correct;
+                                const isWrong       = showResult && isChosen && oi !== correct;
+                                return (
+                                    <label
+                                        key={oi}
+                                        className={cn(
+                                            'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors',
+                                            !showResult && isChosen  && 'border-primary bg-primary/5',
+                                            !showResult && !isChosen && 'hover:bg-muted/50',
+                                            isCorrect && 'border-green-500 bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300',
+                                            isWrong   && 'border-red-400 bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300',
+                                            showResult && 'cursor-default'
+                                        )}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name={`q-${qi}`}
+                                            value={oi}
+                                            disabled={showResult}
+                                            checked={isChosen ?? false}
+                                            onChange={() => setData('answers', { ...data.answers, [qi]: oi })}
+                                            className="accent-primary shrink-0"
+                                        />
+                                        <span className="flex-1">{opt}</span>
+                                        {isCorrect && <Check className="h-4 w-4 text-green-600 shrink-0" />}
+                                    </label>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
 
-            {!submitted && (
+            {!showResult && (
                 <Button
                     onClick={handleSubmit}
-                    disabled={Object.keys(answers).length < questions.length}
+                    disabled={processing || Object.keys(data.answers).length < questions.length}
                     className="w-full"
                     size="lg"
                 >
-                    Submit Quiz
+                    {processing ? 'Submitting…' : `Submit Quiz (${Object.keys(data.answers).length}/${questions.length} answered)`}
                 </Button>
             )}
         </div>
@@ -198,7 +224,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
 // ─── Main Player ──────────────────────────────────────────────────────────────
 
 export default function LearnShow({
-    course, lesson, enrollment, completedIds, isCompleted, nextLesson, prevLesson,
+    course, lesson, enrollment, completedIds, isCompleted, nextLesson, prevLesson, lastAttempt,
 }) {
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
@@ -322,7 +348,7 @@ export default function LearnShow({
 
                             {/* ── Quiz ── */}
                             {lesson.type === 'quiz' && (
-                                <QuizPlayer lesson={lesson} onPass={handleComplete} />
+                                <QuizPlayer lesson={lesson} course={course} lastAttempt={lastAttempt} />
                             )}
 
                             <Separator className="my-8" />

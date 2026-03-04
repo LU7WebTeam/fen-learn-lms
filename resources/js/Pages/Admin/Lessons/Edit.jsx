@@ -89,18 +89,21 @@ function TextEditor({ data, setData, errors }) {
 function QuizEditor({ data, setData, errors }) {
     const EMPTY_QUESTION = { question: '', options: ['', '', '', ''], correct: 0 };
 
-    let parsed = { questions: [] };
+    let parsed = { questions: [], passing_score: 70 };
     try {
-        parsed = data.content ? JSON.parse(data.content) : { questions: [] };
-        if (!Array.isArray(parsed.questions)) parsed = { questions: [] };
-    } catch {
-        parsed = { questions: [] };
-    }
+        const p = data.content ? JSON.parse(data.content) : {};
+        parsed.questions    = Array.isArray(p.questions) ? p.questions : [];
+        parsed.passing_score = p.passing_score ?? 70;
+    } catch { /* keep defaults */ }
 
-    const questions = parsed.questions;
+    const questions    = parsed.questions;
+    const passingScore = parsed.passing_score;
 
-    function save(qs) {
-        setData('content', JSON.stringify({ questions: qs }));
+    function save(qs, ps) {
+        setData('content', JSON.stringify({
+            questions:    qs ?? questions,
+            passing_score: ps ?? passingScore,
+        }));
     }
 
     function addQuestion() {
@@ -143,6 +146,25 @@ function QuizEditor({ data, setData, errors }) {
     return (
         <div className="space-y-6">
             {errors.content && <InputError message={errors.content} />}
+
+            {/* Passing score */}
+            <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+                <div className="flex-1">
+                    <p className="text-sm font-medium">Passing score</p>
+                    <p className="text-xs text-muted-foreground">Minimum percentage required to pass this quiz</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={passingScore}
+                        onChange={(e) => save(undefined, Math.min(100, Math.max(1, parseInt(e.target.value) || 70)))}
+                        className="w-20 text-center"
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
+                </div>
+            </div>
 
             {questions.length === 0 ? (
                 <div className="rounded-xl border border-dashed py-12 text-center">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\QuizAttempt;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -73,6 +74,36 @@ class LearnController extends Controller
 
         $isCompleted = in_array($lesson->id, $completedIds);
 
+        // For quiz lessons: strip correct answers + load last attempt
+        $lessonData  = $lesson->toArray();
+        $lastAttempt = null;
+
+        if ($lesson->type === 'quiz') {
+            $quizData = json_decode($lesson->content ?? '{}', true) ?? [];
+            if (isset($quizData['questions'])) {
+                $quizData['questions'] = array_map(function ($q) {
+                    unset($q['correct']);
+                    return $q;
+                }, $quizData['questions']);
+            }
+            $lessonData['content'] = json_encode($quizData);
+
+            $attempt = QuizAttempt::where('user_id', $request->user()->id)
+                ->where('lesson_id', $lesson->id)
+                ->latest()
+                ->first();
+
+            if ($attempt) {
+                $lastAttempt = [
+                    'score'      => $attempt->score,
+                    'max_score'  => $attempt->max_score,
+                    'percentage' => $attempt->percentage,
+                    'passed'     => $attempt->passed,
+                    'created_at' => $attempt->created_at,
+                ];
+            }
+        }
+
         return Inertia::render('Learn/Show', [
             'course' => [
                 'id'       => $course->id,
@@ -80,7 +111,7 @@ class LearnController extends Controller
                 'slug'     => $course->slug,
                 'sections' => $course->sections,
             ],
-            'lesson'           => $lesson,
+            'lesson'           => $lessonData,
             'enrollment'       => [
                 'id'               => $enrollment->id,
                 'progress'         => $enrollment->progress_percentage,
@@ -91,6 +122,7 @@ class LearnController extends Controller
             'isCompleted'      => $isCompleted,
             'nextLesson'       => $next ? ['id' => $next->id, 'title' => $next->title] : null,
             'prevLesson'       => $prev ? ['id' => $prev->id, 'title' => $prev->title] : null,
+            'lastAttempt'      => $lastAttempt,
         ]);
     }
 
@@ -149,5 +181,105 @@ class LearnController extends Controller
         }
 
         return back()->with('success', 'Lesson marked complete.');
+    }
+
+    public function submitQuiz(Request $request, Course $course, Lesson $lesson): RedirectResponse
+    {
+        abort_unless($lesson->type === 'quiz', 422);
+
+        $enrollment = $request->user()->enrollments()
+            ->where('course_id', $course->id)
+            ->firstOrFail();
+
+        $request->validate([
+            'answers'   => 'required|array',
+            'answers.*' => 'nullable|integer',
+        ]);
+
+        $quizData     = json_decode($lesson->content ?? '{}', true) ?? [];
+        $questions    = $quizData['questions'] ?? [];
+        $passingScore = (int) ($quizData['passing_score'] ?? 70);
+        $answers      = $request->input('answers', []);
+
+        $correct   = 0;
+        $total     = count($questions);
+        $results   = [];
+
+        foreach ($questions as $i => $question) {
+            $selected    = isset($answers[$i]) ? (int) $answers[$i] : null;
+            $isCorrect   = $selected !== null && $selected === (int) $question['correct'];
+            if ($isCorrect) $correct++;
+
+            $results[] = [
+                'question' => $question['question'],
+                'options'  => $question['options'],
+                'selected' => $selected,
+                'correct'  => (int) $question['correct'],
+                'is_correct' => $isCorrect,
+            ];
+        }
+
+        $percentage = $total > 0 ? (int) round(($correct / $total) * 100) : 0;
+        $passed     = $percentage >= $passingScore;
+
+        QuizAttempt::create([
+            'user_id'       => $request->user()->id,
+            'lesson_id'     => $lesson->id,
+            'enrollment_id' => $enrollment->id,
+            'answers'       => $answers,
+            'score'         => $correct,
+            'max_score'     => $total,
+            'passed'        => $passed,
+        ]);
+
+        // If passed, mark lesson complete using existing completion logic
+        if ($passed) {
+            LessonProgress::updateOrCreate(
+                ['user_id' => $request->user()->id, 'lesson_id' => $lesson->id],
+                ['enrollment_id' => $enrollment->id, 'completed_at' => now()]
+            );
+
+            $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
+            $requirements = $template['requirements'] ?? ['type' => 'all_lessons'];
+            $reqType      = $requirements['type'] ?? 'all_lessons';
+            $totalLessons = $course->lessons()->count();
+            $completedCount = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
+
+            $isComplete = match ($reqType) {
+                'percentage' => (function () use ($requirements, $totalLessons, $completedCount) {
+                    $pct    = max(1, min(100, (int) ($requirements['percentage'] ?? 100)));
+                    $needed = (int) ceil(($pct / 100) * $totalLessons);
+                    return $totalLessons > 0 && $completedCount >= $needed;
+                })(),
+                'specific_sections' => (function () use ($requirements, $enrollment) {
+                    $ids      = $requirements['section_ids'] ?? [];
+                    $required = \App\Models\Lesson::whereIn('section_id', $ids)->pluck('id');
+                    $done     = $enrollment->lessonProgress()->whereNotNull('completed_at')->whereIn('lesson_id', $required)->count();
+                    return $required->count() > 0 && $done >= $required->count();
+                })(),
+                'specific_lessons' => (function () use ($requirements, $enrollment) {
+                    $ids  = $requirements['lesson_ids'] ?? [];
+                    $done = $enrollment->lessonProgress()->whereNotNull('completed_at')->whereIn('lesson_id', $ids)->count();
+                    return count($ids) > 0 && $done >= count($ids);
+                })(),
+                default => $totalLessons > 0 && $completedCount >= $totalLessons,
+            };
+
+            if ($isComplete && !$enrollment->completed_at) {
+                $enrollment->update([
+                    'completed_at'     => now(),
+                    'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
+                ]);
+            }
+        }
+
+        return back()->with('quiz_result', [
+            'score'         => $correct,
+            'max_score'     => $total,
+            'percentage'    => $percentage,
+            'passed'        => $passed,
+            'passing_score' => $passingScore,
+            'results'       => $results,
+        ]);
     }
 }
