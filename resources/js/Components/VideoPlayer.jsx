@@ -86,7 +86,14 @@ function YouTubePlayer({ videoId, onWatchComplete }) {
 
             playerRef.current = new window.YT.Player(divRef.current, {
                 videoId,
-                playerVars: { rel: 0, modestbranding: 1 },
+                host: 'https://www.youtube-nocookie.com',
+                playerVars: {
+                    rel:           0, // no related videos at end
+                    modestbranding:1, // removes YouTube logo from control bar
+                    iv_load_policy:3, // no annotation cards
+                    showinfo:      0, // no title overlay (legacy, still respected)
+                    color:        'white',
+                },
                 events: {
                     onStateChange(e) {
                         const { PLAYING, PAUSED, ENDED, BUFFERING } = window.YT.PlayerState;
@@ -129,7 +136,9 @@ function YouTubePlayer({ videoId, onWatchComplete }) {
     }, [videoId]);
 
     return (
-        <div className="aspect-video overflow-hidden rounded-xl bg-black">
+        <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
+            {/* Covers the YouTube title bar / logo that appears at the top on hover */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-11 bg-black" />
             <div ref={divRef} className="h-full w-full" />
         </div>
     );
@@ -163,8 +172,12 @@ function VimeoPlayer({ videoId, onWatchComplete }) {
             if (destroyed || !divRef.current || !window.Vimeo) return;
 
             const p = new window.Vimeo.Player(divRef.current, {
-                id:          videoId,
-                responsive:  true,
+                id:         videoId,
+                responsive: true,
+                title:      false,   // hide video title overlay
+                byline:     false,   // hide author name
+                portrait:   false,   // hide author avatar
+                dnt:        true,    // do not track
             });
             playerRef.current = p;
 
