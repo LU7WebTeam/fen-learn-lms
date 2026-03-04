@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
+use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -26,6 +29,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Courses
+    Route::resource('courses', AdminCoursesController::class)->except(['show']);
+
+    // Sections (nested under a course)
+    Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');
+    Route::patch('/courses/{course}/sections/reorder', [AdminSectionsController::class, 'reorder'])->name('courses.sections.reorder');
+    Route::patch('/sections/{section}', [AdminSectionsController::class, 'update'])->name('sections.update');
+    Route::delete('/sections/{section}', [AdminSectionsController::class, 'destroy'])->name('sections.destroy');
+
+    // Lessons (nested under a section)
+    Route::post('/sections/{section}/lessons', [AdminLessonsController::class, 'store'])->name('sections.lessons.store');
+    Route::patch('/sections/{section}/lessons/reorder', [AdminLessonsController::class, 'reorder'])->name('sections.lessons.reorder');
+    Route::get('/lessons/{lesson}/edit', [AdminLessonsController::class, 'edit'])->name('lessons.edit');
+    Route::patch('/lessons/{lesson}', [AdminLessonsController::class, 'update'])->name('lessons.update');
+    Route::delete('/lessons/{lesson}', [AdminLessonsController::class, 'destroy'])->name('lessons.destroy');
 });
 
 require __DIR__.'/auth.php';

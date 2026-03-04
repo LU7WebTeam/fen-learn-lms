@@ -14,10 +14,10 @@ import { Separator } from '@/Components/ui/separator';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-    { label: 'Dashboard',    href: '/admin/dashboard',  icon: LayoutDashboard, routeName: 'admin.dashboard' },
-    { label: 'Courses',      href: '/admin/courses',     icon: BookOpen,         routeName: 'admin.courses.index' },
-    { label: 'Users',        href: '/admin/users',       icon: Users,            routeName: 'admin.users.index' },
-    { label: 'Settings',     href: '/admin/settings',    icon: Settings,         routeName: 'admin.settings' },
+    { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Courses',   href: '/admin/courses',   icon: BookOpen        },
+    { label: 'Users',     href: '/admin/users',     icon: Users           },
+    { label: 'Settings',  href: '/admin/settings',  icon: Settings        },
 ];
 
 function SidebarNav({ onNavigate }) {

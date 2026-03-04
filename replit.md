@@ -28,6 +28,12 @@ resources/
     Pages/
       Learner/Dashboard.jsx     # /dashboard — in-progress + completed courses
       Admin/Dashboard.jsx       # /admin/dashboard — metric cards + recent courses
+      Admin/Courses/
+        Index.jsx               # /admin/courses — paginated course table
+        Create.jsx              # /admin/courses/create — new course form
+        Edit.jsx                # /admin/courses/{id}/edit — details + curriculum builder
+      Admin/Lessons/
+        Edit.jsx                # /admin/lessons/{id}/edit — video/text/quiz editor
       Auth/                     # Breeze auth pages (Login, Register, etc.)
       Profile/                  # Profile edit (Breeze)
   css/
@@ -35,8 +41,11 @@ resources/
 app/
   Http/
     Controllers/
-      DashboardController.php         # Learner dashboard
-      Admin/DashboardController.php   # Admin dashboard
+      DashboardController.php         # Learner dashboard (redirects admins)
+      Admin/DashboardController.php   # Admin dashboard metrics
+      Admin/CoursesController.php     # Course CRUD (index/create/store/edit/update/destroy)
+      Admin/SectionsController.php    # Section CRUD + reorder
+      Admin/LessonsController.php     # Lesson CRUD + reorder + content editor
       ProfileController.php           # Profile management (Breeze)
     Middleware/
       EnsureUserIsAdmin.php           # Blocks non-admin users from /admin/*
@@ -95,10 +104,9 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 1. **Foundation** ✅ — Project scaffold, Tailwind, Shadcn UI, dev/prod DB config
 2. **Auth** ✅ — Email/password (Breeze), RBAC roles, admin middleware
 3. **Dashboard Pages** ✅ — Learner dashboard + Admin dashboard with layouts
-4. Public Pages — Home/Landing, Course Catalog, Course Detail, Static pages
-5. Course Player — Lesson viewer (video/text/PDF), curriculum sidebar, progress tracking
-6. Quiz System — MCQ builder, auto-grading, pass/fail feedback
-7. Certificate Generation — PDF certificate on 100% completion
-8. Admin CRUD — Course builder, curriculum drag-and-drop, user management
-9. Media Upload — S3 integration for videos/PDFs
-10. SEO Settings — Per-course meta tags
+4. **Course Builder (Admin)** ✅ — Course CRUD, section/lesson management, video/text/quiz editors
+5. Course Catalog — Public `/courses` listing, filter, enroll
+6. Course Player — Lesson viewer (video/text), curriculum sidebar, progress tracking
+7. Quiz System — Auto-graded MCQ with pass/fail feedback
+8. Certificate Generation — PDF certificate on 100% completion
+9. User Management — Admin user list, role editing
