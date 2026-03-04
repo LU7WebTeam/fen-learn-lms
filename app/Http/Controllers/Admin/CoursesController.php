@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\LessonProgress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -63,14 +64,84 @@ class CoursesController extends Controller
     {
         $course->load(['sections' => function ($q) {
             $q->orderBy('order')->with(['lessons' => function ($q2) {
-                $q2->orderBy('order')->select(['id', 'section_id', 'title', 'order']);
+                $q2->orderBy('order')->select(['id', 'section_id', 'title', 'type', 'order']);
             }]);
         }]);
 
+        // ── Analytics ──────────────────────────────────────────────────────────
+        $totalLessons      = $course->lessons()->count();
+        $totalEnrollments  = $course->enrollments()->count();
+        $completedCount    = $course->enrollments()->whereNotNull('completed_at')->count();
+        $inProgressCount   = $totalEnrollments - $completedCount;
+        $completionRate    = $totalEnrollments > 0
+            ? round(($completedCount / $totalEnrollments) * 100, 1) : 0;
+        $certIssuedCount   = $course->enrollments()->whereNotNull('certificate_uuid')->count();
+
+        // Average progress across all enrollments
+        $avgProgress = 0;
+        if ($totalEnrollments > 0 && $totalLessons > 0) {
+            $enrollmentIds = $course->enrollments()->pluck('id');
+            $totalCompleted = LessonProgress::whereIn('enrollment_id', $enrollmentIds)
+                ->whereNotNull('completed_at')
+                ->count();
+            $avgProgress = round(($totalCompleted / ($totalEnrollments * $totalLessons)) * 100, 1);
+        }
+
+        $analytics = [
+            'total_enrollments'  => $totalEnrollments,
+            'completed_count'    => $completedCount,
+            'in_progress_count'  => $inProgressCount,
+            'completion_rate'    => $completionRate,
+            'avg_progress'       => $avgProgress,
+            'total_lessons'      => $totalLessons,
+            'cert_issued_count'  => $certIssuedCount,
+        ];
+
+        // ── Per-lesson completion stats ────────────────────────────────────────
+        $lessonStats = $course->sections()
+            ->orderBy('order')
+            ->with(['lessons' => function ($q) {
+                $q->orderBy('order')
+                  ->withCount(['lessonProgress as completed_count' => fn($q2) => $q2->whereNotNull('completed_at')]);
+            }])
+            ->get()
+            ->flatMap(fn($section) => $section->lessons->map(fn($lesson) => [
+                'id'              => $lesson->id,
+                'title'           => $lesson->title,
+                'type'            => $lesson->type,
+                'section'         => $section->title,
+                'completed_count' => $lesson->completed_count,
+                'completion_rate' => $totalEnrollments > 0
+                    ? round(($lesson->completed_count / $totalEnrollments) * 100, 1) : 0,
+            ]))
+            ->values();
+
+        // ── Enrolled students ──────────────────────────────────────────────────
+        $students = $course->enrollments()
+            ->with([
+                'user:id,name,email',
+                'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')->select('enrollment_id'),
+            ])
+            ->latest('enrolled_at')
+            ->get()
+            ->map(fn($enrollment) => [
+                'id'               => $enrollment->id,
+                'user_name'        => $enrollment->user->name,
+                'user_email'       => $enrollment->user->email,
+                'enrolled_at'      => $enrollment->enrolled_at?->format('M j, Y'),
+                'completed_at'     => $enrollment->completed_at?->format('M j, Y'),
+                'progress'         => $totalLessons > 0
+                    ? (int) round(($enrollment->lessonProgress->count() / $totalLessons) * 100) : 0,
+                'certificate_uuid' => $enrollment->certificate_uuid,
+            ]);
+
         return Inertia::render('Admin/Courses/Edit', [
-            'course'              => $course,
-            'defaultTemplate'     => \App\Models\Course::defaultCertificateTemplate(),
-            'flash'               => session()->only(['success', 'error']),
+            'course'          => $course,
+            'defaultTemplate' => \App\Models\Course::defaultCertificateTemplate(),
+            'analytics'       => $analytics,
+            'students'        => $students,
+            'lessonStats'     => $lessonStats,
+            'flash'           => session()->only(['success', 'error']),
         ]);
     }
 

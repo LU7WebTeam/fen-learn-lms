@@ -11,10 +11,12 @@ import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import InputError from '@/Components/InputError';
 import CertificateBuilder from './CertificateBuilder';
+import CourseDashboard from './CourseDashboard';
 import { useState } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical,
-    Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check, Award, BookOpen, Settings2
+    Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
+    Award, BookOpen, Settings2, BarChart3, Users
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
@@ -306,7 +308,7 @@ function AddSectionForm({ course, onDone }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats }) {
     const [addingSection, setAddingSection] = useState(false);
 
     return (
@@ -355,6 +357,15 @@ export default function EditCourse({ course, flash, defaultTemplate }) {
                             )}
                             {course.certificate_template?.enabled && (
                                 <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">On</Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="dashboard" className="gap-2">
+                            <BarChart3 className="h-4 w-4" />Dashboard
+                            {analytics?.total_enrollments > 0 && (
+                                <Badge variant="secondary" className="ml-1 text-xs">
+                                    <Users className="h-2.5 w-2.5 mr-0.5 inline" />
+                                    {analytics.total_enrollments}
+                                </Badge>
                             )}
                         </TabsTrigger>
                     </TabsList>
@@ -413,6 +424,15 @@ export default function EditCourse({ course, flash, defaultTemplate }) {
                             course={course}
                             defaultTemplate={defaultTemplate}
                             sections={course.sections}
+                        />
+                    </TabsContent>
+
+                    {/* ── Dashboard tab ── */}
+                    <TabsContent value="dashboard" className="mt-6">
+                        <CourseDashboard
+                            analytics={analytics}
+                            students={students}
+                            lessonStats={lessonStats}
                         />
                     </TabsContent>
                 </Tabs>
