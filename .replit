@@ -28,7 +28,6 @@ expertMode = true
 [userenv]
 
 [userenv.shared]
-DB_CONNECTION = "mysql"
 DB_HOST = "127.0.0.1"
 DB_PORT = "3306"
 DB_DATABASE = "lms"
@@ -37,10 +36,19 @@ APP_NAME = "Free LMS"
 APP_URL = "http://localhost:5000"
 APP_ENV = "local"
 APP_DEBUG = "true"
+DB_PASSWORD = "fen-learn@1234"
+
+[userenv.development]
+DB_CONNECTION = "sqlite"
+SESSION_DRIVER = "file"
+CACHE_STORE = "file"
+QUEUE_CONNECTION = "database"
+
+[userenv.production]
+DB_CONNECTION = "mysql"
 SESSION_DRIVER = "database"
 CACHE_STORE = "database"
 QUEUE_CONNECTION = "database"
-DB_PASSWORD = "fen-learn@1234"
 
 [workflows]
 runButton = "Project"

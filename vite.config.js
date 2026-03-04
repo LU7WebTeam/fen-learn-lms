@@ -18,6 +18,9 @@ export default defineConfig({
         hmr: {
             host: '0.0.0.0',
         },
+        watch: {
+            ignored: ['**/vendor/**', '**/node_modules/**', '**/storage/**'],
+        },
     },
     resolve: {
         alias: {
