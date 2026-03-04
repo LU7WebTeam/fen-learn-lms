@@ -102,7 +102,7 @@ class CoursesController extends Controller
             ->orderBy('order')
             ->with(['lessons' => function ($q) {
                 $q->orderBy('order')
-                  ->withCount(['lessonProgress as completed_count' => fn($q2) => $q2->whereNotNull('completed_at')]);
+                  ->withCount(['progress as completed_count' => fn($q2) => $q2->whereNotNull('completed_at')]);
             }])
             ->get()
             ->flatMap(fn($section) => $section->lessons->map(fn($lesson) => [
