@@ -1,7 +1,8 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import VideoPlayer from '@/Components/VideoPlayer';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
@@ -14,63 +15,9 @@ import {
 import { cn } from '@/lib/utils';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
-
-// ─── Video player ─────────────────────────────────────────────────────────────
-
-function getYouTubeId(url) {
-    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
-    return m ? m[1] : null;
-}
-
-function getVimeoId(url) {
-    const m = url.match(/vimeo\.com\/(\d+)/);
-    return m ? m[1] : null;
-}
-
-function VideoPlayer({ url }) {
-    if (!url) {
-        return (
-            <div className="flex aspect-video items-center justify-center rounded-xl bg-muted">
-                <p className="text-sm text-muted-foreground">No video URL set for this lesson.</p>
-            </div>
-        );
-    }
-    const ytId = getYouTubeId(url);
-    if (ytId) {
-        return (
-            <div className="aspect-video overflow-hidden rounded-xl">
-                <iframe
-                    className="h-full w-full"
-                    src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                />
-            </div>
-        );
-    }
-    const vimeoId = getVimeoId(url);
-    if (vimeoId) {
-        return (
-            <div className="aspect-video overflow-hidden rounded-xl">
-                <iframe
-                    className="h-full w-full"
-                    src={`https://player.vimeo.com/video/${vimeoId}`}
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                />
-            </div>
-        );
-    }
-    return (
-        <div className="overflow-hidden rounded-xl bg-black">
-            <video src={url} controls className="aspect-video w-full" />
-        </div>
-    );
-}
+const PASS_THRESHOLD = 0.7;
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
-
-const PASS_THRESHOLD = 0.7;
 
 function QuizPlayer({ lesson, onPass }) {
     let questions = [];
@@ -85,9 +32,7 @@ function QuizPlayer({ lesson, onPass }) {
 
     function handleSubmit() {
         let correct = 0;
-        questions.forEach((q, i) => {
-            if (answers[i] === q.correct) correct++;
-        });
+        questions.forEach((q, i) => { if (answers[i] === q.correct) correct++; });
         const pct = questions.length > 0 ? correct / questions.length : 0;
         setScore({ correct, total: questions.length, pct });
         setSubmitted(true);
@@ -118,9 +63,7 @@ function QuizPlayer({ lesson, onPass }) {
                         ? 'border-green-200 bg-green-50 text-green-800'
                         : 'border-red-200 bg-red-50 text-red-800'
                 )}>
-                    <p className="text-2xl font-bold mb-1">
-                        {score.correct} / {score.total}
-                    </p>
+                    <p className="text-2xl font-bold mb-1">{score.correct} / {score.total}</p>
                     <p className="text-sm">
                         {score.pct >= PASS_THRESHOLD
                             ? 'Great job! You passed this quiz.'
@@ -145,13 +88,12 @@ function QuizPlayer({ lesson, onPass }) {
                             const chosen  = answers[qi] === oi;
                             const correct = submitted && oi === q.correct;
                             const wrong   = submitted && chosen && oi !== q.correct;
-
                             return (
                                 <label
                                     key={oi}
                                     className={cn(
                                         'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors',
-                                        !submitted && chosen && 'border-primary bg-primary/5',
+                                        !submitted && chosen  && 'border-primary bg-primary/5',
                                         !submitted && !chosen && 'hover:bg-muted/50',
                                         correct  && 'border-green-500 bg-green-50 text-green-800',
                                         wrong    && 'border-red-400 bg-red-50 text-red-800',
@@ -195,7 +137,6 @@ function QuizPlayer({ lesson, onPass }) {
 function SidebarContent({ course, lesson, completedIds, enrollment }) {
     return (
         <div className="flex h-full flex-col">
-            {/* Course header */}
             <div className="border-b px-4 py-4">
                 <Link
                     href={route('courses.show', course.slug)}
@@ -213,7 +154,6 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
                 </div>
             </div>
 
-            {/* Lesson list */}
             <div className="flex-1 overflow-y-auto py-2">
                 {course.sections.map((section) => (
                     <div key={section.id} className="mb-2">
@@ -224,7 +164,6 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
                             const Icon      = LESSON_ICONS[l.type] ?? FileText;
                             const isCurrent = l.id === lesson.id;
                             const isDone    = completedIds.includes(l.id);
-
                             return (
                                 <Link
                                     key={l.id}
@@ -257,9 +196,13 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
 
 // ─── Main Player ──────────────────────────────────────────────────────────────
 
-export default function LearnShow({ course, lesson, enrollment, completedIds, isCompleted, nextLesson, prevLesson }) {
-    const [completed, setCompleted] = useState(isCompleted);
-    const [completing, setCompleting] = useState(false);
+export default function LearnShow({
+    course, lesson, enrollment, completedIds, isCompleted, nextLesson, prevLesson,
+}) {
+    const [completed, setCompleted]     = useState(isCompleted);
+    const [completing, setCompleting]   = useState(false);
+    // For video lessons: tracks whether the learner watched to the end
+    const [videoWatched, setVideoWatched] = useState(isCompleted);
 
     const handleComplete = useCallback(() => {
         if (completed || completing) return;
@@ -269,18 +212,18 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setCompleted(true);
-                    setCompleting(false);
-                },
-                onError: () => setCompleting(false),
+                onSuccess: () => { setCompleted(true); setCompleting(false); },
+                onError:   () => setCompleting(false),
             }
         );
     }, [completed, completing, course.slug, lesson.id]);
 
-    function goNext() {
-        if (nextLesson) router.get(route('learn.lesson', [course.slug, nextLesson.id]));
-    }
+    // canComplete: video lessons require the video to be watched first
+    const canComplete = lesson.type === 'video' ? videoWatched : true;
+
+    const effectiveCompletedIds = completed
+        ? [...new Set([...completedIds, lesson.id])]
+        : completedIds;
 
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
@@ -301,13 +244,16 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                             <SidebarContent
                                 course={course}
                                 lesson={lesson}
-                                completedIds={completed ? [...completedIds, lesson.id] : completedIds}
+                                completedIds={effectiveCompletedIds}
                                 enrollment={enrollment}
                             />
                         </SheetContent>
                     </Sheet>
 
-                    <Link href={route('courses.show', course.slug)} className="flex items-center gap-2 text-sm font-medium hover:underline">
+                    <Link
+                        href={route('courses.show', course.slug)}
+                        className="flex items-center gap-2 text-sm font-medium hover:underline"
+                    >
                         <GraduationCap className="h-4 w-4 shrink-0" />
                         <span className="hidden sm:inline line-clamp-1 max-w-xs">{course.title}</span>
                     </Link>
@@ -324,12 +270,12 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                 </header>
 
                 <div className="flex flex-1 overflow-hidden">
-                    {/* Sidebar — desktop only */}
+                    {/* Sidebar — desktop */}
                     <aside className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block">
                         <SidebarContent
                             course={course}
                             lesson={lesson}
-                            completedIds={completed ? [...completedIds, lesson.id] : completedIds}
+                            completedIds={effectiveCompletedIds}
                             enrollment={enrollment}
                         />
                     </aside>
@@ -337,7 +283,7 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                     {/* Content */}
                     <main className="flex-1 overflow-y-auto">
                         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
-                            {/* Lesson header */}
+                            {/* Lesson title */}
                             <div className="mb-6 flex items-center gap-2">
                                 <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
                                 <h1 className="text-2xl font-bold tracking-tight">{lesson.title}</h1>
@@ -346,7 +292,10 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                             {/* ── Video ── */}
                             {lesson.type === 'video' && (
                                 <div className="space-y-6">
-                                    <VideoPlayer url={lesson.video_url} />
+                                    <VideoPlayer
+                                        url={lesson.video_url}
+                                        onWatchComplete={() => setVideoWatched(true)}
+                                    />
                                     {lesson.content && (
                                         <div>
                                             <h2 className="mb-3 text-base font-semibold">Notes</h2>
@@ -376,7 +325,7 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
 
                             <Separator className="my-8" />
 
-                            {/* Bottom nav */}
+                            {/* Bottom navigation */}
                             <div className="flex items-center justify-between gap-4">
                                 <Button
                                     variant="outline"
@@ -388,6 +337,7 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                                 </Button>
 
                                 <div className="flex items-center gap-3">
+                                    {/* Complete button — video & text only */}
                                     {lesson.type !== 'quiz' && (
                                         completed ? (
                                             <Badge variant="outline" className="gap-1.5 text-green-600 border-green-300 px-3 py-1.5">
@@ -397,21 +347,27 @@ export default function LearnShow({ course, lesson, enrollment, completedIds, is
                                         ) : (
                                             <Button
                                                 onClick={handleComplete}
-                                                disabled={completing}
-                                                variant="outline"
+                                                disabled={completing || !canComplete}
+                                                variant={canComplete ? 'default' : 'outline'}
+                                                title={!canComplete ? 'Watch the full video to unlock' : undefined}
                                             >
-                                                {completing ? 'Saving…' : 'Mark as Complete'}
+                                                {completing
+                                                    ? 'Saving…'
+                                                    : canComplete
+                                                        ? 'Mark as Complete'
+                                                        : 'Watch video to continue'}
                                             </Button>
                                         )
                                     )}
 
+                                    {/* Next / Course complete */}
                                     {nextLesson ? (
-                                        <Button onClick={goNext}>
+                                        <Button onClick={() => router.get(route('learn.lesson', [course.slug, nextLesson.id]))}>
                                             Next
                                             <ChevronRight className="ml-1 h-4 w-4" />
                                         </Button>
-                                    ) : enrollment.completed_at || (completed && !nextLesson) ? (
-                                        <Button asChild variant="default">
+                                    ) : (enrollment.completed_at || (completed && !nextLesson)) ? (
+                                        <Button asChild>
                                             <Link href={route('courses.show', course.slug)}>
                                                 <Award className="mr-2 h-4 w-4" />
                                                 Course Complete!
