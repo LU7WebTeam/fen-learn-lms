@@ -54,6 +54,12 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // When running on Replit, use the public HTTPS domain for asset URLs so the
+    // browser can load JS/CSS (the internal PHP server only speaks HTTP).
+    'asset_url' => env('REPLIT_DEV_DOMAIN')
+        ? 'https://' . env('REPLIT_DEV_DOMAIN')
+        : env('ASSET_URL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
