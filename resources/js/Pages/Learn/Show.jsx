@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import VideoPlayer from '@/Components/VideoPlayer';
+import UserMenu from '@/Components/UserMenu';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
@@ -258,7 +259,7 @@ export default function LearnShow({
                         <span className="hidden sm:inline line-clamp-1 max-w-xs">{course.title}</span>
                     </Link>
 
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="ml-auto flex items-center gap-3">
                         {completed && (
                             <Badge variant="outline" className="hidden gap-1 text-green-600 border-green-300 sm:flex">
                                 <Check className="h-3.5 w-3.5" />
@@ -266,6 +267,7 @@ export default function LearnShow({
                             </Badge>
                         )}
                         <span className="text-sm text-muted-foreground">{enrollment.progress}%</span>
+                        <UserMenu />
                     </div>
                 </header>
 

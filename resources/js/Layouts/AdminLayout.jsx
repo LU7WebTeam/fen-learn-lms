@@ -1,4 +1,4 @@
-import { Link, usePage, router } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
     BookOpen,
@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
-import { Separator } from '@/Components/ui/separator';
 import { cn } from '@/lib/utils';
+import UserMenu from '@/Components/UserMenu';
 
 const navItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -28,7 +28,7 @@ function SidebarNav({ onNavigate }) {
                 const isActive = window.location.pathname.startsWith(item.href);
                 return (
                     <Link
-                        key={item.routeName}
+                        key={item.href}
                         href={item.href}
                         onClick={onNavigate}
                         className={cn(
@@ -75,9 +75,6 @@ function Sidebar({ className }) {
 }
 
 export default function AdminLayout({ title, children }) {
-    const { auth } = usePage().props;
-    const user = auth.user;
-
     return (
         <div className="flex min-h-screen bg-background">
             <Sidebar className="hidden w-60 shrink-0 border-r lg:flex lg:flex-col" />
@@ -97,8 +94,8 @@ export default function AdminLayout({ title, children }) {
 
                     <h1 className="text-lg font-semibold">{title}</h1>
 
-                    <div className="ml-auto text-sm text-muted-foreground">
-                        {user.name}
+                    <div className="ml-auto">
+                        <UserMenu />
                     </div>
                 </header>
 

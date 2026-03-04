@@ -1,15 +1,8 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import { BookOpen, LayoutDashboard, Menu, GraduationCap } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/Components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
+import UserMenu from '@/Components/UserMenu';
 
 function NavItems({ mobile = false }) {
     const linkClass = mobile
@@ -31,20 +24,6 @@ function NavItems({ mobile = false }) {
 }
 
 export default function AuthenticatedLayout({ children }) {
-    const { auth } = usePage().props;
-    const user = auth.user;
-
-    const initials = user.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
-    function handleLogout() {
-        router.post(route('logout'));
-    }
-
     return (
         <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -59,36 +38,7 @@ export default function AuthenticatedLayout({ children }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-2">
-                        {user.role !== 'learner' && (
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={route('admin.dashboard')}>Admin Panel</Link>
-                            </Button>
-                        )}
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                                    <Avatar className="h-9 w-9">
-                                        <AvatarImage src={user.avatar} alt={user.name} />
-                                        <AvatarFallback>{initials}</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <div className="px-2 py-1.5">
-                                    <p className="text-sm font-medium">{user.name}</p>
-                                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link href={route('profile.edit')}>Profile Settings</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
-                                    Log Out
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <UserMenu />
 
                         <Sheet>
                             <SheetTrigger asChild>
