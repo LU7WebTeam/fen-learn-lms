@@ -22,7 +22,7 @@ function NavItems({ mobile = false }) {
                 <LayoutDashboard className="h-4 w-4" />
                 My Learning
             </Link>
-            <Link href={route('courses.index', [], false) || '/courses'} className={linkClass}>
+            <Link href="/courses" className={linkClass}>
                 <BookOpen className="h-4 w-4" />
                 Catalog
             </Link>
