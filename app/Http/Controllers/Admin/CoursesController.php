@@ -63,14 +63,41 @@ class CoursesController extends Controller
     {
         $course->load(['sections' => function ($q) {
             $q->orderBy('order')->with(['lessons' => function ($q2) {
-                $q2->orderBy('order');
+                $q2->orderBy('order')->select(['id', 'section_id', 'title', 'order']);
             }]);
         }]);
 
         return Inertia::render('Admin/Courses/Edit', [
-            'course'  => $course,
-            'flash'   => session()->only(['success', 'error']),
+            'course'              => $course,
+            'defaultTemplate'     => \App\Models\Course::defaultCertificateTemplate(),
+            'flash'               => session()->only(['success', 'error']),
         ]);
+    }
+
+    public function updateCertificate(Request $request, Course $course): RedirectResponse
+    {
+        $validated = $request->validate([
+            'certificate_template'                          => 'required|array',
+            'certificate_template.enabled'                  => 'required|boolean',
+            'certificate_template.size'                     => 'required|in:a4,letter',
+            'certificate_template.orientation'              => 'required|in:landscape,portrait',
+            'certificate_template.background'               => 'required|array',
+            'certificate_template.background.type'          => 'required|in:color,image',
+            'certificate_template.background.color'         => 'nullable|string|max:20',
+            'certificate_template.background.image_url'     => 'nullable|url|max:1000',
+            'certificate_template.branding'                 => 'required|array',
+            'certificate_template.fields'                   => 'required|array',
+            'certificate_template.signatory'                => 'required|array',
+            'certificate_template.requirements'             => 'required|array',
+            'certificate_template.requirements.type'        => 'required|in:all_lessons,percentage,specific_sections,specific_lessons',
+            'certificate_template.requirements.percentage'  => 'nullable|integer|min:1|max:100',
+            'certificate_template.requirements.section_ids' => 'nullable|array',
+            'certificate_template.requirements.lesson_ids'  => 'nullable|array',
+        ]);
+
+        $course->update(['certificate_template' => $validated['certificate_template']]);
+
+        return back()->with('success', 'Certificate template saved.');
     }
 
     public function update(Request $request, Course $course): RedirectResponse

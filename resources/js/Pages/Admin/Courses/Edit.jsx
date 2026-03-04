@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import InputError from '@/Components/InputError';
+import CertificateBuilder from './CertificateBuilder';
 import { useState } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical,
-    Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check
+    Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check, Award, BookOpen, Settings2
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
@@ -304,14 +306,15 @@ function AddSectionForm({ course, onDone }) {
     );
 }
 
-export default function EditCourse({ course, flash }) {
+export default function EditCourse({ course, flash, defaultTemplate }) {
     const [addingSection, setAddingSection] = useState(false);
 
     return (
         <AdminLayout title={`Edit: ${course.title}`}>
             <Head title={`Edit ${course.title} — Admin`} />
 
-            <div className="space-y-8">
+            <div className="space-y-6">
+                {/* Header */}
                 <div className="flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -332,47 +335,87 @@ export default function EditCourse({ course, flash }) {
                     </div>
                 )}
 
-                <CourseDetailsForm course={course} />
+                {/* Tabs */}
+                <Tabs defaultValue="details">
+                    <TabsList className="w-full justify-start">
+                        <TabsTrigger value="details" className="gap-2">
+                            <Settings2 className="h-4 w-4" />Details
+                        </TabsTrigger>
+                        <TabsTrigger value="curriculum" className="gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            Curriculum
+                            <Badge variant="secondary" className="ml-1 text-xs">
+                                {course.sections.reduce((t, s) => t + s.lessons.length, 0)}
+                            </Badge>
+                        </TabsTrigger>
+                        <TabsTrigger value="certificate" className="gap-2">
+                            <Award className="h-4 w-4" />Certificate
+                            {course.certificate_template?.enabled === false && (
+                                <Badge variant="outline" className="ml-1 text-xs text-muted-foreground">Off</Badge>
+                            )}
+                            {course.certificate_template?.enabled && (
+                                <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">On</Badge>
+                            )}
+                        </TabsTrigger>
+                    </TabsList>
 
-                <Separator />
+                    {/* ── Details tab ── */}
+                    <TabsContent value="details" className="mt-6">
+                        <CourseDetailsForm course={course} />
+                    </TabsContent>
 
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold">Curriculum</h3>
-                            <p className="text-sm text-muted-foreground">
-                                {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} · {' '}
-                                {course.sections.reduce((t, s) => t + s.lessons.length, 0)} lessons
-                            </p>
+                    {/* ── Curriculum tab ── */}
+                    <TabsContent value="curriculum" className="mt-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold">Curriculum</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} · {' '}
+                                        {course.sections.reduce((t, s) => t + s.lessons.length, 0)} lessons
+                                    </p>
+                                </div>
+                                {!addingSection && (
+                                    <Button variant="outline" onClick={() => setAddingSection(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Section
+                                    </Button>
+                                )}
+                            </div>
+
+                            {addingSection && (
+                                <AddSectionForm course={course} onDone={() => setAddingSection(false)} />
+                            )}
+
+                            {course.sections.length === 0 && !addingSection ? (
+                                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
+                                    <p className="mb-4 text-muted-foreground">
+                                        No sections yet. Add the first section to start building your curriculum.
+                                    </p>
+                                    <Button onClick={() => setAddingSection(true)}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add First Section
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {course.sections.map((section) => (
+                                        <SectionCard key={section.id} section={section} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        {!addingSection && (
-                            <Button variant="outline" onClick={() => setAddingSection(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Section
-                            </Button>
-                        )}
-                    </div>
+                    </TabsContent>
 
-                    {addingSection && (
-                        <AddSectionForm course={course} onDone={() => setAddingSection(false)} />
-                    )}
-
-                    {course.sections.length === 0 && !addingSection ? (
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-                            <p className="mb-4 text-muted-foreground">No sections yet. Add the first section to start building your curriculum.</p>
-                            <Button onClick={() => setAddingSection(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add First Section
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {course.sections.map((section) => (
-                                <SectionCard key={section.id} section={section} />
-                            ))}
-                        </div>
-                    )}
-                </div>
+                    {/* ── Certificate tab ── */}
+                    <TabsContent value="certificate" className="mt-6">
+                        <CertificateBuilder
+                            course={course}
+                            defaultTemplate={defaultTemplate}
+                            sections={course.sections}
+                        />
+                    </TabsContent>
+                </Tabs>
             </div>
         </AdminLayout>
     );

@@ -45,13 +45,36 @@ class CertificateController extends Controller
 
         $verifyUrl = config('app.url') . '/certificate/' . $enrollment->certificate_uuid;
 
+        $template = $enrollment->course->certificate_template
+            ?? \App\Models\Course::defaultCertificateTemplate();
+
+        $size        = $template['size']        ?? 'a4';
+        $orientation = $template['orientation'] ?? 'landscape';
+
+        // Fill dynamic signatory fields into the template fields list
+        $signatory = $template['signatory'] ?? [];
+        $template['fields'] = collect($template['fields'] ?? [])
+            ->map(function ($field) use ($signatory) {
+                if ($field['id'] === 'signatory_name' && empty($field['text'])) {
+                    $field['text'] = $signatory['name'] ?? '';
+                }
+                if ($field['id'] === 'signatory_title' && empty($field['text'])) {
+                    $field['text'] = $signatory['title'] ?? '';
+                }
+                return $field;
+            })->all();
+
+        $options = app(\Barryvdh\DomPDF\PDF::class)->getOptions();
+        $options->setIsRemoteEnabled(true);
+
         $pdf = Pdf::loadView('pdf.certificate', [
+            'template'     => $template,
             'name'         => $enrollment->user->name,
             'course_title' => $enrollment->course->title,
             'completed_at' => $enrollment->completed_at->format('F j, Y'),
             'uuid'         => $enrollment->certificate_uuid,
             'verify_url'   => $verifyUrl,
-        ])->setPaper('a4', 'landscape');
+        ])->setPaper($size, $orientation);
 
         $filename = Str::slug($enrollment->course->title) . '-certificate.pdf';
 

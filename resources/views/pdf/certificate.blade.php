@@ -3,319 +3,197 @@
 <head>
     <meta charset="UTF-8" />
     <style>
+        @php
+            $size        = $template['size']        ?? 'a4';
+            $orientation = $template['orientation'] ?? 'landscape';
+            $bg          = $template['background']  ?? ['type' => 'color', 'color' => '#fdf8f4', 'image_url' => ''];
+            $branding    = $template['branding']    ?? [];
+            $fieldsRaw   = $template['fields']      ?? [];
+            $signatory   = $template['signatory']   ?? ['name' => '', 'title' => '', 'organization' => ''];
+            $fields      = collect($fieldsRaw)->keyBy('id');
+
+            $pageDims = [
+                'a4'     => ['landscape' => [297, 210], 'portrait' => [210, 297]],
+                'letter' => ['landscape' => [279.4, 215.9], 'portrait' => [215.9, 279.4]],
+            ];
+            $pageW = $pageDims[$size][$orientation][0] ?? 297;
+            $pageH = $pageDims[$size][$orientation][1] ?? 210;
+
+            // Top/bottom bar heights as fraction of page height
+            $showTopBar    = $branding['show_top_bar']    ?? true;
+            $showBottomBar = $branding['show_bottom_bar'] ?? true;
+            $topBarH       = $showTopBar    ? round($pageH * 0.085, 2) : 0;
+            $bottomBarH    = $showBottomBar ? round($pageH * 0.067, 2) : 0;
+            $accentH       = $showTopBar    ? round($pageH * 0.014, 2) : 0;
+            $accentH2      = $showBottomBar ? round($pageH * 0.010, 2) : 0;
+
+            $topBarColor    = $branding['top_bar_color']    ?? '#8B1A4A';
+            $bottomBarColor = $branding['bottom_bar_color'] ?? '#8B1A4A';
+            $accentColor    = $branding['accent_color']     ?? '#C8A96E';
+            $showLogo       = $branding['show_logo']        ?? true;
+            $logoText       = $branding['logo_text']        ?? 'FENLearn';
+            $tagline        = $branding['tagline']          ?? '';
+
+            // Background styles
+            $bgStyle = '';
+            if (($bg['type'] ?? 'color') === 'image' && !empty($bg['image_url'])) {
+                $bgStyle = "background-image: url('{$bg['image_url']}'); background-size: cover; background-position: center;";
+            } else {
+                $bgStyle = "background: " . ($bg['color'] ?? '#fdf8f4') . ";";
+            }
+
+            // Helper to get field value for dynamic fields
+            $dynamicValues = [
+                'recipient_name'  => $name         ?? '',
+                'course_title'    => $course_title  ?? '',
+                'completion_date' => $completed_at  ?? '',
+                'certificate_id'  => $uuid          ?? '',
+                'signatory_name'  => $signatory['name']  ?? '',
+                'signatory_title' => $signatory['title'] ?? '',
+            ];
+
+            function getFieldText($field, $dynamicValues) {
+                if (($field['type'] ?? 'static') === 'dynamic') {
+                    return $dynamicValues[$field['id']] ?? '';
+                }
+                return $field['text'] ?? '';
+            }
+
+            function fieldCss($field, $pageW, $pageH) {
+                $topMm     = round(($field['y'] / 100) * $pageH, 2);
+                $fontSize  = $field['font_size'] ?? 12;
+                $color     = $field['color']     ?? '#1e1e2e';
+                $align     = $field['align']     ?? 'center';
+                $bold      = ($field['bold']     ?? false) ? 'bold'   : 'normal';
+                $italic    = ($field['italic']   ?? false) ? 'italic' : 'normal';
+                $paddingL  = 10; // mm padding each side
+                $paddingR  = 10;
+
+                // For left-aligned, shift start based on x%
+                if ($align === 'left') {
+                    $startMm  = round(($field['x'] / 100) * $pageW, 2);
+                    $paddingL = $startMm;
+                } elseif ($align === 'right') {
+                    $endMm    = round(($field['x'] / 100) * $pageW, 2);
+                    $paddingR = $pageW - $endMm;
+                }
+
+                return "position: absolute; top: {$topMm}mm; left: 0; right: 0;"
+                    . " padding-left: {$paddingL}mm; padding-right: {$paddingR}mm;"
+                    . " font-size: {$fontSize}pt; color: {$color};"
+                    . " text-align: {$align}; font-weight: {$bold}; font-style: {$italic};"
+                    . " line-height: 1;";
+            }
+        @endphp
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        @page { size: A4 landscape; margin: 0; }
+        @page { size: {{ $pageW }}mm {{ $pageH }}mm; margin: 0; }
 
         body {
-            width: 297mm;
-            height: 210mm;
+            margin: 0; padding: 0;
             font-family: 'DejaVu Sans', sans-serif;
-            background: #ffffff;
-            color: #1e1e2e;
+            width: {{ $pageW }}mm;
+            height: {{ $pageH }}mm;
             overflow: hidden;
         }
 
-        /* ── Outer page ── */
         .page {
-            width: 297mm;
-            height: 210mm;
             position: relative;
-            background: #fdf8f4;
+            width: {{ $pageW }}mm;
+            height: {{ $pageH }}mm;
+            {!! $bgStyle !!}
         }
 
-        /* ── Decorative border ── */
-        .border-outer {
-            position: absolute;
-            inset: 10mm;
-            border: 3px solid #8B1A4A;
-        }
-        .border-inner {
-            position: absolute;
-            inset: 13mm;
-            border: 1px solid #C8A96E;
-        }
-
-        /* ── Corner ornaments (CSS squares rotated) ── */
-        .corner {
-            position: absolute;
-            width: 8mm;
-            height: 8mm;
-            border: 2px solid #C8A96E;
-        }
-        .corner-tl { top: 8mm;  left: 8mm;  border-right: none; border-bottom: none; }
-        .corner-tr { top: 8mm;  right: 8mm; border-left: none;  border-bottom: none; }
-        .corner-bl { bottom: 8mm; left: 8mm;  border-right: none; border-top: none; }
-        .corner-br { bottom: 8mm; right: 8mm; border-left: none;  border-top: none; }
-
-        /* ── Accent bar top ── */
+        @if ($showTopBar)
         .top-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 18mm;
-            background: #8B1A4A;
+            position: absolute; top: 0; left: 0; right: 0;
+            height: {{ $topBarH }}mm;
+            background: {{ $topBarColor }};
         }
-        .top-bar-gold {
-            position: absolute;
-            top: 18mm;
-            left: 0;
-            right: 0;
-            height: 3mm;
-            background: #C8A96E;
+        .top-accent {
+            position: absolute; top: {{ $topBarH }}mm; left: 0; right: 0;
+            height: {{ $accentH }}mm;
+            background: {{ $accentColor }};
         }
-
-        /* ── Bottom bar ── */
-        .bottom-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 14mm;
-            background: #8B1A4A;
-        }
-        .bottom-bar-gold {
-            position: absolute;
-            bottom: 14mm;
-            left: 0;
-            right: 0;
-            height: 2mm;
-            background: #C8A96E;
-        }
-
-        /* ── Logo in top bar ── */
         .logo-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 18mm;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; top: 0; left: 0; right: 0;
+            height: {{ $topBarH }}mm;
+            text-align: center;
+            padding-top: {{ round($topBarH * 0.2, 2) }}mm;
         }
         .logo-text {
             color: #ffffff;
-            font-size: 16pt;
+            font-size: {{ round($topBarH * 0.35, 1) }}pt;
             font-weight: bold;
             letter-spacing: 4px;
-            text-transform: uppercase;
         }
         .logo-sub {
             color: #F0D9A8;
-            font-size: 7pt;
-            letter-spacing: 3px;
-            text-transform: uppercase;
+            font-size: {{ round($topBarH * 0.17, 1) }}pt;
+            letter-spacing: 2px;
             margin-top: 1mm;
-            text-align: center;
         }
+        @endif
 
-        /* ── Main content ── */
-        .content {
-            position: absolute;
-            top: 24mm;
-            left: 18mm;
-            right: 18mm;
-            bottom: 18mm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        @if ($showBottomBar)
+        .bottom-bar {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: {{ $bottomBarH }}mm;
+            background: {{ $bottomBarColor }};
         }
-
-        .cert-label {
-            font-size: 9pt;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            color: #8B1A4A;
-            margin-bottom: 4mm;
+        .bottom-accent {
+            position: absolute; bottom: {{ $bottomBarH }}mm; left: 0; right: 0;
+            height: {{ $accentH2 }}mm;
+            background: {{ $accentColor }};
         }
-
-        .cert-title {
-            font-size: 28pt;
-            font-weight: bold;
-            color: #1e1e2e;
-            letter-spacing: 1px;
-            margin-bottom: 6mm;
-            line-height: 1.1;
-        }
-
-        .cert-presented {
-            font-size: 9pt;
-            color: #666;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 4mm;
-        }
-
-        .divider {
-            width: 40mm;
-            height: 1px;
-            background: #C8A96E;
-            margin: 0 auto 5mm;
-        }
-
-        .recipient-name {
-            font-size: 30pt;
-            font-weight: bold;
-            color: #8B1A4A;
-            margin-bottom: 5mm;
-            letter-spacing: 1px;
-        }
-
-        .cert-body {
-            font-size: 9pt;
-            color: #555;
-            letter-spacing: 1px;
-            margin-bottom: 3mm;
-        }
-
-        .course-title {
-            font-size: 15pt;
-            font-weight: bold;
-            color: #1e1e2e;
-            margin-bottom: 6mm;
-            line-height: 1.3;
-            padding: 0 10mm;
-        }
-
-        /* ── Footer row ── */
         .footer-row {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 14mm;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20mm;
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: {{ $bottomBarH }}mm;
+            padding: {{ round($bottomBarH * 0.3, 2) }}mm {{ round($pageW * 0.067, 2) }}mm;
         }
-        .footer-left {
-            color: #F0D9A8;
-            font-size: 6.5pt;
-            letter-spacing: 1px;
-        }
-        .footer-center {
-            color: #ffffff;
-            font-size: 7pt;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-align: center;
-        }
-        .footer-right {
-            color: #F0D9A8;
-            font-size: 6.5pt;
-            letter-spacing: 1px;
-            text-align: right;
-        }
-
-        /* ── Date + meta row ── */
-        .meta-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 20mm;
-            margin-top: 3mm;
-        }
-        .meta-col {
-            text-align: center;
-        }
-        .meta-label {
-            font-size: 6pt;
-            color: #999;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 2mm;
-        }
-        .meta-value {
-            font-size: 9pt;
-            color: #1e1e2e;
-            font-weight: bold;
-        }
-        .meta-line {
-            width: 35mm;
-            height: 1px;
-            background: #ddd;
-            margin: 3mm auto 2mm;
-        }
+        .footer-left  { color: #F0D9A8; font-size: {{ round($bottomBarH * 0.3, 1) }}pt; float: left; }
+        .footer-center { color: #fff; font-size: {{ round($bottomBarH * 0.32, 1) }}pt; font-weight: bold; text-align: center; letter-spacing: 2px; }
+        .footer-right { color: #F0D9A8; font-size: {{ round($bottomBarH * 0.27, 1) }}pt; float: right; }
+        @endif
     </style>
 </head>
 <body>
 <div class="page">
 
-    <!-- Top decorative bar -->
+    @if ($showTopBar)
     <div class="top-bar"></div>
-    <div class="top-bar-gold"></div>
-
-    <!-- Logo in top bar -->
+    <div class="top-accent"></div>
+    @if ($showLogo)
     <div class="logo-area">
-        <div>
-            <div class="logo-text">FENLearn</div>
-            <div class="logo-sub">FEN E-Learning Platform &nbsp;·&nbsp; Backed by FEN Network</div>
-        </div>
+        <div class="logo-text">{{ $logoText }}</div>
+        @if ($tagline)
+        <div class="logo-sub">{{ $tagline }}</div>
+        @endif
     </div>
+    @endif
+    @endif
 
-    <!-- Bottom bar -->
-    <div class="bottom-bar-gold"></div>
+    @if ($showBottomBar)
+    <div class="bottom-accent"></div>
     <div class="bottom-bar"></div>
-
-    <!-- Corner ornaments -->
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
-
-    <!-- Footer row inside bottom bar -->
     <div class="footer-row">
-        <div class="footer-left">
-            Issued: {{ $completed_at }}
-        </div>
-        <div class="footer-center">
-            Certificate of Completion
-        </div>
-        <div class="footer-right">
-            ID: {{ $uuid }}
-        </div>
+        <span class="footer-left">{{ $completed_at ?? '' }}</span>
+        <span class="footer-center" style="display:block; margin: 0 auto; text-align:center;">Certificate of Completion</span>
+        <span class="footer-right">{{ $uuid ?? '' }}</span>
     </div>
+    @endif
 
-    <!-- Main content -->
-    <div class="content">
-        <div class="cert-label">Certificate of Completion</div>
-
-        <div class="cert-title">Certificate of Achievement</div>
-
-        <div class="cert-presented">This is proudly presented to</div>
-
-        <div class="divider"></div>
-
-        <div class="recipient-name">{{ $name }}</div>
-
-        <div class="cert-body">for successfully completing the course</div>
-
-        <div class="course-title">{{ $course_title }}</div>
-
-        <div class="meta-row">
-            <div class="meta-col">
-                <div class="meta-label">Completion Date</div>
-                <div class="meta-line"></div>
-                <div class="meta-value">{{ $completed_at }}</div>
-            </div>
-            <div class="meta-col">
-                <div class="meta-label">Certificate ID</div>
-                <div class="meta-line"></div>
-                <div class="meta-value" style="font-size:7pt; font-family: 'DejaVu Sans Mono', monospace;">{{ $uuid }}</div>
-            </div>
-            <div class="meta-col">
-                <div class="meta-label">Verify At</div>
-                <div class="meta-line"></div>
-                <div class="meta-value" style="font-size:7pt;">{{ $verify_url }}</div>
-            </div>
-        </div>
-    </div>
+    @foreach ($fieldsRaw as $field)
+        @if ($field['visible'] ?? false)
+            @php
+                $text = getFieldText($field, $dynamicValues);
+            @endphp
+            @if ($text)
+            <div style="{!! fieldCss($field, $pageW, $pageH) !!}">{{ $text }}</div>
+            @endif
+        @endif
+    @endforeach
 
 </div>
 </body>

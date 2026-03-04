@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);
+    Route::patch('/courses/{course}/certificate', [AdminCoursesController::class, 'updateCertificate'])->name('courses.certificate.update');
 
     // Sections (nested under a course)
     Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');

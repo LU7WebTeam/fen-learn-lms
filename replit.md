@@ -115,4 +115,5 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 4. **Course Builder (Admin)** ✅ — Course CRUD, section/lesson management, video/text/quiz editors
 5. **Course Player** ✅ — Catalog, course detail, enrollment, lesson player (video/text/quiz), progress tracking
 6. **Certificate Generation** ✅ — PDF (landscape A4) on 100% completion, public verification page, download button in player + dashboard
+   - Certificate Builder ✅ — Per-course template: size/orientation, background (color/image), branding (bars/logo/colors), field placement (10 fields with y%, font, color, bold/italic, align), signatory, requirements (all/percentage/sections/lessons)
 7. User Management — Admin user list, role editing

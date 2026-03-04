@@ -105,14 +105,46 @@ class LearnController extends Controller
             ['enrollment_id' => $enrollment->id, 'completed_at' => now()]
         );
 
-        // Check for course completion
-        $total     = $course->lessons()->count();
-        $completed = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
+        // Evaluate course completion based on certificate requirements
+        $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
+        $requirements = $template['requirements'] ?? ['type' => 'all_lessons'];
+        $reqType      = $requirements['type'] ?? 'all_lessons';
 
-        if ($total > 0 && $completed >= $total && !$enrollment->completed_at) {
+        $total          = $course->lessons()->count();
+        $completedCount = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
+
+        $isComplete = match ($reqType) {
+            'percentage' => (function () use ($requirements, $total, $completedCount) {
+                $pct    = max(1, min(100, (int) ($requirements['percentage'] ?? 100)));
+                $needed = (int) ceil(($pct / 100) * $total);
+                return $total > 0 && $completedCount >= $needed;
+            })(),
+            'specific_sections' => (function () use ($requirements, $enrollment) {
+                $ids = $requirements['section_ids'] ?? [];
+                if (empty($ids)) return false;
+                $required  = \App\Models\Lesson::whereIn('section_id', $ids)->pluck('id');
+                $completed = $enrollment->lessonProgress()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('lesson_id', $required)
+                    ->count();
+                return $required->count() > 0 && $completed >= $required->count();
+            })(),
+            'specific_lessons' => (function () use ($requirements, $enrollment) {
+                $ids = $requirements['lesson_ids'] ?? [];
+                if (empty($ids)) return false;
+                $completed = $enrollment->lessonProgress()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('lesson_id', $ids)
+                    ->count();
+                return count($ids) > 0 && $completed >= count($ids);
+            })(),
+            default => $total > 0 && $completedCount >= $total, // all_lessons
+        };
+
+        if ($isComplete && !$enrollment->completed_at) {
             $enrollment->update([
                 'completed_at'     => now(),
-                'certificate_uuid' => (string) Str::uuid(),
+                'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
             ]);
         }
 
