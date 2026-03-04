@@ -34,6 +34,11 @@ resources/
         Edit.jsx                # /admin/courses/{id}/edit — details + curriculum builder
       Admin/Lessons/
         Edit.jsx                # /admin/lessons/{id}/edit — video/text/quiz editor
+      Courses/
+        Index.jsx               # /courses — public catalog with filters
+        Show.jsx                # /courses/{slug} — detail, curriculum, enroll
+      Learn/
+        Show.jsx                # /learn/{slug}/lesson/{id} — full lesson player
       Auth/                     # Breeze auth pages (Login, Register, etc.)
       Profile/                  # Profile edit (Breeze)
   css/
@@ -46,6 +51,9 @@ app/
       Admin/CoursesController.php     # Course CRUD (index/create/store/edit/update/destroy)
       Admin/SectionsController.php    # Section CRUD + reorder
       Admin/LessonsController.php     # Lesson CRUD + reorder + content editor
+      CourseController.php            # Public catalog + course detail page
+      EnrollmentController.php        # Enroll in a course, resume from last lesson
+      LearnController.php             # Lesson player + mark-complete + completion check
       ProfileController.php           # Profile management (Breeze)
     Middleware/
       EnsureUserIsAdmin.php           # Blocks non-admin users from /admin/*
@@ -105,8 +113,6 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 2. **Auth** ✅ — Email/password (Breeze), RBAC roles, admin middleware
 3. **Dashboard Pages** ✅ — Learner dashboard + Admin dashboard with layouts
 4. **Course Builder (Admin)** ✅ — Course CRUD, section/lesson management, video/text/quiz editors
-5. Course Catalog — Public `/courses` listing, filter, enroll
-6. Course Player — Lesson viewer (video/text), curriculum sidebar, progress tracking
-7. Quiz System — Auto-graded MCQ with pass/fail feedback
-8. Certificate Generation — PDF certificate on 100% completion
-9. User Management — Admin user list, role editing
+5. **Course Player** ✅ — Catalog, course detail, enrollment, lesson player (video/text/quiz), progress tracking
+6. Certificate Generation — PDF certificate on 100% completion
+7. User Management — Admin user list, role editing

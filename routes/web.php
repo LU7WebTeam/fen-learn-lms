@@ -4,7 +4,10 @@ use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
 use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\LearnController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -19,8 +22,18 @@ Route::get('/', function () {
     ]);
 });
 
+// Public course catalog + detail (auth optional)
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course:slug}', [CourseController::class, 'show'])->name('courses.show');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Enrollment + course player
+    Route::post('/courses/{course:slug}/enroll', [EnrollmentController::class, 'store'])->name('courses.enroll');
+    Route::get('/learn/{course:slug}', [LearnController::class, 'index'])->name('learn.index');
+    Route::get('/learn/{course:slug}/lesson/{lesson}', [LearnController::class, 'show'])->name('learn.lesson');
+    Route::post('/learn/{course:slug}/lesson/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
