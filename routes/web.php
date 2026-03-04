@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
 use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
@@ -21,6 +22,10 @@ Route::get('/', function () {
         'phpVersion'     => PHP_VERSION,
     ]);
 });
+
+// Public certificate verification + download (no auth required — UUID is the access key)
+Route::get('/certificate/{uuid}', [CertificateController::class, 'show'])->name('certificate.show');
+Route::get('/certificate/{uuid}/download', [CertificateController::class, 'download'])->name('certificate.download');
 
 // Public course catalog + detail (auth optional)
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

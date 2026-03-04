@@ -369,12 +369,21 @@ export default function LearnShow({
                                             <ChevronRight className="ml-1 h-4 w-4" />
                                         </Button>
                                     ) : (enrollment.completed_at || (completed && !nextLesson)) ? (
-                                        <Button asChild>
-                                            <Link href={route('courses.show', course.slug)}>
-                                                <Award className="mr-2 h-4 w-4" />
-                                                Course Complete!
-                                            </Link>
-                                        </Button>
+                                        enrollment.certificate_uuid ? (
+                                            <Button asChild className="bg-[#8B1A4A] hover:bg-[#7a1740] text-white">
+                                                <Link href={`/certificate/${enrollment.certificate_uuid}`}>
+                                                    <Award className="mr-2 h-4 w-4" />
+                                                    Get Certificate
+                                                </Link>
+                                            </Button>
+                                        ) : (
+                                            <Button asChild>
+                                                <Link href={route('courses.show', course.slug)}>
+                                                    <Award className="mr-2 h-4 w-4" />
+                                                    Course Complete!
+                                                </Link>
+                                            </Button>
+                                        )
                                     ) : null}
                                 </div>
                             </div>

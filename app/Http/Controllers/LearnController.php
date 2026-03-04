@@ -82,9 +82,10 @@ class LearnController extends Controller
             ],
             'lesson'           => $lesson,
             'enrollment'       => [
-                'id'           => $enrollment->id,
-                'progress'     => $enrollment->progress_percentage,
-                'completed_at' => $enrollment->completed_at,
+                'id'               => $enrollment->id,
+                'progress'         => $enrollment->progress_percentage,
+                'completed_at'     => $enrollment->completed_at,
+                'certificate_uuid' => $enrollment->certificate_uuid,
             ],
             'completedIds'     => $completedIds,
             'isCompleted'      => $isCompleted,

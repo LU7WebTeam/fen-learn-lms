@@ -73,8 +73,8 @@ function CourseCard({ enrollment, completed = false }) {
                     </Button>
                 )}
                 {completed && certificate_uuid && (
-                    <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/certificates/${certificate_uuid}`}>
+                    <Button asChild variant="outline" size="sm" className="flex-1 border-[#8B1A4A] text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white">
+                        <Link href={`/certificate/${certificate_uuid}`}>
                             <Award className="mr-1 h-3.5 w-3.5" />
                             View Certificate
                         </Link>

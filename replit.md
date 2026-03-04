@@ -114,5 +114,5 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 3. **Dashboard Pages** ✅ — Learner dashboard + Admin dashboard with layouts
 4. **Course Builder (Admin)** ✅ — Course CRUD, section/lesson management, video/text/quiz editors
 5. **Course Player** ✅ — Catalog, course detail, enrollment, lesson player (video/text/quiz), progress tracking
-6. Certificate Generation — PDF certificate on 100% completion
+6. **Certificate Generation** ✅ — PDF (landscape A4) on 100% completion, public verification page, download button in player + dashboard
 7. User Management — Admin user list, role editing
