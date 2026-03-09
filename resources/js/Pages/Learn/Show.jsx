@@ -2,6 +2,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
 import VideoPlayer from '@/Components/VideoPlayer';
 import UserMenu from '@/Components/UserMenu';
 import { Button } from '@/Components/ui/button';
@@ -479,13 +480,22 @@ export default function LearnShow({
                             )}
 
                             {/* ── Text ── */}
-                            {lesson.type === 'text' && !isLocked && (
-                                <div className="prose prose-sm dark:prose-invert max-w-none">
-                                    {lesson.content
-                                        ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
-                                        : <p className="text-muted-foreground">No content yet for this lesson.</p>}
-                                </div>
-                            )}
+                            {lesson.type === 'text' && !isLocked && (() => {
+                                if (!lesson.content) {
+                                    return <p className="text-muted-foreground">No content yet for this lesson.</p>;
+                                }
+                                try {
+                                    const blocks = JSON.parse(lesson.content);
+                                    if (Array.isArray(blocks)) {
+                                        return <BlockNoteRenderer content={blocks} />;
+                                    }
+                                } catch { /* not JSON */ }
+                                return (
+                                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
+                                    </div>
+                                );
+                            })()}
 
                             {/* ── Quiz ── */}
                             {lesson.type === 'quiz' && !isLocked && (

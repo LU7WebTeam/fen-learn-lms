@@ -6,6 +6,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Checkbox } from '@/Components/ui/checkbox';
+import BlockNoteEditor from '@/Components/BlockNoteEditor';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import InputError from '@/Components/InputError';
@@ -171,18 +172,20 @@ function VideoEditor({ data, setData, errors }) {
 }
 
 function TextEditor({ data, setData, errors }) {
+    let initialContent;
+    try {
+        const parsed = JSON.parse(data.content || '[]');
+        if (Array.isArray(parsed)) initialContent = parsed;
+    } catch { /* legacy markdown — start fresh */ }
+
     return (
-        <Field
-            label="Lesson Content"
-            error={errors.content}
-            hint="Write the lesson text. Markdown is supported and will be rendered for learners."
-        >
-            <Textarea
-                value={data.content ?? ''}
-                onChange={(e) => setData('content', e.target.value)}
-                placeholder="Write your lesson content here…"
-                rows={16}
-            />
+        <Field label="Lesson Content" error={errors.content}>
+            <div className="rounded-md border overflow-hidden">
+                <BlockNoteEditor
+                    initialContent={initialContent}
+                    onChange={(doc) => setData('content', JSON.stringify(doc))}
+                />
+            </div>
         </Field>
     );
 }
