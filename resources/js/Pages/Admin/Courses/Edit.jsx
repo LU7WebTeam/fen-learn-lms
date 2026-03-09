@@ -13,11 +13,12 @@ import InputError from '@/Components/InputError';
 import ImageUpload from '@/Components/ImageUpload';
 import CertificateBuilder from './CertificateBuilder';
 import CourseDashboard from './CourseDashboard';
+import BlockNoteEditor from '@/Components/BlockNoteEditor';
 import { useState } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
-    Award, BookOpen, Settings2, BarChart3, Users
+    Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
@@ -320,6 +321,66 @@ function AddSectionForm({ course, onDone }) {
     );
 }
 
+function CourseIntroductionForm({ course }) {
+    const [content, setContent] = useState(
+        Array.isArray(course.introduction) && course.introduction.length > 0
+            ? course.introduction
+            : null
+    );
+    const [saving, setSaving] = useState(false);
+    const [saved,  setSaved]  = useState(false);
+
+    function handleSave() {
+        setSaving(true);
+        router.patch(
+            route('admin.courses.introduction.update', course.id),
+            { introduction: content },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSaving(false);
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 2500);
+                },
+                onError: () => setSaving(false),
+            }
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div>
+                <h3 className="text-lg font-semibold">Course Introduction</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                    This is shown on the public course page — use it as a mini landing page with images, video links, headings, and rich text.
+                    Learners and visitors see it before enrolling.
+                </p>
+            </div>
+
+            <div className="rounded-xl border overflow-hidden">
+                <BlockNoteEditor
+                    key={course.id}
+                    initialContent={content}
+                    onChange={setContent}
+                />
+            </div>
+
+            <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                    Supported: headings, paragraphs, lists, images, videos, tables, dividers, and more.
+                </p>
+                <Button onClick={handleSave} disabled={saving}>
+                    {saved
+                        ? <><Check className="mr-2 h-4 w-4" />Saved!</>
+                        : saving
+                            ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</>
+                            : 'Save Introduction'}
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats }) {
     const [addingSection, setAddingSection] = useState(false);
 
@@ -378,6 +439,12 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                     <Users className="h-2.5 w-2.5 mr-0.5 inline" />
                                     {analytics.total_enrollments}
                                 </Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="introduction" className="gap-2">
+                            <LayoutTemplate className="h-4 w-4" />Introduction
+                            {Array.isArray(course.introduction) && course.introduction.length > 0 && (
+                                <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">Live</Badge>
                             )}
                         </TabsTrigger>
                     </TabsList>
@@ -446,6 +513,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             students={students}
                             lessonStats={lessonStats}
                         />
+                    </TabsContent>
+
+                    {/* ── Introduction tab ── */}
+                    <TabsContent value="introduction" className="mt-6">
+                        <CourseIntroductionForm course={course} />
                     </TabsContent>
                 </Tabs>
             </div>

@@ -7,6 +7,7 @@ import { Progress } from '@/Components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/Components/ui/accordion';
 import { Separator } from '@/Components/ui/separator';
 import { BookOpen, Play, Award, Clock, ChevronRight, Video, FileText, HelpCircle, Check, Lock } from 'lucide-react';
+import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
 
 const DIFFICULTY_COLORS = { beginner: 'secondary', intermediate: 'default', advanced: 'destructive' };
 
@@ -134,6 +135,17 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         </div>
                     </div>
                 </div>
+
+                {/* Introduction (BlockNote rich content) */}
+                {Array.isArray(course.introduction) && course.introduction.length > 0 && (
+                    <>
+                        <Separator className="my-8" />
+                        <div>
+                            <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
+                            <BlockNoteRenderer content={course.introduction} />
+                        </div>
+                    </>
+                )}
 
                 <Separator className="my-8" />
 

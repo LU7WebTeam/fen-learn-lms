@@ -16,6 +16,7 @@ class Course extends Model
         'title',
         'slug',
         'description',
+        'introduction',
         'cover_image',
         'category',
         'difficulty',
@@ -31,6 +32,7 @@ class Course extends Model
     {
         return [
             'certificate_template' => 'array',
+            'introduction'         => 'array',
         ];
     }
 

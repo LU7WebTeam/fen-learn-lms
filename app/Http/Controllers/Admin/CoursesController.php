@@ -150,6 +150,17 @@ class CoursesController extends Controller
         ]);
     }
 
+    public function updateIntroduction(Request $request, Course $course): RedirectResponse
+    {
+        $request->validate([
+            'introduction' => 'nullable|array',
+        ]);
+
+        $course->update(['introduction' => $request->input('introduction')]);
+
+        return back()->with('success', 'Introduction saved.');
+    }
+
     public function updateCertificate(Request $request, Course $course): RedirectResponse
     {
         $validated = $request->validate([
