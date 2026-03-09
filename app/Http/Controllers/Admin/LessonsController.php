@@ -7,6 +7,7 @@ use App\Models\Lesson;
 use App\Models\Section;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,7 +17,7 @@ class LessonsController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'type'  => 'required|in:video,text,quiz',
+            'type'  => 'required|in:video,text,quiz,pdf',
         ]);
 
         $order = $section->lessons()->max('order') + 1;
@@ -50,15 +51,33 @@ class LessonsController extends Controller
         ];
 
         if ($lesson->type === 'video') {
-            $rules['video_url'] = 'nullable|url|max:500';
-            $rules['content']   = 'nullable|string';
+            $rules['video_url']   = 'nullable|string|max:500';
+            $rules['video_file']  = 'nullable|file|mimetypes:video/mp4,video/webm,video/ogg,video/quicktime|max:204800';
+            $rules['content']     = 'nullable|string';
         } elseif ($lesson->type === 'text') {
             $rules['content'] = 'nullable|string';
         } elseif ($lesson->type === 'quiz') {
             $rules['content'] = 'nullable|string';
+        } elseif ($lesson->type === 'pdf') {
+            $rules['pdf_url']  = 'nullable|string|max:500';
+            $rules['pdf_file'] = 'nullable|file|mimetypes:application/pdf|max:20480';
         }
 
         $validated = $request->validate($rules);
+
+        if ($lesson->type === 'video' && $request->hasFile('video_file')) {
+            $this->deleteStoredFile($lesson->video_url);
+            $path = $request->file('video_file')->store('videos', 'public');
+            $validated['video_url'] = Storage::url($path);
+        }
+        unset($validated['video_file']);
+
+        if ($lesson->type === 'pdf' && $request->hasFile('pdf_file')) {
+            $this->deleteStoredFile($lesson->pdf_url);
+            $path = $request->file('pdf_file')->store('pdfs', 'public');
+            $validated['pdf_url'] = Storage::url($path);
+        }
+        unset($validated['pdf_file']);
 
         $lesson->update($validated);
 
@@ -67,6 +86,9 @@ class LessonsController extends Controller
 
     public function destroy(Lesson $lesson): RedirectResponse
     {
+        $this->deleteStoredFile($lesson->video_url);
+        $this->deleteStoredFile($lesson->pdf_url);
+
         $courseId = $lesson->section->course_id;
         $lesson->delete();
 
@@ -86,5 +108,14 @@ class LessonsController extends Controller
         }
 
         return back();
+    }
+
+    private function deleteStoredFile(?string $url): void
+    {
+        if (!$url) return;
+        if (str_contains($url, '/storage/')) {
+            $path = preg_replace('#^.*/storage/#', '', $url);
+            Storage::disk('public')->delete($path);
+        }
     }
 }

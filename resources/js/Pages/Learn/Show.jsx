@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
+const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: FileText };
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
@@ -349,6 +349,40 @@ export default function LearnShow({
                             {/* ── Quiz ── */}
                             {lesson.type === 'quiz' && (
                                 <QuizPlayer lesson={lesson} course={course} lastAttempt={lastAttempt} />
+                            )}
+
+                            {/* ── PDF ── */}
+                            {lesson.type === 'pdf' && (
+                                <div className="space-y-4">
+                                    {lesson.pdf_url ? (
+                                        <>
+                                            <div className="overflow-hidden rounded-lg border bg-muted" style={{ height: '75vh' }}>
+                                                <iframe
+                                                    src={lesson.pdf_url}
+                                                    className="h-full w-full"
+                                                    title={lesson.title}
+                                                />
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <a
+                                                    href={lesson.pdf_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-sm text-primary hover:underline"
+                                                >
+                                                    Open in new tab ↗
+                                                </a>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="text-muted-foreground">No PDF attached to this lesson yet.</p>
+                                    )}
+                                    {lesson.content && (
+                                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             <Separator className="my-8" />

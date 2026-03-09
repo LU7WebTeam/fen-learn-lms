@@ -9,13 +9,15 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import InputError from '@/Components/InputError';
-import { useState } from 'react';
-import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle } from 'lucide-react';
+import PdfUpload from '@/Components/PdfUpload';
+import { useRef, useState } from 'react';
+import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2 } from 'lucide-react';
 
 const TYPE_META = {
-    video: { icon: Video,       label: 'Video',  color: 'text-blue-500'  },
-    text:  { icon: FileText,    label: 'Text',   color: 'text-green-500' },
-    quiz:  { icon: HelpCircle,  label: 'Quiz',   color: 'text-purple-500'},
+    video: { icon: Video,       label: 'Video',     color: 'text-blue-500'   },
+    text:  { icon: FileText,    label: 'Text',      color: 'text-green-500'  },
+    quiz:  { icon: HelpCircle,  label: 'Quiz',      color: 'text-purple-500' },
+    pdf:   { icon: FileText,    label: 'PDF',       color: 'text-red-500'    },
 };
 
 function Field({ label, error, hint, children }) {
@@ -29,29 +31,128 @@ function Field({ label, error, hint, children }) {
     );
 }
 
+function ModeTab({ active, onClick, icon: Icon, label }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={[
+                'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium transition-colors',
+                active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+            ].join(' ')}
+        >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+        </button>
+    );
+}
+
 function VideoEditor({ data, setData, errors }) {
+    const [mode, setMode] = useState(() =>
+        data.video_url && data.video_url.includes('/storage/') ? 'upload' : 'url'
+    );
+    const fileInputRef = useRef();
+
+    const uploadedName = data.video_url && data.video_url.includes('/storage/')
+        ? decodeURIComponent(data.video_url.split('/').pop())
+        : null;
+    const pendingFile = data.video_file instanceof File ? data.video_file : null;
+    const displayName = pendingFile ? pendingFile.name : uploadedName;
+
+    function handleVideoFile(file) {
+        if (!file) return;
+        setData('video_file', file);
+    }
+
+    function clearVideo() {
+        setData('video_file', null);
+        setData('video_url', '');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+
     return (
         <div className="space-y-5">
-            <Field
-                label="Video URL"
-                error={errors.video_url}
-                hint="Paste a YouTube, Vimeo, or direct .mp4 URL."
-            >
-                <Input
-                    value={data.video_url ?? ''}
-                    onChange={(e) => setData('video_url', e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    type="url"
-                />
-            </Field>
+            <div className="flex rounded-lg border p-1 gap-1 w-fit">
+                <ModeTab active={mode === 'url'}    onClick={() => setMode('url')}    icon={Link2}   label="External URL" />
+                <ModeTab active={mode === 'upload'} onClick={() => setMode('upload')} icon={Upload}  label="Upload file"  />
+            </div>
 
-            {data.video_url && data.video_url.includes('youtube.com') && (
-                <div className="aspect-video overflow-hidden rounded-lg border bg-black">
-                    <iframe
-                        className="h-full w-full"
-                        src={`https://www.youtube.com/embed/${new URL(data.video_url).searchParams.get('v')}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+            {mode === 'url' && (
+                <>
+                    <Field label="Video URL" error={errors.video_url} hint="Paste a YouTube, Vimeo, or direct .mp4 URL.">
+                        <Input
+                            value={data.video_url ?? ''}
+                            onChange={(e) => setData('video_url', e.target.value)}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            type="url"
+                        />
+                    </Field>
+
+                    {data.video_url && data.video_url.includes('youtube.com') && (() => {
+                        try {
+                            const vid = new URL(data.video_url).searchParams.get('v');
+                            return vid ? (
+                                <div className="aspect-video overflow-hidden rounded-lg border bg-black">
+                                    <iframe
+                                        className="h-full w-full"
+                                        src={`https://www.youtube.com/embed/${vid}`}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            ) : null;
+                        } catch { return null; }
+                    })()}
+                </>
+            )}
+
+            {mode === 'upload' && (
+                <div className="space-y-2">
+                    {displayName ? (
+                        <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3">
+                            <Video className="h-8 w-8 flex-shrink-0 text-blue-500" />
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium">{displayName}</p>
+                                {uploadedName && !pendingFile && (
+                                    <a href={data.video_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                                        View current file ↗
+                                    </a>
+                                )}
+                                {pendingFile && (
+                                    <p className="text-xs text-muted-foreground">
+                                        {(pendingFile.size / 1024 / 1024).toFixed(1)} MB — will be uploaded on save
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex shrink-0 gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                                    <Upload className="mr-1.5 h-3.5 w-3.5" /> Replace
+                                </Button>
+                                <Button type="button" variant="ghost" size="sm" onClick={clearVideo}>
+                                    Clear
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div
+                            className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                            onClick={() => fileInputRef.current?.click()}
+                            onDrop={(e) => { e.preventDefault(); handleVideoFile(e.dataTransfer.files[0]); }}
+                            onDragOver={(e) => e.preventDefault()}
+                        >
+                            <Video className="h-10 w-10" />
+                            <p className="text-sm font-medium">Click or drag & drop to upload</p>
+                            <p className="text-xs">MP4, WebM, MOV — up to 200 MB</p>
+                        </div>
+                    )}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                        className="hidden"
+                        onChange={(e) => handleVideoFile(e.target.files[0])}
                     />
                 </div>
             )}
@@ -78,76 +179,92 @@ function TextEditor({ data, setData, errors }) {
             <Textarea
                 value={data.content ?? ''}
                 onChange={(e) => setData('content', e.target.value)}
-                placeholder="# Lesson Title&#10;&#10;Write your lesson content here…"
-                rows={20}
-                className="font-mono text-sm"
+                placeholder="Write your lesson content here…"
+                rows={16}
             />
         </Field>
     );
 }
 
+function PdfEditor({ data, setData, errors }) {
+    return (
+        <div className="space-y-4">
+            <Field label="PDF File" error={errors.pdf_file || errors.pdf_url}>
+                <PdfUpload
+                    value={data.pdf_file instanceof File ? data.pdf_file : (data.pdf_url ?? '')}
+                    onFileChange={(file) => setData('pdf_file', file)}
+                    onClear={() => { setData('pdf_file', null); setData('pdf_url', ''); }}
+                />
+            </Field>
+            <Field
+                label="Description (optional)"
+                error={errors.content}
+                hint="Briefly describe what this PDF covers."
+            >
+                <Textarea
+                    value={data.content ?? ''}
+                    onChange={(e) => setData('content', e.target.value)}
+                    placeholder="This PDF covers…"
+                    rows={4}
+                />
+            </Field>
+        </div>
+    );
+}
+
 function QuizEditor({ data, setData, errors }) {
-    const EMPTY_QUESTION = { question: '', options: ['', '', '', ''], correct: 0 };
-
+    const rawContent = data.content ?? '';
     let parsed = { questions: [], passing_score: 70 };
-    try {
-        const p = data.content ? JSON.parse(data.content) : {};
-        parsed.questions    = Array.isArray(p.questions) ? p.questions : [];
-        parsed.passing_score = p.passing_score ?? 70;
-    } catch { /* keep defaults */ }
+    try { parsed = JSON.parse(rawContent); } catch {}
 
-    const questions    = parsed.questions;
-    const passingScore = parsed.passing_score;
+    const questions   = parsed.questions    ?? [];
+    const passingScore = parsed.passing_score ?? 70;
 
-    function save(qs, ps) {
-        setData('content', JSON.stringify({
-            questions:    qs ?? questions,
-            passing_score: ps ?? passingScore,
-        }));
+    function save(qs = questions, ps = passingScore) {
+        setData('content', JSON.stringify({ questions: qs, passing_score: ps }));
     }
 
     function addQuestion() {
-        save([...questions, { ...EMPTY_QUESTION, options: ['', '', '', ''] }]);
+        save([...questions, { id: Date.now(), text: '', options: ['', '', '', ''], correct: 0 }]);
     }
 
-    function removeQuestion(qi) {
-        save(questions.filter((_, i) => i !== qi));
-    }
-
-    function updateQuestion(qi, field, value) {
-        const qs = questions.map((q, i) => i === qi ? { ...q, [field]: value } : q);
+    function updateQuestion(idx, field, value) {
+        const qs = questions.map((q, i) => i === idx ? { ...q, [field]: value } : q);
         save(qs);
     }
 
-    function updateOption(qi, oi, value) {
+    function updateOption(qIdx, oIdx, value) {
         const qs = questions.map((q, i) => {
-            if (i !== qi) return q;
-            const options = q.options.map((o, j) => j === oi ? value : o);
+            if (i !== qIdx) return q;
+            const options = q.options.map((o, j) => j === oIdx ? value : o);
             return { ...q, options };
         });
         save(qs);
     }
 
-    function addOption(qi) {
-        const qs = questions.map((q, i) => i === qi ? { ...q, options: [...q.options, ''] } : q);
+    function addOption(qIdx) {
+        const qs = questions.map((q, i) => i === qIdx ? { ...q, options: [...q.options, ''] } : q);
         save(qs);
     }
 
-    function removeOption(qi, oi) {
+    function removeOption(qIdx, oIdx) {
         const qs = questions.map((q, i) => {
-            if (i !== qi) return q;
-            const options = q.options.filter((_, j) => j !== oi);
-            const correct = q.correct >= oi && q.correct > 0 ? q.correct - 1 : q.correct;
+            if (i !== qIdx) return q;
+            const options = q.options.filter((_, j) => j !== oIdx);
+            const correct = q.correct >= options.length ? 0 : (q.correct > oIdx ? q.correct - 1 : q.correct);
             return { ...q, options, correct };
         });
         save(qs);
+    }
+
+    function removeQuestion(idx) {
+        save(questions.filter((_, i) => i !== idx));
     }
 
     return (
         <div className="space-y-6">
             {errors.content && <InputError message={errors.content} />}
 
-            {/* Passing score */}
             <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
                 <div className="flex-1">
                     <p className="text-sm font-medium">Passing score</p>
@@ -171,73 +288,79 @@ function QuizEditor({ data, setData, errors }) {
                     <p className="mb-4 text-sm text-muted-foreground">No questions yet.</p>
                     <Button onClick={addQuestion} type="button" variant="outline">
                         <Plus className="mr-2 h-4 w-4" />
-                        Add First Question
+                        Add first question
                     </Button>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {questions.map((q, qi) => (
-                        <Card key={qi}>
-                            <CardHeader className="pb-3">
-                                <div className="flex items-start gap-3">
-                                    <span className="mt-2 text-sm font-semibold text-muted-foreground shrink-0">Q{qi + 1}</span>
-                                    <div className="flex-1 space-y-1.5">
-                                        <Input
-                                            value={q.question}
-                                            onChange={(e) => updateQuestion(qi, 'question', e.target.value)}
-                                            placeholder="Enter the question…"
-                                        />
-                                    </div>
-                                    <Button
-                                        type="button" variant="ghost" size="icon"
-                                        className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
-                                        onClick={() => removeQuestion(qi)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                    {questions.map((q, qIdx) => (
+                        <Card key={q.id ?? qIdx}>
+                            <CardHeader className="flex flex-row items-start justify-between pb-2">
+                                <CardTitle className="text-sm font-medium">Question {qIdx + 1}</CardTitle>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                    onClick={() => removeQuestion(qIdx)}
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                             </CardHeader>
-                            <CardContent className="space-y-2">
-                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                    Answer options — click the radio to mark correct
-                                </p>
-                                {q.options.map((opt, oi) => (
-                                    <div key={oi} className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            name={`correct-${qi}`}
-                                            checked={q.correct === oi}
-                                            onChange={() => updateQuestion(qi, 'correct', oi)}
-                                            className="h-4 w-4 text-primary accent-primary shrink-0 cursor-pointer"
-                                            title="Mark as correct answer"
-                                        />
-                                        <Input
-                                            value={opt}
-                                            onChange={(e) => updateOption(qi, oi, e.target.value)}
-                                            placeholder={`Option ${oi + 1}`}
-                                            className={`flex-1 ${q.correct === oi ? 'border-green-500 ring-1 ring-green-200' : ''}`}
-                                        />
-                                        {q.options.length > 2 && (
-                                            <Button
-                                                type="button" variant="ghost" size="icon"
-                                                className="h-8 w-8 text-muted-foreground shrink-0"
-                                                onClick={() => removeOption(qi, oi)}
+                            <CardContent className="space-y-4">
+                                <Textarea
+                                    value={q.text}
+                                    onChange={(e) => updateQuestion(qIdx, 'text', e.target.value)}
+                                    placeholder="Enter your question…"
+                                    rows={2}
+                                />
+                                <div className="space-y-2">
+                                    <Label className="text-xs text-muted-foreground">Answer options — click the circle to mark the correct one</Label>
+                                    {q.options.map((opt, oIdx) => (
+                                        <div key={oIdx} className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
+                                                className={[
+                                                    'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                                                    q.correct === oIdx
+                                                        ? 'border-green-500 bg-green-500 text-white'
+                                                        : 'border-muted-foreground',
+                                                ].join(' ')}
                                             >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                ))}
-                                {q.options.length < 6 && (
-                                    <Button
-                                        type="button" variant="ghost" size="sm"
-                                        className="text-muted-foreground"
-                                        onClick={() => addOption(qi)}
-                                    >
-                                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                                        Add Option
-                                    </Button>
-                                )}
+                                                {q.correct === oIdx && <Check className="h-3 w-3" />}
+                                            </button>
+                                            <Input
+                                                value={opt}
+                                                onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
+                                                placeholder={`Option ${oIdx + 1}`}
+                                                className="h-8 text-sm"
+                                            />
+                                            {q.options.length > 2 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 flex-shrink-0"
+                                                    onClick={() => removeOption(qIdx, oIdx)}
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {q.options.length < 6 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs"
+                                            onClick={() => addOption(qIdx)}
+                                        >
+                                            <Plus className="mr-1 h-3 w-3" /> Add option
+                                        </Button>
+                                    )}
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
@@ -258,17 +381,21 @@ export default function EditLesson({ lesson, flash }) {
     const meta = TYPE_META[lesson.type] ?? TYPE_META.text;
     const Icon = meta.icon;
 
-    const { data, setData, patch, processing, errors, isDirty } = useForm({
+    const { data, setData, post, processing, errors, isDirty } = useForm({
+        _method:          'patch',
         title:            lesson.title,
         duration_minutes: lesson.duration_minutes ?? 0,
         is_free_preview:  lesson.is_free_preview ?? false,
         video_url:        lesson.video_url ?? '',
+        video_file:       null,
+        pdf_url:          lesson.pdf_url ?? '',
+        pdf_file:         null,
         content:          lesson.content ?? '',
     });
 
     function handleSubmit(e) {
         e.preventDefault();
-        patch(route('admin.lessons.update', lesson.id));
+        post(route('admin.lessons.update', lesson.id), { forceFormData: true });
     }
 
     return (
@@ -349,6 +476,7 @@ export default function EditLesson({ lesson, flash }) {
                     {lesson.type === 'video' && <VideoEditor data={data} setData={setData} errors={errors} />}
                     {lesson.type === 'text'  && <TextEditor  data={data} setData={setData} errors={errors} />}
                     {lesson.type === 'quiz'  && <QuizEditor  data={data} setData={setData} errors={errors} />}
+                    {lesson.type === 'pdf'   && <PdfEditor   data={data} setData={setData} errors={errors} />}
                 </div>
 
                 <div className="flex justify-between">

@@ -10,6 +10,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import InputError from '@/Components/InputError';
+import ImageUpload from '@/Components/ImageUpload';
 import CertificateBuilder from './CertificateBuilder';
 import CourseDashboard from './CourseDashboard';
 import { useState } from 'react';
@@ -25,6 +26,7 @@ const LESSON_ICONS = {
     video: Video,
     text:  FileText,
     quiz:  HelpCircle,
+    pdf:   FileText,
 };
 
 function Field({ label, error, children, hint }) {
@@ -39,19 +41,22 @@ function Field({ label, error, children, hint }) {
 }
 
 function CourseDetailsForm({ course }) {
-    const { data, setData, patch, processing, errors, isDirty } = useForm({
-        title:       course.title,
-        slug:        course.slug,
-        description: course.description ?? '',
-        cover_image: course.cover_image ?? '',
-        category:    course.category ?? '',
-        difficulty:  course.difficulty,
-        status:      course.status,
+    const { data, setData, post, processing, errors, isDirty } = useForm({
+        _method:           'patch',
+        title:             course.title,
+        slug:              course.slug,
+        description:       course.description ?? '',
+        cover_image:       course.cover_image ?? '',
+        cover_image_file:  null,
+        cover_image_clear: false,
+        category:          course.category ?? '',
+        difficulty:        course.difficulty,
+        status:            course.status,
     });
 
     function handleSubmit(e) {
         e.preventDefault();
-        patch(route('admin.courses.update', course.id));
+        post(route('admin.courses.update', course.id), { forceFormData: true });
     }
 
     return (
@@ -100,12 +105,18 @@ function CourseDetailsForm({ course }) {
                         </Field>
                     </div>
 
-                    <Field label="Cover Image URL" error={errors.cover_image}>
-                        <Input
+                    <Field label="Cover Image" error={errors.cover_image || errors.cover_image_file}>
+                        <ImageUpload
                             value={data.cover_image}
-                            onChange={(e) => setData('cover_image', e.target.value)}
-                            placeholder="https://example.com/cover.jpg"
-                            type="url"
+                            onFileChange={(file) => {
+                                setData('cover_image_file', file);
+                                setData('cover_image_clear', false);
+                            }}
+                            onClear={() => {
+                                setData('cover_image', '');
+                                setData('cover_image_file', null);
+                                setData('cover_image_clear', true);
+                            }}
                         />
                     </Field>
 
@@ -149,6 +160,7 @@ function AddLessonForm({ section, onDone }) {
                     <SelectItem value="video">Video</SelectItem>
                     <SelectItem value="text">Text</SelectItem>
                     <SelectItem value="quiz">Quiz</SelectItem>
+                    <SelectItem value="pdf">PDF</SelectItem>
                 </SelectContent>
             </Select>
             <Button type="submit" size="sm" disabled={processing || !data.title.trim()}>

@@ -1,19 +1,21 @@
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Textarea } from '@/Components/ui/textarea';
 import InputError from '@/Components/InputError';
+import ImageUpload from '@/Components/ImageUpload';
 import { Loader2 } from 'lucide-react';
 
-function Field({ label, error, children }) {
+function Field({ label, error, hint, children }) {
     return (
         <div className="space-y-1.5">
             <Label>{label}</Label>
             {children}
+            {hint  && <p className="text-xs text-muted-foreground">{hint}</p>}
             {error && <InputError message={error} />}
         </div>
     );
@@ -21,17 +23,19 @@ function Field({ label, error, children }) {
 
 export default function CreateCourse() {
     const { data, setData, post, processing, errors } = useForm({
-        title:       '',
-        slug:        '',
-        description: '',
-        cover_image: '',
-        category:    '',
-        difficulty:  'beginner',
+        title:             '',
+        slug:              '',
+        description:       '',
+        cover_image:       '',
+        cover_image_file:  null,
+        cover_image_clear: false,
+        category:          '',
+        difficulty:        'beginner',
     });
 
     function handleSubmit(e) {
         e.preventDefault();
-        post(route('admin.courses.store'));
+        post(route('admin.courses.store'), { forceFormData: true });
     }
 
     function slugify(value) {
@@ -109,12 +113,18 @@ export default function CreateCourse() {
                                 </Field>
                             </div>
 
-                            <Field label="Cover Image URL" error={errors.cover_image}>
-                                <Input
+                            <Field label="Cover Image" error={errors.cover_image || errors.cover_image_file}>
+                                <ImageUpload
                                     value={data.cover_image}
-                                    onChange={(e) => setData('cover_image', e.target.value)}
-                                    placeholder="https://example.com/image.jpg"
-                                    type="url"
+                                    onFileChange={(file) => {
+                                        setData('cover_image_file', file);
+                                        setData('cover_image_clear', false);
+                                    }}
+                                    onClear={() => {
+                                        setData('cover_image', '');
+                                        setData('cover_image_file', null);
+                                        setData('cover_image_clear', true);
+                                    }}
                                 />
                             </Field>
 

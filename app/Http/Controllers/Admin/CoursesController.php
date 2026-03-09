@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\LessonProgress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -34,13 +35,20 @@ class CoursesController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'slug'        => 'nullable|string|max:255|unique:courses,slug',
-            'description' => 'nullable|string',
-            'cover_image' => 'nullable|url|max:500',
-            'category'    => 'nullable|string|max:100',
-            'difficulty'  => 'required|in:beginner,intermediate,advanced',
+            'title'            => 'required|string|max:255',
+            'slug'             => 'nullable|string|max:255|unique:courses,slug',
+            'description'      => 'nullable|string',
+            'cover_image'      => 'nullable|string|max:500',
+            'cover_image_file' => 'nullable|file|image|max:5120',
+            'category'         => 'nullable|string|max:100',
+            'difficulty'       => 'required|in:beginner,intermediate,advanced',
         ]);
+
+        if ($request->hasFile('cover_image_file')) {
+            $path = $request->file('cover_image_file')->store('covers', 'public');
+            $validated['cover_image'] = Storage::url($path);
+        }
+        unset($validated['cover_image_file']);
 
         $slug = $validated['slug'] ?? Str::slug($validated['title']);
         $base = $slug;
@@ -77,10 +85,9 @@ class CoursesController extends Controller
             ? round(($completedCount / $totalEnrollments) * 100, 1) : 0;
         $certIssuedCount   = $course->enrollments()->whereNotNull('certificate_uuid')->count();
 
-        // Average progress across all enrollments
         $avgProgress = 0;
         if ($totalEnrollments > 0 && $totalLessons > 0) {
-            $enrollmentIds = $course->enrollments()->pluck('id');
+            $enrollmentIds  = $course->enrollments()->pluck('id');
             $totalCompleted = LessonProgress::whereIn('enrollment_id', $enrollmentIds)
                 ->whereNotNull('completed_at')
                 ->count();
@@ -97,7 +104,6 @@ class CoursesController extends Controller
             'cert_issued_count'  => $certIssuedCount,
         ];
 
-        // ── Per-lesson completion stats ────────────────────────────────────────
         $lessonStats = $course->sections()
             ->orderBy('order')
             ->with(['lessons' => function ($q) {
@@ -116,7 +122,6 @@ class CoursesController extends Controller
             ]))
             ->values();
 
-        // ── Enrolled students ──────────────────────────────────────────────────
         $students = $course->enrollments()
             ->with([
                 'user:id,name,email',
@@ -174,14 +179,26 @@ class CoursesController extends Controller
     public function update(Request $request, Course $course): RedirectResponse
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'slug'        => ['nullable', 'string', 'max:255', Rule::unique('courses', 'slug')->ignore($course->id)],
-            'description' => 'nullable|string',
-            'cover_image' => 'nullable|url|max:500',
-            'category'    => 'nullable|string|max:100',
-            'difficulty'  => 'required|in:beginner,intermediate,advanced',
-            'status'      => 'required|in:draft,review,published',
+            'title'            => 'required|string|max:255',
+            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('courses', 'slug')->ignore($course->id)],
+            'description'      => 'nullable|string',
+            'cover_image'      => 'nullable|string|max:500',
+            'cover_image_file' => 'nullable|file|image|max:5120',
+            'cover_image_clear'=> 'nullable|boolean',
+            'category'         => 'nullable|string|max:100',
+            'difficulty'       => 'required|in:beginner,intermediate,advanced',
+            'status'           => 'required|in:draft,review,published',
         ]);
+
+        if ($request->hasFile('cover_image_file')) {
+            $this->deleteStoredFile($course->cover_image);
+            $path = $request->file('cover_image_file')->store('covers', 'public');
+            $validated['cover_image'] = Storage::url($path);
+        } elseif ($request->boolean('cover_image_clear')) {
+            $this->deleteStoredFile($course->cover_image);
+            $validated['cover_image'] = null;
+        }
+        unset($validated['cover_image_file'], $validated['cover_image_clear']);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);
@@ -194,9 +211,19 @@ class CoursesController extends Controller
 
     public function destroy(Course $course): RedirectResponse
     {
+        $this->deleteStoredFile($course->cover_image);
         $course->delete();
 
         return redirect()->route('admin.courses.index')
             ->with('success', 'Course deleted.');
+    }
+
+    private function deleteStoredFile(?string $url): void
+    {
+        if (!$url) return;
+        if (str_contains($url, '/storage/')) {
+            $path = preg_replace('#^.*/storage/#', '', $url);
+            Storage::disk('public')->delete($path);
+        }
     }
 }
