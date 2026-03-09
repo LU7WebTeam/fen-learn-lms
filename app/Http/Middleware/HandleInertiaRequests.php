@@ -2,33 +2,33 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
+        try {
+            $platformName    = Setting::get('platform_name', 'Free LMS');
+            $platformTagline = Setting::get('platform_tagline', '');
+            $logoPath        = Setting::get('logo_path');
+            $faviconPath     = Setting::get('favicon_path');
+        } catch (\Throwable) {
+            $platformName    = 'Free LMS';
+            $platformTagline = '';
+            $logoPath        = null;
+            $faviconPath     = null;
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -39,7 +39,13 @@ class HandleInertiaRequests extends Middleware
                 'error'       => $request->session()->get('error'),
                 'quiz_result' => $request->session()->get('quiz_result'),
             ],
-            'locale' => $request->session()->get('locale', 'en'),
+            'locale'   => $request->session()->get('locale', 'en'),
+            'platform' => [
+                'name'        => $platformName,
+                'tagline'     => $platformTagline,
+                'logo_url'    => $logoPath ? asset('storage/' . $logoPath) : null,
+                'favicon_url' => $faviconPath ? asset('storage/' . $faviconPath) : null,
+            ],
         ];
     }
 }

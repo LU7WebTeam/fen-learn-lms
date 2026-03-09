@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
 use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
@@ -67,6 +68,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/courses/{course}/sections/reorder', [AdminSectionsController::class, 'reorder'])->name('courses.sections.reorder');
     Route::patch('/sections/{section}', [AdminSectionsController::class, 'update'])->name('sections.update');
     Route::delete('/sections/{section}', [AdminSectionsController::class, 'destroy'])->name('sections.destroy');
+
+    // Settings
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
+    Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
 
     // Media uploads (quick AJAX endpoints returning JSON)
     Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'image'])->name('upload.image');

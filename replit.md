@@ -121,11 +121,18 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 9. **Media Uploads** ✅ — Course cover images (drag & drop, preview, replace/clear), video lesson file upload (toggle URL ↔ upload), PDF lesson type with file upload + inline viewer; old files auto-deleted on replace
    - Files stored in `storage/app/public/` (covers/, videos/, pdfs/) served via `/storage/` symlink
    - Components: `ImageUpload.jsx`, `PdfUpload.jsx`
-10. **Bilingual Support (EN + Bahasa Melayu)** ✅ — Per-field translation for all course content
-    - DB columns: `title_ms`, `description_ms`, `introduction_ms` (courses); `title_ms`, `content_ms` (lessons); `title_ms` (sections)
-    - Locale stored in session (`en`/`ms`) via `POST /locale` → `LocaleController`; shared to all Inertia pages as `locale`
-    - Admin editors have EN|BM tab toggle for all fields (title, description, introduction, section titles, lesson title/content)
-    - Quiz BM mode: mirrors EN structure; only translates question text, option labels, feedback; correct/type/score from EN
+10. **Bilingual Support (EN + Bahasa Melayu)** ✅
+11. **Platform Settings** ✅ — Admin settings page with 6 groups: Branding, Registration & Access, Localization, Email/SMTP, Certificates, Maintenance
+    - Settings stored in `settings` key-value table via `Setting` model
+    - Branding: platform name, tagline, contact email, logo + favicon upload (`storage/app/public/branding/`)
+    - Registration: allow_registration toggle, default role, email verification toggle
+    - Localization: default platform language (EN/BM)
+    - Email/SMTP: mail driver, host, port, credentials, sender — applied dynamically via `AppServiceProvider`
+    - Certificates: global enable/disable override
+    - Maintenance: toggle + custom message → non-admins see `resources/views/maintenance.blade.php` (503)
+    - `HandleMaintenanceMode` middleware bypasses admins and auth routes
+    - `RegisteredUserController` respects `allow_registration`, `default_role`, `require_email_verification` settings
+    - `HandleInertiaRequests` shares `platform` prop (name, tagline, logo_url, favicon_url) to all pages
     - Public helper `tl(record, field, locale)` in `resources/js/lib/locale.js` — returns BM field if non-empty, else falls back to EN
     - `LangSwitcher.jsx` component in `AuthenticatedLayout` and `Learn/Show` header
     - All public pages (`Courses/Index`, `Courses/Show`, `Learn/Show`) fully localized with EN fallback
