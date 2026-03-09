@@ -12,7 +12,7 @@ import InputError from '@/Components/InputError';
 import PdfUpload from '@/Components/PdfUpload';
 import { uploadImageFile } from '@/Components/ImageUploadWithUrl';
 import { useRef, useState } from 'react';
-import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2, Image as ImageIcon, Type } from 'lucide-react';
+import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2, Image as ImageIcon, Type, Lock } from 'lucide-react';
 
 const TYPE_META = {
     video: { icon: Video,       label: 'Video',     color: 'text-blue-500'   },
@@ -277,14 +277,15 @@ function ImageOptionUpload({ value, onChange }) {
 
 function QuizEditor({ data, setData, errors }) {
     const rawContent = data.content ?? '';
-    let parsed = { questions: [], passing_score: 70 };
+    let parsed = { questions: [], passing_score: 70, max_attempts: 0 };
     try { parsed = JSON.parse(rawContent); } catch {}
 
     const questions    = parsed.questions    ?? [];
     const passingScore = parsed.passing_score ?? 70;
+    const maxAttempts  = parsed.max_attempts  ?? 0;
 
-    function save(qs = questions, ps = passingScore) {
-        setData('content', JSON.stringify({ questions: qs, passing_score: ps }));
+    function save(qs = questions, ps = passingScore, ma = maxAttempts) {
+        setData('content', JSON.stringify({ questions: qs, passing_score: ps, max_attempts: ma }));
     }
 
     function addQuestion() {
@@ -349,21 +350,44 @@ function QuizEditor({ data, setData, errors }) {
         <div className="space-y-6">
             {errors.content && <InputError message={errors.content} />}
 
-            <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
-                <div className="flex-1">
-                    <p className="text-sm font-medium">Passing score</p>
-                    <p className="text-xs text-muted-foreground">Minimum percentage required to pass this quiz</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">Passing score</p>
+                        <p className="text-xs text-muted-foreground">Min % required to pass</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <Input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={passingScore}
+                            onChange={(e) => save(undefined, Math.min(100, Math.max(1, parseInt(e.target.value) || 70)))}
+                            className="w-20 text-center"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={passingScore}
-                        onChange={(e) => save(undefined, Math.min(100, Math.max(1, parseInt(e.target.value) || 70)))}
-                        className="w-20 text-center"
-                    />
-                    <span className="text-sm text-muted-foreground">%</span>
+
+                <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">Allowed attempts</p>
+                        <p className="text-xs text-muted-foreground">How many times a learner can take this quiz</p>
+                    </div>
+                    <div className="shrink-0">
+                        <select
+                            value={maxAttempts}
+                            onChange={(e) => save(undefined, undefined, parseInt(e.target.value))}
+                            className="rounded-md border bg-background px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                            <option value={0}>Unlimited</option>
+                            <option value={1}>1 — once only</option>
+                            <option value={2}>2</option>
+                            <option value={3}>3</option>
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -510,20 +534,21 @@ function QuizEditor({ data, setData, errors }) {
     );
 }
 
-export default function EditLesson({ lesson, flash }) {
+export default function EditLesson({ lesson, courseLessons = [], flash }) {
     const meta = TYPE_META[lesson.type] ?? TYPE_META.text;
     const Icon = meta.icon;
 
     const { data, setData, post, processing, errors, isDirty } = useForm({
-        _method:          'patch',
-        title:            lesson.title,
-        duration_minutes: lesson.duration_minutes ?? 0,
-        is_free_preview:  lesson.is_free_preview ?? false,
-        video_url:        lesson.video_url ?? '',
-        video_file:       null,
-        pdf_url:          lesson.pdf_url ?? '',
-        pdf_file:         null,
-        content:          lesson.content ?? '',
+        _method:                 'patch',
+        title:                   lesson.title,
+        duration_minutes:        lesson.duration_minutes ?? 0,
+        is_free_preview:         lesson.is_free_preview ?? false,
+        prerequisite_lesson_id:  lesson.prerequisite_lesson_id ?? '',
+        video_url:               lesson.video_url ?? '',
+        video_file:              null,
+        pdf_url:                 lesson.pdf_url ?? '',
+        pdf_file:                null,
+        content:                 lesson.content ?? '',
     });
 
     function handleSubmit(e) {
@@ -585,6 +610,29 @@ export default function EditLesson({ lesson, flash }) {
                                 />
                             </Field>
                         </div>
+                        {courseLessons.length > 0 && (
+                            <div className="mt-5">
+                                <Field
+                                    label={<span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" />Prerequisite lesson</span>}
+                                    hint="Learners must complete this lesson before accessing the current one."
+                                    error={errors.prerequisite_lesson_id}
+                                >
+                                    <select
+                                        value={data.prerequisite_lesson_id ?? ''}
+                                        onChange={(e) => setData('prerequisite_lesson_id', e.target.value || '')}
+                                        className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    >
+                                        <option value="">None — no prerequisite</option>
+                                        {courseLessons.map((l) => (
+                                            <option key={l.id} value={l.id}>
+                                                {l.section} → {l.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </Field>
+                            </div>
+                        )}
+
                         <div className="mt-5 flex items-center gap-2">
                             <Checkbox
                                 id="free-preview"

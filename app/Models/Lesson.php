@@ -21,6 +21,7 @@ class Lesson extends Model
         'order',
         'duration_minutes',
         'is_free_preview',
+        'prerequisite_lesson_id',
     ];
 
     protected function casts(): array

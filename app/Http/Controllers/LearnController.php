@@ -54,7 +54,7 @@ class LearnController extends Controller
         $course->load(['sections' => function ($q) {
             $q->orderBy('order')->with(['lessons' => function ($q2) {
                 $q2->orderBy('order')
-                    ->select(['id', 'section_id', 'title', 'type', 'duration_minutes', 'is_free_preview', 'order']);
+                    ->select(['id', 'section_id', 'title', 'type', 'duration_minutes', 'is_free_preview', 'order', 'prerequisite_lesson_id']);
             }]);
         }]);
 
@@ -74,8 +74,20 @@ class LearnController extends Controller
 
         $isCompleted = in_array($lesson->id, $completedIds);
 
-        // For quiz lessons: strip correct answers + load last attempt
+        // Prerequisite check
+        $isLocked          = false;
+        $prerequisiteLesson = null;
+        if ($lesson->prerequisite_lesson_id) {
+            $isLocked = !in_array($lesson->prerequisite_lesson_id, $completedIds);
+            if ($isLocked) {
+                $prereq = \App\Models\Lesson::find($lesson->prerequisite_lesson_id);
+                $prerequisiteLesson = $prereq ? ['id' => $prereq->id, 'title' => $prereq->title] : null;
+            }
+        }
+
+        // For quiz lessons: strip correct answers + load all attempts
         $lessonData  = $lesson->toArray();
+        $allAttempts = [];
         $lastAttempt = null;
 
         if ($lesson->type === 'quiz') {
@@ -88,20 +100,21 @@ class LearnController extends Controller
             }
             $lessonData['content'] = json_encode($quizData);
 
-            $attempt = QuizAttempt::where('user_id', $request->user()->id)
+            $attempts = QuizAttempt::where('user_id', $request->user()->id)
                 ->where('lesson_id', $lesson->id)
-                ->latest()
-                ->first();
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn($a) => [
+                    'attempt_number' => $a->attempt_number,
+                    'score'          => $a->score,
+                    'max_score'      => $a->max_score,
+                    'percentage'     => $a->percentage,
+                    'passed'         => $a->passed,
+                    'created_at'     => $a->created_at->format('M j, Y g:i a'),
+                ]);
 
-            if ($attempt) {
-                $lastAttempt = [
-                    'score'      => $attempt->score,
-                    'max_score'  => $attempt->max_score,
-                    'percentage' => $attempt->percentage,
-                    'passed'     => $attempt->passed,
-                    'created_at' => $attempt->created_at,
-                ];
-            }
+            $allAttempts = $attempts->values()->all();
+            $lastAttempt = $attempts->last();
         }
 
         return Inertia::render('Learn/Show', [
@@ -111,18 +124,21 @@ class LearnController extends Controller
                 'slug'     => $course->slug,
                 'sections' => $course->sections,
             ],
-            'lesson'           => $lessonData,
-            'enrollment'       => [
+            'lesson'             => $lessonData,
+            'enrollment'         => [
                 'id'               => $enrollment->id,
                 'progress'         => $enrollment->progress_percentage,
                 'completed_at'     => $enrollment->completed_at,
                 'certificate_uuid' => $enrollment->certificate_uuid,
             ],
-            'completedIds'     => $completedIds,
-            'isCompleted'      => $isCompleted,
-            'nextLesson'       => $next ? ['id' => $next->id, 'title' => $next->title] : null,
-            'prevLesson'       => $prev ? ['id' => $prev->id, 'title' => $prev->title] : null,
-            'lastAttempt'      => $lastAttempt,
+            'completedIds'       => $completedIds,
+            'isCompleted'        => $isCompleted,
+            'isLocked'           => $isLocked,
+            'prerequisiteLesson' => $prerequisiteLesson,
+            'nextLesson'         => $next ? ['id' => $next->id, 'title' => $next->title] : null,
+            'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title] : null,
+            'lastAttempt'        => $lastAttempt,
+            'allAttempts'        => $allAttempts,
         ]);
     }
 
@@ -199,7 +215,17 @@ class LearnController extends Controller
         $quizData     = json_decode($lesson->content ?? '{}', true) ?? [];
         $questions    = $quizData['questions'] ?? [];
         $passingScore = (int) ($quizData['passing_score'] ?? 70);
+        $maxAttempts  = (int) ($quizData['max_attempts'] ?? 0);
         $answers      = $request->input('answers', []);
+
+        // Enforce attempt limit
+        $attemptCount = QuizAttempt::where('user_id', $request->user()->id)
+            ->where('lesson_id', $lesson->id)
+            ->count();
+
+        if ($maxAttempts > 0 && $attemptCount >= $maxAttempts) {
+            return back()->with('error', 'You have used all your allowed attempts for this quiz.');
+        }
 
         $correct   = 0;
         $total     = count($questions);
@@ -224,13 +250,14 @@ class LearnController extends Controller
         $passed     = $percentage >= $passingScore;
 
         QuizAttempt::create([
-            'user_id'       => $request->user()->id,
-            'lesson_id'     => $lesson->id,
-            'enrollment_id' => $enrollment->id,
-            'answers'       => $answers,
-            'score'         => $correct,
-            'max_score'     => $total,
-            'passed'        => $passed,
+            'user_id'        => $request->user()->id,
+            'lesson_id'      => $lesson->id,
+            'enrollment_id'  => $enrollment->id,
+            'attempt_number' => $attemptCount + 1,
+            'answers'        => $answers,
+            'score'          => $correct,
+            'max_score'      => $total,
+            'passed'         => $passed,
         ]);
 
         // If passed, mark lesson complete using existing completion logic

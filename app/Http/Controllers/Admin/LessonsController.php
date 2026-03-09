@@ -34,20 +34,32 @@ class LessonsController extends Controller
 
     public function edit(Lesson $lesson): Response
     {
-        $lesson->load('section.course');
+        $lesson->load('section.course.sections.lessons');
+
+        $courseLessons = $lesson->section->course->sections
+            ->flatMap(fn($s) => $s->lessons->map(fn($l) => [
+                'id'      => $l->id,
+                'title'   => $l->title,
+                'section' => $s->title,
+                'type'    => $l->type,
+            ]))
+            ->filter(fn($l) => $l['id'] !== $lesson->id)
+            ->values();
 
         return Inertia::render('Admin/Lessons/Edit', [
-            'lesson' => $lesson,
-            'flash'  => session()->only(['success', 'error']),
+            'lesson'        => $lesson,
+            'courseLessons' => $courseLessons,
+            'flash'         => session()->only(['success', 'error']),
         ]);
     }
 
     public function update(Request $request, Lesson $lesson): RedirectResponse
     {
         $rules = [
-            'title'            => 'required|string|max:255',
-            'duration_minutes' => 'nullable|integer|min:0',
-            'is_free_preview'  => 'boolean',
+            'title'                   => 'required|string|max:255',
+            'duration_minutes'        => 'nullable|integer|min:0',
+            'is_free_preview'         => 'boolean',
+            'prerequisite_lesson_id'  => 'nullable|integer|exists:lessons,id',
         ];
 
         if ($lesson->type === 'video') {

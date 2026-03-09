@@ -11,6 +11,7 @@ class QuizAttempt extends Model
         'user_id',
         'lesson_id',
         'enrollment_id',
+        'attempt_number',
         'answers',
         'score',
         'max_score',

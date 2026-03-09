@@ -11,7 +11,7 @@ import { Separator } from '@/Components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import {
     Check, ChevronLeft, ChevronRight, Menu,
-    Video, FileText, HelpCircle, GraduationCap, Award
+    Video, FileText, HelpCircle, GraduationCap, Award, Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,11 +19,11 @@ const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: File
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
-function QuizPlayer({ lesson, course, lastAttempt }) {
+function QuizPlayer({ lesson, course, allAttempts = [] }) {
     const { flash } = usePage().props;
     const result = flash?.quiz_result ?? null;
 
-    let quizData = { questions: [], passing_score: 70 };
+    let quizData = { questions: [], passing_score: 70, max_attempts: 0 };
     try {
         quizData = JSON.parse(lesson.content || '{}');
         if (!Array.isArray(quizData.questions)) quizData.questions = [];
@@ -31,6 +31,10 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
 
     const questions    = quizData.questions;
     const passingScore = quizData.passing_score ?? 70;
+    const maxAttempts  = quizData.max_attempts  ?? 0;
+    const attemptsDone = allAttempts.length;
+    const attemptsLeft = maxAttempts > 0 ? maxAttempts - attemptsDone : Infinity;
+    const limitReached = maxAttempts > 0 && attemptsDone >= maxAttempts;
 
     const { data, setData, post, processing } = useForm({ answers: {} });
 
@@ -42,7 +46,6 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
 
     function handleRetry() {
         setData('answers', {});
-        // Clear flash by navigating to self (Inertia reload)
         router.reload({ only: ['flash'] });
     }
 
@@ -56,11 +59,59 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
     }
 
     const showResult = !!result;
+    const lastAttempt = allAttempts.length > 0 ? allAttempts[allAttempts.length - 1] : null;
 
     return (
         <div className="space-y-6">
-            {/* Previous attempt banner (shown before any submission this session) */}
-            {!showResult && lastAttempt && (
+            {/* Attempt counter */}
+            {maxAttempts > 0 && !showResult && (
+                <div className={cn(
+                    'flex items-center gap-2 rounded-lg border px-4 py-3 text-sm',
+                    limitReached
+                        ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400'
+                        : 'border-border bg-muted/40 text-muted-foreground'
+                )}>
+                    <Lock className="h-4 w-4 shrink-0" />
+                    {limitReached
+                        ? `You have used all ${maxAttempts} allowed attempt${maxAttempts !== 1 ? 's' : ''} for this quiz.`
+                        : `${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining of ${maxAttempts} allowed`}
+                </div>
+            )}
+
+            {/* Attempt history (shown before any submission this session) */}
+            {!showResult && allAttempts.length > 0 && (
+                <div className="rounded-lg border overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b">
+                        <p className="text-sm font-medium">Your attempt history</p>
+                        <span className="text-xs text-muted-foreground">Best: {Math.max(...allAttempts.map(a => a.percentage))}%</span>
+                    </div>
+                    <div className="divide-y">
+                        {allAttempts.map((a, i) => (
+                            <div key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                                <span className="text-muted-foreground">Attempt {a.attempt_number}</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="hidden sm:block w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                                        <div
+                                            className={cn('h-full rounded-full', a.passed ? 'bg-green-500' : 'bg-amber-400')}
+                                            style={{ width: `${a.percentage}%` }}
+                                        />
+                                    </div>
+                                    <span className={cn('font-medium tabular-nums', a.passed ? 'text-green-600' : 'text-amber-600')}>
+                                        {a.percentage}%
+                                    </span>
+                                    {a.passed
+                                        ? <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                                        : <span className="text-xs text-muted-foreground shrink-0">need {passingScore}%</span>}
+                                    <span className="hidden md:block text-xs text-muted-foreground shrink-0">{a.created_at}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Previous attempt banner (shown before any submission, only when no history table) */}
+            {!showResult && !allAttempts.length && lastAttempt && (
                 <div className={cn(
                     'rounded-lg border px-4 py-3 text-sm',
                     lastAttempt.passed
@@ -91,10 +142,13 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
                             ? '🎉 Great job! You passed this quiz.'
                             : `You need ${result.passing_score}% to pass. Review the answers below and try again.`}
                     </p>
-                    {!result.passed && (
+                    {!result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
                         <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
                             Try Again
                         </Button>
+                    )}
+                    {!result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
+                        <p className="mt-3 text-sm text-muted-foreground">No more attempts allowed.</p>
                     )}
                 </div>
             )}
@@ -192,7 +246,7 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
                 );
             })}
 
-            {!showResult && (
+            {!showResult && !limitReached && (
                 <Button
                     onClick={handleSubmit}
                     disabled={processing || Object.keys(data.answers).length < questions.length}
@@ -208,7 +262,7 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function SidebarContent({ course, lesson, completedIds, enrollment }) {
+function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [] }) {
     return (
         <div className="flex h-full flex-col">
             <div className="border-b px-4 py-4">
@@ -238,6 +292,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
                             const Icon      = LESSON_ICONS[l.type] ?? FileText;
                             const isCurrent = l.id === lesson.id;
                             const isDone    = completedIds.includes(l.id);
+                            const isLocked  = lockedIds.includes(l.id);
                             return (
                                 <Link
                                     key={l.id}
@@ -246,13 +301,17 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
                                         'flex items-center gap-3 px-4 py-2 text-sm transition-colors',
                                         isCurrent
                                             ? 'bg-primary/10 font-medium text-primary'
-                                            : 'text-foreground hover:bg-muted'
+                                            : isLocked
+                                                ? 'text-muted-foreground/60 hover:bg-muted'
+                                                : 'text-foreground hover:bg-muted'
                                     )}
                                 >
                                     <span className="shrink-0">
                                         {isDone
                                             ? <Check className="h-4 w-4 text-green-500" />
-                                            : <Icon className="h-4 w-4 text-muted-foreground" />}
+                                            : isLocked
+                                                ? <Lock className="h-4 w-4 text-muted-foreground/60" />
+                                                : <Icon className="h-4 w-4 text-muted-foreground" />}
                                     </span>
                                     <span className="line-clamp-2 flex-1 leading-snug">{l.title}</span>
                                     {l.duration_minutes > 0 && (
@@ -271,11 +330,11 @@ function SidebarContent({ course, lesson, completedIds, enrollment }) {
 // ─── Main Player ──────────────────────────────────────────────────────────────
 
 export default function LearnShow({
-    course, lesson, enrollment, completedIds, isCompleted, nextLesson, prevLesson, lastAttempt,
+    course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
+    nextLesson, prevLesson, allAttempts,
 }) {
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
-    // For video lessons: tracks whether the learner watched to the end
     const [videoWatched, setVideoWatched] = useState(isCompleted);
 
     const handleComplete = useCallback(() => {
@@ -292,12 +351,17 @@ export default function LearnShow({
         );
     }, [completed, completing, course.slug, lesson.id]);
 
-    // canComplete: video lessons require the video to be watched first
     const canComplete = lesson.type === 'video' ? videoWatched : true;
 
     const effectiveCompletedIds = completed
         ? [...new Set([...completedIds, lesson.id])]
         : completedIds;
+
+    // Compute which sidebar lessons are locked by a prerequisite
+    const lockedIds = course.sections
+        .flatMap(s => s.lessons)
+        .filter(l => l.prerequisite_lesson_id && !effectiveCompletedIds.includes(l.prerequisite_lesson_id))
+        .map(l => l.id);
 
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
@@ -320,6 +384,7 @@ export default function LearnShow({
                                 lesson={lesson}
                                 completedIds={effectiveCompletedIds}
                                 enrollment={enrollment}
+                                lockedIds={lockedIds}
                             />
                         </SheetContent>
                     </Sheet>
@@ -352,6 +417,7 @@ export default function LearnShow({
                             lesson={lesson}
                             completedIds={effectiveCompletedIds}
                             enrollment={enrollment}
+                            lockedIds={lockedIds}
                         />
                     </aside>
 
@@ -364,8 +430,36 @@ export default function LearnShow({
                                 <h1 className="text-2xl font-bold tracking-tight">{lesson.title}</h1>
                             </div>
 
+                            {/* ── Locked state ── */}
+                            {isLocked && (
+                                <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed py-16 text-center">
+                                    <div className="rounded-full bg-muted p-4">
+                                        <Lock className="h-8 w-8 text-muted-foreground" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-semibold">Lesson locked</h2>
+                                        <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+                                            You need to complete
+                                            {prerequisiteLesson
+                                                ? <strong className="text-foreground"> "{prerequisiteLesson.title}" </strong>
+                                                : ' the prerequisite lesson '}
+                                            before you can access this lesson.
+                                        </p>
+                                    </div>
+                                    {prerequisiteLesson && (
+                                        <Link
+                                            href={route('learn.lesson', [course.slug, prerequisiteLesson.id])}
+                                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                                        >
+                                            Go to prerequisite lesson
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+
                             {/* ── Video ── */}
-                            {lesson.type === 'video' && (
+                            {lesson.type === 'video' && !isLocked && (
                                 <div className="space-y-6">
                                     <VideoPlayer
                                         url={lesson.video_url}
@@ -385,7 +479,7 @@ export default function LearnShow({
                             )}
 
                             {/* ── Text ── */}
-                            {lesson.type === 'text' && (
+                            {lesson.type === 'text' && !isLocked && (
                                 <div className="prose prose-sm dark:prose-invert max-w-none">
                                     {lesson.content
                                         ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
@@ -394,12 +488,12 @@ export default function LearnShow({
                             )}
 
                             {/* ── Quiz ── */}
-                            {lesson.type === 'quiz' && (
-                                <QuizPlayer lesson={lesson} course={course} lastAttempt={lastAttempt} />
+                            {lesson.type === 'quiz' && !isLocked && (
+                                <QuizPlayer lesson={lesson} course={course} allAttempts={allAttempts ?? []} />
                             )}
 
                             {/* ── PDF ── */}
-                            {lesson.type === 'pdf' && (
+                            {lesson.type === 'pdf' && !isLocked && (
                                 <div className="space-y-4">
                                     {lesson.pdf_url ? (
                                         <>
