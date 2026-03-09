@@ -63,6 +63,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/sections/{section}', [AdminSectionsController::class, 'update'])->name('sections.update');
     Route::delete('/sections/{section}', [AdminSectionsController::class, 'destroy'])->name('sections.destroy');
 
+    // Media uploads (quick AJAX endpoints returning JSON)
+    Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'image'])->name('upload.image');
+
     // Lessons (nested under a section)
     Route::post('/sections/{section}/lessons', [AdminLessonsController::class, 'store'])->name('sections.lessons.store');
     Route::patch('/sections/{section}/lessons/reorder', [AdminLessonsController::class, 'reorder'])->name('sections.lessons.reorder');

@@ -101,19 +101,24 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
 
             {/* Questions */}
             {(showResult ? result.results : questions).map((q, qi) => {
-                const chosen  = showResult ? q.selected : data.answers[qi];
-                const correct = showResult ? q.correct  : null;
+                const chosen    = showResult ? q.selected : data.answers[qi];
+                const correct   = showResult ? q.correct  : null;
+                const isImgQ    = q.type === 'image_choice';
                 return (
                     <div key={qi} className="space-y-3">
                         <p className="font-medium">
                             <span className="mr-2 text-muted-foreground text-sm">Q{qi + 1}.</span>
-                            {q.question}
+                            {q.text ?? q.question}
                         </p>
+
+                        {/* ── Text options ── */}
+                        {!isImgQ && (
                         <div className="space-y-2">
                             {q.options.map((opt, oi) => {
-                                const isChosen      = chosen === oi;
-                                const isCorrect     = showResult && oi === correct;
-                                const isWrong       = showResult && isChosen && oi !== correct;
+                                const isChosen  = chosen === oi;
+                                const isCorrect = showResult && oi === correct;
+                                const isWrong   = showResult && isChosen && oi !== correct;
+                                const optLabel  = typeof opt === 'object' ? (opt.label ?? '') : opt;
                                 return (
                                     <label
                                         key={oi}
@@ -135,12 +140,54 @@ function QuizPlayer({ lesson, course, lastAttempt }) {
                                             onChange={() => setData('answers', { ...data.answers, [qi]: oi })}
                                             className="accent-primary shrink-0"
                                         />
-                                        <span className="flex-1">{opt}</span>
+                                        <span className="flex-1">{optLabel}</span>
                                         {isCorrect && <Check className="h-4 w-4 text-green-600 shrink-0" />}
                                     </label>
                                 );
                             })}
                         </div>
+                        )}
+
+                        {/* ── Image choice options ── */}
+                        {isImgQ && (
+                            <div className="grid grid-cols-2 gap-3">
+                                {q.options.map((opt, oi) => {
+                                    const isChosen  = chosen === oi;
+                                    const isCorrect = showResult && oi === correct;
+                                    const isWrong   = showResult && isChosen && oi !== correct;
+                                    const imgUrl    = typeof opt === 'object' ? opt.image_url : '';
+                                    const label     = typeof opt === 'object' ? (opt.label || '') : '';
+                                    return (
+                                        <button
+                                            key={oi}
+                                            type="button"
+                                            disabled={showResult}
+                                            onClick={() => !showResult && setData('answers', { ...data.answers, [qi]: oi })}
+                                            className={cn(
+                                                'rounded-xl border-2 overflow-hidden text-left w-full transition-colors',
+                                                !showResult && isChosen  && 'border-primary',
+                                                !showResult && !isChosen && 'border-border hover:border-primary/50',
+                                                isCorrect && 'border-green-500',
+                                                isWrong   && 'border-red-400',
+                                                showResult && 'cursor-default'
+                                            )}
+                                        >
+                                            {imgUrl ? (
+                                                <img src={imgUrl} alt={label || `Option ${oi + 1}`} className="aspect-video w-full object-cover" />
+                                            ) : (
+                                                <div className="flex aspect-video w-full items-center justify-center bg-muted text-muted-foreground text-xs">No image</div>
+                                            )}
+                                            <div className={cn('flex items-center justify-between px-2 py-1.5', isCorrect && 'bg-green-50 dark:bg-green-950/40', isWrong && 'bg-red-50 dark:bg-red-950/40')}>
+                                                <span className={cn('text-xs font-medium', isCorrect && 'text-green-800 dark:text-green-300', isWrong && 'text-red-800 dark:text-red-300')}>
+                                                    {label || `Option ${oi + 1}`}
+                                                </span>
+                                                {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 shrink-0" />}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 );
             })}

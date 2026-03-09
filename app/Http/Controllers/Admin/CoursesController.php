@@ -160,7 +160,7 @@ class CoursesController extends Controller
             'certificate_template.background'               => 'required|array',
             'certificate_template.background.type'          => 'required|in:color,image',
             'certificate_template.background.color'         => 'nullable|string|max:20',
-            'certificate_template.background.image_url'     => 'nullable|url|max:1000',
+            'certificate_template.background.image_url'     => 'nullable|string|max:1000',
             'certificate_template.branding'                 => 'required|array',
             'certificate_template.fields'                   => 'required|array',
             'certificate_template.signatory'                => 'required|array',

@@ -10,8 +10,9 @@ import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import InputError from '@/Components/InputError';
 import PdfUpload from '@/Components/PdfUpload';
+import { uploadImageFile } from '@/Components/ImageUploadWithUrl';
 import { useRef, useState } from 'react';
-import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2 } from 'lucide-react';
+import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2, Image as ImageIcon, Type } from 'lucide-react';
 
 const TYPE_META = {
     video: { icon: Video,       label: 'Video',     color: 'text-blue-500'   },
@@ -212,12 +213,74 @@ function PdfEditor({ data, setData, errors }) {
     );
 }
 
+function ImageOptionUpload({ value, onChange }) {
+    const inputRef = useRef();
+    const [loading, setLoading] = useState(false);
+    const url = typeof value === 'object' ? value?.image_url : value;
+
+    async function handleFile(file) {
+        if (!file) return;
+        setLoading(true);
+        try {
+            const uploaded = await uploadImageFile(file);
+            onChange({ ...(typeof value === 'object' ? value : {}), image_url: uploaded });
+        } catch { /* silent */ } finally {
+            setLoading(false);
+            if (inputRef.current) inputRef.current.value = '';
+        }
+    }
+
+    return (
+        <div className="space-y-1">
+            {url ? (
+                <div className="relative group">
+                    <img
+                        src={url}
+                        alt=""
+                        className="h-28 w-full rounded-md object-cover border cursor-pointer"
+                        onClick={() => inputRef.current?.click()}
+                    />
+                    {loading && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/40">
+                            <Loader2 className="h-5 w-5 animate-spin text-white" />
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => onChange({ ...(typeof value === 'object' ? value : {}), image_url: '' })}
+                        className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </button>
+                </div>
+            ) : (
+                <div
+                    className={`flex h-28 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed text-muted-foreground transition-colors hover:border-primary hover:text-primary ${loading ? 'opacity-60 pointer-events-none' : ''}`}
+                    onClick={() => !loading && inputRef.current?.click()}
+                >
+                    {loading
+                        ? <Loader2 className="h-5 w-5 animate-spin" />
+                        : <><ImageIcon className="h-6 w-6" /><p className="text-xs">Upload image</p></>
+                    }
+                </div>
+            )}
+            <input
+                ref={inputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files[0])}
+            />
+        </div>
+    );
+}
+
 function QuizEditor({ data, setData, errors }) {
     const rawContent = data.content ?? '';
     let parsed = { questions: [], passing_score: 70 };
     try { parsed = JSON.parse(rawContent); } catch {}
 
-    const questions   = parsed.questions    ?? [];
+    const questions    = parsed.questions    ?? [];
     const passingScore = parsed.passing_score ?? 70;
 
     function save(qs = questions, ps = passingScore) {
@@ -225,11 +288,29 @@ function QuizEditor({ data, setData, errors }) {
     }
 
     function addQuestion() {
-        save([...questions, { id: Date.now(), text: '', options: ['', '', '', ''], correct: 0 }]);
+        save([...questions, { id: Date.now(), type: 'text', text: '', options: ['', '', '', ''], correct: 0 }]);
     }
 
     function updateQuestion(idx, field, value) {
         const qs = questions.map((q, i) => i === idx ? { ...q, [field]: value } : q);
+        save(qs);
+    }
+
+    function toggleQuestionType(qIdx, newType) {
+        const q = questions[qIdx];
+        let newOptions;
+        if (newType === 'image_choice') {
+            newOptions = (q.options ?? []).map(opt =>
+                typeof opt === 'object' ? opt : { image_url: '', label: opt ?? '' }
+            );
+            if (newOptions.length < 2) newOptions = [{ image_url: '', label: '' }, { image_url: '', label: '' }];
+        } else {
+            newOptions = (q.options ?? []).map(opt =>
+                typeof opt === 'object' ? (opt.label ?? '') : opt
+            );
+            if (newOptions.length < 2) newOptions = ['', ''];
+        }
+        const qs = questions.map((item, i) => i === qIdx ? { ...item, type: newType, options: newOptions } : item);
         save(qs);
     }
 
@@ -243,7 +324,10 @@ function QuizEditor({ data, setData, errors }) {
     }
 
     function addOption(qIdx) {
-        const qs = questions.map((q, i) => i === qIdx ? { ...q, options: [...q.options, ''] } : q);
+        const q = questions[qIdx];
+        const isImg = q.type === 'image_choice';
+        const newOpt = isImg ? { image_url: '', label: '' } : '';
+        const qs = questions.map((item, i) => i === qIdx ? { ...item, options: [...item.options, newOpt] } : item);
         save(qs);
     }
 
@@ -296,7 +380,27 @@ function QuizEditor({ data, setData, errors }) {
                     {questions.map((q, qIdx) => (
                         <Card key={q.id ?? qIdx}>
                             <CardHeader className="flex flex-row items-start justify-between pb-2">
-                                <CardTitle className="text-sm font-medium">Question {qIdx + 1}</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-sm font-medium">Question {qIdx + 1}</CardTitle>
+                                    <div className="flex rounded border p-0.5 gap-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleQuestionType(qIdx, 'text')}
+                                            title="Text choices"
+                                            className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', (q.type ?? 'text') === 'text' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'].join(' ')}
+                                        >
+                                            <Type className="h-3 w-3" /> Text
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleQuestionType(qIdx, 'image_choice')}
+                                            title="Image choices"
+                                            className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', q.type === 'image_choice' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'].join(' ')}
+                                        >
+                                            <ImageIcon className="h-3 w-3" /> Images
+                                        </button>
+                                    </div>
+                                </div>
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -314,53 +418,82 @@ function QuizEditor({ data, setData, errors }) {
                                     placeholder="Enter your question…"
                                     rows={2}
                                 />
-                                <div className="space-y-2">
-                                    <Label className="text-xs text-muted-foreground">Answer options — click the circle to mark the correct one</Label>
-                                    {q.options.map((opt, oIdx) => (
-                                        <div key={oIdx} className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
-                                                className={[
-                                                    'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                                                    q.correct === oIdx
-                                                        ? 'border-green-500 bg-green-500 text-white'
-                                                        : 'border-muted-foreground',
-                                                ].join(' ')}
-                                            >
-                                                {q.correct === oIdx && <Check className="h-3 w-3" />}
-                                            </button>
-                                            <Input
-                                                value={opt}
-                                                onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
-                                                placeholder={`Option ${oIdx + 1}`}
-                                                className="h-8 text-sm"
-                                            />
-                                            {q.options.length > 2 && (
-                                                <Button
+
+                                {/* ── Text options ── */}
+                                {(q.type ?? 'text') === 'text' && (
+                                    <div className="space-y-2">
+                                        <Label className="text-xs text-muted-foreground">Answer options — click the circle to mark the correct one</Label>
+                                        {q.options.map((opt, oIdx) => (
+                                            <div key={oIdx} className="flex items-center gap-2">
+                                                <button
                                                     type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 flex-shrink-0"
-                                                    onClick={() => removeOption(qIdx, oIdx)}
+                                                    onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
+                                                    className={['flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors', q.correct === oIdx ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
-                                            )}
+                                                    {q.correct === oIdx && <Check className="h-3 w-3" />}
+                                                </button>
+                                                <Input
+                                                    value={opt}
+                                                    onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
+                                                    placeholder={`Option ${oIdx + 1}`}
+                                                    className="h-8 text-sm"
+                                                />
+                                                {q.options.length > 2 && (
+                                                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeOption(qIdx, oIdx)}>
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {q.options.length < 6 && (
+                                            <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>
+                                                <Plus className="mr-1 h-3 w-3" /> Add option
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── Image choice options ── */}
+                                {q.type === 'image_choice' && (
+                                    <div className="space-y-3">
+                                        <Label className="text-xs text-muted-foreground">Image options — click the ring to mark correct, hover image to delete</Label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {q.options.map((opt, oIdx) => (
+                                                <div key={oIdx} className={['rounded-lg border-2 p-2 transition-colors', q.correct === oIdx ? 'border-green-500' : 'border-border'].join(' ')}>
+                                                    <ImageOptionUpload
+                                                        value={opt}
+                                                        onChange={(val) => updateOption(qIdx, oIdx, val)}
+                                                    />
+                                                    <div className="mt-2 flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
+                                                            className={['flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors', q.correct === oIdx ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
+                                                        >
+                                                            {q.correct === oIdx && <Check className="h-2.5 w-2.5" />}
+                                                        </button>
+                                                        <Input
+                                                            value={typeof opt === 'object' ? (opt.label ?? '') : ''}
+                                                            onChange={(e) => updateOption(qIdx, oIdx, { ...(typeof opt === 'object' ? opt : { image_url: '' }), label: e.target.value })}
+                                                            placeholder="Caption (optional)"
+                                                            className="h-7 text-xs"
+                                                        />
+                                                        {q.options.length > 2 && (
+                                                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => removeOption(qIdx, oIdx)}>
+                                                                <Trash2 className="h-3 w-3" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                    {q.options.length < 6 && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-xs"
-                                            onClick={() => addOption(qIdx)}
-                                        >
-                                            <Plus className="mr-1 h-3 w-3" /> Add option
-                                        </Button>
-                                    )}
-                                </div>
+                                        {q.options.length < 6 && (
+                                            <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>
+                                                <Plus className="mr-1 h-3 w-3" /> Add image option
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     ))}

@@ -206,15 +206,16 @@ class LearnController extends Controller
         $results   = [];
 
         foreach ($questions as $i => $question) {
-            $selected    = isset($answers[$i]) ? (int) $answers[$i] : null;
-            $isCorrect   = $selected !== null && $selected === (int) $question['correct'];
+            $selected  = isset($answers[$i]) ? (int) $answers[$i] : null;
+            $isCorrect = $selected !== null && $selected === (int) $question['correct'];
             if ($isCorrect) $correct++;
 
             $results[] = [
-                'question' => $question['question'],
-                'options'  => $question['options'],
-                'selected' => $selected,
-                'correct'  => (int) $question['correct'],
+                'text'       => $question['text']    ?? '',
+                'type'       => $question['type']    ?? 'text',
+                'options'    => $question['options'] ?? [],
+                'selected'   => $selected,
+                'correct'    => (int) $question['correct'],
                 'is_correct' => $isCorrect,
             ];
         }

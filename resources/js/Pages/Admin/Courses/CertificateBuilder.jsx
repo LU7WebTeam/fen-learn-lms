@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import ImageUploadWithUrl from '@/Components/ImageUploadWithUrl';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -446,7 +447,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections }
                                                 <div className="flex items-center gap-2"><Palette className="h-4 w-4" />Solid Color</div>
                                             </SelectItem>
                                             <SelectItem value="image">
-                                                <div className="flex items-center gap-2"><ImageIcon className="h-4 w-4" />Image URL</div>
+                                                <div className="flex items-center gap-2"><ImageIcon className="h-4 w-4" />Image Upload</div>
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -460,15 +461,14 @@ export default function CertificateBuilder({ course, defaultTemplate, sections }
                                     />
                                 ) : (
                                     <div className="space-y-1.5">
-                                        <Label className="text-sm">Background Image URL</Label>
-                                        <Input
-                                            type="url"
+                                        <Label className="text-sm">Background Image</Label>
+                                        <ImageUploadWithUrl
                                             value={tpl.background?.image_url || ''}
-                                            onChange={e => setNested('background', { image_url: e.target.value })}
-                                            placeholder="https://example.com/background.jpg"
+                                            onChange={url => setNested('background', { image_url: url })}
+                                            aspectRatio="h-36"
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            Use a high-resolution image (1920×1080 px or larger). The image must be publicly accessible.
+                                            Recommended: 1920×1080 px or larger for best quality.
                                         </p>
                                     </div>
                                 )}
