@@ -57,7 +57,7 @@ function CourseCard({ course, enrolled }) {
 
 function Filters({ categories, filters }) {
     function update(key, value) {
-        router.get(route('courses.index'), { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
+        router.get(route('courses.index'), { ...filters, [key]: (value === 'all' ? undefined : value) || undefined }, { preserveState: true, replace: true });
     }
 
     function reset() {
@@ -68,12 +68,12 @@ function Filters({ categories, filters }) {
 
     return (
         <div className="flex flex-wrap items-center gap-3">
-            <Select value={filters.difficulty || ''} onValueChange={(v) => update('difficulty', v)}>
+            <Select value={filters.difficulty || 'all'} onValueChange={(v) => update('difficulty', v)}>
                 <SelectTrigger className="w-40">
                     <SelectValue placeholder="All Difficulties" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="">All Difficulties</SelectItem>
+                    <SelectItem value="all">All Difficulties</SelectItem>
                     <SelectItem value="beginner">Beginner</SelectItem>
                     <SelectItem value="intermediate">Intermediate</SelectItem>
                     <SelectItem value="advanced">Advanced</SelectItem>
@@ -81,12 +81,12 @@ function Filters({ categories, filters }) {
             </Select>
 
             {categories.length > 0 && (
-                <Select value={filters.category || ''} onValueChange={(v) => update('category', v)}>
+                <Select value={filters.category || 'all'} onValueChange={(v) => update('category', v)}>
                     <SelectTrigger className="w-44">
                         <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         {categories.map((cat) => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
