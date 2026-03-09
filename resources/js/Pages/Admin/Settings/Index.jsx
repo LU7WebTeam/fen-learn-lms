@@ -28,6 +28,9 @@ import {
     EyeOff,
     CheckCircle,
     AlertCircle,
+    ShieldCheck,
+    Lock,
+    Unlock,
 } from 'lucide-react';
 
 function SuccessBanner({ message }) {
@@ -203,6 +206,9 @@ export default function SettingsIndex({ settings }) {
                         <TabsTrigger value="maintenance" className="gap-1.5">
                             <Wrench className="h-3.5 w-3.5" />Maintenance
                         </TabsTrigger>
+                        <TabsTrigger value="role_access" className="gap-1.5">
+                            <ShieldCheck className="h-3.5 w-3.5" />Role Access
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── BRANDING ── */}
@@ -233,6 +239,11 @@ export default function SettingsIndex({ settings }) {
                     {/* ── MAINTENANCE ── */}
                     <TabsContent value="maintenance">
                         <MaintenanceTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
+
+                    {/* ── ROLE ACCESS ── */}
+                    <TabsContent value="role_access">
+                        <RoleAccessTab settings={settings} onSave={submitGroup} processing={processing} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -682,6 +693,187 @@ function MaintenanceTab({ settings, onSave, processing }) {
                     >
                         {enabled ? 'Save (Maintenance Active)' : 'Save Maintenance Settings'}
                     </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function PermissionRow({ icon: Icon, label, description, state }) {
+    const isOn     = state === 'on';
+    const isOff    = state === 'off';
+    const isAlways = state === 'always';
+    const isNever  = state === 'never';
+
+    return (
+        <div className="flex items-center justify-between gap-3 py-2.5">
+            <div className="flex items-start gap-3 min-w-0">
+                {Icon && <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                <div className="min-w-0">
+                    <p className="text-sm font-medium leading-snug">{label}</p>
+                    {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+                </div>
+            </div>
+            <div className="shrink-0">
+                {isAlways && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                        <CheckCircle className="h-3 w-3" /> Always
+                    </span>
+                )}
+                {isNever && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        <Lock className="h-3 w-3" /> Never
+                    </span>
+                )}
+                {(isOn || isOff) && (
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        isOn
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                            : 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400'
+                    }`}>
+                        {isOn
+                            ? <><Unlock className="h-3 w-3" /> Allowed</>
+                            : <><Lock className="h-3 w-3" /> Restricted</>
+                        }
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RoleAccessTab({ settings, onSave, processing }) {
+    const [learnerCanEnroll, setLearnerCanEnroll]               = useState(settings.learner_can_enroll !== '0');
+    const [editorCanManageUsers, setEditorCanManageUsers]       = useState(settings.editor_can_manage_users !== '0');
+    const [editorCanAccessSettings, setEditorCanAccessSettings] = useState(settings.editor_can_access_settings !== '0');
+
+    function save() {
+        onSave('role_access', {
+            learner_can_enroll:         learnerCanEnroll ? '1' : '0',
+            editor_can_manage_users:    editorCanManageUsers ? '1' : '0',
+            editor_can_access_settings: editorCanAccessSettings ? '1' : '0',
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" /> Role Access
+                </CardTitle>
+                <CardDescription>
+                    Control what each role is permitted to do on the platform.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+
+                {/* ── Learner ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                            <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold">Learner</h3>
+                        <span className="text-xs text-muted-foreground">default role for all new registrations</span>
+                    </div>
+                    <div className="divide-y rounded-lg border px-4">
+                        <PermissionRow
+                            label="Browse course catalog"
+                            description="View public courses and course details."
+                            state="always"
+                        />
+                        <PermissionRow
+                            label="Enroll in courses"
+                            description="Sign up for and begin taking published courses."
+                            state={learnerCanEnroll ? 'on' : 'off'}
+                        />
+                        <PermissionRow
+                            label="Track progress and earn certificates"
+                            description="Mark lessons complete, take quizzes, and receive certificates."
+                            state="always"
+                        />
+                        <PermissionRow
+                            label="Admin panel access"
+                            description="Access the admin dashboard, courses, users, or settings."
+                            state="never"
+                        />
+                    </div>
+                    <SwitchRow
+                        label="Allow learners to enroll in courses"
+                        description="When off, learners can browse the catalog but cannot enroll."
+                        checked={learnerCanEnroll}
+                        onChange={setLearnerCanEnroll}
+                    />
+                </div>
+
+                <Separator />
+
+                {/* ── Content Editor ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/40">
+                            <Users className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold">Content Editor</h3>
+                        <span className="text-xs text-muted-foreground">can manage courses in the admin panel</span>
+                    </div>
+                    <div className="divide-y rounded-lg border px-4">
+                        <PermissionRow
+                            label="Manage courses"
+                            description="Create, edit, and publish courses, sections, and lessons."
+                            state="always"
+                        />
+                        <PermissionRow
+                            label="Manage users"
+                            description="View and update user roles."
+                            state={editorCanManageUsers ? 'on' : 'off'}
+                        />
+                        <PermissionRow
+                            label="Platform settings"
+                            description="Access and modify platform-wide settings."
+                            state={editorCanAccessSettings ? 'on' : 'off'}
+                        />
+                    </div>
+                    <div className="space-y-3">
+                        <SwitchRow
+                            label="Allow content editors to manage users"
+                            description="Grants access to the Users page and role editing."
+                            checked={editorCanManageUsers}
+                            onChange={setEditorCanManageUsers}
+                        />
+                        <SwitchRow
+                            label="Allow content editors to access settings"
+                            description="Grants access to this Settings page."
+                            checked={editorCanAccessSettings}
+                            onChange={setEditorCanAccessSettings}
+                        />
+                    </div>
+                </div>
+
+                <Separator />
+
+                {/* ── Super Admin ── */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+                            <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold">Super Admin</h3>
+                        <span className="text-xs text-muted-foreground">unrestricted access to everything</span>
+                    </div>
+                    <div className="divide-y rounded-lg border px-4 opacity-75">
+                        <PermissionRow label="All learner permissions" state="always" />
+                        <PermissionRow label="All content editor permissions" state="always" />
+                        <PermissionRow label="Platform settings" state="always" />
+                        <PermissionRow label="Role management" state="always" />
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-1">
+                        Super Admin permissions cannot be restricted.
+                    </p>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save Role Access</Button>
                 </div>
             </CardContent>
         </Card>

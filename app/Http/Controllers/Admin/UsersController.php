@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,13 @@ class UsersController extends Controller
 {
     public function index(Request $request): Response
     {
+        if ($request->user()->role === 'content_editor') {
+            $canManage = Setting::get('editor_can_manage_users', '1');
+            if ($canManage !== '1') {
+                abort(403, 'Your role does not have access to user management.');
+            }
+        }
+
         $search = $request->input('search', '');
 
         $staff = User::whereIn('role', ['super_admin', 'content_editor'])

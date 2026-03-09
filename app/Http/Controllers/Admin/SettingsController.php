@@ -32,10 +32,22 @@ class SettingsController extends Controller
         'certificates_enabled'       => '1',
         'maintenance_mode'           => '0',
         'maintenance_message'        => 'We are currently down for scheduled maintenance. Please check back soon.',
+        'learner_can_enroll'         => '1',
+        'editor_can_manage_users'    => '1',
+        'editor_can_access_settings' => '1',
     ];
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $user = $request->user();
+
+        if ($user->role === 'content_editor') {
+            $canAccess = Setting::get('editor_can_access_settings', '1');
+            if ($canAccess !== '1') {
+                abort(403, 'Your role does not have access to platform settings.');
+            }
+        }
+
         $stored = Setting::allAsArray();
         $settings = array_merge($this->defaults, $stored);
 
@@ -55,6 +67,7 @@ class SettingsController extends Controller
             'email'        => $this->saveEmail($request),
             'certificates' => $this->saveCertificates($request),
             'maintenance'  => $this->saveMaintenance($request),
+            'role_access'  => $this->saveRoleAccess($request),
             default        => null,
         };
 
@@ -166,5 +179,18 @@ class SettingsController extends Controller
 
         Setting::set('maintenance_mode', $request->input('maintenance_mode'));
         Setting::set('maintenance_message', $request->input('maintenance_message', ''));
+    }
+
+    private function saveRoleAccess(Request $request): void
+    {
+        $request->validate([
+            'learner_can_enroll'         => 'required|in:0,1',
+            'editor_can_manage_users'    => 'required|in:0,1',
+            'editor_can_access_settings' => 'required|in:0,1',
+        ]);
+
+        Setting::set('learner_can_enroll', $request->input('learner_can_enroll'));
+        Setting::set('editor_can_manage_users', $request->input('editor_can_manage_users'));
+        Setting::set('editor_can_access_settings', $request->input('editor_can_access_settings'));
     }
 }
