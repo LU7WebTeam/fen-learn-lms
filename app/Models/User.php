@@ -18,6 +18,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role',
         'avatar',
+        'gender',
+        'race',
+        'state',
+        'birthdate',
+        'occupation',
+        'organization',
+        'profile_completed_at',
     ];
 
     protected $hidden = [
@@ -28,8 +35,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'    => 'datetime',
+            'profile_completed_at' => 'datetime',
+            'birthdate'            => 'date',
+            'password'             => 'hashed',
         ];
     }
 

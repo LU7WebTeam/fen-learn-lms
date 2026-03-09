@@ -133,6 +133,12 @@ All PRD-mapped components in `resources/js/Components/ui/`:
     - `HandleMaintenanceMode` middleware bypasses admins and auth routes
     - `RegisteredUserController` respects `allow_registration`, `default_role`, `require_email_verification` settings
     - `HandleInertiaRequests` shares `platform` prop (name, tagline, logo_url, favicon_url) to all pages
+12. **Learner Profile Builder** ✅ — Onboarding form shown to new learners after registration before they can access any content
+    - DB columns added to `users`: `gender`, `race`, `state`, `birthdate`, `occupation`, `organization`, `profile_completed_at`
+    - `EnsureProfileIsComplete` middleware: redirects learners with null `profile_completed_at` to `/profile-setup`; admins bypass it
+    - `ProfileSetupController`: shows form pre-filled from existing data, saves all fields, sets `profile_completed_at`
+    - `Pages/Auth/ProfileSetup.jsx`: clean onboarding UI with 3-step indicator, gender toggle buttons, dropdowns for race (Malay/Chinese/Indian/Other Bumiputera/Other), all 16 Malaysian states, and occupation types
+    - Existing users at migration time are automatically marked as complete so they are unaffected
     - Public helper `tl(record, field, locale)` in `resources/js/lib/locale.js` — returns BM field if non-empty, else falls back to EN
     - `LangSwitcher.jsx` component in `AuthenticatedLayout` and `Learn/Show` header
     - All public pages (`Courses/Index`, `Courses/Show`, `Learn/Show`) fully localized with EN fallback

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
@@ -37,6 +38,12 @@ Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'
 Route::get('/courses/{course:slug}', [CourseController::class, 'show'])->name('courses.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Profile setup (onboarding) — must come before profile.complete middleware routes
+    Route::get('/profile-setup', [ProfileSetupController::class, 'show'])->name('profile.setup');
+    Route::post('/profile-setup', [ProfileSetupController::class, 'store'])->name('profile.setup.store');
+});
+
+Route::middleware(['auth', 'verified', 'profile.complete'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Enrollment + course player
