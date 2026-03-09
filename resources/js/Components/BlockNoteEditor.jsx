@@ -34,6 +34,7 @@ export default function BlockNoteEditor({ initialContent, onChange }) {
             <BlockNoteView
                 editor={editor}
                 onChange={() => onChange?.(editor.document)}
+                theme="light"
             />
         </div>
     );

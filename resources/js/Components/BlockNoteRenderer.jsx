@@ -11,7 +11,7 @@ export default function BlockNoteRenderer({ content }) {
 
     return (
         <div className="bn-renderer-wrap">
-            <BlockNoteView editor={editor} editable={false} />
+            <BlockNoteView editor={editor} editable={false} theme="light" />
         </div>
     );
 }
