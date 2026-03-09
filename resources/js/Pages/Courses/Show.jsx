@@ -1,6 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { tl } from '@/lib/locale';
+import LangSwitcher from '@/Components/LangSwitcher';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
@@ -14,6 +16,7 @@ const DIFFICULTY_COLORS = { beginner: 'secondary', intermediate: 'default', adva
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
 
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
+    const { locale } = usePage().props;
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
     const canOpen = enrolled || lesson.is_free_preview;
 
@@ -24,7 +27,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
                 : canOpen
                     ? <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     : <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />}
-            <span className={`flex-1 ${!canOpen ? 'text-muted-foreground' : ''}`}>{lesson.title}</span>
+            <span className={`flex-1 ${!canOpen ? 'text-muted-foreground' : ''}`}>{tl(lesson, 'title', locale)}</span>
             {lesson.is_free_preview && !enrolled && (
                 <Badge variant="outline" className="text-xs">Preview</Badge>
             )}
@@ -41,8 +44,12 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
 }
 
 export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId }) {
-    const { auth } = usePage().props;
+    const { auth, locale } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
+
+    const courseTitle       = tl(course, 'title', locale);
+    const courseDescription = tl(course, 'description', locale);
+    const courseIntro       = tl(course, 'introduction', locale);
 
     function handleEnroll() {
         router.post(route('courses.enroll', course.slug));
@@ -52,9 +59,15 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
     return (
         <Layout>
-            <Head title={course.title} />
+            <Head title={courseTitle} />
 
             <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+                {!auth?.user && (
+                    <div className="mb-4 flex justify-end">
+                        <LangSwitcher />
+                    </div>
+                )}
+
                 {/* Hero */}
                 <div className="mb-8 grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
@@ -65,10 +78,10 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             {course.category && <Badge variant="outline">{course.category}</Badge>}
                         </div>
 
-                        <h1 className="text-3xl font-bold tracking-tight leading-tight">{course.title}</h1>
+                        <h1 className="text-3xl font-bold tracking-tight leading-tight">{courseTitle}</h1>
 
-                        {course.description && (
-                            <p className="text-muted-foreground leading-relaxed">{course.description}</p>
+                        {courseDescription && (
+                            <p className="text-muted-foreground leading-relaxed">{courseDescription}</p>
                         )}
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -137,12 +150,12 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 </div>
 
                 {/* Introduction (BlockNote rich content) */}
-                {Array.isArray(course.introduction) && course.introduction.length > 0 && (
+                {Array.isArray(courseIntro) && courseIntro.length > 0 && (
                     <>
                         <Separator className="my-8" />
                         <div>
                             <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
-                            <BlockNoteRenderer content={course.introduction} />
+                            <BlockNoteRenderer content={courseIntro} />
                         </div>
                     </>
                 )}
@@ -160,7 +173,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                 <AccordionItem key={section.id} value={String(section.id)}>
                                     <AccordionTrigger className="text-base font-medium">
                                         <span className="flex items-center gap-2">
-                                            {section.title}
+                                            {tl(section, 'title', locale)}
                                             <span className="text-xs font-normal text-muted-foreground">
                                                 {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
                                             </span>

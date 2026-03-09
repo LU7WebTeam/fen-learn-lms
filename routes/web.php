@@ -9,6 +9,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LearnController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,9 @@ Route::get('/', function () {
 // Public certificate verification + download (no auth required — UUID is the access key)
 Route::get('/certificate/{uuid}', [CertificateController::class, 'show'])->name('certificate.show');
 Route::get('/certificate/{uuid}/download', [CertificateController::class, 'download'])->name('certificate.download');
+
+// Locale switcher
+Route::post('/locale', [LocaleController::class, 'set'])->name('locale.set');
 
 // Public course catalog + detail (auth optional)
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

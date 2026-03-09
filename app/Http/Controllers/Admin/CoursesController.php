@@ -36,8 +36,10 @@ class CoursesController extends Controller
     {
         $validated = $request->validate([
             'title'            => 'required|string|max:255',
+            'title_ms'         => 'nullable|string|max:255',
             'slug'             => 'nullable|string|max:255|unique:courses,slug',
             'description'      => 'nullable|string',
+            'description_ms'   => 'nullable|string',
             'cover_image'      => 'nullable|string|max:500',
             'cover_image_file' => 'nullable|file|image|max:5120',
             'category'         => 'nullable|string|max:100',
@@ -153,10 +155,14 @@ class CoursesController extends Controller
     public function updateIntroduction(Request $request, Course $course): RedirectResponse
     {
         $request->validate([
-            'introduction' => 'nullable|array',
+            'introduction'    => 'nullable|array',
+            'introduction_ms' => 'nullable|array',
         ]);
 
-        $course->update(['introduction' => $request->input('introduction')]);
+        $course->update([
+            'introduction'    => $request->input('introduction'),
+            'introduction_ms' => $request->input('introduction_ms'),
+        ]);
 
         return back()->with('success', 'Introduction saved.');
     }
@@ -191,8 +197,10 @@ class CoursesController extends Controller
     {
         $validated = $request->validate([
             'title'            => 'required|string|max:255',
+            'title_ms'         => 'nullable|string|max:255',
             'slug'             => ['nullable', 'string', 'max:255', Rule::unique('courses', 'slug')->ignore($course->id)],
             'description'      => 'nullable|string',
+            'description_ms'   => 'nullable|string',
             'cover_image'      => 'nullable|string|max:500',
             'cover_image_file' => 'nullable|file|image|max:5120',
             'cover_image_clear'=> 'nullable|boolean',

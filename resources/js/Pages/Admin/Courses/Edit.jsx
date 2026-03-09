@@ -23,6 +23,15 @@ import {
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
 
+function LangTab({ lang, setLang }) {
+    return (
+        <div className="flex items-center gap-1 rounded-md border bg-muted/50 p-0.5 w-fit">
+            <button type="button" onClick={() => setLang('en')} className={['rounded px-2.5 py-0.5 text-xs font-medium transition-colors', lang === 'en' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'].join(' ')}>EN</button>
+            <button type="button" onClick={() => setLang('ms')} className={['rounded px-2.5 py-0.5 text-xs font-medium transition-colors', lang === 'ms' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'].join(' ')}>BM</button>
+        </div>
+    );
+}
+
 const LESSON_ICONS = {
     video: Video,
     text:  FileText,
@@ -42,11 +51,14 @@ function Field({ label, error, children, hint }) {
 }
 
 function CourseDetailsForm({ course }) {
+    const [lang, setLang] = useState('en');
     const { data, setData, post, processing, errors, isDirty } = useForm({
         _method:           'patch',
         title:             course.title,
+        title_ms:          course.title_ms ?? '',
         slug:              course.slug,
         description:       course.description ?? '',
+        description_ms:    course.description_ms ?? '',
         cover_image:       course.cover_image ?? '',
         cover_image_file:  null,
         cover_image_clear: false,
@@ -63,22 +75,37 @@ function CourseDetailsForm({ course }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Course Details</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Course Details</CardTitle>
+                    <LangTab lang={lang} setLang={setLang} />
+                </div>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="grid gap-5 sm:grid-cols-2">
-                        <Field label="Title *" error={errors.title}>
-                            <Input value={data.title} onChange={(e) => setData('title', e.target.value)} />
-                        </Field>
-                        <Field label="Slug" error={errors.slug} hint="Must be unique">
-                            <Input value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
-                        </Field>
-                    </div>
-
-                    <Field label="Description" error={errors.description}>
-                        <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={3} />
-                    </Field>
+                    {lang === 'en' ? (
+                        <>
+                            <div className="grid gap-5 sm:grid-cols-2">
+                                <Field label="Title *" error={errors.title}>
+                                    <Input value={data.title} onChange={(e) => setData('title', e.target.value)} />
+                                </Field>
+                                <Field label="Slug" error={errors.slug} hint="Must be unique">
+                                    <Input value={data.slug} onChange={(e) => setData('slug', e.target.value)} />
+                                </Field>
+                            </div>
+                            <Field label="Description" error={errors.description}>
+                                <Textarea value={data.description} onChange={(e) => setData('description', e.target.value)} rows={3} />
+                            </Field>
+                        </>
+                    ) : (
+                        <>
+                            <Field label="Title (Bahasa Melayu)" error={errors.title_ms} hint="Leave blank to fall back to the English title for BM learners.">
+                                <Input value={data.title_ms} onChange={(e) => setData('title_ms', e.target.value)} placeholder="Tajuk dalam Bahasa Melayu…" />
+                            </Field>
+                            <Field label="Description (Bahasa Melayu)" error={errors.description_ms}>
+                                <Textarea value={data.description_ms} onChange={(e) => setData('description_ms', e.target.value)} rows={3} placeholder="Penerangan dalam Bahasa Melayu…" />
+                            </Field>
+                        </>
+                    )}
 
                     <div className="grid gap-5 sm:grid-cols-3">
                         <Field label="Category" error={errors.category}>
@@ -207,10 +234,11 @@ function SectionCard({ section }) {
     const [addingLesson, setAddingLesson]   = useState(false);
     const [renaming, setRenaming]           = useState(false);
     const [title, setTitle]                 = useState(section.title);
+    const [titleMs, setTitleMs]             = useState(section.title_ms ?? '');
 
     function handleRename(e) {
         e.preventDefault();
-        router.patch(route('admin.sections.update', section.id), { title }, {
+        router.patch(route('admin.sections.update', section.id), { title, title_ms: titleMs }, {
             onSuccess: () => setRenaming(false),
         });
     }
@@ -233,12 +261,19 @@ function SectionCard({ section }) {
                             ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                             : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                         {renaming ? (
-                            <form onSubmit={handleRename} className="flex items-center gap-2 flex-1" onClick={(e) => e.stopPropagation()}>
+                            <form onSubmit={handleRename} className="flex flex-col gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
                                 <Input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     className="h-7 text-sm"
                                     autoFocus
+                                    placeholder="Section title (EN)"
+                                />
+                                <Input
+                                    value={titleMs}
+                                    onChange={(e) => setTitleMs(e.target.value)}
+                                    className="h-7 text-sm"
+                                    placeholder="Tajuk seksyen (BM, optional)"
                                     onBlur={handleRename}
                                 />
                             </form>
@@ -322,9 +357,15 @@ function AddSectionForm({ course, onDone }) {
 }
 
 function CourseIntroductionForm({ course }) {
-    const [content, setContent] = useState(
+    const [lang, setLang]       = useState('en');
+    const [content,   setContent]   = useState(
         Array.isArray(course.introduction) && course.introduction.length > 0
             ? course.introduction
+            : null
+    );
+    const [contentMs, setContentMs] = useState(
+        Array.isArray(course.introduction_ms) && course.introduction_ms.length > 0
+            ? course.introduction_ms
             : null
     );
     const [saving, setSaving] = useState(false);
@@ -334,7 +375,7 @@ function CourseIntroductionForm({ course }) {
         setSaving(true);
         router.patch(
             route('admin.courses.introduction.update', course.id),
-            { introduction: content },
+            { introduction: content, introduction_ms: contentMs },
             {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -349,21 +390,33 @@ function CourseIntroductionForm({ course }) {
 
     return (
         <div className="space-y-4">
-            <div>
-                <h3 className="text-lg font-semibold">Course Introduction</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                    This is shown on the public course page — use it as a mini landing page with images, video links, headings, and rich text.
-                    Learners and visitors see it before enrolling.
-                </p>
+            <div className="flex items-start justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold">Course Introduction</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Shown on the public course page. Add bilingual content using the EN / BM tabs.
+                    </p>
+                </div>
+                <LangTab lang={lang} setLang={setLang} />
             </div>
 
-            <div className="rounded-xl border overflow-hidden">
-                <BlockNoteEditor
-                    key={course.id}
-                    initialContent={content}
-                    onChange={setContent}
-                />
-            </div>
+            {lang === 'en' ? (
+                <div className="rounded-xl border overflow-hidden">
+                    <BlockNoteEditor
+                        key={`intro-en-${course.id}`}
+                        initialContent={content}
+                        onChange={setContent}
+                    />
+                </div>
+            ) : (
+                <div className="rounded-xl border overflow-hidden">
+                    <BlockNoteEditor
+                        key={`intro-ms-${course.id}`}
+                        initialContent={contentMs}
+                        onChange={setContentMs}
+                    />
+                </div>
+            )}
 
             <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">

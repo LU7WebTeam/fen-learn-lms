@@ -54,7 +54,7 @@ class LearnController extends Controller
         $course->load(['sections' => function ($q) {
             $q->orderBy('order')->with(['lessons' => function ($q2) {
                 $q2->orderBy('order')
-                    ->select(['id', 'section_id', 'title', 'type', 'duration_minutes', 'is_free_preview', 'order', 'prerequisite_lesson_id']);
+                    ->select(['id', 'section_id', 'title', 'title_ms', 'type', 'duration_minutes', 'is_free_preview', 'order', 'prerequisite_lesson_id']);
             }]);
         }]);
 
@@ -121,6 +121,7 @@ class LearnController extends Controller
             'course' => [
                 'id'       => $course->id,
                 'title'    => $course->title,
+                'title_ms' => $course->title_ms,
                 'slug'     => $course->slug,
                 'sections' => $course->sections,
             ],
@@ -135,8 +136,8 @@ class LearnController extends Controller
             'isCompleted'        => $isCompleted,
             'isLocked'           => $isLocked,
             'prerequisiteLesson' => $prerequisiteLesson,
-            'nextLesson'         => $next ? ['id' => $next->id, 'title' => $next->title] : null,
-            'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title] : null,
+            'nextLesson'         => $next ? ['id' => $next->id, 'title' => $next->title, 'title_ms' => $next->title_ms] : null,
+            'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title, 'title_ms' => $prev->title_ms] : null,
             'lastAttempt'        => $lastAttempt,
             'allAttempts'        => $allAttempts,
         ]);

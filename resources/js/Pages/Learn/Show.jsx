@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm';
 import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
 import VideoPlayer from '@/Components/VideoPlayer';
 import UserMenu from '@/Components/UserMenu';
+import LangSwitcher from '@/Components/LangSwitcher';
+import { tl } from '@/lib/locale';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
@@ -20,7 +22,7 @@ const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: File
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
-function QuizPlayer({ lesson, course, allAttempts = [] }) {
+function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     const { flash } = usePage().props;
     const result = flash?.quiz_result ?? null;
 
@@ -29,6 +31,31 @@ function QuizPlayer({ lesson, course, allAttempts = [] }) {
         quizData = JSON.parse(lesson.content || '{}');
         if (!Array.isArray(quizData.questions)) quizData.questions = [];
     } catch { /* empty */ }
+
+    if (locale === 'ms' && lesson.content_ms) {
+        try {
+            const msData = JSON.parse(lesson.content_ms);
+            if (Array.isArray(msData.questions)) {
+                quizData = {
+                    ...quizData,
+                    questions: quizData.questions.map((enQ, i) => {
+                        const msQ = msData.questions[i];
+                        if (!msQ) return enQ;
+                        return {
+                            ...enQ,
+                            text: msQ.text?.trim() || enQ.text,
+                            options: enQ.options.map((enOpt, j) => {
+                                const msOpt = msQ.options?.[j];
+                                if (!msOpt || !String(msOpt).trim()) return enOpt;
+                                if (typeof enOpt === 'object') return { ...enOpt, label: msOpt };
+                                return msOpt;
+                            }),
+                        };
+                    }),
+                };
+            }
+        } catch { /* keep EN */ }
+    }
 
     const questions    = quizData.questions;
     const passingScore = quizData.passing_score ?? 70;
@@ -263,7 +290,7 @@ function QuizPlayer({ lesson, course, allAttempts = [] }) {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [] }) {
+function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [], locale }) {
     return (
         <div className="flex h-full flex-col">
             <div className="border-b px-4 py-4">
@@ -272,7 +299,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                     className="flex items-center gap-2 text-sm font-semibold hover:underline"
                 >
                     <GraduationCap className="h-4 w-4 shrink-0" />
-                    <span className="line-clamp-1">{course.title}</span>
+                    <span className="line-clamp-1">{tl(course, 'title', locale)}</span>
                 </Link>
                 <div className="mt-2 space-y-1">
                     <div className="flex justify-between text-xs text-muted-foreground">
@@ -287,7 +314,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                 {course.sections.map((section) => (
                     <div key={section.id} className="mb-2">
                         <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {section.title}
+                            {tl(section, 'title', locale)}
                         </p>
                         {section.lessons.map((l) => {
                             const Icon      = LESSON_ICONS[l.type] ?? FileText;
@@ -314,7 +341,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                                                 ? <Lock className="h-4 w-4 text-muted-foreground/60" />
                                                 : <Icon className="h-4 w-4 text-muted-foreground" />}
                                     </span>
-                                    <span className="line-clamp-2 flex-1 leading-snug">{l.title}</span>
+                                    <span className="line-clamp-2 flex-1 leading-snug">{tl(l, 'title', locale)}</span>
                                     {l.duration_minutes > 0 && (
                                         <span className="shrink-0 text-xs text-muted-foreground">{l.duration_minutes}m</span>
                                     )}
@@ -334,6 +361,7 @@ export default function LearnShow({
     course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
     nextLesson, prevLesson, allAttempts,
 }) {
+    const { locale } = usePage().props;
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
@@ -366,9 +394,12 @@ export default function LearnShow({
 
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
+    const lessonTitle = tl(lesson, 'title', locale);
+    const courseTitle = tl(course, 'title', locale);
+
     return (
         <>
-            <Head title={`${lesson.title} — ${course.title}`} />
+            <Head title={`${lessonTitle} — ${courseTitle}`} />
 
             <div className="flex h-screen flex-col overflow-hidden bg-background">
                 {/* Top bar */}
@@ -386,6 +417,7 @@ export default function LearnShow({
                                 completedIds={effectiveCompletedIds}
                                 enrollment={enrollment}
                                 lockedIds={lockedIds}
+                                locale={locale}
                             />
                         </SheetContent>
                     </Sheet>
@@ -395,7 +427,7 @@ export default function LearnShow({
                         className="flex items-center gap-2 text-sm font-medium hover:underline"
                     >
                         <GraduationCap className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline line-clamp-1 max-w-xs">{course.title}</span>
+                        <span className="hidden sm:inline line-clamp-1 max-w-xs">{courseTitle}</span>
                     </Link>
 
                     <div className="ml-auto flex items-center gap-3">
@@ -406,6 +438,7 @@ export default function LearnShow({
                             </Badge>
                         )}
                         <span className="text-sm text-muted-foreground">{enrollment.progress}%</span>
+                        <LangSwitcher />
                         <UserMenu />
                     </div>
                 </header>
@@ -419,6 +452,7 @@ export default function LearnShow({
                             completedIds={effectiveCompletedIds}
                             enrollment={enrollment}
                             lockedIds={lockedIds}
+                            locale={locale}
                         />
                     </aside>
 
@@ -428,7 +462,7 @@ export default function LearnShow({
                             {/* Lesson title */}
                             <div className="mb-6 flex items-center gap-2">
                                 <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
-                                <h1 className="text-2xl font-bold tracking-tight">{lesson.title}</h1>
+                                <h1 className="text-2xl font-bold tracking-tight">{lessonTitle}</h1>
                             </div>
 
                             {/* ── Locked state ── */}
@@ -460,81 +494,86 @@ export default function LearnShow({
                             )}
 
                             {/* ── Video ── */}
-                            {lesson.type === 'video' && !isLocked && (
-                                <div className="space-y-6">
-                                    <VideoPlayer
-                                        url={lesson.video_url}
-                                        onWatchComplete={() => setVideoWatched(true)}
-                                    />
-                                    {lesson.content && (
-                                        <div>
-                                            <h2 className="mb-3 text-base font-semibold">Notes</h2>
-                                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                    {lesson.content}
-                                                </ReactMarkdown>
+                            {lesson.type === 'video' && !isLocked && (() => {
+                                const notes = tl(lesson, 'content', locale);
+                                return (
+                                    <div className="space-y-6">
+                                        <VideoPlayer
+                                            url={lesson.video_url}
+                                            onWatchComplete={() => setVideoWatched(true)}
+                                        />
+                                        {notes && (
+                                            <div>
+                                                <h2 className="mb-3 text-base font-semibold">Notes</h2>
+                                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                        )}
+                                    </div>
+                                );
+                            })()}
 
                             {/* ── Text ── */}
                             {lesson.type === 'text' && !isLocked && (() => {
-                                if (!lesson.content) {
+                                const rawContent = tl(lesson, 'content', locale);
+                                if (!rawContent) {
                                     return <p className="text-muted-foreground">No content yet for this lesson.</p>;
                                 }
                                 try {
-                                    const blocks = JSON.parse(lesson.content);
+                                    const blocks = JSON.parse(rawContent);
                                     if (Array.isArray(blocks)) {
                                         return <BlockNoteRenderer content={blocks} />;
                                     }
                                 } catch { /* not JSON */ }
                                 return (
                                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{rawContent}</ReactMarkdown>
                                     </div>
                                 );
                             })()}
 
                             {/* ── Quiz ── */}
                             {lesson.type === 'quiz' && !isLocked && (
-                                <QuizPlayer lesson={lesson} course={course} allAttempts={allAttempts ?? []} />
+                                <QuizPlayer lesson={lesson} course={course} allAttempts={allAttempts ?? []} locale={locale} />
                             )}
 
                             {/* ── PDF ── */}
-                            {lesson.type === 'pdf' && !isLocked && (
-                                <div className="space-y-4">
-                                    {lesson.pdf_url ? (
-                                        <>
-                                            <div className="overflow-hidden rounded-lg border bg-muted" style={{ height: '75vh' }}>
-                                                <iframe
-                                                    src={lesson.pdf_url}
-                                                    className="h-full w-full"
-                                                    title={lesson.title}
-                                                />
+                            {lesson.type === 'pdf' && !isLocked && (() => {
+                                const pdfDesc = tl(lesson, 'content', locale);
+                                return (
+                                    <div className="space-y-4">
+                                        {lesson.pdf_url ? (
+                                            <>
+                                                <div className="overflow-hidden rounded-lg border bg-muted" style={{ height: '75vh' }}>
+                                                    <iframe
+                                                        src={lesson.pdf_url}
+                                                        className="h-full w-full"
+                                                        title={lessonTitle}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end">
+                                                    <a
+                                                        href={lesson.pdf_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm text-primary hover:underline"
+                                                    >
+                                                        Open in new tab ↗
+                                                    </a>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <p className="text-muted-foreground">No PDF attached to this lesson yet.</p>
+                                        )}
+                                        {pdfDesc && (
+                                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{pdfDesc}</ReactMarkdown>
                                             </div>
-                                            <div className="flex justify-end">
-                                                <a
-                                                    href={lesson.pdf_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-sm text-primary hover:underline"
-                                                >
-                                                    Open in new tab ↗
-                                                </a>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <p className="text-muted-foreground">No PDF attached to this lesson yet.</p>
-                                    )}
-                                    {lesson.content && (
-                                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.content}</ReactMarkdown>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                        )}
+                                    </div>
+                                );
+                            })()}
 
                             <Separator className="my-8" />
 
@@ -546,7 +585,7 @@ export default function LearnShow({
                                     onClick={() => prevLesson && router.get(route('learn.lesson', [course.slug, prevLesson.id]))}
                                 >
                                     <ChevronLeft className="mr-1 h-4 w-4" />
-                                    {prevLesson ? prevLesson.title : 'Previous'}
+                                    {prevLesson ? tl(prevLesson, 'title', locale) : 'Previous'}
                                 </Button>
 
                                 <div className="flex items-center gap-3">

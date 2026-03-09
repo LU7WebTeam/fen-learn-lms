@@ -14,9 +14,12 @@ class Course extends Model
 
     protected $fillable = [
         'title',
+        'title_ms',
         'slug',
         'description',
+        'description_ms',
         'introduction',
+        'introduction_ms',
         'cover_image',
         'category',
         'difficulty',
@@ -33,6 +36,7 @@ class Course extends Model
         return [
             'certificate_template' => 'array',
             'introduction'         => 'array',
+            'introduction_ms'      => 'array',
         ];
     }
 

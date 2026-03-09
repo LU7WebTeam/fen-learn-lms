@@ -3,6 +3,7 @@ import { BookOpen, LayoutDashboard, Menu, GraduationCap } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
+import LangSwitcher from '@/Components/LangSwitcher';
 
 function NavItems({ mobile = false }) {
     const linkClass = mobile
@@ -38,6 +39,7 @@ export default function AuthenticatedLayout({ children }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-2">
+                        <LangSwitcher />
                         <UserMenu />
 
                         <Sheet>

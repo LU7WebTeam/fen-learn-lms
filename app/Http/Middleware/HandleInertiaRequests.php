@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                 'error'       => $request->session()->get('error'),
                 'quiz_result' => $request->session()->get('quiz_result'),
             ],
+            'locale' => $request->session()->get('locale', 'en'),
         ];
     }
 }

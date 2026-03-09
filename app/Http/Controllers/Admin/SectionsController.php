@@ -12,13 +12,17 @@ class SectionsController extends Controller
 {
     public function store(Request $request, Course $course): RedirectResponse
     {
-        $request->validate(['title' => 'required|string|max:255']);
+        $request->validate([
+            'title'    => 'required|string|max:255',
+            'title_ms' => 'nullable|string|max:255',
+        ]);
 
         $order = $course->sections()->max('order') + 1;
 
         $course->sections()->create([
-            'title' => $request->title,
-            'order' => $order,
+            'title'    => $request->title,
+            'title_ms' => $request->title_ms,
+            'order'    => $order,
         ]);
 
         return back()->with('success', 'Section added.');
@@ -26,9 +30,15 @@ class SectionsController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
-        $request->validate(['title' => 'required|string|max:255']);
+        $request->validate([
+            'title'    => 'required|string|max:255',
+            'title_ms' => 'nullable|string|max:255',
+        ]);
 
-        $section->update(['title' => $request->title]);
+        $section->update([
+            'title'    => $request->title,
+            'title_ms' => $request->title_ms,
+        ]);
 
         return back()->with('success', 'Section renamed.');
     }

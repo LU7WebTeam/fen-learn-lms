@@ -121,3 +121,11 @@ All PRD-mapped components in `resources/js/Components/ui/`:
 9. **Media Uploads** ✅ — Course cover images (drag & drop, preview, replace/clear), video lesson file upload (toggle URL ↔ upload), PDF lesson type with file upload + inline viewer; old files auto-deleted on replace
    - Files stored in `storage/app/public/` (covers/, videos/, pdfs/) served via `/storage/` symlink
    - Components: `ImageUpload.jsx`, `PdfUpload.jsx`
+10. **Bilingual Support (EN + Bahasa Melayu)** ✅ — Per-field translation for all course content
+    - DB columns: `title_ms`, `description_ms`, `introduction_ms` (courses); `title_ms`, `content_ms` (lessons); `title_ms` (sections)
+    - Locale stored in session (`en`/`ms`) via `POST /locale` → `LocaleController`; shared to all Inertia pages as `locale`
+    - Admin editors have EN|BM tab toggle for all fields (title, description, introduction, section titles, lesson title/content)
+    - Quiz BM mode: mirrors EN structure; only translates question text, option labels, feedback; correct/type/score from EN
+    - Public helper `tl(record, field, locale)` in `resources/js/lib/locale.js` — returns BM field if non-empty, else falls back to EN
+    - `LangSwitcher.jsx` component in `AuthenticatedLayout` and `Learn/Show` header
+    - All public pages (`Courses/Index`, `Courses/Show`, `Learn/Show`) fully localized with EN fallback

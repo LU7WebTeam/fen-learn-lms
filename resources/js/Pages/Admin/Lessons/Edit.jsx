@@ -51,7 +51,16 @@ function ModeTab({ active, onClick, icon: Icon, label }) {
     );
 }
 
-function VideoEditor({ data, setData, errors }) {
+function LangTab({ lang, setLang }) {
+    return (
+        <div className="flex items-center gap-1 rounded-md border bg-muted/50 p-0.5 w-fit">
+            <button type="button" onClick={() => setLang('en')} className={['rounded px-2.5 py-0.5 text-xs font-medium transition-colors', lang === 'en' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'].join(' ')}>EN</button>
+            <button type="button" onClick={() => setLang('ms')} className={['rounded px-2.5 py-0.5 text-xs font-medium transition-colors', lang === 'ms' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'].join(' ')}>BM</button>
+        </div>
+    );
+}
+
+function VideoEditor({ data, setData, errors, lang }) {
     const [mode, setMode] = useState(() =>
         data.video_url && data.video_url.includes('/storage/') ? 'upload' : 'url'
     );
@@ -159,29 +168,59 @@ function VideoEditor({ data, setData, errors }) {
                 </div>
             )}
 
-            <Field label="Notes / Transcript (optional)" error={errors.content}>
-                <Textarea
-                    value={data.content ?? ''}
-                    onChange={(e) => setData('content', e.target.value)}
-                    placeholder="Add supplemental notes or a transcript for this lesson…"
-                    rows={6}
-                />
-            </Field>
+            {lang === 'en' ? (
+                <Field label="Notes / Transcript (optional)" error={errors.content}>
+                    <Textarea
+                        value={data.content ?? ''}
+                        onChange={(e) => setData('content', e.target.value)}
+                        placeholder="Add supplemental notes or a transcript for this lesson…"
+                        rows={6}
+                    />
+                </Field>
+            ) : (
+                <Field label="Notes / Transcript (Bahasa Melayu, optional)" error={errors.content_ms}>
+                    <Textarea
+                        value={data.content_ms ?? ''}
+                        onChange={(e) => setData('content_ms', e.target.value)}
+                        placeholder="Nota atau transkripsi dalam Bahasa Melayu…"
+                        rows={6}
+                    />
+                </Field>
+            )}
         </div>
     );
 }
 
-function TextEditor({ data, setData, errors }) {
-    let initialContent;
+function TextEditor({ data, setData, errors, lang }) {
+    let initialContent, initialContentMs;
     try {
         const parsed = JSON.parse(data.content || '[]');
         if (Array.isArray(parsed)) initialContent = parsed;
     } catch { /* legacy markdown — start fresh */ }
+    try {
+        const parsed = JSON.parse(data.content_ms || '[]');
+        if (Array.isArray(parsed)) initialContentMs = parsed;
+    } catch {}
+
+    if (lang === 'ms') {
+        return (
+            <Field label="Lesson Content (Bahasa Melayu)" error={errors.content_ms}>
+                <div className="rounded-md border overflow-hidden">
+                    <BlockNoteEditor
+                        key="text-ms"
+                        initialContent={initialContentMs}
+                        onChange={(doc) => setData('content_ms', JSON.stringify(doc))}
+                    />
+                </div>
+            </Field>
+        );
+    }
 
     return (
         <Field label="Lesson Content" error={errors.content}>
             <div className="rounded-md border overflow-hidden">
                 <BlockNoteEditor
+                    key="text-en"
                     initialContent={initialContent}
                     onChange={(doc) => setData('content', JSON.stringify(doc))}
                 />
@@ -190,7 +229,7 @@ function TextEditor({ data, setData, errors }) {
     );
 }
 
-function PdfEditor({ data, setData, errors }) {
+function PdfEditor({ data, setData, errors, lang }) {
     return (
         <div className="space-y-4">
             <Field label="PDF File" error={errors.pdf_file || errors.pdf_url}>
@@ -200,18 +239,112 @@ function PdfEditor({ data, setData, errors }) {
                     onClear={() => { setData('pdf_file', null); setData('pdf_url', ''); }}
                 />
             </Field>
-            <Field
-                label="Description (optional)"
-                error={errors.content}
-                hint="Briefly describe what this PDF covers."
-            >
-                <Textarea
-                    value={data.content ?? ''}
-                    onChange={(e) => setData('content', e.target.value)}
-                    placeholder="This PDF covers…"
-                    rows={4}
-                />
-            </Field>
+            {lang === 'en' ? (
+                <Field label="Description (optional)" error={errors.content} hint="Briefly describe what this PDF covers.">
+                    <Textarea
+                        value={data.content ?? ''}
+                        onChange={(e) => setData('content', e.target.value)}
+                        placeholder="This PDF covers…"
+                        rows={4}
+                    />
+                </Field>
+            ) : (
+                <Field label="Description (Bahasa Melayu, optional)" error={errors.content_ms}>
+                    <Textarea
+                        value={data.content_ms ?? ''}
+                        onChange={(e) => setData('content_ms', e.target.value)}
+                        placeholder="PDF ini meliputi…"
+                        rows={4}
+                    />
+                </Field>
+            )}
+        </div>
+    );
+}
+
+function QuizBMEditor({ data, setData }) {
+    let enParsed = { questions: [] };
+    try { enParsed = JSON.parse(data.content ?? '{}'); } catch {}
+    const enQuestions = enParsed.questions ?? [];
+
+    let msParsed = { questions: [] };
+    try { msParsed = JSON.parse(data.content_ms || '{}'); } catch {}
+
+    function getMsQ(idx) {
+        return msParsed.questions?.[idx] ?? { text: '', options: [] };
+    }
+
+    function saveMsQuestions(qs) {
+        setData('content_ms', JSON.stringify({ questions: qs }));
+    }
+
+    function updateMsQuestion(qIdx, field, value) {
+        const qs = enQuestions.map((_, i) => {
+            const cur = getMsQ(i);
+            return i === qIdx ? { ...cur, [field]: value } : cur;
+        });
+        saveMsQuestions(qs);
+    }
+
+    function updateMsOption(qIdx, oIdx, value) {
+        const qs = enQuestions.map((enQ, i) => {
+            const cur = getMsQ(i);
+            if (i !== qIdx) return cur;
+            const opts = enQ.options.map((_, j) => j === oIdx ? value : (cur.options?.[j] ?? ''));
+            return { ...cur, options: opts };
+        });
+        saveMsQuestions(qs);
+    }
+
+    if (enQuestions.length === 0) {
+        return (
+            <div className="rounded-xl border border-dashed py-12 text-center">
+                <p className="text-sm text-muted-foreground">Add EN questions first, then switch to BM to translate them.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <p className="text-xs rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-amber-800">
+                Translate question text and answer options. Question type and correct answer are controlled in the EN tab.
+            </p>
+            {enQuestions.map((enQ, qIdx) => {
+                const msQ = getMsQ(qIdx);
+                return (
+                    <Card key={enQ.id ?? qIdx}>
+                        <CardHeader className="pb-2">
+                            <p className="text-xs text-muted-foreground font-medium">Q{qIdx + 1} (EN): {enQ.text}</p>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Textarea
+                                value={msQ.text ?? ''}
+                                onChange={(e) => updateMsQuestion(qIdx, 'text', e.target.value)}
+                                placeholder="Teks soalan dalam Bahasa Melayu…"
+                                rows={2}
+                            />
+                            <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">BM answer options</Label>
+                                {enQ.options.map((enOpt, oIdx) => {
+                                    const enLabel = typeof enOpt === 'object' ? (enOpt.label ?? `Option ${oIdx + 1}`) : (enOpt || `Option ${oIdx + 1}`);
+                                    return (
+                                        <div key={oIdx} className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground w-28 shrink-0 truncate" title={enLabel}>{enLabel}</span>
+                                            <span className="text-muted-foreground shrink-0">→</span>
+                                            <Input
+                                                value={msQ.options?.[oIdx] ?? ''}
+                                                onChange={(e) => updateMsOption(qIdx, oIdx, e.target.value)}
+                                                placeholder={`BM option ${oIdx + 1}…`}
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })}
         </div>
     );
 }
@@ -278,7 +411,11 @@ function ImageOptionUpload({ value, onChange }) {
     );
 }
 
-function QuizEditor({ data, setData, errors }) {
+function QuizEditor({ data, setData, errors, lang }) {
+    if (lang === 'ms') {
+        return <QuizBMEditor data={data} setData={setData} />;
+    }
+
     const rawContent = data.content ?? '';
     let parsed = { questions: [], passing_score: 70, max_attempts: 0 };
     try { parsed = JSON.parse(rawContent); } catch {}
@@ -540,10 +677,12 @@ function QuizEditor({ data, setData, errors }) {
 export default function EditLesson({ lesson, courseLessons = [], flash }) {
     const meta = TYPE_META[lesson.type] ?? TYPE_META.text;
     const Icon = meta.icon;
+    const [lang, setLang] = useState('en');
 
     const { data, setData, post, processing, errors, isDirty } = useForm({
         _method:                 'patch',
         title:                   lesson.title,
+        title_ms:                lesson.title_ms ?? '',
         duration_minutes:        lesson.duration_minutes ?? 0,
         is_free_preview:         lesson.is_free_preview ?? false,
         prerequisite_lesson_id:  lesson.prerequisite_lesson_id ?? '',
@@ -552,6 +691,7 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
         pdf_url:                 lesson.pdf_url ?? '',
         pdf_file:                null,
         content:                 lesson.content ?? '',
+        content_ms:              lesson.content_ms ?? '',
     });
 
     function handleSubmit(e) {
@@ -598,12 +738,23 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
                 )}
 
                 <Card>
-                    <CardHeader><CardTitle>Lesson Settings</CardTitle></CardHeader>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>Lesson Settings</CardTitle>
+                            <LangTab lang={lang} setLang={setLang} />
+                        </div>
+                    </CardHeader>
                     <CardContent>
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="Title *" error={errors.title}>
-                                <Input value={data.title} onChange={(e) => setData('title', e.target.value)} />
-                            </Field>
+                            {lang === 'en' ? (
+                                <Field label="Title *" error={errors.title}>
+                                    <Input value={data.title} onChange={(e) => setData('title', e.target.value)} />
+                                </Field>
+                            ) : (
+                                <Field label="Title (Bahasa Melayu)" error={errors.title_ms} hint="Leave blank to fall back to the English title.">
+                                    <Input value={data.title_ms} onChange={(e) => setData('title_ms', e.target.value)} placeholder="Tajuk dalam Bahasa Melayu…" />
+                                </Field>
+                            )}
                             <Field label="Duration (minutes)" error={errors.duration_minutes}>
                                 <Input
                                     type="number"
@@ -657,10 +808,10 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
                         {meta.label} Content
                     </h3>
 
-                    {lesson.type === 'video' && <VideoEditor data={data} setData={setData} errors={errors} />}
-                    {lesson.type === 'text'  && <TextEditor  data={data} setData={setData} errors={errors} />}
-                    {lesson.type === 'quiz'  && <QuizEditor  data={data} setData={setData} errors={errors} />}
-                    {lesson.type === 'pdf'   && <PdfEditor   data={data} setData={setData} errors={errors} />}
+                    {lesson.type === 'video' && <VideoEditor data={data} setData={setData} errors={errors} lang={lang} />}
+                    {lesson.type === 'text'  && <TextEditor  data={data} setData={setData} errors={errors} lang={lang} />}
+                    {lesson.type === 'quiz'  && <QuizEditor  data={data} setData={setData} errors={errors} lang={lang} />}
+                    {lesson.type === 'pdf'   && <PdfEditor   data={data} setData={setData} errors={errors} lang={lang} />}
                 </div>
 
                 <div className="flex justify-between">

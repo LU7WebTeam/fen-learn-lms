@@ -7,6 +7,8 @@ import { Button } from '@/Components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Progress } from '@/Components/ui/progress';
 import { BookOpen, Play, GraduationCap, Clock } from 'lucide-react';
+import { tl } from '@/lib/locale';
+import LangSwitcher from '@/Components/LangSwitcher';
 
 const DIFFICULTY_COLORS = {
     beginner:     'secondary',
@@ -15,10 +17,14 @@ const DIFFICULTY_COLORS = {
 };
 
 function CourseCard({ course, enrolled }) {
+    const { locale } = usePage().props;
+    const title       = tl(course, 'title', locale);
+    const description = tl(course, 'description', locale);
+
     return (
         <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
             {course.cover_image ? (
-                <img src={course.cover_image} alt={course.title} className="h-44 w-full object-cover" />
+                <img src={course.cover_image} alt={title} className="h-44 w-full object-cover" />
             ) : (
                 <div className="flex h-44 w-full items-center justify-center bg-muted">
                     <BookOpen className="h-12 w-12 text-muted-foreground" />
@@ -26,7 +32,7 @@ function CourseCard({ course, enrolled }) {
             )}
             <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-2 text-base leading-snug">{course.title}</CardTitle>
+                    <CardTitle className="line-clamp-2 text-base leading-snug">{title}</CardTitle>
                     <Badge variant={DIFFICULTY_COLORS[course.difficulty] || 'secondary'} className="shrink-0 capitalize">
                         {course.difficulty}
                     </Badge>
@@ -34,7 +40,7 @@ function CourseCard({ course, enrolled }) {
                 {course.category && <CardDescription>{course.category}</CardDescription>}
             </CardHeader>
             <CardContent className="flex-1 pb-2">
-                <p className="line-clamp-2 text-sm text-muted-foreground">{course.description}</p>
+                <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
                 <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                         <BookOpen className="h-3.5 w-3.5" />
@@ -119,7 +125,10 @@ export default function CoursesIndex({ courses, enrolledIds, categories, filters
                             {courses.total} course{courses.total !== 1 ? 's' : ''} available
                         </p>
                     </div>
-                    <Filters categories={categories} filters={filters} />
+                    <div className="flex flex-wrap items-center gap-3">
+                        {!auth?.user && <LangSwitcher />}
+                        <Filters categories={categories} filters={filters} />
+                    </div>
                 </div>
 
                 {courses.data.length === 0 ? (

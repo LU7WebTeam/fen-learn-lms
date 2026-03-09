@@ -57,6 +57,7 @@ class LessonsController extends Controller
     {
         $rules = [
             'title'                   => 'required|string|max:255',
+            'title_ms'                => 'nullable|string|max:255',
             'duration_minutes'        => 'nullable|integer|min:0',
             'is_free_preview'         => 'boolean',
             'prerequisite_lesson_id'  => 'nullable|integer|exists:lessons,id',
@@ -66,13 +67,18 @@ class LessonsController extends Controller
             $rules['video_url']   = 'nullable|string|max:500';
             $rules['video_file']  = 'nullable|file|mimetypes:video/mp4,video/webm,video/ogg,video/quicktime|max:204800';
             $rules['content']     = 'nullable|string';
+            $rules['content_ms']  = 'nullable|string';
         } elseif ($lesson->type === 'text') {
-            $rules['content'] = 'nullable|string';
+            $rules['content']    = 'nullable|string';
+            $rules['content_ms'] = 'nullable|string';
         } elseif ($lesson->type === 'quiz') {
-            $rules['content'] = 'nullable|string';
+            $rules['content']    = 'nullable|string';
+            $rules['content_ms'] = 'nullable|string';
         } elseif ($lesson->type === 'pdf') {
-            $rules['pdf_url']  = 'nullable|string|max:500';
-            $rules['pdf_file'] = 'nullable|file|mimetypes:application/pdf|max:20480';
+            $rules['pdf_url']    = 'nullable|string|max:500';
+            $rules['pdf_file']   = 'nullable|file|mimetypes:application/pdf|max:20480';
+            $rules['content']    = 'nullable|string';
+            $rules['content_ms'] = 'nullable|string';
         }
 
         $validated = $request->validate($rules);

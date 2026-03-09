@@ -11,7 +11,7 @@ class Section extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['course_id', 'title', 'order'];
+    protected $fillable = ['course_id', 'title', 'title_ms', 'order'];
 
     public function course(): BelongsTo
     {
