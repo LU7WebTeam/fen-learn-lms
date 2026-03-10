@@ -512,7 +512,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                 )}
 
                 {/* Tabs */}
-                <Tabs defaultValue="details">
+                <Tabs defaultValue="dashboard">
                     <TabsList className="w-full justify-start">
                         <TabsTrigger value="details" className="gap-2">
                             <Settings2 className="h-4 w-4" />Details

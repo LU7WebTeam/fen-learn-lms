@@ -40,7 +40,12 @@ function CourseRow({ course }) {
     return (
         <TableRow>
             <TableCell className="font-medium max-w-xs">
-                <div className="truncate">{course.title}</div>
+                <Link
+                    href={route('admin.courses.edit', course.id)}
+                    className="hover:underline hover:text-primary"
+                >
+                    <div className="truncate">{course.title}</div>
+                </Link>
                 <div className="text-xs text-muted-foreground truncate">{course.slug}</div>
             </TableCell>
             <TableCell><StatusBadge status={course.status} /></TableCell>
