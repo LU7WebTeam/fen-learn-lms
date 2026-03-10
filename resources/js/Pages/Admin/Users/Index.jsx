@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import { Progress } from '@/Components/ui/progress';
+import { Separator } from '@/Components/ui/separator';
 import {
     Dialog,
     DialogContent,
@@ -38,7 +40,430 @@ import {
     Send,
     Ban,
     CircleCheck,
+    Save,
+    X,
+    CalendarDays,
+    MapPin,
+    Briefcase,
+    Building2,
+    Activity,
+    Award,
+    ExternalLink,
+    User,
+    Clock,
 } from 'lucide-react';
+
+const MALAYSIAN_STATES = [
+    'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak',
+    'Perlis','Pulau Pinang','Sabah','Sarawak','Selangor','Terengganu',
+    'Wilayah Persekutuan Kuala Lumpur','Wilayah Persekutuan Labuan',
+    'Wilayah Persekutuan Putrajaya',
+];
+const OCCUPATIONS = [
+    { value: 'student',       label: 'Student' },
+    { value: 'government',    label: 'Government Employee' },
+    { value: 'private',       label: 'Private Sector Employee' },
+    { value: 'self_employed', label: 'Self-employed / Entrepreneur' },
+    { value: 'professional',  label: 'Professional (Doctor, Lawyer, etc.)' },
+    { value: 'academic',      label: 'Academic / Educator' },
+    { value: 'homemaker',     label: 'Homemaker' },
+    { value: 'retired',       label: 'Retired' },
+    { value: 'unemployed',    label: 'Unemployed' },
+    { value: 'other',         label: 'Other' },
+];
+const RACES = [
+    { value: 'malay',            label: 'Malay' },
+    { value: 'chinese',          label: 'Chinese' },
+    { value: 'indian',           label: 'Indian' },
+    { value: 'other_bumiputera', label: 'Other Bumiputera' },
+    { value: 'other',            label: 'Other' },
+];
+
+function UserAvatar({ name, src, size = 'md' }) {
+    const initials = name
+        ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : '?';
+    const sizeClass = size === 'lg' ? 'h-14 w-14 text-lg' : 'h-8 w-8 text-xs';
+    return (
+        <div className={`${sizeClass} rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center font-semibold text-indigo-700 shrink-0`}>
+            {src
+                ? <img src={src} alt={name} className="h-full w-full object-cover" />
+                : <span>{initials}</span>
+            }
+        </div>
+    );
+}
+
+// ─── Learner profile dialog ───────────────────────────────────────────────────
+function LearnerProfileDialog({ userId, open, onClose }) {
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [editing, setEditing] = useState(false);
+
+    const { data, setData, patch, processing, errors, reset } = useForm({
+        name:         '',
+        email:        '',
+        gender:       '',
+        race:         '',
+        state:        '',
+        birthdate:    '',
+        occupation:   '',
+        organization: '',
+    });
+
+    useEffect(() => {
+        if (!open || !userId) return;
+        setLoading(true);
+        setEditing(false);
+        fetch(route('admin.users.show', userId), { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                setProfile(data);
+                setData({
+                    name:         data.name         ?? '',
+                    email:        data.email        ?? '',
+                    gender:       data.gender       ?? '',
+                    race:         data.race         ?? '',
+                    state:        data.state        ?? '',
+                    birthdate:    data.birthdate_raw ?? '',
+                    occupation:   data.occupation   ?? '',
+                    organization: data.organization ?? '',
+                });
+            })
+            .finally(() => setLoading(false));
+    }, [open, userId]);
+
+    function restoreForm() {
+        if (!profile) return;
+        reset();
+        setData({
+            name:         profile.name         ?? '',
+            email:        profile.email        ?? '',
+            gender:       profile.gender       ?? '',
+            race:         profile.race         ?? '',
+            state:        profile.state        ?? '',
+            birthdate:    profile.birthdate_raw ?? '',
+            occupation:   profile.occupation   ?? '',
+            organization: profile.organization ?? '',
+        });
+        setEditing(false);
+    }
+
+    function handleSave(e) {
+        e.preventDefault();
+        patch(route('admin.users.update-profile', userId), {
+            onSuccess: () => {
+                setProfile(prev => ({
+                    ...prev,
+                    name:         data.name,
+                    email:        data.email,
+                    gender:       data.gender,
+                    race:         data.race,
+                    state:        data.state,
+                    occupation:   data.occupation,
+                    organization: data.organization,
+                }));
+                setEditing(false);
+            },
+        });
+    }
+
+    const occupationLabel = OCCUPATIONS.find(o => o.value === profile?.occupation)?.label ?? profile?.occupation;
+    const raceLabel       = RACES.find(r => r.value === profile?.race)?.label ?? profile?.race;
+
+    return (
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { restoreForm(); onClose(); } }}>
+            <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <div className="flex items-center justify-between">
+                        <DialogTitle>{editing ? 'Edit Profile' : 'Learner Profile'}</DialogTitle>
+                        {!editing && profile && (
+                            <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setEditing(true)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit
+                            </Button>
+                        )}
+                    </div>
+                    <DialogDescription className="sr-only">
+                        {editing ? 'Edit' : 'View'} profile for learner.
+                    </DialogDescription>
+                </DialogHeader>
+
+                {loading && (
+                    <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                        Loading…
+                    </div>
+                )}
+
+                {!loading && profile && editing && (
+                    <form onSubmit={handleSave} className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 py-1">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Full Name <span className="text-red-500">*</span></label>
+                                <Input value={data.name} onChange={e => setData('name', e.target.value)} />
+                                <InputError message={errors.name} />
+                            </div>
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Email Address <span className="text-red-500">*</span></label>
+                                <Input type="email" value={data.email} onChange={e => setData('email', e.target.value)} />
+                                <InputError message={errors.email} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Gender</label>
+                            <div className="flex gap-2">
+                                {[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => setData('gender', data.gender === opt.value ? '' : opt.value)}
+                                        className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+                                            data.gender === opt.value
+                                                ? 'border-primary bg-primary/5 text-primary'
+                                                : 'border-input bg-background text-muted-foreground hover:border-primary/50'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <InputError message={errors.gender} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">Race / Ethnicity</label>
+                                <Select value={data.race} onValueChange={v => setData('race', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {RACES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.race} />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">State</label>
+                                <Select value={data.state} onValueChange={v => setData('state', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {MALAYSIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.state} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Date of Birth</label>
+                            <Input
+                                type="date"
+                                value={data.birthdate}
+                                onChange={e => setData('birthdate', e.target.value)}
+                                max={new Date().toISOString().split('T')[0]}
+                            />
+                            <InputError message={errors.birthdate} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Occupation</label>
+                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                <SelectContent>
+                                    {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.occupation} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Organization / Institution</label>
+                            <Input
+                                value={data.organization}
+                                onChange={e => setData('organization', e.target.value)}
+                                placeholder="e.g. Universiti Malaya, Petronas…"
+                            />
+                            <InputError message={errors.organization} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">
+                            <Button type="submit" className="flex-1 gap-1.5" disabled={processing}>
+                                <Save className="h-4 w-4" />
+                                {processing ? 'Saving…' : 'Save Changes'}
+                            </Button>
+                            <Button type="button" variant="outline" onClick={restoreForm} disabled={processing}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </form>
+                )}
+
+                {!loading && profile && !editing && (
+                    <>
+                        {/* Profile header */}
+                        <div className="flex items-center gap-4 py-2">
+                            <UserAvatar name={profile.name} src={profile.avatar} size="lg" />
+                            <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-base truncate">{profile.name}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+                                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                                    {profile.email}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Joined {profile.created_at}
+                                </p>
+                            </div>
+                            {profile.suspended_at ? (
+                                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-medium text-red-600">
+                                    <Ban className="h-3 w-3" /> Suspended
+                                </span>
+                            ) : (
+                                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-sky-100 border border-sky-200 px-2.5 py-0.5 text-xs font-medium text-sky-600">
+                                    <GraduationCap className="h-3 w-3" /> Student
+                                </span>
+                            )}
+                        </div>
+
+                        <Separator />
+
+                        {/* Profile info grid */}
+                        {(profile.gender || raceLabel || profile.birthdate || profile.state || occupationLabel || profile.organization) && (
+                            <>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                                    {profile.gender && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Gender</p>
+                                                <p className="font-medium capitalize">{profile.gender}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {raceLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
+                                                <p className="font-medium">{raceLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {profile.birthdate && (
+                                        <div className="flex items-start gap-2">
+                                            <CalendarDays className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Date of Birth</p>
+                                                <p className="font-medium">{profile.birthdate}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {profile.state && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">State</p>
+                                                <p className="font-medium">{profile.state}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {occupationLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <Briefcase className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Occupation</p>
+                                                <p className="font-medium">{occupationLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {profile.organization && (
+                                        <div className="flex items-start gap-2">
+                                            <Building2 className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Organization</p>
+                                                <p className="font-medium">{profile.organization}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <Separator />
+                            </>
+                        )}
+
+                        {/* Enrolled courses */}
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-2 pr-1">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                                Enrolled Courses ({profile.enrollments.length})
+                            </p>
+                            {profile.enrollments.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <BookOpen className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                                    <p className="text-sm text-muted-foreground">Not enrolled in any courses yet.</p>
+                                </div>
+                            ) : (
+                                profile.enrollments.map(enrollment => (
+                                    <div key={enrollment.id} className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                                        <div className="flex items-start gap-3">
+                                            {enrollment.course_thumbnail ? (
+                                                <img
+                                                    src={enrollment.course_thumbnail}
+                                                    alt={enrollment.course_title}
+                                                    className="h-10 w-16 rounded object-cover shrink-0"
+                                                />
+                                            ) : (
+                                                <div className="h-10 w-16 rounded bg-muted flex items-center justify-center shrink-0">
+                                                    <BookOpen className="h-4 w-4 text-muted-foreground/50" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{enrollment.course_title}</p>
+                                                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                                                    <span className="flex items-center gap-1">
+                                                        <CalendarDays className="h-3 w-3" />
+                                                        Enrolled {enrollment.enrolled_at}
+                                                    </span>
+                                                    {enrollment.completed_at ? (
+                                                        <span className="flex items-center gap-1 text-green-600">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            Completed {enrollment.completed_at}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            In progress
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {enrollment.certificate_uuid && (
+                                                <a
+                                                    href={`/certificate/${enrollment.certificate_uuid}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="shrink-0 inline-flex items-center gap-1 text-xs text-[#8B1A4A] hover:underline"
+                                                >
+                                                    <Award className="h-3 w-3" />
+                                                    Cert
+                                                    <ExternalLink className="h-2.5 w-2.5" />
+                                                </a>
+                                            )}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs text-muted-foreground">
+                                                <span>Progress</span>
+                                                <span>{enrollment.completed_count} / {enrollment.total_lessons} lessons</span>
+                                            </div>
+                                            <Progress value={enrollment.progress} className="h-1.5" />
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 const ROLE_META = {
     super_admin:    { label: 'Super Admin',    color: 'bg-rose-100 text-rose-700 border-rose-200',   icon: Crown  },
@@ -173,14 +598,20 @@ function SuspendedBadge() {
     );
 }
 
-function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend }) {
+function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile }) {
     const isSuspended = !!user.suspended_at;
     return (
         <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
             <td className="py-3 pl-4 pr-3">
                 <div>
                     <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">{user.name}</p>
+                        <button
+                            type="button"
+                            className="font-medium text-sm hover:underline hover:text-primary text-left"
+                            onClick={() => onViewProfile(user.id)}
+                        >
+                            {user.name}
+                        </button>
                         {isSuspended && <SuspendedBadge />}
                     </div>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -427,6 +858,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
     const [dialogUser, setDialogUser] = useState(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [suspendUser, setSuspendUser] = useState(null);
+    const [profileUserId, setProfileUserId] = useState(null);
 
     function handleUnsuspend(user) {
         if (!window.confirm(`Reinstate ${user.name}'s account?`)) return;
@@ -580,6 +1012,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     onChangeRole={setDialogUser}
                                                     onSuspend={setSuspendUser}
                                                     onUnsuspend={handleUnsuspend}
+                                                    onViewProfile={setProfileUserId}
                                                 />
                                             ))}
                                         </tbody>
@@ -662,6 +1095,13 @@ export default function UsersIndex({ staff, students, counts, filters }) {
             <InviteStaffDialog
                 open={inviteOpen}
                 onClose={() => setInviteOpen(false)}
+            />
+
+            {/* Learner Profile Dialog */}
+            <LearnerProfileDialog
+                userId={profileUserId}
+                open={!!profileUserId}
+                onClose={() => setProfileUserId(null)}
             />
         </AdminLayout>
     );

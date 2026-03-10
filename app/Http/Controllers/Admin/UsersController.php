@@ -116,6 +116,52 @@ class UsersController extends Controller
         return back()->with('success', "{$user->name}'s account has been reinstated.");
     }
 
+    public function show(User $user): \Illuminate\Http\JsonResponse
+    {
+        $user->loadMissing([
+            'enrollments.course',
+            'enrollments.lessonProgress',
+        ]);
+
+        $enrollments = $user->enrollments->map(function ($enrollment) {
+            $totalLessons = $enrollment->course?->lessons()->count() ?? 0;
+            $completedCount = $enrollment->lessonProgress->count();
+            $progress = $totalLessons > 0
+                ? (int) round(($completedCount / $totalLessons) * 100)
+                : 0;
+
+            return [
+                'id'               => $enrollment->id,
+                'course_id'        => $enrollment->course_id,
+                'course_title'     => $enrollment->course?->title,
+                'course_thumbnail' => $enrollment->course?->thumbnail,
+                'enrolled_at'      => $enrollment->enrolled_at?->format('M j, Y'),
+                'completed_at'     => $enrollment->completed_at?->format('M j, Y'),
+                'total_lessons'    => $totalLessons,
+                'completed_count'  => $completedCount,
+                'progress'         => $progress,
+                'certificate_uuid' => $enrollment->certificate_uuid,
+            ];
+        })->sortByDesc('enrolled_at')->values();
+
+        return response()->json([
+            'id'                 => $user->id,
+            'name'               => $user->name,
+            'email'              => $user->email,
+            'avatar'             => $user->avatar,
+            'gender'             => $user->gender,
+            'race'               => $user->race,
+            'state'              => $user->state,
+            'birthdate'          => $user->birthdate?->format('M j, Y'),
+            'birthdate_raw'      => $user->birthdate?->format('Y-m-d'),
+            'occupation'         => $user->occupation,
+            'organization'       => $user->organization,
+            'suspended_at'       => $user->suspended_at?->format('M j, Y'),
+            'created_at'         => $user->created_at?->format('M j, Y'),
+            'enrollments'        => $enrollments,
+        ]);
+    }
+
     public function updateProfile(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
