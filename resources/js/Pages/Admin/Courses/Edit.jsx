@@ -613,6 +613,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             analytics={analytics}
                             students={students}
                             lessonStats={lessonStats}
+                            course={course}
                         />
                     </TabsContent>
 

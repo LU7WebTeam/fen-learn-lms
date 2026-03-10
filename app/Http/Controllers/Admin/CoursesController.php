@@ -126,20 +126,27 @@ class CoursesController extends Controller
 
         $students = $course->enrollments()
             ->with([
-                'user:id,name,email',
-                'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')->select('enrollment_id'),
+                'user:id,name,email,avatar',
+                'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')
+                    ->select('enrollment_id', 'lesson_id', 'completed_at'),
             ])
             ->latest('enrolled_at')
             ->get()
             ->map(fn($enrollment) => [
-                'id'               => $enrollment->id,
-                'user_name'        => $enrollment->user->name,
-                'user_email'       => $enrollment->user->email,
-                'enrolled_at'      => $enrollment->enrolled_at?->format('M j, Y'),
-                'completed_at'     => $enrollment->completed_at?->format('M j, Y'),
-                'progress'         => $totalLessons > 0
+                'id'                   => $enrollment->id,
+                'user_id'              => $enrollment->user->id,
+                'user_name'            => $enrollment->user->name,
+                'user_email'           => $enrollment->user->email,
+                'user_avatar'          => $enrollment->user->avatar,
+                'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),
+                'completed_at'         => $enrollment->completed_at?->format('M j, Y'),
+                'progress'             => $totalLessons > 0
                     ? (int) round(($enrollment->lessonProgress->count() / $totalLessons) * 100) : 0,
-                'certificate_uuid' => $enrollment->certificate_uuid,
+                'certificate_uuid'     => $enrollment->certificate_uuid,
+                'completed_lesson_ids' => $enrollment->lessonProgress->pluck('lesson_id')->all(),
+                'last_activity'        => $enrollment->lessonProgress->max('completed_at')
+                    ? \Carbon\Carbon::parse($enrollment->lessonProgress->max('completed_at'))->format('M j, Y')
+                    : null,
             ]);
 
         return Inertia::render('Admin/Courses/Edit', [

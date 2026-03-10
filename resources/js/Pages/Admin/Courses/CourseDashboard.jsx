@@ -7,9 +7,15 @@ import { Input } from '@/Components/ui/input';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/Components/ui/dialog';
+import {
     Users, GraduationCap, Award, TrendingUp, BookOpen,
     Search, ExternalLink, ChevronDown, ChevronUp, Video, FileText, HelpCircle,
-    CheckCircle2, Clock, BarChart3, Download
+    CheckCircle2, Clock, BarChart3, Mail, CalendarDays, Activity,
 } from 'lucide-react';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
@@ -34,14 +40,182 @@ function MetricCard({ icon: Icon, label, value, sub, color = 'text-foreground', 
     );
 }
 
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+function Avatar({ name, src, size = 'md' }) {
+    const initials = name
+        ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : '?';
+    const sizeClass = size === 'lg'
+        ? 'h-14 w-14 text-lg'
+        : 'h-8 w-8 text-xs';
+    return (
+        <div className={`${sizeClass} rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center font-semibold text-indigo-700 shrink-0`}>
+            {src
+                ? <img src={src} alt={name} className="h-full w-full object-cover" />
+                : <span>{initials}</span>
+            }
+        </div>
+    );
+}
+
+// ─── Student profile dialog ────────────────────────────────────────────────────
+function StudentProfileDialog({ student, course, open, onClose }) {
+    if (!student) return null;
+
+    const completedSet = new Set(student.completed_lesson_ids ?? []);
+
+    const totalLessons = course?.sections?.reduce(
+        (sum, sec) => sum + (sec.lessons?.length ?? 0), 0
+    ) ?? 0;
+
+    const completedCount = completedSet.size;
+    const progress = totalLessons > 0
+        ? Math.round((completedCount / totalLessons) * 100)
+        : student.progress;
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Learner Profile</DialogTitle>
+                </DialogHeader>
+
+                {/* Profile header */}
+                <div className="flex items-center gap-4 py-2">
+                    <Avatar name={student.user_name} src={student.user_avatar} size="lg" />
+                    <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-base truncate">{student.user_name}</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+                            <Mail className="h-3.5 w-3.5 shrink-0" />
+                            {student.user_email}
+                        </p>
+                    </div>
+                    {student.completed_at ? (
+                        <Badge className="bg-green-100 text-green-700 border-green-200 shrink-0">
+                            Completed
+                        </Badge>
+                    ) : (
+                        <Badge variant="secondary" className="shrink-0">In Progress</Badge>
+                    )}
+                </div>
+
+                <Separator />
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                        <p className="text-lg font-bold">{progress}%</p>
+                        <p className="text-xs text-muted-foreground">Progress</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                        <p className="text-lg font-bold">{completedCount}</p>
+                        <p className="text-xs text-muted-foreground">Lessons done</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                        <p className="text-lg font-bold">{totalLessons}</p>
+                        <p className="text-xs text-muted-foreground">Total lessons</p>
+                    </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Overall progress</span>
+                        <span>{completedCount} / {totalLessons} lessons</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                </div>
+
+                {/* Meta info */}
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Enrolled {student.enrolled_at}
+                    </span>
+                    {student.last_activity && (
+                        <span className="flex items-center gap-1.5">
+                            <Activity className="h-3.5 w-3.5" />
+                            Last active {student.last_activity}
+                        </span>
+                    )}
+                    {student.completed_at && (
+                        <span className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Completed {student.completed_at}
+                        </span>
+                    )}
+                    {student.certificate_uuid && (
+                        <Link
+                            href={`/certificate/${student.certificate_uuid}`}
+                            target="_blank"
+                            className="flex items-center gap-1.5 text-[#8B1A4A] hover:underline"
+                        >
+                            <Award className="h-3.5 w-3.5" />
+                            View certificate
+                            <ExternalLink className="h-3 w-3" />
+                        </Link>
+                    )}
+                </div>
+
+                <Separator />
+
+                {/* Lesson list */}
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
+                    {course?.sections?.map(section => (
+                        <div key={section.id}>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 sticky top-0 bg-background py-1">
+                                {section.title}
+                            </p>
+                            <div className="space-y-1">
+                                {section.lessons?.map(lesson => {
+                                    const Icon = LESSON_ICONS[lesson.type] ?? FileText;
+                                    const done = completedSet.has(lesson.id);
+                                    return (
+                                        <div
+                                            key={lesson.id}
+                                            className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
+                                                done
+                                                    ? 'bg-green-50 text-green-800'
+                                                    : 'bg-muted/30 text-muted-foreground'
+                                            }`}
+                                        >
+                                            {done
+                                                ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                                            }
+                                            <Icon className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                            <span className={`flex-1 truncate ${done ? 'font-medium' : ''}`}>
+                                                {lesson.title}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 // ─── Student row ──────────────────────────────────────────────────────────────
-function StudentRow({ student }) {
+function StudentRow({ student, onViewProfile }) {
     return (
         <tr className="border-b transition-colors hover:bg-muted/30">
             <td className="px-4 py-3">
-                <div>
-                    <p className="text-sm font-medium">{student.user_name}</p>
-                    <p className="text-xs text-muted-foreground">{student.user_email}</p>
+                <div className="flex items-center gap-2.5">
+                    <Avatar name={student.user_name} src={student.user_avatar} />
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => onViewProfile(student)}
+                            className="text-sm font-medium hover:underline hover:text-primary text-left"
+                        >
+                            {student.user_name}
+                        </button>
+                        <p className="text-xs text-muted-foreground">{student.user_email}</p>
+                    </div>
                 </div>
             </td>
             <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
@@ -119,12 +293,13 @@ function LessonProgressRow({ lesson, maxRate }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function CourseDashboard({ analytics, students, lessonStats }) {
+export default function CourseDashboard({ analytics, students, lessonStats, course }) {
     const [search, setSearch]               = useState('');
     const [sortKey, setSortKey]             = useState('enrolled_at');
     const [sortDir, setSortDir]             = useState('desc');
     const [showLessons, setShowLessons]     = useState(false);
     const [studentFilter, setStudentFilter] = useState('all');
+    const [profileStudent, setProfileStudent] = useState(null);
 
     const {
         total_enrollments,
@@ -348,14 +523,18 @@ export default function CourseDashboard({ analytics, students, lessonStats }) {
                                         </tr>
                                     ) : (
                                         filtered.map(student => (
-                                            <StudentRow key={student.id} student={student} />
+                                            <StudentRow
+                                                key={student.id}
+                                                student={student}
+                                                onViewProfile={setProfileStudent}
+                                            />
                                         ))
                                     )}
                                 </tbody>
                             </table>
                             {filtered.length > 0 && (
                                 <div className="px-4 py-2.5 text-xs text-muted-foreground border-t bg-muted/20">
-                                    Showing {filtered.length} of {total_enrollments} student{total_enrollments !== 1 ? 's' : ''}
+                                    Showing {filtered.length} of {total_enrollments} student{total_enrollments !== 1 ? 's' : ''} · Click a name to view details
                                 </div>
                             )}
                         </div>
@@ -408,6 +587,14 @@ export default function CourseDashboard({ analytics, students, lessonStats }) {
                     )}
                 </Card>
             )}
+
+            {/* ── Student profile dialog ── */}
+            <StudentProfileDialog
+                student={profileStudent}
+                course={course}
+                open={!!profileStudent}
+                onClose={() => setProfileStudent(null)}
+            />
 
         </div>
     );
