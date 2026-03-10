@@ -142,6 +142,7 @@ class CoursesController extends Controller
                 'user_race'            => $enrollment->user->race,
                 'user_state'           => $enrollment->user->state,
                 'user_birthdate'       => $enrollment->user->birthdate?->format('M j, Y'),
+                'user_birthdate_raw'   => $enrollment->user->birthdate?->format('Y-m-d'),
                 'user_occupation'      => $enrollment->user->occupation,
                 'user_organization'    => $enrollment->user->organization,
                 'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),

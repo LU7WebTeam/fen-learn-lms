@@ -89,6 +89,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/users/{user}/suspend',   [\App\Http\Controllers\Admin\UsersController::class, 'suspend'])->name('users.suspend');
     Route::patch('/users/{user}/unsuspend', [\App\Http\Controllers\Admin\UsersController::class, 'unsuspend'])->name('users.unsuspend');
 
+    // User profile editing
+    Route::patch('/users/{user}/profile', [\App\Http\Controllers\Admin\UsersController::class, 'updateProfile'])->name('users.update-profile');
+
     // Sections (nested under a course)
     Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');
     Route::patch('/courses/{course}/sections/reorder', [AdminSectionsController::class, 'reorder'])->name('courses.sections.reorder');

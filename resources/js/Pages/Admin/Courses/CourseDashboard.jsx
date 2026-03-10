@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Link } from '@inertiajs/react';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useForm } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Progress } from '@/Components/ui/progress';
@@ -14,11 +14,45 @@ import {
     DialogTitle,
 } from '@/Components/ui/dialog';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/Components/ui/select';
+import InputError from '@/Components/InputError';
+import {
     Users, GraduationCap, Award, TrendingUp, BookOpen,
     Search, ExternalLink, ChevronDown, ChevronUp, Video, FileText, HelpCircle,
     CheckCircle2, Clock, BarChart3, Mail, CalendarDays, Activity,
-    MapPin, Briefcase, Building2, User,
+    MapPin, Briefcase, Building2, User, Pencil, X, Save,
 } from 'lucide-react';
+
+const MALAYSIAN_STATES = [
+    'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak',
+    'Perlis','Pulau Pinang','Sabah','Sarawak','Selangor','Terengganu',
+    'Wilayah Persekutuan Kuala Lumpur','Wilayah Persekutuan Labuan',
+    'Wilayah Persekutuan Putrajaya',
+];
+const OCCUPATIONS = [
+    { value: 'student',       label: 'Student' },
+    { value: 'government',    label: 'Government Employee' },
+    { value: 'private',       label: 'Private Sector Employee' },
+    { value: 'self_employed', label: 'Self-employed / Entrepreneur' },
+    { value: 'professional',  label: 'Professional (Doctor, Lawyer, etc.)' },
+    { value: 'academic',      label: 'Academic / Educator' },
+    { value: 'homemaker',     label: 'Homemaker' },
+    { value: 'retired',       label: 'Retired' },
+    { value: 'unemployed',    label: 'Unemployed' },
+    { value: 'other',         label: 'Other' },
+];
+const RACES = [
+    { value: 'malay',            label: 'Malay' },
+    { value: 'chinese',          label: 'Chinese' },
+    { value: 'indian',           label: 'Indian' },
+    { value: 'other_bumiputera', label: 'Other Bumiputera' },
+    { value: 'other',            label: 'Other' },
+];
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
 
@@ -62,205 +96,380 @@ function Avatar({ name, src, size = 'md' }) {
 
 // ─── Student profile dialog ────────────────────────────────────────────────────
 function StudentProfileDialog({ student, course, open, onClose }) {
+    const [editing, setEditing] = useState(false);
+
+    const { data, setData, patch, processing, errors, reset } = useForm({
+        name:         '',
+        email:        '',
+        gender:       '',
+        race:         '',
+        state:        '',
+        birthdate:    '',
+        occupation:   '',
+        organization: '',
+    });
+
+    useEffect(() => {
+        if (student) {
+            reset();
+            setData({
+                name:         student.user_name          ?? '',
+                email:        student.user_email         ?? '',
+                gender:       student.user_gender        ?? '',
+                race:         student.user_race          ?? '',
+                state:        student.user_state         ?? '',
+                birthdate:    student.user_birthdate_raw ?? '',
+                occupation:   student.user_occupation    ?? '',
+                organization: student.user_organization  ?? '',
+            });
+            setEditing(false);
+        }
+    }, [student?.user_id]);
+
     if (!student) return null;
 
     const completedSet = new Set(student.completed_lesson_ids ?? []);
-
     const totalLessons = course?.sections?.reduce(
         (sum, sec) => sum + (sec.lessons?.length ?? 0), 0
     ) ?? 0;
-
     const completedCount = completedSet.size;
     const progress = totalLessons > 0
         ? Math.round((completedCount / totalLessons) * 100)
         : student.progress;
 
+    const occupationLabel = OCCUPATIONS.find(o => o.value === student.user_occupation)?.label
+        ?? student.user_occupation;
+    const raceLabel = RACES.find(r => r.value === student.user_race)?.label
+        ?? student.user_race;
+
+    function restoreForm() {
+        reset();
+        setData({
+            name:         student.user_name          ?? '',
+            email:        student.user_email         ?? '',
+            gender:       student.user_gender        ?? '',
+            race:         student.user_race          ?? '',
+            state:        student.user_state         ?? '',
+            birthdate:    student.user_birthdate_raw ?? '',
+            occupation:   student.user_occupation    ?? '',
+            organization: student.user_organization  ?? '',
+        });
+        setEditing(false);
+    }
+
+    function handleSave(e) {
+        e.preventDefault();
+        patch(route('admin.users.update-profile', student.user_id), {
+            onSuccess: () => setEditing(false),
+        });
+    }
+
     return (
-        <Dialog open={open} onOpenChange={onClose}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { restoreForm(); onClose(); } }}>
             <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Learner Profile</DialogTitle>
+                    <div className="flex items-center justify-between">
+                        <DialogTitle>{editing ? 'Edit Profile' : 'Learner Profile'}</DialogTitle>
+                        {!editing && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5 h-8"
+                                onClick={() => setEditing(true)}
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit
+                            </Button>
+                        )}
+                    </div>
                     <DialogDescription className="sr-only">
-                        Detailed profile, progress, and lesson completion for {student?.user_name}.
+                        {editing ? 'Edit' : 'View'} profile for {student.user_name}.
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Profile header */}
-                <div className="flex items-center gap-4 py-2">
-                    <Avatar name={student.user_name} src={student.user_avatar} size="lg" />
-                    <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-base truncate">{student.user_name}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
-                            <Mail className="h-3.5 w-3.5 shrink-0" />
-                            {student.user_email}
-                        </p>
-                    </div>
-                    {student.completed_at ? (
-                        <Badge className="bg-green-100 text-green-700 border-green-200 shrink-0">
-                            Completed
-                        </Badge>
-                    ) : (
-                        <Badge variant="secondary" className="shrink-0">In Progress</Badge>
-                    )}
-                </div>
-
-                <Separator />
-
-                {/* Stats row */}
-                <div className="grid grid-cols-3 gap-3 text-center text-sm">
-                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
-                        <p className="text-lg font-bold">{progress}%</p>
-                        <p className="text-xs text-muted-foreground">Progress</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
-                        <p className="text-lg font-bold">{completedCount}</p>
-                        <p className="text-xs text-muted-foreground">Lessons done</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/40 py-2.5 px-2">
-                        <p className="text-lg font-bold">{totalLessons}</p>
-                        <p className="text-xs text-muted-foreground">Total lessons</p>
-                    </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Overall progress</span>
-                        <span>{completedCount} / {totalLessons} lessons</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                </div>
-
-                {/* Meta info */}
-                <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        Enrolled {student.enrolled_at}
-                    </span>
-                    {student.last_activity && (
-                        <span className="flex items-center gap-1.5">
-                            <Activity className="h-3.5 w-3.5" />
-                            Last active {student.last_activity}
-                        </span>
-                    )}
-                    {student.completed_at && (
-                        <span className="flex items-center gap-1.5 text-green-600">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Completed {student.completed_at}
-                        </span>
-                    )}
-                    {student.certificate_uuid && (
-                        <Link
-                            href={`/certificate/${student.certificate_uuid}`}
-                            target="_blank"
-                            className="flex items-center gap-1.5 text-[#8B1A4A] hover:underline"
-                        >
-                            <Award className="h-3.5 w-3.5" />
-                            View certificate
-                            <ExternalLink className="h-3 w-3" />
-                        </Link>
-                    )}
-                </div>
-
-                {/* Profile info */}
-                {(student.user_occupation || student.user_organization || student.user_state ||
-                  student.user_birthdate || student.user_gender || student.user_race) && (
-                    <>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-                            {student.user_occupation && (
-                                <div className="flex items-start gap-2">
-                                    <Briefcase className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Occupation</p>
-                                        <p className="font-medium">{student.user_occupation}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {student.user_organization && (
-                                <div className="flex items-start gap-2">
-                                    <Building2 className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Organization</p>
-                                        <p className="font-medium">{student.user_organization}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {student.user_state && (
-                                <div className="flex items-start gap-2">
-                                    <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">State</p>
-                                        <p className="font-medium">{student.user_state}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {student.user_birthdate && (
-                                <div className="flex items-start gap-2">
-                                    <CalendarDays className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Date of Birth</p>
-                                        <p className="font-medium">{student.user_birthdate}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {student.user_gender && (
-                                <div className="flex items-start gap-2">
-                                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Gender</p>
-                                        <p className="font-medium capitalize">{student.user_gender}</p>
-                                    </div>
-                                </div>
-                            )}
-                            {student.user_race && (
-                                <div className="flex items-start gap-2">
-                                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
-                                        <p className="font-medium">{student.user_race}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <Separator />
-                    </>
-                )}
-
-                {/* Lesson list */}
-                <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
-                    {course?.sections?.map(section => (
-                        <div key={section.id}>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 sticky top-0 bg-background py-1">
-                                {section.title}
-                            </p>
-                            <div className="space-y-1">
-                                {section.lessons?.map(lesson => {
-                                    const Icon = LESSON_ICONS[lesson.type] ?? FileText;
-                                    const done = completedSet.has(lesson.id);
-                                    return (
-                                        <div
-                                            key={lesson.id}
-                                            className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
-                                                done
-                                                    ? 'bg-green-50 text-green-800'
-                                                    : 'bg-muted/30 text-muted-foreground'
-                                            }`}
-                                        >
-                                            {done
-                                                ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                                                : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
-                                            }
-                                            <Icon className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                                            <span className={`flex-1 truncate ${done ? 'font-medium' : ''}`}>
-                                                {lesson.title}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                {editing ? (
+                    <form onSubmit={handleSave} className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 py-1">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Full Name <span className="text-red-500">*</span></label>
+                                <Input value={data.name} onChange={e => setData('name', e.target.value)} />
+                                <InputError message={errors.name} />
+                            </div>
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Email Address <span className="text-red-500">*</span></label>
+                                <Input type="email" value={data.email} onChange={e => setData('email', e.target.value)} />
+                                <InputError message={errors.email} />
                             </div>
                         </div>
-                    ))}
-                </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Gender</label>
+                            <div className="flex gap-2">
+                                {[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => setData('gender', data.gender === opt.value ? '' : opt.value)}
+                                        className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+                                            data.gender === opt.value
+                                                ? 'border-primary bg-primary/5 text-primary'
+                                                : 'border-input bg-background text-muted-foreground hover:border-primary/50'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <InputError message={errors.gender} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">Race / Ethnicity</label>
+                                <Select value={data.race} onValueChange={v => setData('race', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {RACES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.race} />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">State</label>
+                                <Select value={data.state} onValueChange={v => setData('state', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {MALAYSIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.state} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Date of Birth</label>
+                            <Input
+                                type="date"
+                                value={data.birthdate}
+                                onChange={e => setData('birthdate', e.target.value)}
+                                max={new Date().toISOString().split('T')[0]}
+                            />
+                            <InputError message={errors.birthdate} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Occupation</label>
+                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                <SelectContent>
+                                    {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.occupation} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Organization / Institution</label>
+                            <Input
+                                value={data.organization}
+                                onChange={e => setData('organization', e.target.value)}
+                                placeholder="e.g. Universiti Malaya, Petronas…"
+                            />
+                            <InputError message={errors.organization} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">
+                            <Button type="submit" className="flex-1 gap-1.5" disabled={processing}>
+                                <Save className="h-4 w-4" />
+                                {processing ? 'Saving…' : 'Save Changes'}
+                            </Button>
+                            <Button type="button" variant="outline" onClick={restoreForm} disabled={processing}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </form>
+                ) : (
+                    <>
+                        {/* Profile header */}
+                        <div className="flex items-center gap-4 py-2">
+                            <Avatar name={student.user_name} src={student.user_avatar} size="lg" />
+                            <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-base truncate">{student.user_name}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+                                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                                    {student.user_email}
+                                </p>
+                            </div>
+                            {student.completed_at ? (
+                                <Badge className="bg-green-100 text-green-700 border-green-200 shrink-0">
+                                    Completed
+                                </Badge>
+                            ) : (
+                                <Badge variant="secondary" className="shrink-0">In Progress</Badge>
+                            )}
+                        </div>
+
+                        <Separator />
+
+                        {/* Stats row */}
+                        <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{progress}%</p>
+                                <p className="text-xs text-muted-foreground">Progress</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{completedCount}</p>
+                                <p className="text-xs text-muted-foreground">Lessons done</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{totalLessons}</p>
+                                <p className="text-xs text-muted-foreground">Total lessons</p>
+                            </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Overall progress</span>
+                                <span>{completedCount} / {totalLessons} lessons</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                        </div>
+
+                        {/* Meta info */}
+                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                Enrolled {student.enrolled_at}
+                            </span>
+                            {student.last_activity && (
+                                <span className="flex items-center gap-1.5">
+                                    <Activity className="h-3.5 w-3.5" />
+                                    Last active {student.last_activity}
+                                </span>
+                            )}
+                            {student.completed_at && (
+                                <span className="flex items-center gap-1.5 text-green-600">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Completed {student.completed_at}
+                                </span>
+                            )}
+                            {student.certificate_uuid && (
+                                <Link
+                                    href={`/certificate/${student.certificate_uuid}`}
+                                    target="_blank"
+                                    className="flex items-center gap-1.5 text-[#8B1A4A] hover:underline"
+                                >
+                                    <Award className="h-3.5 w-3.5" />
+                                    View certificate
+                                    <ExternalLink className="h-3 w-3" />
+                                </Link>
+                            )}
+                        </div>
+
+                        <Separator />
+
+                        {/* Profile info grid */}
+                        {(occupationLabel || student.user_organization || student.user_state ||
+                          student.user_birthdate || student.user_gender || raceLabel) && (
+                            <>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                                    {student.user_gender && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Gender</p>
+                                                <p className="font-medium capitalize">{student.user_gender}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {raceLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
+                                                <p className="font-medium">{raceLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {student.user_birthdate && (
+                                        <div className="flex items-start gap-2">
+                                            <CalendarDays className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Date of Birth</p>
+                                                <p className="font-medium">{student.user_birthdate}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {student.user_state && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">State</p>
+                                                <p className="font-medium">{student.user_state}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {occupationLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <Briefcase className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Occupation</p>
+                                                <p className="font-medium">{occupationLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {student.user_organization && (
+                                        <div className="flex items-start gap-2">
+                                            <Building2 className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Organization</p>
+                                                <p className="font-medium">{student.user_organization}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <Separator />
+                            </>
+                        )}
+
+                        {/* Lesson list */}
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
+                            {course?.sections?.map(section => (
+                                <div key={section.id}>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 sticky top-0 bg-background py-1">
+                                        {section.title}
+                                    </p>
+                                    <div className="space-y-1">
+                                        {section.lessons?.map(lesson => {
+                                            const Icon = LESSON_ICONS[lesson.type] ?? FileText;
+                                            const done = completedSet.has(lesson.id);
+                                            return (
+                                                <div
+                                                    key={lesson.id}
+                                                    className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
+                                                        done
+                                                            ? 'bg-green-50 text-green-800'
+                                                            : 'bg-muted/30 text-muted-foreground'
+                                                    }`}
+                                                >
+                                                    {done
+                                                        ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                                        : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                                                    }
+                                                    <Icon className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                                    <span className={`flex-1 truncate ${done ? 'font-medium' : ''}`}>
+                                                        {lesson.title}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     );

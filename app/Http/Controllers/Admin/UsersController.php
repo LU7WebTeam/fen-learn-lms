@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -113,5 +114,23 @@ class UsersController extends Controller
         ]);
 
         return back()->with('success', "{$user->name}'s account has been reinstated.");
+    }
+
+    public function updateProfile(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
+            'email'        => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'gender'       => 'nullable|in:male,female',
+            'race'         => 'nullable|string|max:100',
+            'state'        => 'nullable|string|max:100',
+            'birthdate'    => 'nullable|date',
+            'occupation'   => 'nullable|string|max:100',
+            'organization' => 'nullable|string|max:255',
+        ]);
+
+        $user->update($validated);
+
+        return back()->with('success', "{$user->name}'s profile has been updated.");
     }
 }
