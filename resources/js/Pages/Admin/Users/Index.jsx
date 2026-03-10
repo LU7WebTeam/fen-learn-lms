@@ -36,6 +36,8 @@ import {
     UserPlus,
     Mail,
     Send,
+    Ban,
+    CircleCheck,
 } from 'lucide-react';
 
 const ROLE_META = {
@@ -163,12 +165,24 @@ function Pagination({ data, pageName }) {
     );
 }
 
-function StudentRow({ user, onChangeRole }) {
+function SuspendedBadge() {
     return (
-        <tr className="border-b transition-colors hover:bg-muted/30">
+        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-medium text-red-600">
+            <Ban className="h-3 w-3" /> Suspended
+        </span>
+    );
+}
+
+function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend }) {
+    const isSuspended = !!user.suspended_at;
+    return (
+        <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
             <td className="py-3 pl-4 pr-3">
                 <div>
-                    <p className="font-medium text-sm">{user.name}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{user.name}</p>
+                        {isSuspended && <SuspendedBadge />}
+                    </div>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
             </td>
@@ -192,26 +206,43 @@ function StudentRow({ user, onChangeRole }) {
                 <RoleBadge role={user.role} />
             </td>
             <td className="py-3 pl-3 pr-4 text-right">
-                <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => onChangeRole(user)}>
-                    <UserCog className="h-3.5 w-3.5" />
-                    Change Role
-                </Button>
+                <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => onChangeRole(user)}>
+                        <UserCog className="h-3.5 w-3.5" />
+                        Role
+                    </Button>
+                    {isSuspended ? (
+                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700" onClick={() => onUnsuspend(user)}>
+                            <CircleCheck className="h-3.5 w-3.5" />
+                            Reinstate
+                        </Button>
+                    ) : (
+                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive" onClick={() => onSuspend(user)}>
+                            <Ban className="h-3.5 w-3.5" />
+                            Suspend
+                        </Button>
+                    )}
+                </div>
             </td>
         </tr>
     );
 }
 
-function StaffRow({ user, onChangeRole, currentUserId }) {
+function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId }) {
     const isSelf = user.id === currentUserId;
+    const isSuspended = !!user.suspended_at;
     return (
-        <tr className="border-b transition-colors hover:bg-muted/30">
+        <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
             <td className="py-3 pl-4 pr-3">
                 <div className="flex items-center gap-2">
                     <div>
-                        <p className="font-medium text-sm">
-                            {user.name}
-                            {isSelf && <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">
+                                {user.name}
+                                {isSelf && <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>}
+                            </p>
+                            {isSuspended && <SuspendedBadge />}
+                        </div>
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                 </div>
@@ -223,18 +254,80 @@ function StaffRow({ user, onChangeRole, currentUserId }) {
                 {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </td>
             <td className="py-3 pl-3 pr-4 text-right">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1.5 text-xs"
-                    disabled={isSelf}
-                    onClick={() => !isSelf && onChangeRole(user)}
-                >
-                    <UserCog className="h-3.5 w-3.5" />
-                    Change Role
-                </Button>
+                <div className="flex items-center justify-end gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs"
+                        disabled={isSelf}
+                        onClick={() => !isSelf && onChangeRole(user)}
+                    >
+                        <UserCog className="h-3.5 w-3.5" />
+                        Role
+                    </Button>
+                    {!isSelf && (
+                        isSuspended ? (
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700" onClick={() => onUnsuspend(user)}>
+                                <CircleCheck className="h-3.5 w-3.5" />
+                                Reinstate
+                            </Button>
+                        ) : (
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive" onClick={() => onSuspend(user)}>
+                                <Ban className="h-3.5 w-3.5" />
+                                Suspend
+                            </Button>
+                        )
+                    )}
+                </div>
             </td>
         </tr>
+    );
+}
+
+function SuspendDialog({ user, open, onClose }) {
+    const { data, setData, patch, processing, reset } = useForm({ reason: '' });
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        patch(route('admin.users.suspend', user.id), {
+            onSuccess: () => { reset(); onClose(); },
+        });
+    }
+
+    function handleClose() { reset(); onClose(); }
+
+    return (
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-destructive">
+                        <Ban className="h-4 w-4" /> Suspend Account
+                    </DialogTitle>
+                    <DialogDescription>
+                        <strong>{user?.name}</strong> will be immediately logged out and blocked from signing in.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium">Reason <span className="text-muted-foreground font-normal">(optional)</span></label>
+                        <textarea
+                            value={data.reason}
+                            onChange={e => setData('reason', e.target.value)}
+                            rows={3}
+                            maxLength={500}
+                            placeholder="Provide a reason for the suspension…"
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={handleClose} disabled={processing}>Cancel</Button>
+                        <Button type="submit" variant="destructive" disabled={processing}>
+                            {processing ? 'Suspending…' : 'Suspend Account'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -333,6 +426,12 @@ export default function UsersIndex({ staff, students, counts, filters }) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogUser, setDialogUser] = useState(null);
     const [inviteOpen, setInviteOpen] = useState(false);
+    const [suspendUser, setSuspendUser] = useState(null);
+
+    function handleUnsuspend(user) {
+        if (!window.confirm(`Reinstate ${user.name}'s account?`)) return;
+        router.patch(route('admin.users.unsuspend', user.id));
+    }
 
     function handleSearch(e) {
         e.preventDefault();
@@ -396,7 +495,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
                         <div className="rounded-lg bg-sky-100 p-2.5 dark:bg-sky-900/30">
                             <GraduationCap className="h-5 w-5 text-sky-600" />
@@ -422,6 +521,15 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                         <div>
                             <p className="text-2xl font-bold">{counts.super_admins.toLocaleString()}</p>
                             <p className="text-xs text-muted-foreground">Super Admins</p>
+                        </div>
+                    </div>
+                    <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
+                        <div className="rounded-lg bg-red-100 p-2.5 dark:bg-red-900/30">
+                            <Ban className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{counts.suspended.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">Suspended</p>
                         </div>
                     </div>
                 </div>
@@ -470,6 +578,8 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     key={user.id}
                                                     user={user}
                                                     onChangeRole={setDialogUser}
+                                                    onSuspend={setSuspendUser}
+                                                    onUnsuspend={handleUnsuspend}
                                                 />
                                             ))}
                                         </tbody>
@@ -512,6 +622,8 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     key={user.id}
                                                     user={user}
                                                     onChangeRole={setDialogUser}
+                                                    onSuspend={setSuspendUser}
+                                                    onUnsuspend={handleUnsuspend}
                                                     currentUserId={auth.user.id}
                                                 />
                                             ))}
@@ -528,6 +640,13 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            {/* Suspend Dialog */}
+            <SuspendDialog
+                user={suspendUser}
+                open={!!suspendUser}
+                onClose={() => setSuspendUser(null)}
+            />
 
             {/* Role Change Dialog */}
             {dialogUser && (

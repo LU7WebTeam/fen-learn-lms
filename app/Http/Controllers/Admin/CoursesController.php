@@ -207,6 +207,9 @@ class CoursesController extends Controller
             'category'         => 'nullable|string|max:100',
             'difficulty'       => 'required|in:beginner,intermediate,advanced',
             'status'           => 'required|in:draft,review,published',
+            'meta_title'       => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_image'       => 'nullable|string|max:500',
         ]);
 
         if ($request->hasFile('cover_image_file')) {

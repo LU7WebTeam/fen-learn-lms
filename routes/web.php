@@ -34,6 +34,11 @@ Route::get('/certificate/{uuid}/download', [CertificateController::class, 'downl
 // Locale switcher
 Route::post('/locale', [LocaleController::class, 'set'])->name('locale.set');
 
+// Static / legal pages
+Route::get('/about',   fn () => inertia('Legal/About'))->name('about');
+Route::get('/terms',   fn () => inertia('Legal/Terms'))->name('terms');
+Route::get('/privacy', fn () => inertia('Legal/Privacy'))->name('privacy');
+
 // Staff invitation acceptance (public — token is the auth)
 Route::get('/invite/{token}', [\App\Http\Controllers\Admin\InvitationsController::class, 'show'])
     ->name('invitations.show');
@@ -79,6 +84,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     // Staff invitations
     Route::post('/invitations', [AdminInvitationsController::class, 'store'])->name('invitations.store');
+
+    // User suspension
+    Route::patch('/users/{user}/suspend',   [\App\Http\Controllers\Admin\UsersController::class, 'suspend'])->name('users.suspend');
+    Route::patch('/users/{user}/unsuspend', [\App\Http\Controllers\Admin\UsersController::class, 'unsuspend'])->name('users.unsuspend');
 
     // Sections (nested under a course)
     Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');

@@ -63,6 +63,16 @@ export default function AuthenticatedLayout({ children }) {
             </header>
 
             <main>{children}</main>
+
+            <footer className="border-t mt-auto py-6 text-center text-xs text-muted-foreground">
+                <div className="flex items-center justify-center gap-3">
+                    <Link href={route('about')} className="hover:text-foreground hover:underline">About</Link>
+                    <span>&middot;</span>
+                    <Link href={route('terms')} className="hover:text-foreground hover:underline">Terms</Link>
+                    <span>&middot;</span>
+                    <Link href={route('privacy')} className="hover:text-foreground hover:underline">Privacy</Link>
+                </div>
+            </footer>
         </div>
     );
 }

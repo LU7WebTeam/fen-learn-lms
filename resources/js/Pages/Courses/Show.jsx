@@ -57,9 +57,23 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
     const enrolled = !!enrollment;
 
+    const metaTitle = course.meta_title || courseTitle;
+    const metaDesc  = course.meta_description || (typeof courseDescription === 'string' ? courseDescription : '');
+    const metaImage = course.meta_image || course.cover_image || '';
+
     return (
         <Layout>
-            <Head title={courseTitle} />
+            <Head title={metaTitle}>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDesc} />
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta property="og:type" content="article" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDesc} />
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
+            </Head>
 
             <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
                 {!auth?.user && (

@@ -25,6 +25,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'occupation',
         'organization',
         'profile_completed_at',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     protected $hidden = [
@@ -37,6 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at'    => 'datetime',
             'profile_completed_at' => 'datetime',
+            'suspended_at'         => 'datetime',
             'birthdate'            => 'date',
             'password'             => 'hashed',
         ];
@@ -50,6 +53,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
+    }
+
+    public function isSuspended(): bool
+    {
+        return !is_null($this->suspended_at);
     }
 
     public function enrollments(): HasMany

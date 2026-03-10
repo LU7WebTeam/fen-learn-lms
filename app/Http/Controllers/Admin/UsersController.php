@@ -51,6 +51,7 @@ class UsersController extends Controller
             'students'      => User::where('role', 'learner')->count(),
             'editors'       => User::where('role', 'content_editor')->count(),
             'super_admins'  => User::where('role', 'super_admin')->count(),
+            'suspended'     => User::whereNotNull('suspended_at')->count(),
         ];
 
         return Inertia::render('Admin/Users/Index', [
@@ -84,5 +85,33 @@ class UsersController extends Controller
             'success',
             "{$user->name} changed from {$labels[$oldRole]} to {$labels[$validated['role']]}."
         );
+    }
+
+    public function suspend(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->id === $user->id) {
+            return back()->with('error', 'You cannot suspend your own account.');
+        }
+
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user->update([
+            'suspended_at'       => now(),
+            'suspension_reason'  => $validated['reason'] ?? null,
+        ]);
+
+        return back()->with('success', "{$user->name}'s account has been suspended.");
+    }
+
+    public function unsuspend(User $user): RedirectResponse
+    {
+        $user->update([
+            'suspended_at'      => null,
+            'suspension_reason' => null,
+        ]);
+
+        return back()->with('success', "{$user->name}'s account has been reinstated.");
     }
 }

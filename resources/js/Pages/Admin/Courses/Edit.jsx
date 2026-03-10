@@ -65,6 +65,9 @@ function CourseDetailsForm({ course }) {
         category:          course.category ?? '',
         difficulty:        course.difficulty,
         status:            course.status,
+        meta_title:        course.meta_title ?? '',
+        meta_description:  course.meta_description ?? '',
+        meta_image:        course.meta_image ?? '',
     });
 
     function handleSubmit(e) {
@@ -147,6 +150,51 @@ function CourseDetailsForm({ course }) {
                             }}
                         />
                     </Field>
+
+                    <Separator />
+
+                    <div className="space-y-1">
+                        <p className="text-sm font-semibold">SEO &amp; Open Graph</p>
+                        <p className="text-xs text-muted-foreground">Controls how this course appears in search results and when shared on social media.</p>
+                    </div>
+
+                    <Field label="Meta Title" error={errors.meta_title} hint="Defaults to the course title if left blank. Keep under 60 characters.">
+                        <Input
+                            value={data.meta_title}
+                            onChange={(e) => setData('meta_title', e.target.value)}
+                            placeholder={data.title}
+                            maxLength={255}
+                        />
+                        <p className="text-xs text-muted-foreground text-right mt-0.5">{data.meta_title.length}/255</p>
+                    </Field>
+
+                    <Field label="Meta Description" error={errors.meta_description} hint="Shown in search results and social previews. Aim for 120–160 characters.">
+                        <Textarea
+                            value={data.meta_description}
+                            onChange={(e) => setData('meta_description', e.target.value)}
+                            rows={2}
+                            placeholder="A brief description of what learners will gain from this course…"
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-muted-foreground text-right mt-0.5">{data.meta_description.length}/500</p>
+                    </Field>
+
+                    <Field label="OG Image URL" error={errors.meta_image} hint="The image shown when shared on social media. Defaults to cover image if blank.">
+                        <Input
+                            value={data.meta_image}
+                            onChange={(e) => setData('meta_image', e.target.value)}
+                            placeholder="https://…"
+                            type="url"
+                        />
+                    </Field>
+
+                    {(data.meta_title || data.meta_description || data.meta_image) && (
+                        <div className="rounded-lg border bg-muted/40 p-4 space-y-1.5">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Search preview</p>
+                            <p className="text-sm font-medium text-blue-600 truncate">{data.meta_title || data.title}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{data.meta_description || data.description}</p>
+                        </div>
+                    )}
 
                     <div className="flex justify-end">
                         <Button type="submit" disabled={processing || !isDirty}>
