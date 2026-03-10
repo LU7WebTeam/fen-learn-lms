@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/Components/ui/select';
+import InputError from '@/Components/InputError';
 import {
     Users,
     ShieldCheck,
@@ -32,6 +33,9 @@ import {
     UserCog,
     Crown,
     Pencil,
+    UserPlus,
+    Mail,
+    Send,
 } from 'lucide-react';
 
 const ROLE_META = {
@@ -234,10 +238,101 @@ function StaffRow({ user, onChangeRole, currentUserId }) {
     );
 }
 
+function InviteStaffDialog({ open, onClose }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        email: '',
+        role:  'content_editor',
+    });
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        post(route('admin.invitations.store'), {
+            onSuccess: () => { reset(); onClose(); },
+        });
+    }
+
+    function handleClose() {
+        reset();
+        onClose();
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" /> Invite Staff Member
+                    </DialogTitle>
+                    <DialogDescription>
+                        Send an email invitation to add a new content editor or super admin.
+                        The link expires in 7 days.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium" htmlFor="invite-email">
+                            Email address
+                        </label>
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                id="invite-email"
+                                type="email"
+                                value={data.email}
+                                onChange={e => setData('email', e.target.value)}
+                                placeholder="colleague@example.com"
+                                className="pl-9"
+                                autoFocus
+                            />
+                        </div>
+                        <InputError message={errors.email} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium">Role to assign</label>
+                        <Select value={data.role} onValueChange={v => setData('role', v)}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="content_editor">
+                                    <span className="flex items-center gap-2">
+                                        <Pencil className="h-3.5 w-3.5 text-violet-600" />
+                                        Content Editor
+                                    </span>
+                                </SelectItem>
+                                <SelectItem value="super_admin">
+                                    <span className="flex items-center gap-2">
+                                        <Crown className="h-3.5 w-3.5 text-rose-600" />
+                                        Super Admin
+                                    </span>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.role} />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={handleClose} disabled={processing}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={processing} className="gap-1.5">
+                            <Send className="h-3.5 w-3.5" />
+                            {processing ? 'Sending…' : 'Send Invitation'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function UsersIndex({ staff, students, counts, filters }) {
     const { auth } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogUser, setDialogUser] = useState(null);
+    const [inviteOpen, setInviteOpen] = useState(false);
 
     function handleSearch(e) {
         e.preventDefault();
@@ -276,22 +371,28 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                         </p>
                     </div>
 
-                    {/* Search */}
-                    <form onSubmit={handleSearch} className="flex gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                placeholder="Search name or email…"
-                                className="pl-9 w-64"
-                            />
-                        </div>
-                        <Button type="submit" variant="secondary" size="sm">Search</Button>
-                        {filters.search && (
-                            <Button type="button" variant="ghost" size="sm" onClick={clearSearch}>Clear</Button>
-                        )}
-                    </form>
+                    {/* Search + Invite */}
+                    <div className="flex gap-2 flex-wrap">
+                        <form onSubmit={handleSearch} className="flex gap-2">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    placeholder="Search name or email…"
+                                    className="pl-9 w-64"
+                                />
+                            </div>
+                            <Button type="submit" variant="secondary" size="sm">Search</Button>
+                            {filters.search && (
+                                <Button type="button" variant="ghost" size="sm" onClick={clearSearch}>Clear</Button>
+                            )}
+                        </form>
+                        <Button size="sm" className="gap-1.5" onClick={() => setInviteOpen(true)}>
+                            <UserPlus className="h-4 w-4" />
+                            Invite Staff
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats row */}
@@ -437,6 +538,12 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                     currentUserId={auth.user.id}
                 />
             )}
+
+            {/* Invite Staff Dialog */}
+            <InviteStaffDialog
+                open={inviteOpen}
+                onClose={() => setInviteOpen(false)}
+            />
         </AdminLayout>
     );
 }

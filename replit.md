@@ -133,6 +133,18 @@ All PRD-mapped components in `resources/js/Components/ui/`:
     - `HandleMaintenanceMode` middleware bypasses admins and auth routes
     - `RegisteredUserController` respects `allow_registration`, `default_role`, `require_email_verification` settings
     - `HandleInertiaRequests` shares `platform` prop (name, tagline, logo_url, favicon_url) to all pages
+13. **Separate Login Pages** ✅ — `/login` (learner, light full-page layout) and `/admin/login` (dark split-panel for admins/editors only)
+    - `AdminSessionController`: validates role is `super_admin` or `content_editor` after auth; rejects learners
+    - `EnsureUserIsAdmin` middleware now redirects unauthenticated users to `admin.login` instead of `login`
+    - Cross-links between login pages for easy navigation
+14. **Staff Invitation System** ✅ — Admin sends email invite from Users page; invitee clicks link, sets name+password, account is created with the assigned role
+    - `staff_invitations` table: `email`, `role`, `token` (48-char random), `invited_by`, `expires_at` (7 days), `accepted_at`
+    - `Admin\InvitationsController`: `store` (create + send email), `show` (token validation page), `accept` (create account)
+    - `StaffInvitationMail` + `resources/views/emails/staff-invitation.blade.php` — polished HTML email
+    - `Pages/Auth/AcceptInvitation.jsx` — dark-themed setup page matching admin portal style
+    - `Pages/Auth/InvitationInvalid.jsx` — expired/already-used fallback page
+    - "Invite Staff" button on Users page opens dialog with email field + role selector; duplicate pending invites are replaced
+    - Invited users are auto-verified (`email_verified_at`) and profile-marked-complete (`profile_completed_at`)
 12. **Learner Profile Builder** ✅ — Onboarding form shown to new learners after registration before they can access any content
     - DB columns added to `users`: `gender`, `race`, `state`, `birthdate`, `occupation`, `organization`, `profile_completed_at`
     - `EnsureProfileIsComplete` middleware: redirects learners with null `profile_completed_at` to `/profile-setup`; admins bypass it

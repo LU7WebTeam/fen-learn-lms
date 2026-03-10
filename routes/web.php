@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileSetupController;
+use App\Http\Controllers\Admin\InvitationsController as AdminInvitationsController;
 use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
@@ -32,6 +33,12 @@ Route::get('/certificate/{uuid}/download', [CertificateController::class, 'downl
 
 // Locale switcher
 Route::post('/locale', [LocaleController::class, 'set'])->name('locale.set');
+
+// Staff invitation acceptance (public — token is the auth)
+Route::get('/invite/{token}', [\App\Http\Controllers\Admin\InvitationsController::class, 'show'])
+    ->name('invitations.show');
+Route::post('/invite/{token}', [\App\Http\Controllers\Admin\InvitationsController::class, 'accept'])
+    ->name('invitations.accept');
 
 // Public course catalog + detail (auth optional)
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
@@ -69,6 +76,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Users
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update-role');
+
+    // Staff invitations
+    Route::post('/invitations', [AdminInvitationsController::class, 'store'])->name('invitations.store');
 
     // Sections (nested under a course)
     Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');
