@@ -154,3 +154,26 @@ All PRD-mapped components in `resources/js/Components/ui/`:
     - Public helper `tl(record, field, locale)` in `resources/js/lib/locale.js` — returns BM field if non-empty, else falls back to EN
     - `LangSwitcher.jsx` component in `AuthenticatedLayout` and `Learn/Show` header
     - All public pages (`Courses/Index`, `Courses/Show`, `Learn/Show`) fully localized with EN fallback
+
+## GitHub & Deployment
+
+- **Repository:** https://github.com/LU7WebTeam/fen-learn-lms
+- **CI/CD:** GitHub Actions → rsync over SSH → cPanel (`.github/workflows/deploy.yml`)
+- **Trigger:** Every push to `main` branch auto-deploys
+
+### Required GitHub Secrets
+Set these in the repo at **Settings → Secrets and variables → Actions**:
+
+| Secret | Description | Example |
+|---|---|---|
+| `SSH_HOST` | cPanel server hostname or IP | `fenlearn.example.com` |
+| `SSH_PORT` | SSH port (check cPanel Terminal) | `22` |
+| `SSH_USER` | cPanel username | `fenlearn` |
+| `SSH_PRIVATE_KEY` | Full private key (ed25519 or RSA) | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `DEPLOY_PATH` | Absolute path on server | `/home/fenlearn/public_html` |
+
+### What the workflow does on each push to `main`
+1. Installs Composer dependencies (production, no dev)
+2. Builds frontend assets (`npm run build`)
+3. Rsync everything (excluding `.env`, logs, sessions, caches) to cPanel
+4. SSH runs: `migrate --force`, `config:cache`, `route:cache`, `view:cache`, `storage:link`
