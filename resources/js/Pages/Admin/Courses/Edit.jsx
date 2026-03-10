@@ -514,6 +514,21 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                 {/* Tabs */}
                 <Tabs defaultValue="dashboard">
                     <TabsList className="w-full justify-start">
+                        <TabsTrigger value="dashboard" className="gap-2">
+                            <BarChart3 className="h-4 w-4" />Dashboard
+                            {analytics?.total_enrollments > 0 && (
+                                <Badge variant="secondary" className="ml-1 text-xs">
+                                    <Users className="h-2.5 w-2.5 mr-0.5 inline" />
+                                    {analytics.total_enrollments}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="introduction" className="gap-2">
+                            <LayoutTemplate className="h-4 w-4" />Introduction
+                            {Array.isArray(course.introduction) && course.introduction.length > 0 && (
+                                <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">Live</Badge>
+                            )}
+                        </TabsTrigger>
                         <TabsTrigger value="details" className="gap-2">
                             <Settings2 className="h-4 w-4" />Details
                         </TabsTrigger>
@@ -531,21 +546,6 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             )}
                             {course.certificate_template?.enabled && (
                                 <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">On</Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger value="dashboard" className="gap-2">
-                            <BarChart3 className="h-4 w-4" />Dashboard
-                            {analytics?.total_enrollments > 0 && (
-                                <Badge variant="secondary" className="ml-1 text-xs">
-                                    <Users className="h-2.5 w-2.5 mr-0.5 inline" />
-                                    {analytics.total_enrollments}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger value="introduction" className="gap-2">
-                            <LayoutTemplate className="h-4 w-4" />Introduction
-                            {Array.isArray(course.introduction) && course.introduction.length > 0 && (
-                                <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">Live</Badge>
                             )}
                         </TabsTrigger>
                     </TabsList>
