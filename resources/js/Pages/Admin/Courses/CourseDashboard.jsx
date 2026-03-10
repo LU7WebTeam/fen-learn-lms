@@ -9,6 +9,7 @@ import { Separator } from '@/Components/ui/separator';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/Components/ui/dialog';
@@ -16,6 +17,7 @@ import {
     Users, GraduationCap, Award, TrendingUp, BookOpen,
     Search, ExternalLink, ChevronDown, ChevronUp, Video, FileText, HelpCircle,
     CheckCircle2, Clock, BarChart3, Mail, CalendarDays, Activity,
+    MapPin, Briefcase, Building2, User,
 } from 'lucide-react';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
@@ -78,6 +80,9 @@ function StudentProfileDialog({ student, course, open, onClose }) {
             <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Learner Profile</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Detailed profile, progress, and lesson completion for {student?.user_name}.
+                    </DialogDescription>
                 </DialogHeader>
 
                 {/* Profile header */}
@@ -157,7 +162,69 @@ function StudentProfileDialog({ student, course, open, onClose }) {
                     )}
                 </div>
 
-                <Separator />
+                {/* Profile info */}
+                {(student.user_occupation || student.user_organization || student.user_state ||
+                  student.user_birthdate || student.user_gender || student.user_race) && (
+                    <>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                            {student.user_occupation && (
+                                <div className="flex items-start gap-2">
+                                    <Briefcase className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Occupation</p>
+                                        <p className="font-medium">{student.user_occupation}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {student.user_organization && (
+                                <div className="flex items-start gap-2">
+                                    <Building2 className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Organization</p>
+                                        <p className="font-medium">{student.user_organization}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {student.user_state && (
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">State</p>
+                                        <p className="font-medium">{student.user_state}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {student.user_birthdate && (
+                                <div className="flex items-start gap-2">
+                                    <CalendarDays className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Date of Birth</p>
+                                        <p className="font-medium">{student.user_birthdate}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {student.user_gender && (
+                                <div className="flex items-start gap-2">
+                                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Gender</p>
+                                        <p className="font-medium capitalize">{student.user_gender}</p>
+                                    </div>
+                                </div>
+                            )}
+                            {student.user_race && (
+                                <div className="flex items-start gap-2">
+                                    <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
+                                        <p className="font-medium">{student.user_race}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <Separator />
+                    </>
+                )}
 
                 {/* Lesson list */}
                 <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">

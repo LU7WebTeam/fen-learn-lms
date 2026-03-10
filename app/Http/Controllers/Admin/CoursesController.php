@@ -126,7 +126,7 @@ class CoursesController extends Controller
 
         $students = $course->enrollments()
             ->with([
-                'user:id,name,email,avatar',
+                'user:id,name,email,avatar,gender,race,state,birthdate,occupation,organization',
                 'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')
                     ->select('enrollment_id', 'lesson_id', 'completed_at'),
             ])
@@ -138,6 +138,12 @@ class CoursesController extends Controller
                 'user_name'            => $enrollment->user->name,
                 'user_email'           => $enrollment->user->email,
                 'user_avatar'          => $enrollment->user->avatar,
+                'user_gender'          => $enrollment->user->gender,
+                'user_race'            => $enrollment->user->race,
+                'user_state'           => $enrollment->user->state,
+                'user_birthdate'       => $enrollment->user->birthdate?->format('M j, Y'),
+                'user_occupation'      => $enrollment->user->occupation,
+                'user_organization'    => $enrollment->user->organization,
                 'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),
                 'completed_at'         => $enrollment->completed_at?->format('M j, Y'),
                 'progress'             => $totalLessons > 0
