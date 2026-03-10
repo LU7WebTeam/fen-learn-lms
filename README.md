@@ -1,59 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Fen Learn LMS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A free, high-performance Learning Management System built for public access. Delivers video, text, and auto-graded quiz content with progress tracking and automated PDF certificates upon completion.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer | Technology |
+|---|---|
+| Backend | Laravel 12 (PHP 8.4) |
+| Frontend | React 19 |
+| Bridge | Inertia.js (SPA routing, no separate API) |
+| Styling | Tailwind CSS |
+| UI Components | Shadcn UI |
+| Database | SQLite (development) / MySQL (production) |
+| Auth Scaffold | Laravel Breeze |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Learner Experience
+- Public course catalog with search and difficulty filters
+- Course detail page with full curriculum preview
+- One-click enrollment and resume from last lesson
+- Full lesson player — video, rich text, PDF, and auto-graded quizzes
+- Per-lesson progress tracking
+- Automated PDF certificate generation on course completion
+- Bilingual interface — English and Bahasa Melayu with live language switcher
+- Learner profile builder (gender, race, state, date of birth, occupation, organization)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Admin Panel
+- Platform dashboard with key metrics (enrollments, completions, active learners)
+- Course builder with sections, lessons, and drag-and-drop reorder
+- Lesson editor — video URL or file upload, rich text (BlockNote), PDF upload, quiz builder
+- Per-course dashboard — enrollment stats, per-student progress, lesson completion rates
+- Learner profile popup with inline edit directly from the course dashboard or users table
+- User management — students and staff in a single tabbed view
+- Staff invitation system — email invite with role pre-assignment and 7-day expiry
+- Account suspension with reason logging
+- Platform settings — branding, registration controls, SMTP, localization, maintenance mode
+- Certificate template builder per course (toggle on/off, custom layout)
+- SEO metadata per course — title, description, Open Graph image
+- Static legal pages (About, Terms, Privacy)
 
-## Laravel Sponsors
+### Access Control
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Role | Access |
+|---|---|
+| `learner` | Public catalog, enrolled courses, own profile |
+| `content_editor` | Admin panel — courses and lessons only |
+| `super_admin` | Full access including users, settings, invitations |
 
-### Premium Partners
+- Separate login pages for learners (`/login`) and staff/admins (`/admin/login`)
+- New learners must complete their profile before accessing any content
+- Maintenance mode — toggleable from settings, transparently bypasses admins
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## Local Development
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Requirements
+- PHP 8.4+
+- Composer
+- Node.js 20+
 
-## Code of Conduct
+### Setup
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/LU7WebTeam/fen-learn-lms.git
+cd fen-learn-lms
 
-## Security Vulnerabilities
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+composer install
+php artisan key:generate
+php artisan migrate --seed
+
+npm install
+npm run dev
+```
+
+Open `http://localhost:8000` in your browser.
+
+**Seeded admin credentials:**
+- Email: `admin@lms.test`
+- Password: `password`
+
+---
+
+## Production Deployment (cPanel)
+
+### 1. Set environment variables on the server
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_DATABASE=your_db_name
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+
+MAIL_MAILER=smtp
+MAIL_HOST=your_smtp_host
+MAIL_PORT=587
+MAIL_USERNAME=your_smtp_username
+MAIL_PASSWORD=your_smtp_password
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
+MAIL_FROM_NAME="Fen Learn"
+```
+
+Then run:
+```bash
+php artisan key:generate
+php artisan storage:link
+```
+
+### 2. GitHub Actions CI/CD
+
+Every push to `main` automatically:
+1. Installs Composer dependencies (production, no dev)
+2. Builds frontend assets (`npm run build`)
+3. Rsyncs all files to the cPanel server over SSH
+4. Runs migrations, clears and rebuilds all caches, re-links storage
+
+#### Required GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions** in the repo and add:
+
+| Secret | Description | Example |
+|---|---|---|
+| `SSH_HOST` | Server hostname or IP | `yourdomain.com` |
+| `SSH_PORT` | SSH port | `22` |
+| `SSH_USER` | cPanel username | `fenlearn` |
+| `SSH_PRIVATE_KEY` | Full private SSH key | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `DEPLOY_PATH` | Absolute path on server | `/home/fenlearn/public_html` |
+
+Add the matching public key in **cPanel → Security → SSH Access → Manage Keys → Authorize**.
+
+---
+
+## Project Structure
+
+```
+app/
+  Http/
+    Controllers/
+      Admin/                      # Courses, Lessons, Sections, Users, Settings, Invitations
+      CourseController.php        # Public catalog and course detail
+      EnrollmentController.php    # Enroll and resume
+      LearnController.php         # Lesson player and progress tracking
+    Middleware/
+      EnsureUserIsAdmin.php
+      EnsureProfileIsComplete.php
+      HandleMaintenanceMode.php
+  Models/
+    User, Course, Section, Lesson, Enrollment, LessonProgress, Setting
+
+resources/
+  js/
+    Pages/
+      Admin/                      # Dashboard, Courses, Users, Settings
+      Learner/                    # Dashboard
+      Courses/                    # Public catalog and detail
+      Learn/                      # Lesson player
+      Auth/                       # Login, Register, ProfileSetup, AcceptInvitation
+    Components/ui/                # Shadcn UI components
+    Layouts/                      # AdminLayout, AuthenticatedLayout, GuestLayout
+
+database/
+  migrations/                     # 9 migrations
+  seeders/                        # AdminSeeder
+
+.github/
+  workflows/
+    deploy.yml                    # CI/CD — build + rsync + post-deploy
+```
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT — free to use, modify, and distribute.
