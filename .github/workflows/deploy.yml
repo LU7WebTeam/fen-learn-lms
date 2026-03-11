@@ -34,6 +34,7 @@ jobs:
         run: |
           npm ci
           npm run build
+          rm -f public/hot
 
       - name: Configure SSH
         run: |
@@ -71,11 +72,11 @@ jobs:
           ssh deploy_target "
             set -e
             cd '${{ secrets.DEPLOY_PATH }}'
+            mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+            chmod -R ug+rwx storage bootstrap/cache || true
             php artisan migrate --force
-            php artisan config:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            php artisan optimize:clear
             php artisan storage:link --force
+            php artisan optimize
             echo 'Deployment complete!'
           "
