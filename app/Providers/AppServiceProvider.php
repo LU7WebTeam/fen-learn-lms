@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Shared-host MySQL/MariaDB variants may still enforce 1000-byte key limits.
+        Schema::defaultStringLength(191);
+
         Vite::prefetch(concurrency: 3);
 
         if ($root = config('app.asset_url')) {
