@@ -17,11 +17,11 @@ jobs:
       - name: Validate required secrets
         run: |
           set -e
-          [ -n "${{ secrets.CPANEL_HOST }}" ] || (echo "Missing secret: CPANEL_HOST" && exit 1)
-          [ -n "${{ secrets.CPANEL_PORT }}" ] || (echo "Missing secret: CPANEL_PORT" && exit 1)
-          [ -n "${{ secrets.CPANEL_USER }}" ] || (echo "Missing secret: CPANEL_USER" && exit 1)
-          [ -n "${{ secrets.CPANEL_SSH_KEY }}" ] || (echo "Missing secret: CPANEL_SSH_KEY" && exit 1)
-          [ -n "${{ secrets.CPANEL_APP_PATH }}" ] || (echo "Missing secret: CPANEL_APP_PATH" && exit 1)
+          [ -n "${{ secrets.CPANEL_FTP_SERVER }}" ] || (echo "Missing secret: CPANEL_FTP_SERVER" && exit 1)
+          [ -n "${{ secrets.CPANEL_FTP_USERNAME }}" ] || (echo "Missing secret: CPANEL_FTP_USERNAME" && exit 1)
+          [ -n "${{ secrets.CPANEL_FTP_PASSWORD }}" ] || (echo "Missing secret: CPANEL_FTP_PASSWORD" && exit 1)
+          [ -n "${{ secrets.CPANEL_FTP_PORT }}" ] || (echo "Missing secret: CPANEL_FTP_PORT" && exit 1)
+          [ -n "${{ secrets.CPANEL_FTP_REMOTE_DIR }}" ] || (echo "Missing secret: CPANEL_FTP_REMOTE_DIR" && exit 1)
           echo "Secret preflight passed"
 
       - name: Setup PHP 8.4
@@ -46,69 +46,34 @@ jobs:
           npm run build
           rm -f public/hot
 
-      - name: Configure SSH
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          KEY='${{ secrets.CPANEL_SSH_KEY }}'
-          if printf "%s" "$KEY" | grep -q "\\\\n"; then
-            # Support keys pasted as a single line with escaped newlines.
-            printf "%b" "$KEY" | tr -d '\r' > ~/.ssh/deploy_key
-          else
-            printf "%s" "$KEY" | tr -d '\r' > ~/.ssh/deploy_key
-          fi
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.CPANEL_PORT }}" -H "${{ secrets.CPANEL_HOST }}" >> ~/.ssh/known_hosts || true
-          cat >> ~/.ssh/config << EOF
-          Host deploy_target
-            HostName ${{ secrets.CPANEL_HOST }}
-            Port ${{ secrets.CPANEL_PORT }}
-            User ${{ secrets.CPANEL_USER }}
-            IdentityFile ~/.ssh/deploy_key
-            UserKnownHostsFile ~/.ssh/known_hosts
-            StrictHostKeyChecking yes
-          EOF
+      - name: Deploy files via FTP/FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.CPANEL_FTP_PORT }}
+          server-dir: ${{ secrets.CPANEL_FTP_REMOTE_DIR }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/tests/**
+            **/.env
+            **/.env.*
+            **/storage/logs/**
+            **/storage/framework/cache/data/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            **/phpunit.xml
+            **/*.md
 
-      - name: Test network reachability
+      - name: Manual post-deploy reminder
         run: |
-          if timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.CPANEL_HOST }}/${{ secrets.CPANEL_PORT }}"; then
-            echo "TCP connection to SSH port is reachable"
-          else
-            echo "Warning: cannot reach SSH host/port from GitHub runner during precheck; continuing to SSH test for detailed logs"
-          fi
-
-      - name: Test SSH connection
-        run: |
-          ssh -vv -o BatchMode=yes -o ConnectTimeout=20 deploy_target "echo Connected to \\$(hostname) as \\$(whoami)"
-
-      - name: Sync files to server
-        run: |
-          rsync -az --delete \
-            -e "ssh -o BatchMode=yes -o ConnectTimeout=20" \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            --exclude='storage/logs/*.log' \
-            --exclude='storage/framework/cache/data' \
-            --exclude='storage/framework/sessions/*' \
-            --exclude='storage/framework/views/*' \
-            --exclude='tests/' \
-            --exclude='phpunit.xml' \
-            --exclude='*.md' \
-            ./ "deploy_target:${{ secrets.CPANEL_APP_PATH }}/"
-
-      - name: Run post-deploy commands
-        run: |
-          ssh deploy_target "
-            set -e
-            cd '${{ secrets.CPANEL_APP_PATH }}'
-            mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
-            chmod -R ug+rwx storage bootstrap/cache || true
-            php artisan migrate --force
-            php artisan optimize:clear
-            php artisan storage:link --force
-            php artisan optimize
-            echo 'Deployment complete!'
-          "
+          echo "FTP deploy completed. Run these on cPanel Terminal (inside app path):"
+          echo "php artisan migrate --force"
+          echo "php artisan optimize:clear"
+          echo "php artisan storage:link --force"
+          echo "php artisan optimize"
