@@ -35,7 +35,12 @@ class InvitationsController extends Controller
             'expires_at' => now()->addDays(7),
         ]);
 
-        Mail::to($validated['email'])->send(new StaffInvitationMail($invitation));
+        try {
+            Mail::to($validated['email'])->send(new StaffInvitationMail($invitation));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Invitation created, but email could not be sent. Please verify SMTP settings and try again.');
+        }
 
         return back()->with('success', "Invitation sent to {$validated['email']}.");
     }

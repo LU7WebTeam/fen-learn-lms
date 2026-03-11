@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
             $driver   = \App\Models\Setting::get('mail_driver');
             $host     = \App\Models\Setting::get('mail_host');
             $port     = \App\Models\Setting::get('mail_port');
+            $scheme   = \App\Models\Setting::get('mail_scheme');
             $username = \App\Models\Setting::get('mail_username');
             $password = \App\Models\Setting::get('mail_password');
             $name     = \App\Models\Setting::get('mail_sender_name');
@@ -40,6 +41,11 @@ class AppServiceProvider extends ServiceProvider
             if ($driver) Config::set('mail.default', $driver);
             if ($host)   Config::set('mail.mailers.smtp.host', $host);
             if ($port)   Config::set('mail.mailers.smtp.port', (int) $port);
+            if ($scheme === 'none' || $scheme === '') {
+                Config::set('mail.mailers.smtp.scheme', null);
+            } elseif ($scheme) {
+                Config::set('mail.mailers.smtp.scheme', $scheme);
+            }
             if ($username) Config::set('mail.mailers.smtp.username', $username);
             if ($password) Config::set('mail.mailers.smtp.password', $password);
             if ($name)    Config::set('mail.from.name', $name);

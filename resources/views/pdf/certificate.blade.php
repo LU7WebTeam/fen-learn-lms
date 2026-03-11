@@ -11,6 +11,7 @@
             $fieldsRaw   = $template['fields']      ?? [];
             $signatory   = $template['signatory']   ?? ['name' => '', 'title' => '', 'organization' => ''];
             $fields      = collect($fieldsRaw)->keyBy('id');
+            $fontFamily  = $template['font_family'] ?? 'DejaVu Sans';
 
             $pageDims = [
                 'a4'     => ['landscape' => [297, 210], 'portrait' => [210, 297]],
@@ -84,6 +85,23 @@
                     . " text-align: {$align}; font-weight: {$bold}; font-style: {$italic};"
                     . " line-height: 1;";
             }
+
+            $customRegular = null;
+            $customBold = null;
+            $customItalic = null;
+            $customBoldItalic = null;
+            if (!empty($customFont) && !empty($customFont->regular_path)) {
+                $customRegular = storage_path('app/public/' . $customFont->regular_path);
+                if (!empty($customFont->bold_path)) {
+                    $customBold = storage_path('app/public/' . $customFont->bold_path);
+                }
+                if (!empty($customFont->italic_path)) {
+                    $customItalic = storage_path('app/public/' . $customFont->italic_path);
+                }
+                if (!empty($customFont->bold_italic_path)) {
+                    $customBoldItalic = storage_path('app/public/' . $customFont->bold_italic_path);
+                }
+            }
         @endphp
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -92,11 +110,47 @@
 
         body {
             margin: 0; padding: 0;
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: '{{ $fontFamily }}', 'DejaVu Sans', sans-serif;
             width: {{ $pageW }}mm;
             height: {{ $pageH }}mm;
             overflow: hidden;
         }
+
+        @if ($customRegular && file_exists($customRegular))
+        @font-face {
+            font-family: '{{ $fontFamily }}';
+            font-style: normal;
+            font-weight: 400;
+            src: url('{{ 'file://' . str_replace('\\', '/', $customRegular) }}') format('truetype');
+        }
+        @endif
+
+        @if ($customBold && file_exists($customBold))
+        @font-face {
+            font-family: '{{ $fontFamily }}';
+            font-style: normal;
+            font-weight: 700;
+            src: url('{{ 'file://' . str_replace('\\', '/', $customBold) }}') format('truetype');
+        }
+        @endif
+
+        @if ($customItalic && file_exists($customItalic))
+        @font-face {
+            font-family: '{{ $fontFamily }}';
+            font-style: italic;
+            font-weight: 400;
+            src: url('{{ 'file://' . str_replace('\\', '/', $customItalic) }}') format('truetype');
+        }
+        @endif
+
+        @if ($customBoldItalic && file_exists($customBoldItalic))
+        @font-face {
+            font-family: '{{ $fontFamily }}';
+            font-style: italic;
+            font-weight: 700;
+            src: url('{{ 'file://' . str_replace('\\', '/', $customBoldItalic) }}') format('truetype');
+        }
+        @endif
 
         .page {
             position: relative;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomFont;
 use App\Models\Course;
 use App\Models\LessonProgress;
 use Illuminate\Http\RedirectResponse;
@@ -159,6 +160,10 @@ class CoursesController extends Controller
         return Inertia::render('Admin/Courses/Edit', [
             'course'          => $course,
             'defaultTemplate' => \App\Models\Course::defaultCertificateTemplate(),
+            'customFonts'     => CustomFont::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'family', 'regular_path', 'bold_path', 'italic_path', 'bold_italic_path']),
             'analytics'       => $analytics,
             'students'        => $students,
             'lessonStats'     => $lessonStats,
@@ -195,6 +200,8 @@ class CoursesController extends Controller
             'certificate_template.branding'                 => 'required|array',
             'certificate_template.fields'                   => 'required|array',
             'certificate_template.signatory'                => 'required|array',
+            'certificate_template.font_family'              => 'nullable|string|max:120',
+            'certificate_template.custom_font_id'           => 'nullable|integer|exists:custom_fonts,id',
             'certificate_template.requirements'             => 'required|array',
             'certificate_template.requirements.type'        => 'required|in:all_lessons,percentage,specific_sections,specific_lessons',
             'certificate_template.requirements.percentage'  => 'nullable|integer|min:1|max:100',

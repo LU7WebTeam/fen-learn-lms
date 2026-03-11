@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'http://fen-learn-lms.test/'),
 
     // When running on Replit, use the public HTTPS domain for asset URLs so the
     // browser can load JS/CSS (the internal PHP server only speaks HTTP).

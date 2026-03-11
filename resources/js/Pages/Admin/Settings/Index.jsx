@@ -23,6 +23,8 @@ import {
     Award,
     Wrench,
     Upload,
+    Type,
+    Trash2,
     X,
     Eye,
     EyeOff,
@@ -152,7 +154,7 @@ function ImageUploadField({ label, description, currentUrl, onFileChange, onClea
     );
 }
 
-export default function SettingsIndex({ settings }) {
+export default function SettingsIndex({ settings, customFonts = [] }) {
     const { flash } = usePage().props;
     const [processing, setProcessing] = useState(false);
 
@@ -203,6 +205,9 @@ export default function SettingsIndex({ settings }) {
                         <TabsTrigger value="certificates" className="gap-1.5">
                             <Award className="h-3.5 w-3.5" />Certificates
                         </TabsTrigger>
+                        <TabsTrigger value="fonts" className="gap-1.5">
+                            <Type className="h-3.5 w-3.5" />Fonts
+                        </TabsTrigger>
                         <TabsTrigger value="maintenance" className="gap-1.5">
                             <Wrench className="h-3.5 w-3.5" />Maintenance
                         </TabsTrigger>
@@ -236,6 +241,11 @@ export default function SettingsIndex({ settings }) {
                         <CertificatesTab settings={settings} onSave={submitGroup} processing={processing} />
                     </TabsContent>
 
+                    {/* ── CUSTOM FONTS ── */}
+                    <TabsContent value="fonts">
+                        <FontsTab customFonts={customFonts} processing={processing} />
+                    </TabsContent>
+
                     {/* ── MAINTENANCE ── */}
                     <TabsContent value="maintenance">
                         <MaintenanceTab settings={settings} onSave={submitGroup} processing={processing} />
@@ -248,6 +258,130 @@ export default function SettingsIndex({ settings }) {
                 </Tabs>
             </div>
         </AdminLayout>
+    );
+}
+
+function FontsTab({ customFonts, processing }) {
+    const [name, setName] = useState('');
+    const [family, setFamily] = useState('');
+    const [regularFile, setRegularFile] = useState(null);
+    const [boldFile, setBoldFile] = useState(null);
+    const [italicFile, setItalicFile] = useState(null);
+    const [boldItalicFile, setBoldItalicFile] = useState(null);
+
+    function upload() {
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('family', family);
+        if (regularFile) formData.append('regular_file', regularFile);
+        if (boldFile) formData.append('bold_file', boldFile);
+        if (italicFile) formData.append('italic_file', italicFile);
+        if (boldItalicFile) formData.append('bold_italic_file', boldItalicFile);
+
+        router.post(route('admin.settings.fonts.store'), formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setName('');
+                setFamily('');
+                setRegularFile(null);
+                setBoldFile(null);
+                setItalicFile(null);
+                setBoldItalicFile(null);
+            },
+        });
+    }
+
+    function removeFont(id) {
+        router.delete(route('admin.settings.fonts.destroy', id), {
+            preserveScroll: true,
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Type className="h-4 w-4" /> Custom Fonts
+                </CardTitle>
+                <CardDescription>
+                    Upload custom TTF/OTF fonts for certificate generation. These fonts will be available in the certificate builder.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="font_name">Font Name</Label>
+                        <Input id="font_name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Montserrat" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="font_family">CSS Family Name</Label>
+                        <Input id="font_family" value={family} onChange={e => setFamily(e.target.value)} placeholder="e.g. Montserrat" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="font_regular">Regular Font File (required)</Label>
+                        <Input id="font_regular" type="file" accept=".ttf,.otf" onChange={e => setRegularFile(e.target.files?.[0] || null)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="font_bold">Bold Font File (optional)</Label>
+                        <Input id="font_bold" type="file" accept=".ttf,.otf" onChange={e => setBoldFile(e.target.files?.[0] || null)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="font_italic">Italic Font File (optional)</Label>
+                        <Input id="font_italic" type="file" accept=".ttf,.otf" onChange={e => setItalicFile(e.target.files?.[0] || null)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="font_bold_italic">Bold Italic Font File (optional)</Label>
+                        <Input id="font_bold_italic" type="file" accept=".ttf,.otf" onChange={e => setBoldItalicFile(e.target.files?.[0] || null)} />
+                    </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                    Accepted formats: <code>.ttf</code>, <code>.otf</code>. Max size 5MB per file. Upload variants to improve bold/italic rendering in PDF certificates.
+                </p>
+
+                <div className="flex justify-end">
+                    <Button onClick={upload} disabled={processing || !name || !regularFile}>Upload Font</Button>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                    <p className="text-sm font-medium">Uploaded Fonts</p>
+                    {customFonts.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No custom fonts uploaded yet.</p>
+                    ) : (
+                        <div className="space-y-2">
+                            {customFonts.map(font => {
+                                const hasBold = !!font.bold_path;
+                                const hasItalic = !!font.italic_path;
+                                const hasBoldItalic = !!font.bold_italic_path;
+
+                                return (
+                                    <div key={font.id} className="flex items-center justify-between rounded-lg border p-3">
+                                        <div>
+                                            <p className="text-sm font-semibold">{font.name}</p>
+                                            <p className="text-xs text-muted-foreground">Family: {font.family || font.name}</p>
+                                            <div className="mt-1 flex flex-wrap gap-1">
+                                                <Badge variant="outline" className="text-[10px]">Regular</Badge>
+                                                {hasBold && <Badge variant="outline" className="text-[10px]">Bold</Badge>}
+                                                {hasItalic && <Badge variant="outline" className="text-[10px]">Italic</Badge>}
+                                                {hasBoldItalic && <Badge variant="outline" className="text-[10px]">Bold Italic</Badge>}
+                                            </div>
+                                        </div>
+                                        <Button variant="destructive" size="sm" onClick={() => removeFont(font.id)}>
+                                            <Trash2 className="mr-1 h-3.5 w-3.5" />Delete
+                                        </Button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -460,10 +594,13 @@ function EmailTab({ settings, onSave, processing }) {
     const [driver, setDriver] = useState(settings.mail_driver || 'smtp');
     const [host, setHost] = useState(settings.mail_host || '');
     const [port, setPort] = useState(settings.mail_port || '587');
+    const [scheme, setScheme] = useState(settings.mail_scheme || 'none');
     const [username, setUsername] = useState(settings.mail_username || '');
     const [password, setPassword] = useState('');
+    const [clearPassword, setClearPassword] = useState(false);
     const [senderName, setSenderName] = useState(settings.mail_sender_name || '');
     const [senderAddress, setSenderAddress] = useState(settings.mail_sender_address || '');
+    const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
 
     function save() {
@@ -471,10 +608,20 @@ function EmailTab({ settings, onSave, processing }) {
             mail_driver:         driver,
             mail_host:           host,
             mail_port:           port,
+            mail_scheme:         scheme,
             mail_username:       username,
             mail_password:       password,
+            clear_mail_password: clearPassword ? '1' : '0',
             mail_sender_name:    senderName,
             mail_sender_address: senderAddress,
+        });
+    }
+
+    function sendTestEmail() {
+        router.post(route('admin.settings.test-email'), {
+            recipient: testRecipient,
+        }, {
+            preserveScroll: true,
         });
     }
 
@@ -506,7 +653,7 @@ function EmailTab({ settings, onSave, processing }) {
                 {driver === 'smtp' && (
                     <>
                         <Separator />
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div className="col-span-2 space-y-2">
                                 <Label htmlFor="mail_host">SMTP Host</Label>
                                 <Input
@@ -526,6 +673,20 @@ function EmailTab({ settings, onSave, processing }) {
                                     placeholder="587"
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Encryption / Scheme</Label>
+                            <Select value={scheme} onValueChange={setScheme}>
+                                <SelectTrigger className="w-48">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="tls">TLS</SelectItem>
+                                    <SelectItem value="smtps">SMTPS (SSL)</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
@@ -557,6 +718,14 @@ function EmailTab({ settings, onSave, processing }) {
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+                            <label className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+                                <input
+                                    type="checkbox"
+                                    checked={clearPassword}
+                                    onChange={e => setClearPassword(e.target.checked)}
+                                />
+                                Clear saved SMTP password on save
+                            </label>
                         </div>
                     </>
                 )}
@@ -582,6 +751,26 @@ function EmailTab({ settings, onSave, processing }) {
                             onChange={e => setSenderAddress(e.target.value)}
                             placeholder="no-reply@example.com"
                         />
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="test_recipient">Test Recipient Email</Label>
+                        <Input
+                            id="test_recipient"
+                            type="email"
+                            value={testRecipient}
+                            onChange={e => setTestRecipient(e.target.value)}
+                            placeholder="you@example.com"
+                        />
+                    </div>
+                    <div className="flex items-end">
+                        <Button variant="outline" onClick={sendTestEmail} className="w-full" disabled={processing}>
+                            Send Test Email
+                        </Button>
                     </div>
                 </div>
 

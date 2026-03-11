@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomFont;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +27,7 @@ class SettingsController extends Controller
         'mail_driver'                => 'smtp',
         'mail_host'                  => '',
         'mail_port'                  => '587',
+        'mail_scheme'                => 'none',
         'mail_username'              => '',
         'mail_password'              => '',
         'mail_sender_name'           => '',
@@ -52,7 +55,11 @@ class SettingsController extends Controller
         $settings = array_merge($this->defaults, $stored);
 
         return Inertia::render('Admin/Settings/Index', [
-            'settings' => $settings,
+            'settings'    => $settings,
+            'customFonts' => CustomFont::query()
+                ->where('is_active', true)
+                ->latest()
+                ->get(['id', 'name', 'family', 'regular_path', 'bold_path', 'italic_path', 'bold_italic_path']),
         ]);
     }
 
@@ -143,21 +150,56 @@ class SettingsController extends Controller
             'mail_driver'         => 'required|in:smtp,sendmail,log',
             'mail_host'           => 'nullable|string|max:255',
             'mail_port'           => 'nullable|integer|min:1|max:65535',
+            'mail_scheme'         => 'nullable|in:none,tls,smtps',
             'mail_username'       => 'nullable|string|max:255',
             'mail_sender_name'    => 'nullable|string|max:100',
             'mail_sender_address' => 'nullable|email|max:200',
+            'clear_mail_password' => 'nullable|in:0,1',
         ]);
 
         Setting::set('mail_driver', $request->input('mail_driver'));
         Setting::set('mail_host', $request->input('mail_host', ''));
         Setting::set('mail_port', $request->input('mail_port', '587'));
+        Setting::set('mail_scheme', $request->input('mail_scheme', 'none'));
         Setting::set('mail_username', $request->input('mail_username', ''));
         Setting::set('mail_sender_name', $request->input('mail_sender_name', ''));
         Setting::set('mail_sender_address', $request->input('mail_sender_address', ''));
 
+        if ($request->input('clear_mail_password') === '1') {
+            Setting::set('mail_password', '');
+            return;
+        }
+
         $password = $request->input('mail_password', '');
         if ($password !== '') {
             Setting::set('mail_password', $password);
+        }
+    }
+
+    public function testEmail(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient' => 'nullable|email|max:200',
+        ]);
+
+        $recipient = $validated['recipient']
+            ?? Setting::get('mail_sender_address')
+            ?? $request->user()?->email;
+
+        if (!$recipient) {
+            return back()->with('error', 'Please provide a recipient email for test mail.');
+        }
+
+        try {
+            Mail::raw(
+                "This is a test email from {$request->getHost()} sent at " . now()->toDateTimeString() . '.',
+                fn ($message) => $message->to($recipient)->subject('SMTP Test Email')
+            );
+
+            return back()->with('success', "Test email sent successfully to {$recipient}.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Failed to send test email. Please verify SMTP settings.');
         }
     }
 

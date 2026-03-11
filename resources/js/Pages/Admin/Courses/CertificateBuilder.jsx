@@ -23,7 +23,7 @@ const PAGE_DIMS = {
 // ─── Live Preview ──────────────────────────────────────────────────────────────
 const PREVIEW_W = 520; // px target width
 
-function CertPreview({ template, courseTitle }) {
+function CertPreview({ template, courseTitle, customFonts = [] }) {
     const size        = template.size        || 'a4';
     const orientation = template.orientation || 'landscape';
     const [pageW, pageH] = PAGE_DIMS[size]?.[orientation] || [297, 210];
@@ -38,6 +38,8 @@ function CertPreview({ template, courseTitle }) {
     const branding = template.branding    || {};
     const fields   = template.fields      || [];
     const signatory = template.signatory  || {};
+    const selectedCustomFont = customFonts.find(f => Number(f.id) === Number(template.custom_font_id));
+    const previewFontFamily = selectedCustomFont?.family || template.font_family || 'DejaVu Sans';
 
     const showTopBar    = branding.show_top_bar    ?? true;
     const showBottomBar = branding.show_bottom_bar ?? true;
@@ -69,11 +71,22 @@ function CertPreview({ template, courseTitle }) {
             style={{ width: PREVIEW_W, height: previewH, position: 'relative', overflow: 'hidden', flexShrink: 0 }}
             className="rounded-md shadow-lg border"
         >
+            {selectedCustomFont?.regular_url && (
+                <style>{`
+                    @font-face {
+                        font-family: '${previewFontFamily}';
+                        src: url('${selectedCustomFont.regular_url}') format('truetype');
+                        font-weight: normal;
+                        font-style: normal;
+                    }
+                `}</style>
+            )}
             <div
                 style={{
                     width: nativeW, height: nativeH,
                     transform: `scale(${scale})`, transformOrigin: 'top left',
                     position: 'relative', ...bgStyle,
+                    fontFamily: `'${previewFontFamily}', 'DejaVu Sans', sans-serif`,
                 }}
             >
                 {/* Top bar */}
@@ -315,7 +328,7 @@ function FieldRow({ field, onChange }) {
 }
 
 // ─── Main exported builder ──────────────────────────────────────────────────
-export default function CertificateBuilder({ course, defaultTemplate, sections }) {
+export default function CertificateBuilder({ course, defaultTemplate, sections, customFonts = [] }) {
     const existing = course.certificate_template;
     const initial  = existing ?? defaultTemplate;
 
@@ -425,6 +438,67 @@ export default function CertificateBuilder({ course, defaultTemplate, sections }
                                                 <SelectItem value="portrait">Portrait</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm">System Font Family</Label>
+                                        <Select
+                                            value={tpl.custom_font_id ? '__custom__' : (tpl.font_family || 'DejaVu Sans')}
+                                            onValueChange={v => {
+                                                if (v === '__custom__') return;
+                                                setTpl({ font_family: v, custom_font_id: null });
+                                            }}
+                                        >
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="DejaVu Sans">DejaVu Sans</SelectItem>
+                                                <SelectItem value="DejaVu Serif">DejaVu Serif</SelectItem>
+                                                <SelectItem value="Courier">Courier</SelectItem>
+                                                {customFonts.length > 0 && <SelectItem value="__custom__" disabled>Use Custom Font Picker</SelectItem>}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm">Custom Uploaded Font</Label>
+                                        <Select
+                                            value={tpl.custom_font_id ? String(tpl.custom_font_id) : '__none__'}
+                                            onValueChange={v => {
+                                                if (v === '__none__') {
+                                                    setTpl({ custom_font_id: null });
+                                                    return;
+                                                }
+                                                const selected = customFonts.find(f => String(f.id) === v);
+                                                setTpl({
+                                                    custom_font_id: Number(v),
+                                                    font_family: selected?.family || selected?.name || tpl.font_family || 'DejaVu Sans',
+                                                });
+                                            }}
+                                        >
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__none__">None (use system font)</SelectItem>
+                                                {customFonts.map(font => {
+                                                    const variants = [
+                                                        font.regular_path && 'R',
+                                                        font.bold_path && 'B',
+                                                        font.italic_path && 'I',
+                                                        font.bold_italic_path && 'BI',
+                                                    ].filter(Boolean).join('/');
+
+                                                    return (
+                                                        <SelectItem key={font.id} value={String(font.id)}>
+                                                            {font.name} ({variants || 'R'})
+                                                        </SelectItem>
+                                                    );
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-xs text-muted-foreground">
+                                            Upload fonts in Admin Settings → Fonts.
+                                        </p>
                                     </div>
                                 </div>
                             </AccordionContent>
@@ -748,7 +822,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections }
                                 {(tpl.size || 'a4').toUpperCase()} · {tpl.orientation || 'landscape'}
                             </Badge>
                         </div>
-                        <CertPreview template={tpl} courseTitle={course.title} />
+                        <CertPreview template={tpl} courseTitle={course.title} customFonts={customFonts} />
                         <p className="mt-2 text-xs text-muted-foreground">
                             Preview uses sample data. The actual PDF renders using the learner's real information.
                         </p>

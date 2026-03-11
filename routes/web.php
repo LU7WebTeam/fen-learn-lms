@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\Admin\InvitationsController as AdminInvitationsController;
+use App\Http\Controllers\Admin\CustomFontController;
 use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
@@ -104,6 +105,9 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Settings
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/test-email', [AdminSettingsController::class, 'testEmail'])->name('settings.test-email');
+    Route::post('/settings/fonts', [CustomFontController::class, 'store'])->name('settings.fonts.store');
+    Route::delete('/settings/fonts/{font}', [CustomFontController::class, 'destroy'])->name('settings.fonts.destroy');
 
     // Media uploads (quick AJAX endpoints returning JSON)
     Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'image'])->name('upload.image');

@@ -482,7 +482,7 @@ function CourseIntroductionForm({ course }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts }) {
     const [addingSection, setAddingSection] = useState(false);
 
     return (
@@ -604,6 +604,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             course={course}
                             defaultTemplate={defaultTemplate}
                             sections={course.sections}
+                            customFonts={customFonts}
                         />
                     </TabsContent>
 

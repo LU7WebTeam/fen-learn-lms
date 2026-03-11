@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
+use App\Models\CustomFont;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
@@ -48,6 +49,12 @@ class CertificateController extends Controller
         $template = $enrollment->course->certificate_template
             ?? \App\Models\Course::defaultCertificateTemplate();
 
+        $customFont = null;
+        $customFontId = $template['custom_font_id'] ?? null;
+        if ($customFontId) {
+            $customFont = CustomFont::query()->where('is_active', true)->find($customFontId);
+        }
+
         $size        = $template['size']        ?? 'a4';
         $orientation = $template['orientation'] ?? 'landscape';
 
@@ -69,6 +76,7 @@ class CertificateController extends Controller
 
         $pdf = Pdf::loadView('pdf.certificate', [
             'template'     => $template,
+            'customFont'   => $customFont,
             'name'         => $enrollment->user->name,
             'course_title' => $enrollment->course->title,
             'completed_at' => $enrollment->completed_at->format('F j, Y'),

@@ -61,6 +61,8 @@ class Course extends Model
                 'logo_text'       => 'FENLearn',
                 'tagline'         => 'FEN E-Learning Platform · Backed by FEN Network',
             ],
+            'font_family'    => 'DejaVu Sans',
+            'custom_font_id' => null,
             'fields' => [
                 ['id' => 'cert_label',        'label' => 'Certificate Label',  'type' => 'static',  'text' => 'Certificate of Completion',       'visible' => true,  'y' => 11, 'x' => 50, 'font_size' => 8,  'color' => '#8B1A4A', 'align' => 'center', 'bold' => false, 'italic' => false],
                 ['id' => 'heading',           'label' => 'Main Heading',        'type' => 'static',  'text' => 'Certificate of Achievement',       'visible' => true,  'y' => 22, 'x' => 50, 'font_size' => 28, 'color' => '#1e1e2e', 'align' => 'center', 'bold' => true,  'italic' => false],

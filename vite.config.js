@@ -12,11 +12,10 @@ export default defineConfig({
         react(),
     ],
     server: {
-        host: '0.0.0.0',
+        host: 'localhost',
         port: 5173,
-        allowedHosts: true,
         hmr: {
-            host: '0.0.0.0',
+            host: 'localhost',
         },
         watch: {
             ignored: ['**/vendor/**', '**/node_modules/**', '**/storage/**'],
