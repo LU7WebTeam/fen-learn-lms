@@ -594,7 +594,9 @@ function EmailTab({ settings, onSave, processing }) {
     const [driver, setDriver] = useState(settings.mail_driver || 'smtp');
     const [host, setHost] = useState(settings.mail_host || '');
     const [port, setPort] = useState(settings.mail_port || '587');
-    const [scheme, setScheme] = useState(settings.mail_scheme || 'none');
+    // Map legacy 'tls'/'ssl' values stored in DB to Symfony Mailer scheme names.
+    const normalizeScheme = (v) => v === 'tls' ? 'smtp' : v === 'ssl' ? 'smtps' : (v || 'none');
+    const [scheme, setScheme] = useState(normalizeScheme(settings.mail_scheme));
     const [username, setUsername] = useState(settings.mail_username || '');
     const [password, setPassword] = useState('');
     const [clearPassword, setClearPassword] = useState(false);
@@ -683,8 +685,8 @@ function EmailTab({ settings, onSave, processing }) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">None</SelectItem>
-                                    <SelectItem value="tls">TLS</SelectItem>
-                                    <SelectItem value="smtps">SMTPS (SSL)</SelectItem>
+                                    <SelectItem value="smtp">TLS (STARTTLS, port 587)</SelectItem>
+                                    <SelectItem value="smtps">SMTPS (SSL, port 465)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
