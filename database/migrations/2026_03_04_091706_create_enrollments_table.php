@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
             $table->timestamp('enrolled_at')->useCurrent();
             $table->timestamp('completed_at')->nullable();
-            $table->string('certificate_uuid')->nullable()->unique();
+            $table->string('certificate_uuid', 191)->nullable()->unique();
             $table->unique(['user_id', 'course_id']);
             $table->timestamps();
         });
