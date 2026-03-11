@@ -24,16 +24,6 @@ jobs:
           [ -n "${{ secrets.CPANEL_FTP_REMOTE_DIR }}" ] || (echo "Missing secret: CPANEL_FTP_REMOTE_DIR" && exit 1)
           echo "Secret preflight passed"
 
-      - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, bcmath, pdo_mysql, pdo_sqlite, zip, gd, curl, xml
-          coverage: none
-
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
       - name: Setup Node.js 20
         uses: actions/setup-node@v5
         with:
@@ -60,6 +50,7 @@ jobs:
             **/.git*/**
             **/.github/**
             **/node_modules/**
+            **/vendor/**
             **/tests/**
             **/.env
             **/.env.*
@@ -73,6 +64,7 @@ jobs:
       - name: Manual post-deploy reminder
         run: |
           echo "FTP deploy completed. Run these on cPanel Terminal (inside app path):"
+          echo "composer install --no-dev --optimize-autoloader --no-interaction"
           echo "php artisan migrate --force"
           echo "php artisan optimize:clear"
           echo "php artisan storage:link --force"
