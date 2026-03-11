@@ -45,9 +45,17 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // Create extra learners for testing lists/search/pagination.
-        User::factory(10)->create([
-            'role' => 'learner',
-        ]);
+        // Create extra learners without relying on Faker (not installed in --no-dev).
+        for ($i = 1; $i <= 10; $i++) {
+            User::updateOrCreate(
+                ['email' => "learner{$i}@fenlearn.test"],
+                [
+                    'name' => "Learner {$i}",
+                    'role' => 'learner',
+                    'password' => $password,
+                    'email_verified_at' => now(),
+                ]
+            );
+        }
     }
 }
