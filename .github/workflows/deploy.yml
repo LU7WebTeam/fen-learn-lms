@@ -36,6 +36,37 @@ jobs:
           npm run build
           rm -f public/hot
 
+      - name: Prepare incremental deploy package
+        run: |
+          set -e
+          rm -rf .deploy-changed
+          mkdir -p .deploy-changed
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED_FILES=$(git ls-files)
+          else
+            CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT "$BEFORE" "$AFTER")
+          fi
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ -f "$file" ] || continue
+            mkdir -p ".deploy-changed/$(dirname "$file")"
+            cp "$file" ".deploy-changed/$file"
+          done <<< "$CHANGED_FILES"
+
+          # Always include freshly built front-end assets.
+          if [ -d public/build ]; then
+            mkdir -p .deploy-changed/public
+            cp -R public/build .deploy-changed/public/
+          fi
+
+          echo "Prepared incremental package contents:"
+          find .deploy-changed -type f | wc -l
+
       - name: Deploy files via FTP/FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -45,6 +76,7 @@ jobs:
           protocol: ftps
           port: ${{ secrets.CPANEL_FTP_PORT }}
           server-dir: ${{ secrets.CPANEL_FTP_REMOTE_DIR }}
+          local-dir: .deploy-changed/
           dangerous-clean-slate: false
           exclude: |
             **/.git*/**
