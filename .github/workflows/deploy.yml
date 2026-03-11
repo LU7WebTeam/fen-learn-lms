@@ -71,9 +71,11 @@ jobs:
 
       - name: Test network reachability
         run: |
-          timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.CPANEL_HOST }}/${{ secrets.CPANEL_PORT }}" \
-            && echo "TCP connection to SSH port is reachable" \
-            || (echo "Cannot reach SSH host/port from GitHub runner" && exit 1)
+          if timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.CPANEL_HOST }}/${{ secrets.CPANEL_PORT }}"; then
+            echo "TCP connection to SSH port is reachable"
+          else
+            echo "Warning: cannot reach SSH host/port from GitHub runner during precheck; continuing to SSH test for detailed logs"
+          fi
 
       - name: Test SSH connection
         run: |
