@@ -128,6 +128,20 @@ class LessonsController extends Controller
         return back();
     }
 
+    public function duplicate(Lesson $lesson): RedirectResponse
+    {
+        $section = $lesson->section;
+        $order   = $section->lessons()->max('order') + 1;
+
+        $newLesson        = $lesson->replicate();
+        $newLesson->title = 'Copy of ' . $lesson->title;
+        $newLesson->order = $order;
+        $newLesson->save();
+
+        return redirect()->route('admin.courses.edit', $section->course_id)
+            ->with('success', 'Lesson duplicated.');
+    }
+
     private function deleteStoredFile(?string $url): void
     {
         if (!$url) return;

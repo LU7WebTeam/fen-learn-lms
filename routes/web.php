@@ -101,6 +101,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::patch('/courses/{course}/sections/reorder', [AdminSectionsController::class, 'reorder'])->name('courses.sections.reorder');
     Route::patch('/sections/{section}', [AdminSectionsController::class, 'update'])->name('sections.update');
     Route::delete('/sections/{section}', [AdminSectionsController::class, 'destroy'])->name('sections.destroy');
+    Route::post('/sections/{section}/duplicate', [AdminSectionsController::class, 'duplicate'])->name('sections.duplicate');
 
     // Settings
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
@@ -118,6 +119,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/lessons/{lesson}/edit', [AdminLessonsController::class, 'edit'])->name('lessons.edit');
     Route::patch('/lessons/{lesson}', [AdminLessonsController::class, 'update'])->name('lessons.update');
     Route::delete('/lessons/{lesson}', [AdminLessonsController::class, 'destroy'])->name('lessons.destroy');
+    Route::post('/lessons/{lesson}/duplicate', [AdminLessonsController::class, 'duplicate'])->name('lessons.duplicate');
+    Route::post('/courses/{course}/duplicate', [AdminCoursesController::class, 'duplicate'])->name('courses.duplicate');
 });
 
 require __DIR__.'/auth.php';

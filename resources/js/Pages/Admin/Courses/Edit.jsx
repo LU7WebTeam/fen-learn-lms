@@ -16,7 +16,7 @@ import CourseDashboard from './CourseDashboard';
 import BlockNoteEditor from '@/Components/BlockNoteEditor';
 import { useState } from 'react';
 import {
-    Loader2, Plus, Pencil, Trash2, GripVertical,
+    Loader2, Plus, Pencil, Trash2, GripVertical, Copy,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
     Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate
 } from 'lucide-react';
@@ -249,7 +249,7 @@ function AddLessonForm({ section, onDone }) {
     );
 }
 
-function LessonRow({ lesson }) {
+function LessonRow({ lesson, onDuplicate }) {
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
     function handleDelete() {
@@ -269,6 +269,9 @@ function LessonRow({ lesson }) {
                         <Pencil className="h-3.5 w-3.5" />
                     </Link>
                 </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDuplicate} title="Duplicate lesson">
+                    <Copy className="h-3.5 w-3.5" />
+                </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={handleDelete}>
                     <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -278,11 +281,64 @@ function LessonRow({ lesson }) {
 }
 
 function SectionCard({ section }) {
-    const [expanded, setExpanded]           = useState(true);
-    const [addingLesson, setAddingLesson]   = useState(false);
-    const [renaming, setRenaming]           = useState(false);
-    const [title, setTitle]                 = useState(section.title);
-    const [titleMs, setTitleMs]             = useState(section.title_ms ?? '');
+    const [expanded, setExpanded]               = useState(true);
+    const [addingLesson, setAddingLesson]       = useState(false);
+    const [renaming, setRenaming]               = useState(false);
+    const [title, setTitle]                     = useState(section.title);
+    const [titleMs, setTitleMs]                 = useState(section.title_ms ?? '');
+    const [lessons, setLessons]                 = useState([...section.lessons].sort((a, b) => a.order - b.order));
+    const [lessonDraggedId, setLessonDraggedId] = useState(null);
+    const [lessonDragOverId, setLessonDragOverId] = useState(null);
+
+    function handleLessonDragStart(e, id) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.stopPropagation();
+        setLessonDraggedId(id);
+    }
+
+    function handleLessonDragOver(e, id) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        if (lessonDraggedId === null || lessonDraggedId === id) return;
+        setLessonDragOverId(id);
+    }
+
+    function handleLessonDrop(e, targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (lessonDraggedId === null || lessonDraggedId === targetId) {
+            setLessonDraggedId(null);
+            setLessonDragOverId(null);
+            return;
+        }
+
+        const draggedIdx = lessons.findIndex(l => l.id === lessonDraggedId);
+        const targetIdx  = lessons.findIndex(l => l.id === targetId);
+
+        if (draggedIdx === -1 || targetIdx === -1) {
+            setLessonDraggedId(null);
+            setLessonDragOverId(null);
+            return;
+        }
+
+        const newLessons = [...lessons];
+        [newLessons[draggedIdx], newLessons[targetIdx]] = [newLessons[targetIdx], newLessons[draggedIdx]];
+        setLessons(newLessons);
+
+        router.patch(
+            route('admin.sections.lessons.reorder', section.id),
+            { lessons: newLessons.map(l => l.id) },
+            {
+                preserveScroll: true,
+                onError: () => setLessons([...section.lessons].sort((a, b) => a.order - b.order)),
+            }
+        );
+
+        setLessonDraggedId(null);
+        setLessonDragOverId(null);
+    }
 
     function handleRename(e) {
         e.preventDefault();
@@ -330,12 +386,19 @@ function SectionCard({ section }) {
                         )}
                     </button>
                     <div className="flex items-center gap-1 shrink-0">
-                        <span className="text-xs text-muted-foreground">{section.lessons.length} lessons</span>
+                        <span className="text-xs text-muted-foreground">{lessons.length} lessons</span>
                         <Button
                             variant="ghost" size="icon" className="h-7 w-7"
                             onClick={() => { setRenaming(!renaming); setTitle(section.title); }}
                         >
                             <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                            variant="ghost" size="icon" className="h-7 w-7"
+                            onClick={() => router.post(route('admin.sections.duplicate', section.id))}
+                            title="Duplicate section"
+                        >
+                            <Copy className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                             variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
@@ -349,10 +412,29 @@ function SectionCard({ section }) {
 
             {expanded && (
                 <CardContent className="px-4 pb-3 pt-0">
-                    {section.lessons.length > 0 && (
+                    {lessons.length > 0 && (
                         <div className="mb-2 space-y-0.5">
-                            {section.lessons.map((lesson) => (
-                                <LessonRow key={lesson.id} lesson={lesson} />
+                            {lessons.map((lesson) => (
+                                <div
+                                    key={lesson.id}
+                                    draggable
+                                    onDragStart={(e) => handleLessonDragStart(e, lesson.id)}
+                                    onDragOver={(e) => handleLessonDragOver(e, lesson.id)}
+                                    onDrop={(e) => handleLessonDrop(e, lesson.id)}
+                                    onDragLeave={() => {
+                                        if (lessonDragOverId === lesson.id) setLessonDragOverId(null);
+                                    }}
+                                    className={[
+                                        'transition-all',
+                                        lessonDraggedId === lesson.id && 'opacity-50',
+                                        lessonDragOverId === lesson.id && lessonDraggedId !== lesson.id && 'border-t-2 border-primary pt-0.5',
+                                    ].join(' ')}
+                                >
+                                    <LessonRow
+                                        lesson={lesson}
+                                        onDuplicate={() => router.post(route('admin.lessons.duplicate', lesson.id))}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}

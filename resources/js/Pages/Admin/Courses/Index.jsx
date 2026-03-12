@@ -5,7 +5,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, Pencil, Trash2, BookOpen } from 'lucide-react';
+import { Plus, MoreHorizontal, Pencil, Trash2, BookOpen, Copy } from 'lucide-react';
 import { useState } from 'react';
 
 const STATUS_VARIANTS = {
@@ -37,6 +37,10 @@ function CourseRow({ course }) {
         router.delete(route('admin.courses.destroy', course.id));
     }
 
+    function handleDuplicate() {
+        router.post(route('admin.courses.duplicate', course.id));
+    }
+
     return (
         <TableRow>
             <TableCell className="font-medium max-w-xs">
@@ -66,6 +70,10 @@ function CourseRow({ course }) {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit / Build
                             </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDuplicate}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

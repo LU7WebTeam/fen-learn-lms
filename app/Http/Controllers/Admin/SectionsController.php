@@ -63,4 +63,22 @@ class SectionsController extends Controller
 
         return back();
     }
+
+    public function duplicate(Section $section): RedirectResponse
+    {
+        $order = $section->course->sections()->max('order') + 1;
+
+        $newSection        = $section->replicate();
+        $newSection->title = 'Copy of ' . $section->title;
+        $newSection->order = $order;
+        $newSection->save();
+
+        foreach ($section->lessons()->orderBy('order')->get() as $lesson) {
+            $newLesson             = $lesson->replicate();
+            $newLesson->section_id = $newSection->id;
+            $newLesson->save();
+        }
+
+        return back()->with('success', 'Section duplicated.');
+    }
 }

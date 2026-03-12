@@ -252,6 +252,38 @@ class CoursesController extends Controller
         return back()->with('success', 'Course details saved.');
     }
 
+    public function duplicate(Course $course): RedirectResponse
+    {
+        $base = $course->slug . '-copy';
+        $slug = $base;
+        $i    = 1;
+        while (Course::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        $newCourse              = $course->replicate();
+        $newCourse->title       = 'Copy of ' . $course->title;
+        $newCourse->slug        = $slug;
+        $newCourse->status      = 'draft';
+        $newCourse->created_by  = request()->user()->id;
+        $newCourse->save();
+
+        foreach ($course->sections()->orderBy('order')->with(['lessons' => fn ($q) => $q->orderBy('order')])->get() as $section) {
+            $newSection            = $section->replicate();
+            $newSection->course_id = $newCourse->id;
+            $newSection->save();
+
+            foreach ($section->lessons as $lesson) {
+                $newLesson             = $lesson->replicate();
+                $newLesson->section_id = $newSection->id;
+                $newLesson->save();
+            }
+        }
+
+        return redirect()->route('admin.courses.edit', $newCourse)
+            ->with('success', 'Course duplicated. You are now editing the copy.');
+    }
+
     public function destroy(Course $course): RedirectResponse
     {
         $this->deleteStoredFile($course->cover_image);
