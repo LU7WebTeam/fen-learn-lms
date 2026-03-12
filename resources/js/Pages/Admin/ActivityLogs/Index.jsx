@@ -3,7 +3,9 @@ import { Head, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
-import { ScrollText, User, Clock3, Info } from 'lucide-react';
+import { Input } from '@/Components/ui/input';
+import { ScrollText, User, Clock3, Info, Filter } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 function ActivityCard({ activity }) {
     const updatedFields = activity.properties?.updated_fields ?? [];
@@ -69,7 +71,44 @@ function ActivityCard({ activity }) {
     );
 }
 
-export default function ActivityLogsIndex({ activities }) {
+export default function ActivityLogsIndex({ activities, filters, options }) {
+    const [form, setForm] = useState({
+        causer_id: filters?.causer_id ?? '',
+        subject_type: filters?.subject_type ?? '',
+        event: filters?.event ?? '',
+        date_from: filters?.date_from ?? '',
+        date_to: filters?.date_to ?? '',
+    });
+
+    const hasActiveFilters = useMemo(
+        () => Object.values(form).some((value) => value !== ''),
+        [form],
+    );
+
+    function applyFilters(e) {
+        e.preventDefault();
+        router.get(route('admin.activity-logs.index'), form, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+
+    function clearFilters() {
+        const cleared = {
+            causer_id: '',
+            subject_type: '',
+            event: '',
+            date_from: '',
+            date_to: '',
+        };
+
+        setForm(cleared);
+        router.get(route('admin.activity-logs.index'), {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+
     return (
         <AdminLayout title="Activity Logs">
             <Head title="Activity Logs" />
@@ -79,6 +118,88 @@ export default function ActivityLogsIndex({ activities }) {
                     <h2 className="text-2xl font-bold tracking-tight">Activity Logs</h2>
                     <p className="text-muted-foreground">Audit trail for admin content and user-management actions.</p>
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Filter className="h-5 w-5 text-primary" />
+                            <CardTitle>Filters</CardTitle>
+                        </div>
+                        <CardDescription>Narrow logs by actor, subject, event, or date range.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={applyFilters} className="space-y-4">
+                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Actor</label>
+                                    <select
+                                        value={form.causer_id}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, causer_id: e.target.value }))}
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    >
+                                        <option value="">All actors</option>
+                                        {(options?.actors ?? []).map((actor) => (
+                                            <option key={actor.id} value={actor.id}>{actor.name} ({actor.email})</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Subject</label>
+                                    <select
+                                        value={form.subject_type}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, subject_type: e.target.value }))}
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    >
+                                        <option value="">All subjects</option>
+                                        {(options?.subjectTypes ?? []).map((subject) => (
+                                            <option key={subject.value} value={subject.value}>{subject.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Event</label>
+                                    <select
+                                        value={form.event}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, event: e.target.value }))}
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    >
+                                        <option value="">All events</option>
+                                        {(options?.events ?? []).map((event) => (
+                                            <option key={event} value={event} className="capitalize">{event}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Date from</label>
+                                    <Input
+                                        type="date"
+                                        value={form.date_from}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, date_from: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Date to</label>
+                                    <Input
+                                        type="date"
+                                        value={form.date_to}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, date_to: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button type="submit" size="sm">Apply filters</Button>
+                                {hasActiveFilters && (
+                                    <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>
+                                )}
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>
@@ -110,7 +231,10 @@ export default function ActivityLogsIndex({ activities }) {
                                         variant={link.active ? 'default' : 'outline'}
                                         size="sm"
                                         disabled={!link.url}
-                                        onClick={() => link.url && router.get(link.url)}
+                                        onClick={() => link.url && router.get(link.url, {}, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        })}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
                                 ))}
