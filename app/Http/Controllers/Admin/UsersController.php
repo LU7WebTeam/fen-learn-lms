@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -82,6 +83,12 @@ class UsersController extends Controller
             'super_admin'    => 'Super Admin',
         ];
 
+        ActivityLogger::record('Updated user role', $user, [
+            'title' => $user->name,
+            'old_role' => $oldRole,
+            'new_role' => $validated['role'],
+        ], 'updated');
+
         return back()->with(
             'success',
             "{$user->name} changed from {$labels[$oldRole]} to {$labels[$validated['role']]}."
@@ -103,6 +110,11 @@ class UsersController extends Controller
             'suspension_reason'  => $validated['reason'] ?? null,
         ]);
 
+        ActivityLogger::record('Suspended user', $user, [
+            'title' => $user->name,
+            'reason' => $validated['reason'] ?? null,
+        ], 'updated');
+
         return back()->with('success', "{$user->name}'s account has been suspended.");
     }
 
@@ -112,6 +124,10 @@ class UsersController extends Controller
             'suspended_at'      => null,
             'suspension_reason' => null,
         ]);
+
+        ActivityLogger::record('Unsuspended user', $user, [
+            'title' => $user->name,
+        ], 'updated');
 
         return back()->with('success', "{$user->name}'s account has been reinstated.");
     }
@@ -175,7 +191,14 @@ class UsersController extends Controller
             'organization' => 'nullable|string|max:255',
         ]);
 
+        $before = $user->only(array_keys($validated));
+
         $user->update($validated);
+
+        ActivityLogger::record('Updated user profile', $user, [
+            'title' => $user->name,
+            'updated_fields' => ActivityLogger::changedFields($before, $user->only(array_keys($validated))),
+        ], 'updated');
 
         return back()->with('success', "{$user->name}'s profile has been updated.");
     }

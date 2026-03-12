@@ -4,6 +4,7 @@ import {
     BookOpen,
     Users,
     Settings,
+    ScrollText,
     GraduationCap,
     Sun,
     Moon,
@@ -46,6 +47,7 @@ const navMain = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Courses',   href: '/admin/courses',   icon: BookOpen        },
     { label: 'Users',     href: '/admin/users',     icon: Users           },
+    { label: 'Activity Logs', href: '/admin/activity-logs', icon: ScrollText },
 ];
 
 const navSecondary = [

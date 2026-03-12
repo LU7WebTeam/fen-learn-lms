@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Course;
 use App\Models\LessonProgress;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +67,13 @@ class CoursesController extends Controller
             'created_by' => $request->user()->id,
             'status'     => 'draft',
         ]);
+
+        ActivityLogger::record('Created course', $course, [
+            'title' => $course->title,
+            'slug' => $course->slug,
+            'difficulty' => $course->difficulty,
+            'status' => $course->status,
+        ], 'created');
 
         return redirect()->route('admin.courses.edit', $course)
             ->with('success', 'Course created. Now build your curriculum.');
@@ -183,6 +191,11 @@ class CoursesController extends Controller
             'introduction_ms' => $request->input('introduction_ms'),
         ]);
 
+        ActivityLogger::record('Updated course introduction', $course, [
+            'title' => $course->title,
+            'updated_fields' => ['introduction', 'introduction_ms'],
+        ], 'updated');
+
         return back()->with('success', 'Introduction saved.');
     }
 
@@ -210,6 +223,11 @@ class CoursesController extends Controller
         ]);
 
         $course->update(['certificate_template' => $validated['certificate_template']]);
+
+        ActivityLogger::record('Updated course certificate settings', $course, [
+            'title' => $course->title,
+            'updated_fields' => ['certificate_template'],
+        ], 'updated');
 
         return back()->with('success', 'Certificate template saved.');
     }
@@ -247,7 +265,14 @@ class CoursesController extends Controller
             $validated['slug'] = Str::slug($validated['title']);
         }
 
+        $before = $course->only(array_keys($validated));
+
         $course->update($validated);
+
+        ActivityLogger::record('Updated course details', $course, [
+            'title' => $course->title,
+            'updated_fields' => ActivityLogger::changedFields($before, $course->only(array_keys($validated))),
+        ], 'updated');
 
         return back()->with('success', 'Course details saved.');
     }
@@ -280,12 +305,22 @@ class CoursesController extends Controller
             }
         }
 
+        ActivityLogger::record('Duplicated course', $newCourse, [
+            'title' => $newCourse->title,
+            'source_course_id' => $course->id,
+        ], 'created');
+
         return redirect()->route('admin.courses.edit', $newCourse)
             ->with('success', 'Course duplicated. You are now editing the copy.');
     }
 
     public function destroy(Course $course): RedirectResponse
     {
+        ActivityLogger::record('Deleted course', $course, [
+            'title' => $course->title,
+            'slug' => $course->slug,
+        ], 'deleted');
+
         $this->deleteStoredFile($course->cover_image);
         $course->delete();
 

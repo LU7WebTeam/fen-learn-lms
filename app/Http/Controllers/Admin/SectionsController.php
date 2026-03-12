@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Section;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -19,11 +20,16 @@ class SectionsController extends Controller
 
         $order = $course->sections()->max('order') + 1;
 
-        $course->sections()->create([
+        $section = $course->sections()->create([
             'title'    => $request->title,
             'title_ms' => $request->title_ms,
             'order'    => $order,
         ]);
+
+        ActivityLogger::record('Created section', $section, [
+            'title' => $section->title,
+            'course_id' => $course->id,
+        ], 'created');
 
         return back()->with('success', 'Section added.');
     }
@@ -35,16 +41,30 @@ class SectionsController extends Controller
             'title_ms' => 'nullable|string|max:255',
         ]);
 
+        $oldTitle = $section->title;
+
         $section->update([
             'title'    => $request->title,
             'title_ms' => $request->title_ms,
         ]);
+
+        ActivityLogger::record('Updated section', $section, [
+            'title' => $section->title,
+            'updated_fields' => $oldTitle !== $section->title ? ['title', 'title_ms'] : ['title_ms'],
+            'course_id' => $section->course_id,
+        ], 'updated');
 
         return back()->with('success', 'Section renamed.');
     }
 
     public function destroy(Section $section): RedirectResponse
     {
+        ActivityLogger::record('Deleted section', $section, [
+            'title' => $section->title,
+            'course_id' => $section->course_id,
+            'lesson_count' => $section->lessons()->count(),
+        ], 'deleted');
+
         $section->delete();
 
         return back()->with('success', 'Section deleted.');
@@ -60,6 +80,11 @@ class SectionsController extends Controller
         foreach ($request->sections as $order => $id) {
             $course->sections()->where('id', $id)->update(['order' => $order]);
         }
+
+        ActivityLogger::record('Reordered sections', $course, [
+            'title' => $course->title,
+            'course_id' => $course->id,
+        ], 'updated');
 
         return back();
     }
@@ -78,6 +103,13 @@ class SectionsController extends Controller
             $newLesson->section_id = $newSection->id;
             $newLesson->save();
         }
+
+        ActivityLogger::record('Duplicated section', $newSection, [
+            'title' => $newSection->title,
+            'course_id' => $newSection->course_id,
+            'source_section_id' => $section->id,
+            'lesson_count' => $newSection->lessons()->count(),
+        ], 'created');
 
         return back()->with('success', 'Section duplicated.');
     }

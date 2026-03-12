@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\Section;
+use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,11 @@ class LessonsController extends Controller
             'type'  => $request->type,
             'order' => $order,
         ]);
+
+        ActivityLogger::record('Created lesson', $lesson, [
+            'title' => $lesson->title,
+            'section_id' => $section->id,
+        ], 'created');
 
         return redirect()->route('admin.lessons.edit', $lesson)
             ->with('success', 'Lesson created. Add your content below.');
@@ -97,13 +103,26 @@ class LessonsController extends Controller
         }
         unset($validated['pdf_file']);
 
+        $before = $lesson->only(array_keys($validated));
+
         $lesson->update($validated);
+
+        ActivityLogger::record('Updated lesson', $lesson, [
+            'title' => $lesson->title,
+            'section_id' => $lesson->section_id,
+            'updated_fields' => ActivityLogger::changedFields($before, $lesson->only(array_keys($validated))),
+        ], 'updated');
 
         return back()->with('success', 'Lesson saved.');
     }
 
     public function destroy(Lesson $lesson): RedirectResponse
     {
+        ActivityLogger::record('Deleted lesson', $lesson, [
+            'title' => $lesson->title,
+            'section_id' => $lesson->section_id,
+        ], 'deleted');
+
         $this->deleteStoredFile($lesson->video_url);
         $this->deleteStoredFile($lesson->pdf_url);
 
@@ -125,6 +144,11 @@ class LessonsController extends Controller
             $section->lessons()->where('id', $id)->update(['order' => $order]);
         }
 
+        ActivityLogger::record('Reordered lessons', $section, [
+            'title' => $section->title,
+            'section_id' => $section->id,
+        ], 'updated');
+
         return back();
     }
 
@@ -137,6 +161,12 @@ class LessonsController extends Controller
         $newLesson->title = 'Copy of ' . $lesson->title;
         $newLesson->order = $order;
         $newLesson->save();
+
+        ActivityLogger::record('Duplicated lesson', $newLesson, [
+            'title' => $newLesson->title,
+            'section_id' => $newLesson->section_id,
+            'source_lesson_id' => $lesson->id,
+        ], 'created');
 
         return redirect()->route('admin.courses.edit', $section->course_id)
             ->with('success', 'Lesson duplicated.');

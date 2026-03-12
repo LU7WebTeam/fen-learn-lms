@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\Admin\InvitationsController as AdminInvitationsController;
 use App\Http\Controllers\Admin\CustomFontController;
+use App\Http\Controllers\Admin\ActivityLogsController as AdminActivityLogsController;
 use App\Http\Controllers\Admin\CoursesController as AdminCoursesController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified', 'profile.complete'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/activity-logs', [AdminActivityLogsController::class, 'index'])->name('activity-logs.index');
 
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);
