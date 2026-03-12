@@ -484,6 +484,57 @@ function CourseIntroductionForm({ course }) {
 
 export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts }) {
     const [addingSection, setAddingSection] = useState(false);
+    const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
+    const [draggedId, setDraggedId] = useState(null);
+    const [dragOverId, setDragOverId] = useState(null);
+    const [reordering, setReordering] = useState(false);
+
+    function handleDragStart(id) {
+        setDraggedId(id);
+    }
+
+    function handleDragOver(id) {
+        if (draggedId === null || draggedId === id) return;
+        setDragOverId(id);
+    }
+
+    function handleDrop(targetId) {
+        if (draggedId === null || draggedId === targetId) {
+            setDraggedId(null);
+            setDragOverId(null);
+            return;
+        }
+
+        const draggedIdx = sections.findIndex(s => s.id === draggedId);
+        const targetIdx = sections.findIndex(s => s.id === targetId);
+
+        if (draggedIdx === -1 || targetIdx === -1) {
+            setDraggedId(null);
+            setDragOverId(null);
+            return;
+        }
+
+        const newSections = [...sections];
+        [newSections[draggedIdx], newSections[targetIdx]] = [newSections[targetIdx], newSections[draggedIdx]];
+        setSections(newSections);
+
+        setReordering(true);
+        router.patch(
+            route('admin.courses.sections.reorder', course.id),
+            { sections: newSections.map(s => s.id) },
+            {
+                preserveScroll: true,
+                onSuccess: () => setReordering(false),
+                onError: () => {
+                    setSections(course.sections.sort((a, b) => a.order - b.order));
+                    setReordering(false);
+                },
+            }
+        );
+
+        setDraggedId(null);
+        setDragOverId(null);
+    }
 
     return (
         <AdminLayout title={`Edit: ${course.title}`}>
@@ -591,7 +642,23 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             ) : (
                                 <div className="space-y-3">
                                     {course.sections.map((section) => (
-                                        <SectionCard key={section.id} section={section} />
+                                        <div
+                                            key={section.id}
+                                            draggable
+                                            onDragStart={() => handleDragStart(section.id)}
+                                            onDragOver={() => handleDragOver(section.id)}
+                                            onDrop={() => handleDrop(section.id)}
+                                            onDragLeave={() => {
+                                                if (dragOverId === section.id) setDragOverId(null);
+                                            }}
+                                            className={[
+                                                'transition-all',
+                                                draggedId === section.id && 'opacity-50',
+                                                dragOverId === section.id && draggedId !== section.id && 'border-t-2 border-primary pt-2',
+                                            ].join(' ')}
+                                        >
+                                            <SectionCard section={section} />
+                                        </div>
                                     ))}
                                 </div>
                             )}
