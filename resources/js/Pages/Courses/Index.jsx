@@ -22,41 +22,48 @@ function CourseCard({ course, enrolled }) {
     const description = tl(course, 'description', locale);
 
     return (
-        <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
-            {course.cover_image ? (
-                <img src={course.cover_image} alt={title} className="h-44 w-full object-cover" />
-            ) : (
-                <div className="flex h-44 w-full items-center justify-center bg-muted">
-                    <BookOpen className="h-12 w-12 text-muted-foreground" />
+        <Card className="overflow-hidden transition-shadow hover:shadow-md">
+            <div className="flex flex-col sm:flex-row">
+                {course.cover_image ? (
+                    <img src={course.cover_image} alt={title} className="h-52 w-full object-cover sm:h-auto sm:w-64 sm:shrink-0" />
+                ) : (
+                    <div className="flex h-52 w-full items-center justify-center bg-muted sm:h-auto sm:w-64 sm:shrink-0">
+                        <BookOpen className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                )}
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-2">
+                            <CardTitle className="line-clamp-2 text-lg leading-snug">{title}</CardTitle>
+                            <Badge variant={DIFFICULTY_COLORS[course.difficulty] || 'secondary'} className="shrink-0 capitalize">
+                                {course.difficulty}
+                            </Badge>
+                        </div>
+                        {course.category && <CardDescription>{course.category}</CardDescription>}
+                    </CardHeader>
+
+                    <CardContent className="flex-1 pb-2">
+                        <p className="line-clamp-3 text-sm text-muted-foreground">{description}</p>
+                        <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <BookOpen className="h-3.5 w-3.5" />
+                                {course.lessons_count} lessons
+                            </span>
+                        </div>
+                    </CardContent>
+
+                    <CardFooter className="pt-0">
+                        <Button asChild className="w-full sm:w-auto" variant={enrolled ? 'outline' : 'default'}>
+                            <Link href={route('courses.show', course.slug)}>
+                                {enrolled
+                                    ? <><Play className="mr-2 h-4 w-4" />Continue</>
+                                    : 'View Course'}
+                            </Link>
+                        </Button>
+                    </CardFooter>
                 </div>
-            )}
-            <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-2 text-base leading-snug">{title}</CardTitle>
-                    <Badge variant={DIFFICULTY_COLORS[course.difficulty] || 'secondary'} className="shrink-0 capitalize">
-                        {course.difficulty}
-                    </Badge>
-                </div>
-                {course.category && <CardDescription>{course.category}</CardDescription>}
-            </CardHeader>
-            <CardContent className="flex-1 pb-2">
-                <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                        <BookOpen className="h-3.5 w-3.5" />
-                        {course.lessons_count} lessons
-                    </span>
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button asChild className="w-full" variant={enrolled ? 'outline' : 'default'}>
-                    <Link href={route('courses.show', course.slug)}>
-                        {enrolled
-                            ? <><Play className="mr-2 h-4 w-4" />Continue</>
-                            : 'View Course'}
-                    </Link>
-                </Button>
-            </CardFooter>
+            </div>
         </Card>
     );
 }
@@ -137,7 +144,7 @@ export default function CoursesIndex({ courses, enrolledIds, categories, filters
                         <p className="text-muted-foreground">No published courses yet.</p>
                     </div>
                 ) : (
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-5">
                         {courses.data.map((course) => (
                             <CourseCard
                                 key={course.id}
