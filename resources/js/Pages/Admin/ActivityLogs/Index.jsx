@@ -85,6 +85,14 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
         [form],
     );
 
+    const exportUrl = useMemo(() => {
+        const query = Object.fromEntries(
+            Object.entries(form).filter(([, value]) => value !== ''),
+        );
+
+        return route('admin.activity-logs.export', query);
+    }, [form]);
+
     function applyFilters(e) {
         e.preventDefault();
         router.get(route('admin.activity-logs.index'), form, {
@@ -193,6 +201,9 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button type="submit" size="sm">Apply filters</Button>
+                                <Button type="button" variant="secondary" size="sm" asChild>
+                                    <a href={exportUrl}>Export CSV</a>
+                                </Button>
                                 {hasActiveFilters && (
                                     <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>
                                 )}

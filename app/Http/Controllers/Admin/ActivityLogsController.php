@@ -4,44 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ActivityLogsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $filters = [
-            'causer_id' => $request->string('causer_id')->toString(),
-            'subject_type' => $request->string('subject_type')->toString(),
-            'event' => $request->string('event')->toString(),
-            'date_from' => $request->string('date_from')->toString(),
-            'date_to' => $request->string('date_to')->toString(),
-        ];
+        $filters = $this->filtersFromRequest($request);
 
         $baseQuery = Activity::query()->where('log_name', 'admin');
 
-        $activitiesQuery = (clone $baseQuery)
+        $activities = $this->filteredActivitiesQuery($filters)
             ->with('causer')
-            ->when($filters['causer_id'] !== '', function ($query) use ($filters) {
-                $query->where('causer_id', (int) $filters['causer_id']);
-            })
-            ->when($filters['subject_type'] !== '', function ($query) use ($filters) {
-                $query->where('subject_type', $filters['subject_type']);
-            })
-            ->when($filters['event'] !== '', function ($query) use ($filters) {
-                $query->where('event', $filters['event']);
-            })
-            ->when($filters['date_from'] !== '', function ($query) use ($filters) {
-                $query->where('created_at', '>=', Carbon::parse($filters['date_from'])->startOfDay());
-            })
-            ->when($filters['date_to'] !== '', function ($query) use ($filters) {
-                $query->where('created_at', '<=', Carbon::parse($filters['date_to'])->endOfDay());
-            });
-
-        $activities = $activitiesQuery
             ->latest()
             ->paginate(50)
             ->withQueryString()
@@ -124,5 +103,104 @@ class ActivityLogsController extends Controller
                 'events' => $events,
             ],
         ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filters = $this->filtersFromRequest($request);
+
+        $filename = 'admin-activity-logs-'.now()->format('Y-m-d_His').'.csv';
+
+        return response()->streamDownload(function () use ($filters) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'timestamp',
+                'actor_name',
+                'actor_email',
+                'event',
+                'description',
+                'subject_type',
+                'subject_id',
+                'changed_fields',
+                'reason',
+                'old_role',
+                'new_role',
+                'source_course_id',
+                'source_section_id',
+                'source_lesson_id',
+            ]);
+
+            $this->filteredActivitiesQuery($filters)
+                ->with('causer')
+                ->latest('created_at')
+                ->chunkById(500, function ($activities) use ($handle) {
+                    foreach ($activities as $activity) {
+                        $properties = $activity->properties?->toArray() ?? [];
+                        $updatedFields = $properties['updated_fields'] ?? [];
+
+                        fputcsv($handle, [
+                            $activity->created_at?->toIso8601String(),
+                            $activity->causer?->name,
+                            $activity->causer?->email,
+                            $activity->event,
+                            $activity->description,
+                            class_basename((string) $activity->subject_type),
+                            $activity->subject_id,
+                            implode('|', $updatedFields),
+                            $properties['reason'] ?? null,
+                            $properties['old_role'] ?? null,
+                            $properties['new_role'] ?? null,
+                            $properties['source_course_id'] ?? null,
+                            $properties['source_section_id'] ?? null,
+                            $properties['source_lesson_id'] ?? null,
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function filtersFromRequest(Request $request): array
+    {
+        $validated = $request->validate([
+            'causer_id' => ['nullable', 'integer'],
+            'subject_type' => ['nullable', 'string', 'max:255'],
+            'event' => ['nullable', 'string', 'max:100'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+        ]);
+
+        return [
+            'causer_id' => isset($validated['causer_id']) ? (string) $validated['causer_id'] : '',
+            'subject_type' => $validated['subject_type'] ?? '',
+            'event' => $validated['event'] ?? '',
+            'date_from' => isset($validated['date_from']) ? Carbon::parse($validated['date_from'])->toDateString() : '',
+            'date_to' => isset($validated['date_to']) ? Carbon::parse($validated['date_to'])->toDateString() : '',
+        ];
+    }
+
+    private function filteredActivitiesQuery(array $filters): Builder
+    {
+        return Activity::query()
+            ->where('log_name', 'admin')
+            ->when($filters['causer_id'] !== '', function ($query) use ($filters) {
+                $query->where('causer_id', (int) $filters['causer_id']);
+            })
+            ->when($filters['subject_type'] !== '', function ($query) use ($filters) {
+                $query->where('subject_type', $filters['subject_type']);
+            })
+            ->when($filters['event'] !== '', function ($query) use ($filters) {
+                $query->where('event', $filters['event']);
+            })
+            ->when($filters['date_from'] !== '', function ($query) use ($filters) {
+                $query->where('created_at', '>=', Carbon::parse($filters['date_from'])->startOfDay());
+            })
+            ->when($filters['date_to'] !== '', function ($query) use ($filters) {
+                $query->where('created_at', '<=', Carbon::parse($filters['date_to'])->endOfDay());
+            });
     }
 }

@@ -77,6 +77,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/docs/{slug?}', [AdminDocumentationController::class, 'index'])->name('docs.index');
     Route::get('/activity-logs', [AdminActivityLogsController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/export', [AdminActivityLogsController::class, 'export'])->name('activity-logs.export');
 
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);
