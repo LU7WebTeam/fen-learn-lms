@@ -34,6 +34,21 @@ else
   echo "[deploy] WARNING: Composer not found, skipping composer install"
 fi
 
+# Build frontend assets (required for Vite/React changes to go live).
+if command -v npm >/dev/null 2>&1; then
+  echo "[deploy] Installing frontend dependencies..."
+  if [ -f "package-lock.json" ]; then
+    npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+  else
+    npm install --no-audit --no-fund
+  fi
+
+  echo "[deploy] Building frontend assets..."
+  npm run build
+else
+  echo "[deploy] WARNING: npm not found, skipping frontend build"
+fi
+
 echo "[deploy] Running Laravel maintenance commands..."
 "$PHP_BIN" artisan migrate --force
 "$PHP_BIN" artisan optimize:clear
