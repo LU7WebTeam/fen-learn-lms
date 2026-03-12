@@ -5,6 +5,7 @@ import {
     Users,
     Settings,
     ScrollText,
+    BookText,
     GraduationCap,
     Sun,
     Moon,
@@ -47,6 +48,7 @@ const navMain = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Courses',   href: '/admin/courses',   icon: BookOpen        },
     { label: 'Users',     href: '/admin/users',     icon: Users           },
+    { label: 'Documentation', href: '/admin/docs', icon: BookText },
     { label: 'Activity Logs', href: '/admin/activity-logs', icon: ScrollText },
 ];
 
