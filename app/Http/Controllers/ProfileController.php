@@ -26,7 +26,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $user->fill($request->only('name', 'email'));
+        $user->fill($request->only(
+            'name',
+            'email',
+            'gender',
+            'race',
+            'state',
+            'birthdate',
+            'occupation',
+            'organization',
+        ));
 
         if ($request->user()->isDirty('email')) {
             $user->email_verified_at = null;
@@ -49,7 +58,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     public function destroy(Request $request): RedirectResponse

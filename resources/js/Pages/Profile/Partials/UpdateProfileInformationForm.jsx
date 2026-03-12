@@ -7,6 +7,46 @@ import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Camera, X } from 'lucide-react';
 
+const MALAYSIAN_STATES = [
+    'Johor',
+    'Kedah',
+    'Kelantan',
+    'Melaka',
+    'Negeri Sembilan',
+    'Pahang',
+    'Perak',
+    'Perlis',
+    'Pulau Pinang',
+    'Sabah',
+    'Sarawak',
+    'Selangor',
+    'Terengganu',
+    'Wilayah Persekutuan Kuala Lumpur',
+    'Wilayah Persekutuan Labuan',
+    'Wilayah Persekutuan Putrajaya',
+];
+
+const OCCUPATIONS = [
+    { value: 'student', label: 'Student' },
+    { value: 'government', label: 'Government Employee' },
+    { value: 'private', label: 'Private Sector Employee' },
+    { value: 'self_employed', label: 'Self-employed / Entrepreneur' },
+    { value: 'professional', label: 'Professional (Doctor, Lawyer, etc.)' },
+    { value: 'academic', label: 'Academic / Educator' },
+    { value: 'homemaker', label: 'Homemaker' },
+    { value: 'retired', label: 'Retired' },
+    { value: 'unemployed', label: 'Unemployed' },
+    { value: 'other', label: 'Other' },
+];
+
+const RACES = [
+    { value: 'malay', label: 'Malay' },
+    { value: 'chinese', label: 'Chinese' },
+    { value: 'indian', label: 'Indian' },
+    { value: 'other_bumiputera', label: 'Other Bumiputera' },
+    { value: 'other', label: 'Other' },
+];
+
 export default function UpdateProfileInformation({
     mustVerifyEmail,
     status,
@@ -20,6 +60,12 @@ export default function UpdateProfileInformation({
         _method:      'patch',
         name:         user.name,
         email:        user.email,
+        gender:       user.gender ?? '',
+        race:         user.race ?? '',
+        state:        user.state ?? '',
+        birthdate:    user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : '',
+        occupation:   user.occupation ?? '',
+        organization: user.organization ?? '',
         avatar_file:  null,
         avatar_clear: false,
     });
@@ -49,7 +95,7 @@ export default function UpdateProfileInformation({
             <header>
                 <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Update your name, email, and profile picture.
+                    Update your personal details, learner profile, and profile picture.
                 </p>
             </header>
 
@@ -133,6 +179,100 @@ export default function UpdateProfileInformation({
                         autoComplete="username"
                     />
                     <InputError className="mt-2" message={errors.email} />
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <InputLabel htmlFor="gender" value="Gender" />
+                        <select
+                            id="gender"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.gender}
+                            onChange={(e) => setData('gender', e.target.value)}
+                        >
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                        <InputError className="mt-2" message={errors.gender} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="race" value="Race / Ethnicity" />
+                        <select
+                            id="race"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.race}
+                            onChange={(e) => setData('race', e.target.value)}
+                        >
+                            <option value="">Select race</option>
+                            {RACES.map((race) => (
+                                <option key={race.value} value={race.value}>{race.label}</option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.race} />
+                    </div>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <InputLabel htmlFor="state" value="State" />
+                        <select
+                            id="state"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.state}
+                            onChange={(e) => setData('state', e.target.value)}
+                        >
+                            <option value="">Select state</option>
+                            {MALAYSIAN_STATES.map((state) => (
+                                <option key={state} value={state}>{state}</option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.state} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="birthdate" value="Date of Birth" />
+                        <TextInput
+                            id="birthdate"
+                            type="date"
+                            className="mt-1 block w-full"
+                            value={data.birthdate}
+                            onChange={(e) => setData('birthdate', e.target.value)}
+                            max={new Date().toISOString().split('T')[0]}
+                        />
+                        <InputError className="mt-2" message={errors.birthdate} />
+                    </div>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <InputLabel htmlFor="occupation" value="Occupation" />
+                        <select
+                            id="occupation"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={data.occupation}
+                            onChange={(e) => setData('occupation', e.target.value)}
+                        >
+                            <option value="">Select occupation</option>
+                            {OCCUPATIONS.map((occupation) => (
+                                <option key={occupation.value} value={occupation.value}>{occupation.label}</option>
+                            ))}
+                        </select>
+                        <InputError className="mt-2" message={errors.occupation} />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="organization" value="Organization / Institution" />
+                        <TextInput
+                            id="organization"
+                            className="mt-1 block w-full"
+                            value={data.organization}
+                            onChange={(e) => setData('organization', e.target.value)}
+                            autoComplete="organization"
+                        />
+                        <InputError className="mt-2" message={errors.organization} />
+                    </div>
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
