@@ -14,7 +14,7 @@ import ImageUpload from '@/Components/ImageUpload';
 import CertificateBuilder from './CertificateBuilder';
 import CourseDashboard from './CourseDashboard';
 import BlockNoteEditor from '@/Components/BlockNoteEditor';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical, Copy,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
@@ -289,6 +289,10 @@ function SectionCard({ section }) {
     const [lessons, setLessons]                 = useState([...section.lessons].sort((a, b) => a.order - b.order));
     const [lessonDraggedId, setLessonDraggedId] = useState(null);
     const [lessonDragOverId, setLessonDragOverId] = useState(null);
+
+    useEffect(() => {
+        setLessons([...section.lessons].sort((a, b) => a.order - b.order));
+    }, [section.lessons]);
 
     function handleLessonDragStart(e, id) {
         e.dataTransfer.effectAllowed = 'move';
@@ -570,6 +574,10 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
     const [draggedId, setDraggedId] = useState(null);
     const [dragOverId, setDragOverId] = useState(null);
     const [reordering, setReordering] = useState(false);
+
+    useEffect(() => {
+        setSections([...course.sections].sort((a, b) => a.order - b.order));
+    }, [course.sections]);
 
     function handleDragStart(e, id) {
         e.dataTransfer.effectAllowed = 'move';
