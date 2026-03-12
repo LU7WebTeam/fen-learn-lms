@@ -1,6 +1,7 @@
 import { useCreateBlockNote, createReactBlockSpec } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
+import { normalizeBlockNoteInitialContent } from '@/lib/blocknote-content';
 import '@blocknote/mantine/style.css';
 
 function toEmbedUrl(url) {
@@ -54,11 +55,11 @@ const schema = BlockNoteSchema.create({
 });
 
 export default function BlockNoteRenderer({ content }) {
+    const initialContent = normalizeBlockNoteInitialContent(content);
+
     const editor = useCreateBlockNote({
         schema,
-        initialContent: Array.isArray(content) && content.length > 0
-            ? content
-            : undefined,
+        initialContent,
     });
 
     return (

@@ -1,6 +1,7 @@
 import { useCreateBlockNote, createReactBlockSpec, getDefaultReactSlashMenuItems, SuggestionMenuController } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
+import { normalizeBlockNoteInitialContent } from '@/lib/blocknote-content';
 import '@blocknote/mantine/style.css';
 
 function toEmbedUrl(url) {
@@ -73,12 +74,12 @@ async function uploadImageToBN(file) {
 }
 
 export default function BlockNoteEditor({ initialContent, onChange }) {
+    const normalizedInitialContent = normalizeBlockNoteInitialContent(initialContent);
+
     const editor = useCreateBlockNote({
         schema,
         uploadFile: uploadImageToBN,
-        initialContent: Array.isArray(initialContent) && initialContent.length > 0
-            ? initialContent
-            : undefined,
+        initialContent: normalizedInitialContent,
     });
 
     return (
