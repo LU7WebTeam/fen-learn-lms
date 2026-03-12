@@ -62,7 +62,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
     const metaImage = course.meta_image || course.cover_image || '';
 
     return (
-        <Layout>
+        <Layout fullWidth={!auth?.user}>
             <Head title={metaTitle}>
                 <meta name="description" content={metaDesc} />
                 <meta property="og:title" content={metaTitle} />
