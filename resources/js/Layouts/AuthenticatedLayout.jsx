@@ -1,5 +1,5 @@
 import { Link, usePage, router } from '@inertiajs/react';
-import { BookOpen, LayoutDashboard, Menu, GraduationCap } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Menu, GraduationCap, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
@@ -19,6 +19,10 @@ function NavItems({ mobile = false }) {
             <Link href="/courses" className={linkClass}>
                 <BookOpen className="h-4 w-4" />
                 Catalog
+            </Link>
+            <Link href={route('profile.edit')} className={linkClass}>
+                <User className="h-4 w-4" />
+                Profile
             </Link>
         </>
     );
