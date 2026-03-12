@@ -489,16 +489,23 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
     const [dragOverId, setDragOverId] = useState(null);
     const [reordering, setReordering] = useState(false);
 
-    function handleDragStart(id) {
+    function handleDragStart(e, id) {
+        e.dataTransfer.effectAllowed = 'move';
         setDraggedId(id);
     }
 
-    function handleDragOver(id) {
+    function handleDragOver(e, id) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
         if (draggedId === null || draggedId === id) return;
         setDragOverId(id);
     }
 
-    function handleDrop(targetId) {
+    function handleDrop(e, targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (draggedId === null || draggedId === targetId) {
             setDraggedId(null);
             setDragOverId(null);
@@ -613,8 +620,8 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 <div>
                                     <h3 className="text-lg font-semibold">Curriculum</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} · {' '}
-                                        {course.sections.reduce((t, s) => t + s.lessons.length, 0)} lessons
+                                        {sections.length} section{sections.length !== 1 ? 's' : ''} · {' '}
+                                        {sections.reduce((t, s) => t + s.lessons.length, 0)} lessons
                                     </p>
                                 </div>
                                 {!addingSection && (
@@ -629,7 +636,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 <AddSectionForm course={course} onDone={() => setAddingSection(false)} />
                             )}
 
-                            {course.sections.length === 0 && !addingSection ? (
+                            {sections.length === 0 && !addingSection ? (
                                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
                                     <p className="mb-4 text-muted-foreground">
                                         No sections yet. Add the first section to start building your curriculum.
@@ -641,13 +648,13 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {course.sections.map((section) => (
+                                    {sections.map((section) => (
                                         <div
                                             key={section.id}
                                             draggable
-                                            onDragStart={() => handleDragStart(section.id)}
-                                            onDragOver={() => handleDragOver(section.id)}
-                                            onDrop={() => handleDrop(section.id)}
+                                            onDragStart={(e) => handleDragStart(e, section.id)}
+                                            onDragOver={(e) => handleDragOver(e, section.id)}
+                                            onDrop={(e) => handleDrop(e, section.id)}
                                             onDragLeave={() => {
                                                 if (dragOverId === section.id) setDragOverId(null);
                                             }}
