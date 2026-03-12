@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -136,24 +137,23 @@ class ActivityLogsController extends Controller
                 ->latest('created_at')
                 ->chunkById(500, function ($activities) use ($handle) {
                     foreach ($activities as $activity) {
-                        $properties = $activity->properties?->toArray() ?? [];
-                        $updatedFields = $properties['updated_fields'] ?? [];
+                        $row = $this->mapActivityForExport($activity);
 
                         fputcsv($handle, [
-                            $activity->created_at?->toIso8601String(),
-                            $activity->causer?->name,
-                            $activity->causer?->email,
-                            $activity->event,
-                            $activity->description,
-                            class_basename((string) $activity->subject_type),
-                            $activity->subject_id,
-                            implode('|', $updatedFields),
-                            $properties['reason'] ?? null,
-                            $properties['old_role'] ?? null,
-                            $properties['new_role'] ?? null,
-                            $properties['source_course_id'] ?? null,
-                            $properties['source_section_id'] ?? null,
-                            $properties['source_lesson_id'] ?? null,
+                            $row['timestamp'],
+                            $row['actor_name'],
+                            $row['actor_email'],
+                            $row['event'],
+                            $row['description'],
+                            $row['subject_type'],
+                            $row['subject_id'],
+                            $row['changed_fields'],
+                            $row['reason'],
+                            $row['old_role'],
+                            $row['new_role'],
+                            $row['source_course_id'],
+                            $row['source_section_id'],
+                            $row['source_lesson_id'],
                         ]);
                     }
                 });
@@ -161,6 +161,24 @@ class ActivityLogsController extends Controller
             fclose($handle);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function exportJson(Request $request): JsonResponse
+    {
+        $filters = $this->filtersFromRequest($request);
+
+        $data = $this->filteredActivitiesQuery($filters)
+            ->with('causer')
+            ->latest('created_at')
+            ->get()
+            ->map(fn (Activity $activity) => $this->mapActivityForExport($activity));
+
+        return response()->json([
+            'exported_at' => now()->toIso8601String(),
+            'filters' => $filters,
+            'count' => $data->count(),
+            'data' => $data,
         ]);
     }
 
@@ -202,5 +220,28 @@ class ActivityLogsController extends Controller
             ->when($filters['date_to'] !== '', function ($query) use ($filters) {
                 $query->where('created_at', '<=', Carbon::parse($filters['date_to'])->endOfDay());
             });
+    }
+
+    private function mapActivityForExport(Activity $activity): array
+    {
+        $properties = $activity->properties?->toArray() ?? [];
+        $updatedFields = $properties['updated_fields'] ?? [];
+
+        return [
+            'timestamp' => $activity->created_at?->toIso8601String(),
+            'actor_name' => $activity->causer?->name,
+            'actor_email' => $activity->causer?->email,
+            'event' => $activity->event,
+            'description' => $activity->description,
+            'subject_type' => class_basename((string) $activity->subject_type),
+            'subject_id' => $activity->subject_id,
+            'changed_fields' => implode('|', $updatedFields),
+            'reason' => $properties['reason'] ?? null,
+            'old_role' => $properties['old_role'] ?? null,
+            'new_role' => $properties['new_role'] ?? null,
+            'source_course_id' => $properties['source_course_id'] ?? null,
+            'source_section_id' => $properties['source_section_id'] ?? null,
+            'source_lesson_id' => $properties['source_lesson_id'] ?? null,
+        ];
     }
 }

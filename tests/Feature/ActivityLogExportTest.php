@@ -58,6 +58,63 @@ class ActivityLogExportTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_admin_can_export_activity_logs_as_json(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+        ]);
+
+        activity('admin')
+            ->causedBy($admin)
+            ->performedOn($admin)
+            ->event('updated')
+            ->log('Updated json payload');
+
+        $response = $this
+            ->actingAs($admin)
+            ->get(route('admin.activity-logs.export-json'));
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'exported_at',
+            'filters',
+            'count',
+            'data' => [
+                '*' => [
+                    'timestamp',
+                    'actor_name',
+                    'actor_email',
+                    'event',
+                    'description',
+                    'subject_type',
+                    'subject_id',
+                    'changed_fields',
+                    'reason',
+                    'old_role',
+                    'new_role',
+                    'source_course_id',
+                    'source_section_id',
+                    'source_lesson_id',
+                ],
+            ],
+        ]);
+
+        $response->assertJsonPath('data.0.description', 'Updated json payload');
+    }
+
+    public function test_non_admin_cannot_export_activity_logs_as_json(): void
+    {
+        $learner = User::factory()->create([
+            'role' => 'learner',
+        ]);
+
+        $response = $this
+            ->actingAs($learner)
+            ->get(route('admin.activity-logs.export-json'));
+
+        $response->assertForbidden();
+    }
+
     public function test_export_respects_event_filter(): void
     {
         $admin = User::factory()->create([
@@ -88,6 +145,35 @@ class ActivityLogExportTest extends TestCase
 
         $this->assertStringContainsString('Deleted course', $content);
         $this->assertStringNotContainsString('Updated course', $content);
+    }
+
+    public function test_json_export_respects_event_filter(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+        ]);
+
+        activity('admin')
+            ->causedBy($admin)
+            ->performedOn($admin)
+            ->event('updated')
+            ->log('Updated from json filter test');
+
+        activity('admin')
+            ->causedBy($admin)
+            ->performedOn($admin)
+            ->event('deleted')
+            ->log('Deleted from json filter test');
+
+        $response = $this
+            ->actingAs($admin)
+            ->get(route('admin.activity-logs.export-json', [
+                'event' => 'deleted',
+            ]));
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'data');
+        $response->assertJsonPath('data.0.description', 'Deleted from json filter test');
     }
 
     public function test_export_respects_causer_filter(): void

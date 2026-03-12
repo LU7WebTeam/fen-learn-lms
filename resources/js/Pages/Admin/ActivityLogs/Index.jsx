@@ -5,7 +5,9 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { ScrollText, User, Clock3, Info, Filter } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+const PRESET_STORAGE_KEY = 'admin.activity-log.filter-presets.v1';
 
 function ActivityCard({ activity }) {
     const updatedFields = activity.properties?.updated_fields ?? [];
@@ -79,6 +81,26 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
         date_from: filters?.date_from ?? '',
         date_to: filters?.date_to ?? '',
     });
+    const [savedPresets, setSavedPresets] = useState([]);
+    const [selectedPresetId, setSelectedPresetId] = useState('');
+
+    useEffect(() => {
+        try {
+            const raw = window.localStorage.getItem(PRESET_STORAGE_KEY);
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                setSavedPresets(parsed);
+            }
+        } catch {
+            setSavedPresets([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(savedPresets));
+    }, [savedPresets]);
 
     const hasActiveFilters = useMemo(
         () => Object.values(form).some((value) => value !== ''),
@@ -91,6 +113,14 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
         );
 
         return route('admin.activity-logs.export', query);
+    }, [form]);
+
+    const exportJsonUrl = useMemo(() => {
+        const query = Object.fromEntries(
+            Object.entries(form).filter(([, value]) => value !== ''),
+        );
+
+        return route('admin.activity-logs.export-json', query);
     }, [form]);
 
     function applyFilters(e) {
@@ -115,6 +145,37 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
             preserveState: true,
             preserveScroll: true,
         });
+    }
+
+    function saveCurrentPreset() {
+        const name = window.prompt('Preset name');
+        if (!name || !name.trim()) return;
+
+        const id = `${Date.now()}`;
+        const preset = {
+            id,
+            name: name.trim(),
+            filters: { ...form },
+        };
+
+        setSavedPresets((prev) => [...prev, preset]);
+        setSelectedPresetId(id);
+    }
+
+    function applySelectedPreset() {
+        if (!selectedPresetId) return;
+
+        const preset = savedPresets.find((item) => item.id === selectedPresetId);
+        if (!preset) return;
+
+        setForm(preset.filters);
+    }
+
+    function deleteSelectedPreset() {
+        if (!selectedPresetId) return;
+
+        setSavedPresets((prev) => prev.filter((item) => item.id !== selectedPresetId));
+        setSelectedPresetId('');
     }
 
     return (
@@ -199,10 +260,29 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 </div>
                             </div>
 
+                            <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+                                <select
+                                    value={selectedPresetId}
+                                    onChange={(e) => setSelectedPresetId(e.target.value)}
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Saved presets</option>
+                                    {savedPresets.map((preset) => (
+                                        <option key={preset.id} value={preset.id}>{preset.name}</option>
+                                    ))}
+                                </select>
+                                <Button type="button" variant="outline" size="sm" onClick={applySelectedPreset} disabled={!selectedPresetId}>Apply preset</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={saveCurrentPreset}>Save current</Button>
+                                <Button type="button" variant="ghost" size="sm" onClick={deleteSelectedPreset} disabled={!selectedPresetId}>Delete preset</Button>
+                            </div>
+
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button type="submit" size="sm">Apply filters</Button>
                                 <Button type="button" variant="secondary" size="sm" asChild>
                                     <a href={exportUrl}>Export CSV</a>
+                                </Button>
+                                <Button type="button" variant="secondary" size="sm" asChild>
+                                    <a href={exportJsonUrl}>Export JSON</a>
                                 </Button>
                                 {hasActiveFilters && (
                                     <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>
