@@ -114,7 +114,7 @@ export default function CoursesIndex({ courses, enrolledIds, categories, filters
     const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
 
     return (
-        <Layout>
+        <Layout fullWidth={!auth?.user}>
             <Head title="Course Catalog" />
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
