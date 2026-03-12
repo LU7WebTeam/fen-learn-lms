@@ -8,28 +8,69 @@ summary: Guest-facing catalog and course preview behavior, layout, and branding.
 
 # Public Catalog and Preview
 
-## Course catalog
+The public side of the platform is accessible to anyone without an account. It acts as the marketing and discovery surface for the LMS — showcasing available courses and encouraging enrolment.
 
-The public catalog is available at `/courses`.
+---
 
-Current behavior:
+## Course Catalog
 
-- supports both guests and logged-in users
-- guest users see a full-width layout
-- catalog cards render one course per row
-- cards use a horizontal layout with image left and content right
-- category and difficulty filters are available
+**URL:** `/courses`
 
-## Course preview page
+The catalog lists all **published** courses. Unpublished (draft) courses are not shown.
 
-The public course page is available at `/courses/{slug}`.
+### Layout and cards
 
-Current behavior:
+- Each card uses a **horizontal layout** — course cover image on the left, details on the right
+- Cards show: course title, short description, category badge, and difficulty badge
+- One course per row for clear readability
 
-- guest users see full-width layout
-- course introductions render safely from stored rich content
-- learners can continue from the course page if already enrolled
+### Filtering
+
+Visitors can filter the catalog by:
+
+- **Category** — e.g. Technology, Business, Health
+- **Difficulty** — Beginner, Intermediate, Advanced
+
+Filters update the visible course list without a full page reload.
+
+### Logged-in learners
+
+When a logged-in learner visits the catalog:
+
+- Courses they are already enrolled in show an **enrolled** indicator
+- The enrol button is replaced with a **Continue** or **View** link
+
+---
+
+## Course Preview Page
+
+**URL:** `/courses/{slug}`
+
+Each course has a dedicated public preview page with full details to help visitors decide whether to enrol.
+
+### What the page shows
+
+| Section | Description |
+|---|---|
+| **Cover image** | Full-width hero image for the course. |
+| **Title and description** | The course name and short description. |
+| **Category and difficulty** | Displayed as badges. |
+| **Course introduction** | Rich-text content authored in BlockNote, rendered safely. |
+| **Curriculum outline** | List of sections and lessons (lesson titles are visible but content is gated). |
+| **Enrol button** | Guests are prompted to log in; learners can enrol directly. |
+
+### For enrolled learners
+
+If a learner is already enrolled, the enrol button is replaced with a **Continue learning** link that takes them directly into the course player.
+
+---
 
 ## Branding
 
-Guest-facing pages now use LMS branding rather than the default Laravel logo in the guest layout header.
+All guest-facing pages use the platform branding configured in **Admin → Settings**:
+
+- The **guest layout header** shows the platform logo and name instead of the default Laravel logo
+- The platform name appears in the browser tab title
+- Favicon is served from the uploaded favicon in settings
+
+> To update the logo, favicon, or platform name shown on public pages, go to **Admin → Settings**.
