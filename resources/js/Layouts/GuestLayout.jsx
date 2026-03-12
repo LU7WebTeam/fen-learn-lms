@@ -1,5 +1,5 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link } from '@inertiajs/react';
+import { GraduationCap } from 'lucide-react';
 
 export default function GuestLayout({ children, fullWidth = false }) {
     return (
@@ -8,8 +8,9 @@ export default function GuestLayout({ children, fullWidth = false }) {
             fullWidth ? 'sm:pt-6' : 'sm:justify-center sm:pt-0',
         ].join(' ')}>
             <div>
-                <Link href="/">
-                    <ApplicationLogo className="h-20 w-20 fill-current text-gray-500" />
+                <Link href="/" className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-gray-900">
+                    <GraduationCap className="h-7 w-7 text-primary" />
+                    <span className="text-lg font-semibold tracking-tight">Free LMS</span>
                 </Link>
             </div>
 
