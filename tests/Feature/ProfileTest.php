@@ -10,6 +10,20 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function validProfilePayload(User $user, array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'Test User',
+            'email' => $user->email,
+            'gender' => 'male',
+            'race' => 'malay',
+            'state' => 'Selangor',
+            'birthdate' => '1995-01-01',
+            'occupation' => 'Student',
+            'organization' => 'Fen Learn',
+        ], $overrides);
+    }
+
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
@@ -27,10 +41,9 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
+            ->patch('/profile', $this->validProfilePayload($user, [
                 'email' => 'test@example.com',
-            ]);
+            ]));
 
         $response
             ->assertSessionHasNoErrors()
@@ -49,10 +62,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
-            ]);
+            ->patch('/profile', $this->validProfilePayload($user));
 
         $response
             ->assertSessionHasNoErrors()
