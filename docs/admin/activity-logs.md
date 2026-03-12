@@ -1,5 +1,4 @@
 ---
----
 title: Activity Logs
 category: Operations
 order: 60
@@ -25,6 +24,38 @@ The page shows the 50 most recent entries, paginated. Each entry displays:
 - **Actor** — the admin who performed the action
 - **Timestamp** — date and time of the action
 - **Details** — additional context such as changed fields, old/new role, or suspension reason
+
+### Filters
+
+Use filters at the top of the page to narrow results by:
+
+- **Actor** (`causer_id`)
+- **Subject type** (`subject_type`)
+- **Event** (`event`)
+- **Date from** / **Date to** (`date_from`, `date_to`)
+
+Filters persist in pagination links, so moving to the next page keeps the same query.
+
+### Saved filter presets
+
+Admins can save commonly used filter combinations from the activity log page:
+
+- **Save current** stores the active filter set in browser local storage
+- **Apply preset** re-applies a saved set of filters
+- **Delete preset** removes a saved preset
+
+Preset storage is browser-local and uses the key `admin.activity-log.filter-presets.v1`.
+
+### Exports
+
+With or without filters, admins can export logs in two formats:
+
+| Export | Route | Notes |
+|---|---|---|
+| CSV | `/admin/activity-logs/export` | Best for spreadsheets and audit sharing |
+| JSON | `/admin/activity-logs/export-json` | Best for integrations and scripting |
+
+Both export endpoints use the same filter logic as the on-screen listing.
 
 ---
 
@@ -78,6 +109,10 @@ The page shows the 50 most recent entries, paginated. Each entry displays:
 - **Storage:** `activity_log` database table
 - **Helper:** `App\Support\ActivityLogger` — static class wrapping spatie's fluent API
 - **Log name:** all admin entries use `log_name = 'admin'`, keeping them separate from any future learner-activity logs
+- **Controller:** `App\Http\Controllers\Admin\ActivityLogsController`
+	- `index()` renders paginated logs + filter options
+	- `export()` streams filtered CSV output
+	- `exportJson()` returns filtered JSON output
 
 To add logging to a new controller action:
 
@@ -102,5 +137,6 @@ ActivityLogger::record('Updated lesson', $lesson, [
 - **Investigating unexpected changes** — find out who changed a course title or deleted a section and when
 - **Accountability** — maintain a record of all admin actions for internal review
 - **Debugging** — trace the sequence of changes that led to a current state
+- **Reporting** — export filtered records for operations or compliance reviews
 
-> The activity log is **read-only** from the admin UI. Entries cannot be deleted through the interface.
+> The activity log is read-only in the admin UI. Entries cannot be edited or deleted through the interface.
