@@ -328,7 +328,8 @@ function SectionCard({ section }) {
         }
 
         const newLessons = [...lessons];
-        [newLessons[draggedIdx], newLessons[targetIdx]] = [newLessons[targetIdx], newLessons[draggedIdx]];
+        const [draggedLesson] = newLessons.splice(draggedIdx, 1);
+        newLessons.splice(targetIdx, 0, draggedLesson);
         setLessons(newLessons);
 
         router.patch(
@@ -612,7 +613,8 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
         }
 
         const newSections = [...sections];
-        [newSections[draggedIdx], newSections[targetIdx]] = [newSections[targetIdx], newSections[draggedIdx]];
+        const [draggedSection] = newSections.splice(draggedIdx, 1);
+        newSections.splice(targetIdx, 0, draggedSection);
         setSections(newSections);
 
         setReordering(true);
