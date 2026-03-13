@@ -4,72 +4,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { ScrollText, User, Clock3, Info, Filter } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { ScrollText, Info, Filter } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 const PRESET_STORAGE_KEY = 'admin.activity-log.filter-presets.v1';
 
-function ActivityCard({ activity }) {
+function ActivityDetails({ activity }) {
     const updatedFields = activity.properties?.updated_fields ?? [];
 
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-2 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-foreground">{activity.description}</p>
-                            {activity.event && (
-                                <Badge variant="outline" className="capitalize">{activity.event}</Badge>
-                            )}
-                            {activity.subject?.type && activity.subject.id && (
-                                <Badge variant="secondary">{activity.subject.type} #{activity.subject.id}</Badge>
-                            )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5">
-                                <User className="h-4 w-4" />
-                                {activity.causer?.name ?? 'System'}
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                                <Clock3 className="h-4 w-4" />
-                                {activity.created_at}
-                            </span>
-                        </div>
-
-                        {(updatedFields.length > 0 || activity.properties?.reason || activity.properties?.old_role || activity.properties?.title) && (
-                            <div className="flex flex-wrap items-center gap-2 pt-1">
-                                {activity.properties?.title && (
-                                    <Badge variant="outline">{activity.properties.title}</Badge>
-                                )}
-                                {updatedFields.map((field) => (
-                                    <Badge key={field} variant="outline">Updated: {field}</Badge>
-                                ))}
-                                {activity.properties?.old_role && activity.properties?.new_role && (
-                                    <Badge variant="outline">{activity.properties.old_role} → {activity.properties.new_role}</Badge>
-                                )}
-                                {activity.properties?.source_course_id && (
-                                    <Badge variant="outline">From course #{activity.properties.source_course_id}</Badge>
-                                )}
-                                {activity.properties?.source_section_id && (
-                                    <Badge variant="outline">From section #{activity.properties.source_section_id}</Badge>
-                                )}
-                                {activity.properties?.source_lesson_id && (
-                                    <Badge variant="outline">From lesson #{activity.properties.source_lesson_id}</Badge>
-                                )}
-                                {activity.properties?.lesson_count !== null && activity.properties?.lesson_count !== undefined && (
-                                    <Badge variant="outline">{activity.properties.lesson_count} lessons</Badge>
-                                )}
-                                {activity.properties?.reason && (
-                                    <Badge variant="outline">Reason: {activity.properties.reason}</Badge>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+        <div className="flex flex-wrap items-center gap-1.5">
+            {activity.properties?.title && (
+                <Badge variant="outline">{activity.properties.title}</Badge>
+            )}
+            {updatedFields.map((field) => (
+                <Badge key={field} variant="outline">Updated: {field}</Badge>
+            ))}
+            {activity.properties?.old_role && activity.properties?.new_role && (
+                <Badge variant="outline">{activity.properties.old_role} to {activity.properties.new_role}</Badge>
+            )}
+            {activity.properties?.source_course_id && (
+                <Badge variant="outline">From course #{activity.properties.source_course_id}</Badge>
+            )}
+            {activity.properties?.source_section_id && (
+                <Badge variant="outline">From section #{activity.properties.source_section_id}</Badge>
+            )}
+            {activity.properties?.source_lesson_id && (
+                <Badge variant="outline">From lesson #{activity.properties.source_lesson_id}</Badge>
+            )}
+            {activity.properties?.lesson_count !== null && activity.properties?.lesson_count !== undefined && (
+                <Badge variant="outline">{activity.properties.lesson_count} lessons</Badge>
+            )}
+            {activity.properties?.reason && (
+                <Badge variant="outline">Reason: {activity.properties.reason}</Badge>
+            )}
+        </div>
     );
 }
 
@@ -307,10 +277,45 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {activities.data.map((activity) => (
-                                    <ActivityCard key={activity.id} activity={activity} />
-                                ))}
+                            <div className="rounded-md border overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead>Event</TableHead>
+                                            <TableHead>Subject</TableHead>
+                                            <TableHead>Actor</TableHead>
+                                            <TableHead>Time</TableHead>
+                                            <TableHead>Details</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {activities.data.map((activity) => (
+                                            <TableRow key={activity.id}>
+                                                <TableCell className="font-medium min-w-[220px]">{activity.description}</TableCell>
+                                                <TableCell>
+                                                    {activity.event ? (
+                                                        <Badge variant="outline" className="capitalize">{activity.event}</Badge>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {activity.subject?.type && activity.subject?.id ? (
+                                                        <Badge variant="secondary">{activity.subject.type} #{activity.subject.id}</Badge>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{activity.causer?.name ?? 'System'}</TableCell>
+                                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{activity.created_at}</TableCell>
+                                                <TableCell className="min-w-[260px]">
+                                                    <ActivityDetails activity={activity} />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
                         )}
 
