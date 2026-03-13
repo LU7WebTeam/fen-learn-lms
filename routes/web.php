@@ -79,6 +79,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/activity-logs', [AdminActivityLogsController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/export', [AdminActivityLogsController::class, 'export'])->name('activity-logs.export');
     Route::get('/activity-logs/export-json', [AdminActivityLogsController::class, 'exportJson'])->name('activity-logs.export-json');
+    Route::post('/activity-logs/settings', [AdminActivityLogsController::class, 'updateSettings'])->name('activity-logs.settings.update');
+    Route::post('/activity-logs/prune', [AdminActivityLogsController::class, 'pruneNow'])->name('activity-logs.prune');
 
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);

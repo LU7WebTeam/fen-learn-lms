@@ -12,7 +12,7 @@ import {
     SheetTitle,
 } from '@/Components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { ScrollText, Info, Filter } from 'lucide-react';
+import { ScrollText, Info, Filter, ShieldAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 const PRESET_STORAGE_KEY = 'admin.activity-log.filter-presets.v1';
@@ -50,17 +50,65 @@ function ActivityDetails({ activity }) {
     );
 }
 
-export default function ActivityLogsIndex({ activities, filters, options }) {
+function selectedValuesFromEvent(e) {
+    return Array.from(e.target.selectedOptions).map((option) => option.value);
+}
+
+function isoDateOffset(daysBack) {
+    const d = new Date();
+    d.setDate(d.getDate() - daysBack);
+    return d.toISOString().slice(0, 10);
+}
+
+function nonEmptyQuery(form, detailed) {
+    const query = {};
+
+    if (form.causer_id) query.causer_id = form.causer_id;
+    if (form.search) query.search = form.search;
+    if (form.subject_types.length > 0) query.subject_types = form.subject_types;
+    if (form.events.length > 0) query.events = form.events;
+    if (form.date_from) query.date_from = form.date_from;
+    if (form.date_to) query.date_to = form.date_to;
+    if (detailed) query.detailed = '1';
+
+    return query;
+}
+
+function RiskBadge({ level }) {
+    if (level === 'high') {
+        return <Badge variant="destructive">High risk</Badge>;
+    }
+
+    if (level === 'medium') {
+        return <Badge variant="outline">Medium risk</Badge>;
+    }
+
+    return null;
+}
+
+export default function ActivityLogsIndex({ activities, filters, options, capabilities, logSettings }) {
     const [form, setForm] = useState({
         causer_id: filters?.causer_id ?? '',
-        subject_type: filters?.subject_type ?? '',
-        event: filters?.event ?? '',
+        search: filters?.search ?? '',
+        subject_types: filters?.subject_types ?? [],
+        events: filters?.events ?? [],
         date_from: filters?.date_from ?? '',
         date_to: filters?.date_to ?? '',
     });
+    const [detailedExport, setDetailedExport] = useState(false);
     const [savedPresets, setSavedPresets] = useState([]);
     const [selectedPresetId, setSelectedPresetId] = useState('');
     const [selectedActivity, setSelectedActivity] = useState(null);
+    const [settingsForm, setSettingsForm] = useState({
+        activity_log_retention_days: logSettings?.activity_log_retention_days ?? '180',
+        activity_log_archive_before_prune: logSettings?.activity_log_archive_before_prune ?? '1',
+        activity_log_alert_enabled: logSettings?.activity_log_alert_enabled ?? '0',
+        activity_log_alert_recipients: logSettings?.activity_log_alert_recipients ?? '',
+        activity_log_redaction_enabled: logSettings?.activity_log_redaction_enabled ?? '0',
+        activity_log_redacted_keys: logSettings?.activity_log_redacted_keys ?? '',
+        editor_can_view_activity_logs: logSettings?.editor_can_view_activity_logs ?? '1',
+        editor_can_export_activity_logs: logSettings?.editor_can_export_activity_logs ?? '0',
+    });
 
     useEffect(() => {
         try {
@@ -81,25 +129,48 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
     }, [savedPresets]);
 
     const hasActiveFilters = useMemo(
-        () => Object.values(form).some((value) => value !== ''),
+        () => (
+            form.causer_id !== ''
+            || form.search !== ''
+            || form.subject_types.length > 0
+            || form.events.length > 0
+            || form.date_from !== ''
+            || form.date_to !== ''
+        ),
         [form],
     );
 
-    const exportUrl = useMemo(() => {
-        const query = Object.fromEntries(
-            Object.entries(form).filter(([, value]) => value !== ''),
-        );
+    const userSubjectTypeValues = useMemo(
+        () => (options?.subjectTypes ?? [])
+            .filter((subject) => /user|invitation/i.test(subject.label))
+            .map((subject) => subject.value),
+        [options],
+    );
 
-        return route('admin.activity-logs.export', query);
-    }, [form]);
+    const contentSubjectTypeValues = useMemo(
+        () => (options?.subjectTypes ?? [])
+            .filter((subject) => /course|section|lesson/i.test(subject.label))
+            .map((subject) => subject.value),
+        [options],
+    );
+
+    const userManagementEventValues = useMemo(
+        () => (options?.events ?? []).filter((event) => /role|suspend|user/i.test(event)),
+        [options],
+    );
+
+    const contentEventValues = useMemo(
+        () => (options?.events ?? []).filter((event) => /create|update|delete|duplicate|reorder/i.test(event)),
+        [options],
+    );
+
+    const exportUrl = useMemo(() => {
+        return route('admin.activity-logs.export', nonEmptyQuery(form, detailedExport));
+    }, [form, detailedExport]);
 
     const exportJsonUrl = useMemo(() => {
-        const query = Object.fromEntries(
-            Object.entries(form).filter(([, value]) => value !== ''),
-        );
-
-        return route('admin.activity-logs.export-json', query);
-    }, [form]);
+        return route('admin.activity-logs.export-json', nonEmptyQuery(form, detailedExport));
+    }, [form, detailedExport]);
 
     function applyFilters(e) {
         e.preventDefault();
@@ -112,8 +183,9 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
     function clearFilters() {
         const cleared = {
             causer_id: '',
-            subject_type: '',
-            event: '',
+            search: '',
+            subject_types: [],
+            events: [],
             date_from: '',
             date_to: '',
         };
@@ -164,6 +236,48 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
         setSelectedActivity(null);
     }
 
+    function applyQuickRange(daysBack) {
+        setForm((prev) => ({
+            ...prev,
+            date_from: isoDateOffset(daysBack),
+            date_to: isoDateOffset(0),
+        }));
+    }
+
+    function applyQuickScope(scope) {
+        if (scope === 'user') {
+            setForm((prev) => ({
+                ...prev,
+                subject_types: userSubjectTypeValues,
+                events: userManagementEventValues,
+            }));
+            return;
+        }
+
+        if (scope === 'content') {
+            setForm((prev) => ({
+                ...prev,
+                subject_types: contentSubjectTypeValues,
+                events: contentEventValues,
+            }));
+        }
+    }
+
+    function savePolicies(e) {
+        e.preventDefault();
+        router.post(route('admin.activity-logs.settings.update'), settingsForm, {
+            preserveScroll: true,
+        });
+    }
+
+    function runPruneNow() {
+        if (!window.confirm('Prune logs now based on current retention policy?')) return;
+
+        router.post(route('admin.activity-logs.prune'), {}, {
+            preserveScroll: true,
+        });
+    }
+
     return (
         <AdminLayout title="Activity Logs">
             <Head title="Activity Logs" />
@@ -180,11 +294,11 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                             <Filter className="h-5 w-5 text-primary" />
                             <CardTitle>Filters</CardTitle>
                         </div>
-                        <CardDescription>Narrow logs by actor, subject, event, or date range.</CardDescription>
+                        <CardDescription>Narrow logs by actor, free-text search, subject, event, and date range.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={applyFilters} className="space-y-4">
-                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
                                 <div className="space-y-1">
                                     <label className="text-xs font-medium text-muted-foreground">Actor</label>
                                     <select
@@ -200,13 +314,22 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-medium text-muted-foreground">Subject</label>
+                                    <label className="text-xs font-medium text-muted-foreground">Search</label>
+                                    <Input
+                                        value={form.search}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, search: e.target.value }))}
+                                        placeholder="Description or JSON property"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Subject types</label>
                                     <select
-                                        value={form.subject_type}
-                                        onChange={(e) => setForm((prev) => ({ ...prev, subject_type: e.target.value }))}
-                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        multiple
+                                        value={form.subject_types}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, subject_types: selectedValuesFromEvent(e) }))}
+                                        className="h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     >
-                                        <option value="">All subjects</option>
                                         {(options?.subjectTypes ?? []).map((subject) => (
                                             <option key={subject.value} value={subject.value}>{subject.label}</option>
                                         ))}
@@ -214,13 +337,13 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-medium text-muted-foreground">Event</label>
+                                    <label className="text-xs font-medium text-muted-foreground">Events</label>
                                     <select
-                                        value={form.event}
-                                        onChange={(e) => setForm((prev) => ({ ...prev, event: e.target.value }))}
-                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        multiple
+                                        value={form.events}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, events: selectedValuesFromEvent(e) }))}
+                                        className="h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     >
-                                        <option value="">All events</option>
                                         {(options?.events ?? []).map((event) => (
                                             <option key={event} value={event} className="capitalize">{event}</option>
                                         ))}
@@ -246,6 +369,13 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 </div>
                             </div>
 
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => applyQuickRange(0)}>Today</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => applyQuickRange(6)}>Last 7 days</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => applyQuickScope('user')}>User-management only</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => applyQuickScope('content')}>Content edits only</Button>
+                            </div>
+
                             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
                                 <select
                                     value={selectedPresetId}
@@ -264,12 +394,24 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button type="submit" size="sm">Apply filters</Button>
-                                <Button type="button" variant="secondary" size="sm" asChild>
-                                    <a href={exportUrl}>Export CSV</a>
-                                </Button>
-                                <Button type="button" variant="secondary" size="sm" asChild>
-                                    <a href={exportJsonUrl}>Export JSON</a>
-                                </Button>
+                                {capabilities?.canExport && (
+                                    <>
+                                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                                            <input
+                                                type="checkbox"
+                                                checked={detailedExport}
+                                                onChange={(e) => setDetailedExport(e.target.checked)}
+                                            />
+                                            Detailed export (flattened JSON)
+                                        </label>
+                                        <Button type="button" variant="secondary" size="sm" asChild>
+                                            <a href={exportUrl}>Export CSV</a>
+                                        </Button>
+                                        <Button type="button" variant="secondary" size="sm" asChild>
+                                            <a href={exportJsonUrl}>Export JSON</a>
+                                        </Button>
+                                    </>
+                                )}
                                 {hasActiveFilters && (
                                     <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>
                                 )}
@@ -277,6 +419,116 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                         </form>
                     </CardContent>
                 </Card>
+
+                {capabilities?.canManageLogPolicies && (
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <ShieldAlert className="h-5 w-5 text-primary" />
+                                <CardTitle>Log Policies and Access</CardTitle>
+                            </div>
+                            <CardDescription>Configure retention, alerts, redaction, and editor permissions.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={savePolicies} className="space-y-4">
+                                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Retention days</label>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            max={3650}
+                                            value={settingsForm.activity_log_retention_days}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_retention_days: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Archive before prune</label>
+                                        <select
+                                            value={settingsForm.activity_log_archive_before_prune}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_archive_before_prune: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="1">Enabled</option>
+                                            <option value="0">Disabled</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Editor can view logs</label>
+                                        <select
+                                            value={settingsForm.editor_can_view_activity_logs}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, editor_can_view_activity_logs: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="1">Yes</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Editor can export logs</label>
+                                        <select
+                                            value={settingsForm.editor_can_export_activity_logs}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, editor_can_export_activity_logs: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="1">Yes</option>
+                                            <option value="0">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Critical alert emails (comma separated)</label>
+                                        <Input
+                                            value={settingsForm.activity_log_alert_recipients}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_alert_recipients: e.target.value }))}
+                                            placeholder="admin@example.com, security@example.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Redacted property keys (comma separated)</label>
+                                        <Input
+                                            value={settingsForm.activity_log_redacted_keys}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_redacted_keys: e.target.value }))}
+                                            placeholder="email,password,token"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">High-risk alerting</label>
+                                        <select
+                                            value={settingsForm.activity_log_alert_enabled}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_alert_enabled: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="1">Enabled</option>
+                                            <option value="0">Disabled</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Redaction in UI and exports</label>
+                                        <select
+                                            value={settingsForm.activity_log_redaction_enabled}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_redaction_enabled: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="1">Enabled</option>
+                                            <option value="0">Disabled</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button type="submit" size="sm">Save policies</Button>
+                                    <Button type="button" variant="secondary" size="sm" onClick={runPruneNow}>Run prune now</Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>
@@ -298,6 +550,7 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Description</TableHead>
+                                            <TableHead>Risk</TableHead>
                                             <TableHead>Event</TableHead>
                                             <TableHead>Subject</TableHead>
                                             <TableHead>Actor</TableHead>
@@ -320,6 +573,9 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                                 tabIndex={0}
                                             >
                                                 <TableCell className="font-medium min-w-[220px]">{activity.description}</TableCell>
+                                                <TableCell>
+                                                    <RiskBadge level={activity.risk_level} />
+                                                </TableCell>
                                                 <TableCell>
                                                     {activity.event ? (
                                                         <Badge variant="outline" className="capitalize">{activity.event}</Badge>
@@ -362,6 +618,7 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                             <p className="text-base font-medium">{selectedActivity.description}</p>
                                             <div className="flex flex-wrap gap-2">
                                                 <Badge variant="outline">ID: {selectedActivity.id}</Badge>
+                                                <RiskBadge level={selectedActivity.risk_level} />
                                                 {selectedActivity.event && (
                                                     <Badge variant="outline" className="capitalize">{selectedActivity.event}</Badge>
                                                 )}

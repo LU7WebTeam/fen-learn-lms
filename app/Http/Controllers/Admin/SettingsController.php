@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Setting;
+use App\Support\ActivityLogger;
 use App\Support\EmailBranding;
 use App\Support\EmailContent;
 use Illuminate\Http\RedirectResponse;
@@ -92,6 +93,15 @@ class SettingsController extends Controller
             'role_access'  => $this->saveRoleAccess($request),
             default        => null,
         };
+
+        if ($group) {
+            ActivityLogger::record(
+                'Updated settings group: '.$group,
+                null,
+                ['group' => $group],
+                'updated'
+            );
+        }
 
         return back()->with('success', 'Settings saved.');
     }
