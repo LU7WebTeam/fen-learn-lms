@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Setting;
 use App\Support\EmailBranding;
+use App\Support\EmailContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -182,6 +184,8 @@ class SettingsController extends Controller
             'reset_email_cta'            => 'nullable|string|max:60',
         ]);
 
+        $this->validateEmailTemplateGuardrails($request);
+
         Setting::set('mail_driver', $request->input('mail_driver'));
         Setting::set('mail_host', $request->input('mail_host', ''));
         Setting::set('mail_port', $request->input('mail_port', '587'));
@@ -210,6 +214,47 @@ class SettingsController extends Controller
         $password = $request->input('mail_password', '');
         if ($password !== '') {
             Setting::set('mail_password', $password);
+        }
+    }
+
+    private function validateEmailTemplateGuardrails(Request $request): void
+    {
+        $fields = [
+            'invitation_email_subject' => ['platform_name', 'inviter_name', 'role_label'],
+            'invitation_email_title'   => ['platform_name', 'inviter_name', 'role_label'],
+            'invitation_email_body'    => ['platform_name', 'inviter_name', 'role_label'],
+            'invitation_email_cta'     => ['platform_name', 'inviter_name', 'role_label'],
+            'verification_email_subject' => ['platform_name'],
+            'verification_email_title'   => ['platform_name'],
+            'verification_email_body'    => ['platform_name'],
+            'verification_email_cta'     => ['platform_name'],
+            'reset_email_subject'      => ['platform_name'],
+            'reset_email_title'        => ['platform_name'],
+            'reset_email_body'         => ['platform_name'],
+            'reset_email_cta'          => ['platform_name'],
+        ];
+
+        $errors = [];
+
+        foreach ($fields as $field => $allowedTokens) {
+            $value = (string) $request->input($field, '');
+            if ($value === '') {
+                continue;
+            }
+
+            preg_match_all('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', $value, $matches);
+            $usedTokens = array_unique($matches[1] ?? []);
+
+            foreach ($usedTokens as $token) {
+                if (!in_array($token, $allowedTokens, true)) {
+                    $errors[$field] = 'Unsupported placeholder {{'.$token.'}} in this template field.';
+                    break;
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
         }
     }
 
@@ -242,6 +287,95 @@ class SettingsController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return back()->with('error', 'Failed to send test email. Please verify SMTP settings.');
+        }
+    }
+
+    public function testTemplateEmail(Request $request, string $type): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient' => 'nullable|email|max:200',
+        ]);
+
+        $recipient = $validated['recipient']
+            ?? Setting::get('mail_sender_address')
+            ?? $request->user()?->email;
+
+        if (!$recipient) {
+            return back()->with('error', 'Please provide a recipient email for test mail.');
+        }
+
+        $supportedTypes = ['invitation', 'verification', 'reset'];
+        if (!in_array($type, $supportedTypes, true)) {
+            return back()->with('error', 'Invalid email template type requested.');
+        }
+
+        try {
+            $branding = EmailBranding::data();
+            $tokens = [
+                'platform_name' => $branding['platformName'],
+                'inviter_name' => $request->user()?->name ?? 'An administrator',
+                'role_label' => 'Content Editor',
+            ];
+
+            $testUrls = [
+                'invitation' => url('/invite/test-invitation-token'),
+                'verification' => url('/email/verify/test'),
+                'reset' => url('/reset-password/test-token?email='.urlencode($recipient)),
+            ];
+
+            if ($type === 'invitation') {
+                $subject = EmailContent::get('invitation_email_subject', "You've been invited to join {{platform_name}}", $tokens);
+
+                Mail::send('emails.staff-invitation', [
+                    ...$branding,
+                    'acceptUrl' => $testUrls['invitation'],
+                    'roleLabel' => $tokens['role_label'],
+                    'inviterName' => $tokens['inviter_name'],
+                    'expiresAt' => now()->addDays(7)->format('d M Y'),
+                    'emailTitle' => EmailContent::get('invitation_email_title', "You're invited to join the team", $tokens),
+                    'emailBody' => EmailContent::get('invitation_email_body', '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.', $tokens),
+                    'emailCta' => EmailContent::get('invitation_email_cta', 'Accept Invitation', $tokens),
+                ], function ($message) use ($recipient, $subject) {
+                    $message->to($recipient)->subject($subject.' [Test]');
+                });
+            }
+
+            if ($type === 'verification') {
+                $subject = EmailContent::get('verification_email_subject', 'Verify your email address', $tokens);
+
+                Mail::send('emails.auth-verify-email', [
+                    ...$branding,
+                    'title' => EmailContent::get('verification_email_title', 'Verify your email address', $tokens),
+                    'email' => $recipient,
+                    'actionUrl' => $testUrls['verification'],
+                    'actionText' => EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens),
+                    'bodyText' => EmailContent::get('verification_email_body', 'Please confirm your email address for {{platform_name}} by clicking the button below.', $tokens),
+                    'expiresInMinutes' => 60,
+                ], function ($message) use ($recipient, $subject) {
+                    $message->to($recipient)->subject($subject.' [Test]');
+                });
+            }
+
+            if ($type === 'reset') {
+                $subject = EmailContent::get('reset_email_subject', 'Reset your password', $tokens);
+
+                Mail::send('emails.auth-reset-password', [
+                    ...$branding,
+                    'title' => EmailContent::get('reset_email_title', 'Reset your password', $tokens),
+                    'email' => $recipient,
+                    'actionUrl' => $testUrls['reset'],
+                    'actionText' => EmailContent::get('reset_email_cta', 'Reset Password', $tokens),
+                    'bodyText' => EmailContent::get('reset_email_body', 'We received a request to reset your password for {{platform_name}}.', $tokens),
+                    'expiresInMinutes' => 60,
+                ], function ($message) use ($recipient, $subject) {
+                    $message->to($recipient)->subject($subject.' [Test]');
+                });
+            }
+
+            return back()->with('success', ucfirst($type).' test email sent successfully to '.$recipient.'.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Failed to send '.$type.' test email. Please verify SMTP settings and template content.');
         }
     }
 

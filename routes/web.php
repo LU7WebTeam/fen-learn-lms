@@ -113,6 +113,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/test-email', [AdminSettingsController::class, 'testEmail'])->name('settings.test-email');
+    Route::post('/settings/test-email/{type}', [AdminSettingsController::class, 'testTemplateEmail'])->name('settings.test-email-template');
     Route::post('/settings/fonts', [CustomFontController::class, 'store'])->name('settings.fonts.store');
     Route::delete('/settings/fonts/{font}', [CustomFontController::class, 'destroy'])->name('settings.fonts.destroy');
 

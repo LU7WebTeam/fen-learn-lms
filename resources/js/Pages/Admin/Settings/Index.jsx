@@ -652,6 +652,14 @@ function EmailTab({ settings, onSave, processing }) {
         });
     }
 
+    function sendTemplateTestEmail(type) {
+        router.post(route('admin.settings.test-email-template', type), {
+            recipient: testRecipient,
+        }, {
+            preserveScroll: true,
+        });
+    }
+
     const emailSections = [
         { id: 'smtp', label: 'SMTP & Sender' },
         { id: 'invitation', label: 'Staff Invitation' },
@@ -839,6 +847,11 @@ function EmailTab({ settings, onSave, processing }) {
                                         onChange={e => setInvitationBody(e.target.value)}
                                     />
                                 </div>
+                                <div className="flex justify-end">
+                                    <Button variant="outline" onClick={() => sendTemplateTestEmail('invitation')} disabled={processing}>
+                                        Send Invitation Test
+                                    </Button>
+                                </div>
                             </div>
                         )}
 
@@ -868,6 +881,11 @@ function EmailTab({ settings, onSave, processing }) {
                                         value={verificationBody}
                                         onChange={e => setVerificationBody(e.target.value)}
                                     />
+                                </div>
+                                <div className="flex justify-end">
+                                    <Button variant="outline" onClick={() => sendTemplateTestEmail('verification')} disabled={processing}>
+                                        Send Verification Test
+                                    </Button>
                                 </div>
                             </div>
                         )}
@@ -899,13 +917,18 @@ function EmailTab({ settings, onSave, processing }) {
                                         onChange={e => setResetBody(e.target.value)}
                                     />
                                 </div>
+                                <div className="flex justify-end">
+                                    <Button variant="outline" onClick={() => sendTemplateTestEmail('reset')} disabled={processing}>
+                                        Send Reset Test
+                                    </Button>
+                                </div>
                             </div>
                         )}
 
                         {activeSection === 'test' && (
                             <div className="space-y-4">
                                 <p className="text-xs text-muted-foreground">
-                                    Use this to confirm SMTP delivery with your current configuration.
+                                    Use this to confirm SMTP delivery with your current configuration. Template test buttons are also available on each template section.
                                 </p>
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div className="space-y-2 sm:col-span-2">
