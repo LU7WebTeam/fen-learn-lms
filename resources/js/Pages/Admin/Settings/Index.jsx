@@ -602,6 +602,18 @@ function EmailTab({ settings, onSave, processing }) {
     const [clearPassword, setClearPassword] = useState(false);
     const [senderName, setSenderName] = useState(settings.mail_sender_name || '');
     const [senderAddress, setSenderAddress] = useState(settings.mail_sender_address || '');
+    const [invitationSubject, setInvitationSubject] = useState(settings.invitation_email_subject || "You've been invited to join {{platform_name}}");
+    const [invitationTitle, setInvitationTitle] = useState(settings.invitation_email_title || "You're invited to join the team");
+    const [invitationBody, setInvitationBody] = useState(settings.invitation_email_body || '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.');
+    const [invitationCta, setInvitationCta] = useState(settings.invitation_email_cta || 'Accept Invitation');
+    const [verificationSubject, setVerificationSubject] = useState(settings.verification_email_subject || 'Verify your email address');
+    const [verificationTitle, setVerificationTitle] = useState(settings.verification_email_title || 'Verify your email address');
+    const [verificationBody, setVerificationBody] = useState(settings.verification_email_body || 'Please confirm your email address for {{platform_name}} by clicking the button below.');
+    const [verificationCta, setVerificationCta] = useState(settings.verification_email_cta || 'Verify Email Address');
+    const [resetSubject, setResetSubject] = useState(settings.reset_email_subject || 'Reset your password');
+    const [resetTitle, setResetTitle] = useState(settings.reset_email_title || 'Reset your password');
+    const [resetBody, setResetBody] = useState(settings.reset_email_body || 'We received a request to reset your password for {{platform_name}}.');
+    const [resetCta, setResetCta] = useState(settings.reset_email_cta || 'Reset Password');
     const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
 
@@ -616,6 +628,18 @@ function EmailTab({ settings, onSave, processing }) {
             clear_mail_password: clearPassword ? '1' : '0',
             mail_sender_name:    senderName,
             mail_sender_address: senderAddress,
+            invitation_email_subject: invitationSubject,
+            invitation_email_title: invitationTitle,
+            invitation_email_body: invitationBody,
+            invitation_email_cta: invitationCta,
+            verification_email_subject: verificationSubject,
+            verification_email_title: verificationTitle,
+            verification_email_body: verificationBody,
+            verification_email_cta: verificationCta,
+            reset_email_subject: resetSubject,
+            reset_email_title: resetTitle,
+            reset_email_body: resetBody,
+            reset_email_cta: resetCta,
         });
     }
 
@@ -753,6 +777,83 @@ function EmailTab({ settings, onSave, processing }) {
                             onChange={e => setSenderAddress(e.target.value)}
                             placeholder="no-reply@example.com"
                         />
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                    <div>
+                        <h4 className="text-sm font-semibold">Email Content Templates</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Supported placeholders: {'{{platform_name}}'}, {'{{inviter_name}}'}, {'{{role_label}}'}
+                        </p>
+                    </div>
+
+                    <div className="rounded-lg border p-4 space-y-3">
+                        <p className="text-sm font-medium">Staff Invitation</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Subject</Label>
+                                <Input value={invitationSubject} onChange={e => setInvitationSubject(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Button text</Label>
+                                <Input value={invitationCta} onChange={e => setInvitationCta(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Title</Label>
+                            <Input value={invitationTitle} onChange={e => setInvitationTitle(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Body</Label>
+                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={invitationBody} onChange={e => setInvitationBody(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border p-4 space-y-3">
+                        <p className="text-sm font-medium">Email Verification</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Subject</Label>
+                                <Input value={verificationSubject} onChange={e => setVerificationSubject(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Button text</Label>
+                                <Input value={verificationCta} onChange={e => setVerificationCta(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Title</Label>
+                            <Input value={verificationTitle} onChange={e => setVerificationTitle(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Body</Label>
+                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={verificationBody} onChange={e => setVerificationBody(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border p-4 space-y-3">
+                        <p className="text-sm font-medium">Password Reset</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Subject</Label>
+                                <Input value={resetSubject} onChange={e => setResetSubject(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Button text</Label>
+                                <Input value={resetCta} onChange={e => setResetCta(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Title</Label>
+                            <Input value={resetTitle} onChange={e => setResetTitle(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Body</Label>
+                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={resetBody} onChange={e => setResetBody(e.target.value)} />
+                        </div>
                     </div>
                 </div>
 

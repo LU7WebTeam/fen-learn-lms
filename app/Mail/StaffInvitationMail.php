@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\StaffInvitation;
 use App\Models\Setting;
 use App\Support\EmailBranding;
+use App\Support\EmailContent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -22,9 +23,16 @@ class StaffInvitationMail extends Mailable
     public function envelope(): Envelope
     {
         $platform = Setting::get('platform_name', config('app.name'));
+        $subject = EmailContent::get(
+            'invitation_email_subject',
+            "You've been invited to join {{platform_name}}",
+            [
+                'platform_name' => $platform,
+            ],
+        );
 
         return new Envelope(
-            subject: "You've been invited to join {$platform}",
+            subject: $subject,
         );
     }
 
@@ -48,6 +56,29 @@ class StaffInvitationMail extends Mailable
                 'expiresAt'    => $this->invitation->expires_at->format('d M Y'),
                 'logoUrl'      => $branding['logoUrl'],
                 'theme'        => $branding['theme'],
+                'emailTitle'   => EmailContent::get(
+                    'invitation_email_title',
+                    "You're invited to join the team",
+                    [
+                        'platform_name' => $branding['platformName'],
+                    ],
+                ),
+                'emailBody'    => EmailContent::get(
+                    'invitation_email_body',
+                    '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.',
+                    [
+                        'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
+                        'platform_name' => $branding['platformName'],
+                        'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
+                    ],
+                ),
+                'emailCta'     => EmailContent::get(
+                    'invitation_email_cta',
+                    'Accept Invitation',
+                    [
+                        'platform_name' => $branding['platformName'],
+                    ],
+                ),
             ],
         );
     }

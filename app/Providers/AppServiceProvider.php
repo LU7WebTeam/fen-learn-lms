@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Support\EmailBranding;
-use Carbon\Carbon;
+use App\Support\EmailContent;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -40,34 +40,61 @@ class AppServiceProvider extends ServiceProvider
     {
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             $branding = EmailBranding::data();
+            $tokens = [
+                'platform_name' => $branding['platformName'],
+            ];
+
+            $title = EmailContent::get('verification_email_title', 'Verify your email address', $tokens);
+            $subject = EmailContent::get('verification_email_subject', 'Verify your email address', $tokens);
+            $body = EmailContent::get(
+                'verification_email_body',
+                'Please confirm your email address for {{platform_name}} by clicking the button below.',
+                $tokens,
+            );
+            $cta = EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens);
 
             return (new MailMessage)
-                ->subject('Verify your email address')
+                ->subject($subject)
                 ->view('emails.auth-verify-email', [
                     ...$branding,
-                    'title' => 'Verify your email address',
+                    'title' => $title,
                     'email' => $notifiable->email,
                     'actionUrl' => $url,
-                    'actionText' => 'Verify Email Address',
+                    'actionText' => $cta,
+                    'bodyText' => $body,
                     'expiresInMinutes' => (int) config('auth.verification.expire', 60),
                 ]);
         });
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {
             $branding = EmailBranding::data();
+            $tokens = [
+                'platform_name' => $branding['platformName'],
+            ];
+
+            $title = EmailContent::get('reset_email_title', 'Reset your password', $tokens);
+            $subject = EmailContent::get('reset_email_subject', 'Reset your password', $tokens);
+            $body = EmailContent::get(
+                'reset_email_body',
+                'We received a request to reset your password for {{platform_name}}.',
+                $tokens,
+            );
+            $cta = EmailContent::get('reset_email_cta', 'Reset Password', $tokens);
+
             $resetUrl = url(route('password.reset', [
                 'token' => $token,
                 'email' => $notifiable->getEmailForPasswordReset(),
             ], false));
 
             return (new MailMessage)
-                ->subject('Reset your password')
+                ->subject($subject)
                 ->view('emails.auth-reset-password', [
                     ...$branding,
-                    'title' => 'Reset your password',
+                    'title' => $title,
                     'email' => $notifiable->email,
                     'actionUrl' => $resetUrl,
-                    'actionText' => 'Reset Password',
+                    'actionText' => $cta,
+                    'bodyText' => $body,
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
                 ]);
         });

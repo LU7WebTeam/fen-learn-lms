@@ -6,7 +6,7 @@
 ])
     <h2>{{ $title }}</h2>
     <p>Hello,</p>
-    <p>Please confirm your email address for <strong>{{ $platformName }}</strong> by clicking the button below.</p>
+    <p>{!! nl2br(e($bodyText)) !!}</p>
 
     <div class="button-wrap">
         <a href="{{ $actionUrl }}" class="button">{{ $actionText }}</a>

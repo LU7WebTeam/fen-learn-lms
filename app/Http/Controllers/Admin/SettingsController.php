@@ -33,6 +33,18 @@ class SettingsController extends Controller
         'mail_password'              => '',
         'mail_sender_name'           => '',
         'mail_sender_address'        => '',
+        'invitation_email_subject'   => "You've been invited to join {{platform_name}}",
+        'invitation_email_title'     => "You're invited to join the team",
+        'invitation_email_body'      => '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.',
+        'invitation_email_cta'       => 'Accept Invitation',
+        'verification_email_subject' => 'Verify your email address',
+        'verification_email_title'   => 'Verify your email address',
+        'verification_email_body'    => 'Please confirm your email address for {{platform_name}} by clicking the button below.',
+        'verification_email_cta'     => 'Verify Email Address',
+        'reset_email_subject'        => 'Reset your password',
+        'reset_email_title'          => 'Reset your password',
+        'reset_email_body'           => 'We received a request to reset your password for {{platform_name}}.',
+        'reset_email_cta'            => 'Reset Password',
         'certificates_enabled'       => '1',
         'maintenance_mode'           => '0',
         'maintenance_message'        => 'We are currently down for scheduled maintenance. Please check back soon.',
@@ -156,6 +168,18 @@ class SettingsController extends Controller
             'mail_sender_name'    => 'nullable|string|max:100',
             'mail_sender_address' => 'nullable|email|max:200',
             'clear_mail_password' => 'nullable|in:0,1',
+            'invitation_email_subject'   => 'nullable|string|max:150',
+            'invitation_email_title'     => 'nullable|string|max:150',
+            'invitation_email_body'      => 'nullable|string|max:1000',
+            'invitation_email_cta'       => 'nullable|string|max:60',
+            'verification_email_subject' => 'nullable|string|max:150',
+            'verification_email_title'   => 'nullable|string|max:150',
+            'verification_email_body'    => 'nullable|string|max:1000',
+            'verification_email_cta'     => 'nullable|string|max:60',
+            'reset_email_subject'        => 'nullable|string|max:150',
+            'reset_email_title'          => 'nullable|string|max:150',
+            'reset_email_body'           => 'nullable|string|max:1000',
+            'reset_email_cta'            => 'nullable|string|max:60',
         ]);
 
         Setting::set('mail_driver', $request->input('mail_driver'));
@@ -165,6 +189,18 @@ class SettingsController extends Controller
         Setting::set('mail_username', $request->input('mail_username', ''));
         Setting::set('mail_sender_name', $request->input('mail_sender_name', ''));
         Setting::set('mail_sender_address', $request->input('mail_sender_address', ''));
+        Setting::set('invitation_email_subject', $request->input('invitation_email_subject', $this->defaults['invitation_email_subject']));
+        Setting::set('invitation_email_title', $request->input('invitation_email_title', $this->defaults['invitation_email_title']));
+        Setting::set('invitation_email_body', $request->input('invitation_email_body', $this->defaults['invitation_email_body']));
+        Setting::set('invitation_email_cta', $request->input('invitation_email_cta', $this->defaults['invitation_email_cta']));
+        Setting::set('verification_email_subject', $request->input('verification_email_subject', $this->defaults['verification_email_subject']));
+        Setting::set('verification_email_title', $request->input('verification_email_title', $this->defaults['verification_email_title']));
+        Setting::set('verification_email_body', $request->input('verification_email_body', $this->defaults['verification_email_body']));
+        Setting::set('verification_email_cta', $request->input('verification_email_cta', $this->defaults['verification_email_cta']));
+        Setting::set('reset_email_subject', $request->input('reset_email_subject', $this->defaults['reset_email_subject']));
+        Setting::set('reset_email_title', $request->input('reset_email_title', $this->defaults['reset_email_title']));
+        Setting::set('reset_email_body', $request->input('reset_email_body', $this->defaults['reset_email_body']));
+        Setting::set('reset_email_cta', $request->input('reset_email_cta', $this->defaults['reset_email_cta']));
 
         if ($request->input('clear_mail_password') === '1') {
             Setting::set('mail_password', '');

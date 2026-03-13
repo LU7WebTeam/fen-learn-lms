@@ -6,7 +6,7 @@
 ])
     <h2>{{ $title }}</h2>
     <p>Hello,</p>
-    <p>We received a request to reset your password for <strong>{{ $platformName }}</strong>.</p>
+    <p>{!! nl2br(e($bodyText)) !!}</p>
 
     <div class="button-wrap">
         <a href="{{ $actionUrl }}" class="button">{{ $actionText }}</a>
