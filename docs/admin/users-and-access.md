@@ -97,6 +97,8 @@ Staff accounts (`content_editor`, `super_admin`) are created through a controlle
 2. Enter the invitee's email address and select the target role.
 3. Click **Send Invitation** — the system emails a secure, time-limited token link.
 
+The content of the invitation email (subject, title, body text, and button label) can be customised in **Admin → Settings → Email → Staff Invitation**.
+
 ### What happens next
 
 - The recipient clicks the link in the email.

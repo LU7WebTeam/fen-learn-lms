@@ -3,7 +3,7 @@ title: Settings and Certificates
 category: Administration
 order: 50
 slug: settings-and-certificates
-summary: Platform branding, settings, email checks, custom fonts, and certificate management.
+summary: Platform branding, configurable email templates and SMTP, custom fonts, and per-course certificate management.
 ---
 
 # Settings and Certificates
@@ -32,7 +32,83 @@ Saved settings are stored in the `settings` database table and shared into the R
 
 ### Email testing
 
-The Settings page includes an **Send test email** tool. Use this to verify that your mail configuration (SMTP credentials in `.env`) is working correctly before relying on the invitation or notification system.
+The Settings page includes a **Send test email** tool. Use this to verify that your mail configuration (SMTP credentials in `.env`) is working correctly before relying on the invitation or notification system.
+
+---
+
+## Email Settings
+
+**Location:** Admin → Settings → Email tab
+
+The Email tab uses a left-side section navigator with five areas:
+
+| Section | Purpose |
+|---|---|
+| **SMTP & Sender** | Configure the mail server connection and default sender identity |
+| **Staff Invitation** | Customise the invitation email sent to new staff members |
+| **Email Verification** | Customise the email address verification email |
+| **Password Reset** | Customise the password reset email |
+| **Test Email** | Send a connectivity test to any address |
+
+### SMTP & Sender
+
+These fields control how outgoing emails connect to your mail provider:
+
+| Field | Description |
+|---|---|
+| **SMTP Host** | Mail server hostname, e.g. `smtp.mailgun.org` |
+| **SMTP Port** | Typically `587` (TLS) or `465` (SSL) |
+| **SMTP Username** | Account credential |
+| **SMTP Password** | Account credential |
+| **Encryption** | `tls` or `ssl` |
+| **From Address** | Sender email address shown to recipients |
+| **From Name** | Sender name shown to recipients |
+
+> SMTP credentials are saved in the `settings` table. They can also be configured in `.env` if you prefer environment-level control — `.env` values take precedence.
+
+### Email branding
+
+All outgoing emails use the platform branding configured in **Admin → Settings → Branding**:
+
+- **Logo** — shown in the email header
+- **Background colour** — body background of the email
+- **Button colour** — call-to-action button colour
+
+No template changes are needed to update the visual identity — changing branding settings applies to all future emails automatically.
+
+### Email templates
+
+Each of the three system emails — Staff Invitation, Email Verification, and Password Reset — has a customisable template. Fields for each template:
+
+| Field | Description |
+|---|---|
+| **Subject** | Email subject line |
+| **Title** | Large heading inside the email body |
+| **Body** | Main message paragraph |
+| **Button text** | Label on the call-to-action button |
+
+Inline **placeholder chips** are shown under each field to indicate which tokens may be used in that field. Saving a template that uses an unsupported `{{token}}` will be blocked with a validation error.
+
+### Available placeholder tokens
+
+| Token | Available in | Description |
+|---|---|---|
+| `{{platform_name}}` | All templates | The platform name from Settings |
+| `{{inviter_name}}` | Staff Invitation only | Name of the admin who sent the invitation |
+| `{{role_label}}` | Staff Invitation only | Human-readable role name, e.g. "Content Editor" |
+
+### Sending a template test
+
+Each template section (Invitation, Verification, Reset) includes:
+
+1. A **Test Recipient Email** field — enter any address to receive the test
+2. A **Send test email** button — sends the current saved template to that address
+
+Test emails use realistic dummy data for dynamic values (action URLs, names, etc.) and append `[Test]` to the subject so they are easy to identify in the recipient's inbox.
+
+### SMTP connectivity test
+
+The **Test Email** section at the bottom of the Email tab sends a plain connectivity check to a specified address. Use this to confirm your SMTP credentials are correct before worrying about template content.
 
 ---
 

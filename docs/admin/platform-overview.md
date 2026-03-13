@@ -55,7 +55,7 @@ Core admin capabilities:
 
 - **Courses** — create, edit, publish, duplicate, and delete courses; manage sections and lessons
 - **Users** — browse accounts, change roles, send staff invitations, suspend/unsuspend
-- **Settings** — configure platform name, logo, favicon, fonts, and email
+- **Settings** — configure platform name, logo, favicon, fonts, SMTP credentials, and customisable email templates for invitations, verification, and password reset
 - **Certificates** — configure per-course certificate templates and completion requirements
 - **Activity Logs** — review a full audit trail of admin actions
 - **Documentation** — this internal reference, loaded from `docs/admin/*.md`

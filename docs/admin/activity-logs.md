@@ -16,13 +16,13 @@ The activity log provides a full audit trail of admin actions on the platform. E
 
 **Location:** Admin → Activity Logs (`/admin/activity-logs`)
 
-The page shows the 50 most recent entries, paginated. Each entry displays:
+The page shows the 50 most recent entries, paginated, in a scrollable table. Each row in the table shows:
 
 - **Description** — what happened (e.g. "Created course Introduction to Python")
 - **Event** — the action type (created, updated, deleted, etc.)
 - **Subject** — the model that was affected (e.g. Course #12)
 - **Actor** — the admin who performed the action
-- **Timestamp** — date and time of the action
+- **Time** — date and time of the action
 - **Details** — additional context such as changed fields, old/new role, or suspension reason
 
 ### Filters
