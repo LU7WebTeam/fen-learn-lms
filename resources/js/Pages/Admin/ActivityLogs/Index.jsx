@@ -12,7 +12,7 @@ import {
     SheetTitle,
 } from '@/Components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { ScrollText, Info, Filter } from 'lucide-react';
+import { ScrollText, Info, Filter, ChevronDown } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 const PRESET_STORAGE_KEY = 'admin.activity-log.filter-presets.v1';
@@ -99,6 +99,7 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
     const [savedPresets, setSavedPresets] = useState([]);
     const [selectedPresetId, setSelectedPresetId] = useState('');
     const [selectedActivity, setSelectedActivity] = useState(null);
+    const [filtersOpen, setFiltersOpen] = useState(true);
 
     useEffect(() => {
         try {
@@ -272,12 +273,25 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
 
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <Filter className="h-5 w-5 text-primary" />
-                            <CardTitle>Filters</CardTitle>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <Filter className="h-5 w-5 text-primary" />
+                                <CardTitle>Filters</CardTitle>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFiltersOpen((prev) => !prev)}
+                                aria-expanded={filtersOpen}
+                                aria-label={filtersOpen ? 'Collapse filters' : 'Expand filters'}
+                            >
+                                <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+                            </Button>
                         </div>
                         <CardDescription>Narrow logs by actor, free-text search, subject, event, and date range.</CardDescription>
                     </CardHeader>
+                    {filtersOpen && (
                     <CardContent>
                         <form onSubmit={applyFilters} className="space-y-4">
                             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
@@ -400,6 +414,7 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
                             </div>
                         </form>
                     </CardContent>
+                    )}
                 </Card>
 
                 <Card>
