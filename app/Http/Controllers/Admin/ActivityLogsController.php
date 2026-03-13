@@ -132,7 +132,18 @@ class ActivityLogsController extends Controller
                 'canExport' => $this->canExport($request),
                 'canManageLogPolicies' => $request->user()?->isSuperAdmin() ?? false,
             ],
-            'logSettings' => $logSettings,
+        ]);
+    }
+
+    public function controls(Request $request): Response
+    {
+        $this->authorizeView($request);
+
+        return Inertia::render('Admin/ActivityLogs/Controls', [
+            'capabilities' => [
+                'canManageLogPolicies' => $request->user()?->isSuperAdmin() ?? false,
+            ],
+            'logSettings' => $this->activityLogSettings(),
         ]);
     }
 
