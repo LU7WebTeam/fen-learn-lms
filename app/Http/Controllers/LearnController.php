@@ -124,7 +124,7 @@ class LearnController extends Controller
             ->where('causer_id', $request->user()->id)
             ->where('properties->course_id', $course->id)
             ->latest()
-            ->limit(25)
+            ->limit(200)
             ->get()
             ->map(function (Activity $activity) {
                 $properties = $activity->properties?->toArray() ?? [];
@@ -134,6 +134,7 @@ class LearnController extends Controller
                     'event' => $activity->event,
                     'description' => $activity->description,
                     'created_at' => $activity->created_at?->format('M j, Y g:i A'),
+                    'created_at_raw' => $activity->created_at?->toDateString(),
                     'properties' => [
                         'lesson_title' => $properties['lesson_title'] ?? null,
                         'lesson_type' => $properties['lesson_type'] ?? null,
