@@ -101,6 +101,7 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [settingsForm, setSettingsForm] = useState({
         activity_log_retention_days: logSettings?.activity_log_retention_days ?? '180',
+        activity_log_retention_unit: logSettings?.activity_log_retention_unit ?? 'days',
         activity_log_archive_before_prune: logSettings?.activity_log_archive_before_prune ?? '1',
         activity_log_alert_enabled: logSettings?.activity_log_alert_enabled ?? '0',
         activity_log_alert_recipients: logSettings?.activity_log_alert_recipients ?? '',
@@ -431,9 +432,9 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
                         </CardHeader>
                         <CardContent>
                             <form onSubmit={savePolicies} className="space-y-4">
-                                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-medium text-muted-foreground">Retention days</label>
+                                        <label className="text-xs font-medium text-muted-foreground">Retention value</label>
                                         <Input
                                             type="number"
                                             min={1}
@@ -441,6 +442,17 @@ export default function ActivityLogsIndex({ activities, filters, options, capabi
                                             value={settingsForm.activity_log_retention_days}
                                             onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_retention_days: e.target.value }))}
                                         />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-muted-foreground">Retention unit</label>
+                                        <select
+                                            value={settingsForm.activity_log_retention_unit}
+                                            onChange={(e) => setSettingsForm((prev) => ({ ...prev, activity_log_retention_unit: e.target.value }))}
+                                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        >
+                                            <option value="days">Days</option>
+                                            <option value="months">Months</option>
+                                        </select>
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-medium text-muted-foreground">Archive before prune</label>

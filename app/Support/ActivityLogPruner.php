@@ -12,13 +12,16 @@ class ActivityLogPruner
     public function pruneFromSettings(?int $overrideDays = null, ?bool $overrideArchive = null): array
     {
         $retentionDays = $overrideDays ?? (int) Setting::get('activity_log_retention_days', '180');
+        $retentionUnit = (string) Setting::get('activity_log_retention_unit', 'days');
         $archiveBeforePrune = $overrideArchive ?? (Setting::get('activity_log_archive_before_prune', '1') === '1');
 
         if ($retentionDays < 1) {
             $retentionDays = 1;
         }
 
-        $cutoff = Carbon::now()->subDays($retentionDays);
+        $cutoff = $retentionUnit === 'months'
+            ? Carbon::now()->subMonths($retentionDays)
+            : Carbon::now()->subDays($retentionDays);
 
         $query = Activity::query()
             ->where('log_name', 'admin')
@@ -59,6 +62,7 @@ class ActivityLogPruner
 
         return [
             'retention_days' => $retentionDays,
+            'retention_unit' => $retentionUnit,
             'cutoff' => $cutoff->toIso8601String(),
             'deleted_count' => $deletedCount,
             'archive_path' => $archivePath,

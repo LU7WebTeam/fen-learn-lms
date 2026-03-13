@@ -19,6 +19,7 @@ class ActivityLogsController extends Controller
 {
     private const LOG_SETTINGS_DEFAULTS = [
         'activity_log_retention_days' => '180',
+        'activity_log_retention_unit' => 'days',
         'activity_log_archive_before_prune' => '1',
         'activity_log_alert_enabled' => '0',
         'activity_log_alert_recipients' => '',
@@ -310,6 +311,7 @@ class ActivityLogsController extends Controller
 
         $validated = $request->validate([
             'activity_log_retention_days' => ['required', 'integer', 'min:1', 'max:3650'],
+            'activity_log_retention_unit' => ['required', 'in:days,months'],
             'activity_log_archive_before_prune' => ['required', 'in:0,1'],
             'activity_log_alert_enabled' => ['required', 'in:0,1'],
             'activity_log_alert_recipients' => ['nullable', 'string', 'max:2000'],
