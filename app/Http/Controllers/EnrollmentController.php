@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Setting;
+use App\Support\LearnerCourseActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -26,6 +27,20 @@ class EnrollmentController extends Controller
             ['course_id' => $course->id],
             ['enrolled_at' => now()]
         );
+
+        if ($enrollment->wasRecentlyCreated) {
+            LearnerCourseActivityLogger::record(
+                $user,
+                $course,
+                $enrollment,
+                'enrollment_started',
+                'Started course enrollment',
+                [
+                    'course_slug' => $course->slug,
+                ],
+                $course
+            );
+        }
 
         // Resume from last lesson, or go to first
         $lastLessonId = $enrollment->last_lesson_id;

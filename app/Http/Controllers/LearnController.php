@@ -6,11 +6,13 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
+use App\Support\LearnerCourseActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class LearnController extends Controller
 {
@@ -117,6 +119,34 @@ class LearnController extends Controller
             $lastAttempt = $attempts->last();
         }
 
+        $learnerActivity = Activity::query()
+            ->where('log_name', 'learner_course')
+            ->where('causer_id', $request->user()->id)
+            ->where('properties->course_id', $course->id)
+            ->latest()
+            ->limit(25)
+            ->get()
+            ->map(function (Activity $activity) {
+                $properties = $activity->properties?->toArray() ?? [];
+
+                return [
+                    'id' => $activity->id,
+                    'event' => $activity->event,
+                    'description' => $activity->description,
+                    'created_at' => $activity->created_at?->format('M j, Y g:i A'),
+                    'properties' => [
+                        'lesson_title' => $properties['lesson_title'] ?? null,
+                        'lesson_type' => $properties['lesson_type'] ?? null,
+                        'score' => $properties['score'] ?? null,
+                        'max_score' => $properties['max_score'] ?? null,
+                        'percentage' => $properties['percentage'] ?? null,
+                        'passed' => $properties['passed'] ?? null,
+                        'attempt_number' => $properties['attempt_number'] ?? null,
+                    ],
+                ];
+            })
+            ->values();
+
         return Inertia::render('Learn/Show', [
             'course' => [
                 'id'       => $course->id,
@@ -140,6 +170,7 @@ class LearnController extends Controller
             'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title, 'title_ms' => $prev->title_ms] : null,
             'lastAttempt'        => $lastAttempt,
             'allAttempts'        => $allAttempts,
+            'learnerActivity'    => $learnerActivity,
         ]);
     }
 
@@ -149,10 +180,28 @@ class LearnController extends Controller
             ->where('course_id', $course->id)
             ->firstOrFail();
 
+        $alreadyCompletedLesson = LessonProgress::query()
+            ->where('user_id', $request->user()->id)
+            ->where('lesson_id', $lesson->id)
+            ->whereNotNull('completed_at')
+            ->exists();
+
         LessonProgress::updateOrCreate(
             ['user_id' => $request->user()->id, 'lesson_id' => $lesson->id],
             ['enrollment_id' => $enrollment->id, 'completed_at' => now()]
         );
+
+        if (! $alreadyCompletedLesson) {
+            LearnerCourseActivityLogger::record(
+                $request->user(),
+                $course,
+                $enrollment,
+                'lesson_completed',
+                'Completed lesson',
+                [],
+                $lesson
+            );
+        }
 
         // Evaluate course completion based on certificate requirements
         $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
@@ -195,6 +244,18 @@ class LearnController extends Controller
                 'completed_at'     => now(),
                 'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
             ]);
+
+            LearnerCourseActivityLogger::record(
+                $request->user(),
+                $course,
+                $enrollment,
+                'course_completed',
+                'Completed course',
+                [
+                    'certificate_uuid' => $enrollment->certificate_uuid,
+                ],
+                $course
+            );
         }
 
         return back()->with('success', 'Lesson marked complete.');
@@ -261,12 +322,63 @@ class LearnController extends Controller
             'passed'         => $passed,
         ]);
 
+        LearnerCourseActivityLogger::record(
+            $request->user(),
+            $course,
+            $enrollment,
+            'quiz_attempt_submitted',
+            'Submitted quiz attempt',
+            [
+                'attempt_number' => $attemptCount + 1,
+                'score' => $correct,
+                'max_score' => $total,
+                'percentage' => $percentage,
+                'passing_score' => $passingScore,
+                'passed' => $passed,
+            ],
+            $lesson
+        );
+
+        LearnerCourseActivityLogger::record(
+            $request->user(),
+            $course,
+            $enrollment,
+            $passed ? 'quiz_passed' : 'quiz_failed',
+            $passed ? 'Passed quiz' : 'Failed quiz',
+            [
+                'attempt_number' => $attemptCount + 1,
+                'score' => $correct,
+                'max_score' => $total,
+                'percentage' => $percentage,
+                'passing_score' => $passingScore,
+            ],
+            $lesson
+        );
+
         // If passed, mark lesson complete using existing completion logic
         if ($passed) {
+            $alreadyCompletedLesson = LessonProgress::query()
+                ->where('user_id', $request->user()->id)
+                ->where('lesson_id', $lesson->id)
+                ->whereNotNull('completed_at')
+                ->exists();
+
             LessonProgress::updateOrCreate(
                 ['user_id' => $request->user()->id, 'lesson_id' => $lesson->id],
                 ['enrollment_id' => $enrollment->id, 'completed_at' => now()]
             );
+
+            if (! $alreadyCompletedLesson) {
+                LearnerCourseActivityLogger::record(
+                    $request->user(),
+                    $course,
+                    $enrollment,
+                    'lesson_completed',
+                    'Completed lesson',
+                    [],
+                    $lesson
+                );
+            }
 
             $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
             $requirements = $template['requirements'] ?? ['type' => 'all_lessons'];
@@ -299,6 +411,18 @@ class LearnController extends Controller
                     'completed_at'     => now(),
                     'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
                 ]);
+
+                LearnerCourseActivityLogger::record(
+                    $request->user(),
+                    $course,
+                    $enrollment,
+                    'course_completed',
+                    'Completed course',
+                    [
+                        'certificate_uuid' => $enrollment->certificate_uuid,
+                    ],
+                    $course
+                );
             }
         }
 

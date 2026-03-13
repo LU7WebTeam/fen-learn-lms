@@ -18,7 +18,7 @@ import { useState, useEffect } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical, Copy,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
-    Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate
+    Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate, ScrollText
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
@@ -47,6 +47,110 @@ function Field({ label, error, children, hint }) {
             {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
             {error && <InputError message={error} />}
         </div>
+    );
+}
+
+const ACTIVITY_EVENT_LABELS = {
+    enrollment_started: 'Enrollment Started',
+    lesson_completed: 'Lesson Completed',
+    quiz_attempt_submitted: 'Quiz Attempt Submitted',
+    quiz_passed: 'Quiz Passed',
+    quiz_failed: 'Quiz Failed',
+    course_completed: 'Course Completed',
+};
+
+function LearnerActivityPanel({ activities = [], students = [] }) {
+    const [learnerId, setLearnerId] = useState('all');
+    const [eventFilter, setEventFilter] = useState('all');
+
+    const eventOptions = [...new Set(activities.map((item) => item.event).filter(Boolean))];
+
+    const visible = activities.filter((item) => {
+        if (learnerId !== 'all' && String(item.learner?.id ?? '') !== learnerId) {
+            return false;
+        }
+
+        if (eventFilter !== 'all' && item.event !== eventFilter) {
+            return false;
+        }
+
+        return true;
+    });
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <ScrollText className="h-4 w-4" />
+                    Learner Activity
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                        <Label>Filter by Learner</Label>
+                        <Select value={learnerId} onValueChange={setLearnerId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All learners" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All learners</SelectItem>
+                                {students.map((student) => (
+                                    <SelectItem key={student.user_id} value={String(student.user_id)}>
+                                        {student.user_name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label>Filter by Event</Label>
+                        <Select value={eventFilter} onValueChange={setEventFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All events" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All events</SelectItem>
+                                {eventOptions.map((event) => (
+                                    <SelectItem key={event} value={event}>
+                                        {ACTIVITY_EVENT_LABELS[event] ?? event}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                {visible.length === 0 ? (
+                    <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                        No learner activity events for this filter.
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {visible.map((item) => (
+                            <div key={item.id} className="rounded-md border px-4 py-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Badge variant="outline">{ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</Badge>
+                                    <span className="text-sm font-medium">{item.learner?.name ?? 'Unknown learner'}</span>
+                                    {item.properties?.lesson_title && (
+                                        <span className="text-sm text-muted-foreground">- {item.properties.lesson_title}</span>
+                                    )}
+                                    {item.properties?.percentage !== null && item.properties?.percentage !== undefined && (
+                                        <span className="text-xs text-muted-foreground">Score: {item.properties.percentage}%</span>
+                                    )}
+                                    {typeof item.properties?.passed === 'boolean' && (
+                                        <span className={`text-xs ${item.properties.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                            {item.properties.passed ? 'Passed' : 'Failed'}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-1 text-xs text-muted-foreground">{item.created_at}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 
@@ -569,7 +673,7 @@ function CourseIntroductionForm({ course }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed }) {
     const [addingSection, setAddingSection] = useState(false);
     const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
     const [draggedId, setDraggedId] = useState(null);
@@ -698,6 +802,9 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 <Badge variant="secondary" className="ml-1 text-xs text-green-700 bg-green-50">On</Badge>
                             )}
                         </TabsTrigger>
+                        <TabsTrigger value="learner-activity" className="gap-2">
+                            <ScrollText className="h-4 w-4" />Learner Activity
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── Details tab ── */}
@@ -782,6 +889,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             lessonStats={lessonStats}
                             course={course}
                         />
+                    </TabsContent>
+
+                    {/* ── Learner activity tab ── */}
+                    <TabsContent value="learner-activity" className="mt-6">
+                        <LearnerActivityPanel activities={learnerActivityFeed ?? []} students={students ?? []} />
                     </TabsContent>
 
                     {/* ── Introduction tab ── */}

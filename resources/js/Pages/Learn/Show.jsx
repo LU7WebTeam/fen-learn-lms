@@ -20,6 +20,15 @@ import { cn } from '@/lib/utils';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: FileText };
 
+const LEARNER_ACTIVITY_EVENT_LABELS = {
+    enrollment_started: 'Enrollment Started',
+    lesson_completed: 'Lesson Completed',
+    quiz_attempt_submitted: 'Quiz Attempt Submitted',
+    quiz_passed: 'Quiz Passed',
+    quiz_failed: 'Quiz Failed',
+    course_completed: 'Course Completed',
+};
+
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
 function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
@@ -359,7 +368,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
 
 export default function LearnShow({
     course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
-    nextLesson, prevLesson, allAttempts,
+    nextLesson, prevLesson, allAttempts, learnerActivity,
 }) {
     const { locale } = usePage().props;
     const [completed, setCompleted]     = useState(isCompleted);
@@ -574,6 +583,36 @@ export default function LearnShow({
                                     </div>
                                 );
                             })()}
+
+                            {!isLocked && Array.isArray(learnerActivity) && learnerActivity.length > 0 && (
+                                <div className="mt-8 rounded-lg border">
+                                    <div className="flex items-center justify-between border-b px-4 py-3">
+                                        <h2 className="text-sm font-semibold">Your Activity in This Course</h2>
+                                        <span className="text-xs text-muted-foreground">Latest {learnerActivity.length} events</span>
+                                    </div>
+                                    <div className="max-h-72 overflow-y-auto">
+                                        {learnerActivity.map((item) => (
+                                            <div key={item.id} className="border-b px-4 py-3 last:border-b-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge variant="outline">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</Badge>
+                                                    {item.properties?.lesson_title && (
+                                                        <span className="text-sm font-medium">{item.properties.lesson_title}</span>
+                                                    )}
+                                                    {item.properties?.percentage !== null && item.properties?.percentage !== undefined && (
+                                                        <span className="text-xs text-muted-foreground">Score: {item.properties.percentage}%</span>
+                                                    )}
+                                                    {typeof item.properties?.passed === 'boolean' && (
+                                                        <span className={`text-xs ${item.properties.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                            {item.properties.passed ? 'Passed' : 'Failed'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="mt-1 text-xs text-muted-foreground">{item.created_at}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <Separator className="my-8" />
 

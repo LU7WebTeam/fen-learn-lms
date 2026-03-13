@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class CoursesController extends Controller
 {
@@ -165,6 +166,39 @@ class CoursesController extends Controller
                     : null,
             ]);
 
+        $learnerActivityFeed = Activity::query()
+            ->where('log_name', 'learner_course')
+            ->where('properties->course_id', $course->id)
+            ->with('causer:id,name,email')
+            ->latest()
+            ->limit(200)
+            ->get()
+            ->map(function (Activity $activity) {
+                $properties = $activity->properties?->toArray() ?? [];
+
+                return [
+                    'id' => $activity->id,
+                    'event' => $activity->event,
+                    'description' => $activity->description,
+                    'created_at' => $activity->created_at?->format('M j, Y g:i A'),
+                    'learner' => [
+                        'id' => $activity->causer?->id,
+                        'name' => $activity->causer?->name ?? 'Unknown',
+                        'email' => $activity->causer?->email,
+                    ],
+                    'properties' => [
+                        'lesson_title' => $properties['lesson_title'] ?? null,
+                        'lesson_type' => $properties['lesson_type'] ?? null,
+                        'score' => $properties['score'] ?? null,
+                        'max_score' => $properties['max_score'] ?? null,
+                        'percentage' => $properties['percentage'] ?? null,
+                        'passed' => $properties['passed'] ?? null,
+                        'attempt_number' => $properties['attempt_number'] ?? null,
+                    ],
+                ];
+            })
+            ->values();
+
         return Inertia::render('Admin/Courses/Edit', [
             'course'          => $course,
             'defaultTemplate' => \App\Models\Course::defaultCertificateTemplate(),
@@ -175,6 +209,7 @@ class CoursesController extends Controller
             'analytics'       => $analytics,
             'students'        => $students,
             'lessonStats'     => $lessonStats,
+            'learnerActivityFeed' => $learnerActivityFeed,
             'flash'           => session()->only(['success', 'error']),
         ]);
     }
