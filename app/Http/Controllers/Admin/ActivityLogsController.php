@@ -42,6 +42,7 @@ class ActivityLogsController extends Controller
                         'type' => class_basename((string) $activity->subject_type),
                         'id' => $activity->subject_id,
                     ],
+                    'raw_properties' => $properties,
                     'properties' => [
                         'updated_fields' => $properties['updated_fields'] ?? [],
                         'source_course_id' => $properties['source_course_id'] ?? null,

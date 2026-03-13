@@ -4,6 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/Components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { ScrollText, Info, Filter } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -53,6 +60,7 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
     });
     const [savedPresets, setSavedPresets] = useState([]);
     const [selectedPresetId, setSelectedPresetId] = useState('');
+    const [selectedActivity, setSelectedActivity] = useState(null);
 
     useEffect(() => {
         try {
@@ -146,6 +154,14 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
 
         setSavedPresets((prev) => prev.filter((item) => item.id !== selectedPresetId));
         setSelectedPresetId('');
+    }
+
+    function openActivityDetails(activity) {
+        setSelectedActivity(activity);
+    }
+
+    function closeActivityDetails() {
+        setSelectedActivity(null);
     }
 
     return (
@@ -291,7 +307,18 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                     </TableHeader>
                                     <TableBody>
                                         {activities.data.map((activity) => (
-                                            <TableRow key={activity.id}>
+                                            <TableRow
+                                                key={activity.id}
+                                                className="cursor-pointer"
+                                                onClick={() => openActivityDetails(activity)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        openActivityDetails(activity);
+                                                    }
+                                                }}
+                                                tabIndex={0}
+                                            >
                                                 <TableCell className="font-medium min-w-[220px]">{activity.description}</TableCell>
                                                 <TableCell>
                                                     {activity.event ? (
@@ -318,6 +345,71 @@ export default function ActivityLogsIndex({ activities, filters, options }) {
                                 </Table>
                             </div>
                         )}
+
+                        <Sheet open={Boolean(selectedActivity)} onOpenChange={(open) => !open && closeActivityDetails()}>
+                            <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+                                <SheetHeader>
+                                    <SheetTitle>Activity details</SheetTitle>
+                                    <SheetDescription>
+                                        Full event metadata and payload for audit review.
+                                    </SheetDescription>
+                                </SheetHeader>
+
+                                {selectedActivity && (
+                                    <div className="mt-6 space-y-6">
+                                        <div className="space-y-3">
+                                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Summary</h3>
+                                            <p className="text-base font-medium">{selectedActivity.description}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge variant="outline">ID: {selectedActivity.id}</Badge>
+                                                {selectedActivity.event && (
+                                                    <Badge variant="outline" className="capitalize">{selectedActivity.event}</Badge>
+                                                )}
+                                                {selectedActivity.subject?.type && selectedActivity.subject?.id && (
+                                                    <Badge variant="secondary">{selectedActivity.subject.type} #{selectedActivity.subject.id}</Badge>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid gap-3 rounded-md border p-4 sm:grid-cols-2">
+                                            <div>
+                                                <p className="text-xs font-medium text-muted-foreground">Actor</p>
+                                                <p className="text-sm">{selectedActivity.causer?.name ?? 'System'}</p>
+                                                {selectedActivity.causer?.email && (
+                                                    <p className="text-xs text-muted-foreground">{selectedActivity.causer.email}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-medium text-muted-foreground">Time</p>
+                                                <p className="text-sm">{selectedActivity.created_at}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Highlights</h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(selectedActivity.properties?.updated_fields ?? []).map((field) => (
+                                                    <Badge key={field} variant="outline">Updated: {field}</Badge>
+                                                ))}
+                                                {selectedActivity.properties?.old_role && selectedActivity.properties?.new_role && (
+                                                    <Badge variant="outline">{selectedActivity.properties.old_role} to {selectedActivity.properties.new_role}</Badge>
+                                                )}
+                                                {selectedActivity.properties?.reason && (
+                                                    <Badge variant="outline">Reason: {selectedActivity.properties.reason}</Badge>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Raw properties</h3>
+                                            <pre className="max-h-[320px] overflow-auto rounded-md border bg-muted p-3 text-xs leading-relaxed">
+                                                {JSON.stringify(selectedActivity.raw_properties ?? {}, null, 2)}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                )}
+                            </SheetContent>
+                        </Sheet>
 
                         {activities.last_page > 1 && (
                             <div className="mt-6 flex justify-center gap-2">
