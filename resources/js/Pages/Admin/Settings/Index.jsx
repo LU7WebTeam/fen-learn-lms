@@ -616,6 +616,7 @@ function EmailTab({ settings, onSave, processing }) {
     const [resetCta, setResetCta] = useState(settings.reset_email_cta || 'Reset Password');
     const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
+    const [activeSection, setActiveSection] = useState('smtp');
 
     function save() {
         onSave('email', {
@@ -651,6 +652,14 @@ function EmailTab({ settings, onSave, processing }) {
         });
     }
 
+    const emailSections = [
+        { id: 'smtp', label: 'SMTP & Sender' },
+        { id: 'invitation', label: 'Staff Invitation' },
+        { id: 'verification', label: 'Email Verification' },
+        { id: 'reset', label: 'Password Reset' },
+        { id: 'test', label: 'Test Email' },
+    ];
+
     return (
         <Card>
             <CardHeader>
@@ -658,222 +667,265 @@ function EmailTab({ settings, onSave, processing }) {
                     <Mail className="h-4 w-4" /> Email / SMTP
                 </CardTitle>
                 <CardDescription>
-                    Configure outbound email so the platform can send verification and password-reset messages.
+                    Configure outbound email and customize each email template in dedicated sections.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-                <div className="space-y-2">
-                    <Label>Mail Driver</Label>
-                    <Select value={driver} onValueChange={setDriver}>
-                        <SelectTrigger className="w-48">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="smtp">SMTP</SelectItem>
-                            <SelectItem value="sendmail">Sendmail</SelectItem>
-                            <SelectItem value="log">Log (dev only)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {driver === 'smtp' && (
-                    <>
-                        <Separator />
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            <div className="col-span-2 space-y-2">
-                                <Label htmlFor="mail_host">SMTP Host</Label>
-                                <Input
-                                    id="mail_host"
-                                    value={host}
-                                    onChange={e => setHost(e.target.value)}
-                                    placeholder="smtp.example.com"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="mail_port">Port</Label>
-                                <Input
-                                    id="mail_port"
-                                    type="number"
-                                    value={port}
-                                    onChange={e => setPort(e.target.value)}
-                                    placeholder="587"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Encryption / Scheme</Label>
-                            <Select value={scheme} onValueChange={setScheme}>
-                                <SelectTrigger className="w-48">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    <SelectItem value="smtp">TLS (STARTTLS, port 587)</SelectItem>
-                                    <SelectItem value="smtps">SMTPS (SSL, port 465)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="mail_username">Username</Label>
-                            <Input
-                                id="mail_username"
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
-                                placeholder="user@example.com"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="mail_password">Password</Label>
-                            <div className="relative">
-                                <Input
-                                    id="mail_password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    placeholder="Leave blank to keep existing password"
-                                    className="pr-10"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            </div>
-                            <label className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
-                                <input
-                                    type="checkbox"
-                                    checked={clearPassword}
-                                    onChange={e => setClearPassword(e.target.checked)}
-                                />
-                                Clear saved SMTP password on save
-                            </label>
-                        </div>
-                    </>
-                )}
-
-                <Separator />
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="mail_sender_name">Sender Name</Label>
-                        <Input
-                            id="mail_sender_name"
-                            value={senderName}
-                            onChange={e => setSenderName(e.target.value)}
-                            placeholder="My LMS"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="mail_sender_address">Sender Address</Label>
-                        <Input
-                            id="mail_sender_address"
-                            type="email"
-                            value={senderAddress}
-                            onChange={e => setSenderAddress(e.target.value)}
-                            placeholder="no-reply@example.com"
-                        />
-                    </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                    <div>
-                        <h4 className="text-sm font-semibold">Email Content Templates</h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Supported placeholders: {'{{platform_name}}'}, {'{{inviter_name}}'}, {'{{role_label}}'}
-                        </p>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+                    <div className="space-y-1 rounded-lg border p-2 h-fit">
+                        {emailSections.map(section => (
+                            <button
+                                key={section.id}
+                                type="button"
+                                onClick={() => setActiveSection(section.id)}
+                                className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                                    activeSection === section.id
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {section.label}
+                            </button>
+                        ))}
                     </div>
 
-                    <div className="rounded-lg border p-4 space-y-3">
-                        <p className="text-sm font-medium">Staff Invitation</p>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>Subject</Label>
-                                <Input value={invitationSubject} onChange={e => setInvitationSubject(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Button text</Label>
-                                <Input value={invitationCta} onChange={e => setInvitationCta(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Title</Label>
-                            <Input value={invitationTitle} onChange={e => setInvitationTitle(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Body</Label>
-                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={invitationBody} onChange={e => setInvitationBody(e.target.value)} />
-                        </div>
-                    </div>
+                    <div className="rounded-lg border p-4 sm:p-5">
+                        {activeSection === 'smtp' && (
+                            <div className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label>Mail Driver</Label>
+                                    <Select value={driver} onValueChange={setDriver}>
+                                        <SelectTrigger className="w-48">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="smtp">SMTP</SelectItem>
+                                            <SelectItem value="sendmail">Sendmail</SelectItem>
+                                            <SelectItem value="log">Log (dev only)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                    <div className="rounded-lg border p-4 space-y-3">
-                        <p className="text-sm font-medium">Email Verification</p>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>Subject</Label>
-                                <Input value={verificationSubject} onChange={e => setVerificationSubject(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Button text</Label>
-                                <Input value={verificationCta} onChange={e => setVerificationCta(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Title</Label>
-                            <Input value={verificationTitle} onChange={e => setVerificationTitle(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Body</Label>
-                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={verificationBody} onChange={e => setVerificationBody(e.target.value)} />
-                        </div>
-                    </div>
+                                {driver === 'smtp' && (
+                                    <>
+                                        <Separator />
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                            <div className="col-span-2 space-y-2">
+                                                <Label htmlFor="mail_host">SMTP Host</Label>
+                                                <Input
+                                                    id="mail_host"
+                                                    value={host}
+                                                    onChange={e => setHost(e.target.value)}
+                                                    placeholder="smtp.example.com"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="mail_port">Port</Label>
+                                                <Input
+                                                    id="mail_port"
+                                                    type="number"
+                                                    value={port}
+                                                    onChange={e => setPort(e.target.value)}
+                                                    placeholder="587"
+                                                />
+                                            </div>
+                                        </div>
 
-                    <div className="rounded-lg border p-4 space-y-3">
-                        <p className="text-sm font-medium">Password Reset</p>
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label>Subject</Label>
-                                <Input value={resetSubject} onChange={e => setResetSubject(e.target.value)} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Button text</Label>
-                                <Input value={resetCta} onChange={e => setResetCta(e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Title</Label>
-                            <Input value={resetTitle} onChange={e => setResetTitle(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Body</Label>
-                            <textarea className="min-h-[90px] w-full rounded-md border bg-background px-3 py-2 text-sm" value={resetBody} onChange={e => setResetBody(e.target.value)} />
-                        </div>
-                    </div>
-                </div>
+                                        <div className="space-y-2">
+                                            <Label>Encryption / Scheme</Label>
+                                            <Select value={scheme} onValueChange={setScheme}>
+                                                <SelectTrigger className="w-64">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None</SelectItem>
+                                                    <SelectItem value="smtp">TLS (STARTTLS, port 587)</SelectItem>
+                                                    <SelectItem value="smtps">SMTPS (SSL, port 465)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                <Separator />
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mail_username">Username</Label>
+                                            <Input
+                                                id="mail_username"
+                                                value={username}
+                                                onChange={e => setUsername(e.target.value)}
+                                                placeholder="user@example.com"
+                                            />
+                                        </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="test_recipient">Test Recipient Email</Label>
-                        <Input
-                            id="test_recipient"
-                            type="email"
-                            value={testRecipient}
-                            onChange={e => setTestRecipient(e.target.value)}
-                            placeholder="you@example.com"
-                        />
-                    </div>
-                    <div className="flex items-end">
-                        <Button variant="outline" onClick={sendTestEmail} className="w-full" disabled={processing}>
-                            Send Test Email
-                        </Button>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mail_password">Password</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="mail_password"
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={password}
+                                                    onChange={e => setPassword(e.target.value)}
+                                                    placeholder="Leave blank to keep existing password"
+                                                    className="pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(v => !v)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </button>
+                                            </div>
+                                            <label className="mt-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={clearPassword}
+                                                    onChange={e => setClearPassword(e.target.checked)}
+                                                />
+                                                Clear saved SMTP password on save
+                                            </label>
+                                        </div>
+                                    </>
+                                )}
+
+                                <Separator />
+
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="mail_sender_name">Sender Name</Label>
+                                        <Input
+                                            id="mail_sender_name"
+                                            value={senderName}
+                                            onChange={e => setSenderName(e.target.value)}
+                                            placeholder="My LMS"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="mail_sender_address">Sender Address</Label>
+                                        <Input
+                                            id="mail_sender_address"
+                                            type="email"
+                                            value={senderAddress}
+                                            onChange={e => setSenderAddress(e.target.value)}
+                                            placeholder="no-reply@example.com"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'invitation' && (
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">
+                                    Supported placeholders: {'{{platform_name}}'}, {'{{inviter_name}}'}, {'{{role_label}}'}
+                                </p>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>Subject</Label>
+                                        <Input value={invitationSubject} onChange={e => setInvitationSubject(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Button text</Label>
+                                        <Input value={invitationCta} onChange={e => setInvitationCta(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input value={invitationTitle} onChange={e => setInvitationTitle(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Body</Label>
+                                    <textarea
+                                        className="min-h-[120px] w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        value={invitationBody}
+                                        onChange={e => setInvitationBody(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'verification' && (
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">
+                                    Supported placeholders: {'{{platform_name}}'}
+                                </p>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>Subject</Label>
+                                        <Input value={verificationSubject} onChange={e => setVerificationSubject(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Button text</Label>
+                                        <Input value={verificationCta} onChange={e => setVerificationCta(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input value={verificationTitle} onChange={e => setVerificationTitle(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Body</Label>
+                                    <textarea
+                                        className="min-h-[120px] w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        value={verificationBody}
+                                        onChange={e => setVerificationBody(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'reset' && (
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">
+                                    Supported placeholders: {'{{platform_name}}'}
+                                </p>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>Subject</Label>
+                                        <Input value={resetSubject} onChange={e => setResetSubject(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Button text</Label>
+                                        <Input value={resetCta} onChange={e => setResetCta(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input value={resetTitle} onChange={e => setResetTitle(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Body</Label>
+                                    <textarea
+                                        className="min-h-[120px] w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        value={resetBody}
+                                        onChange={e => setResetBody(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'test' && (
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">
+                                    Use this to confirm SMTP delivery with your current configuration.
+                                </p>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <Label htmlFor="test_recipient">Test Recipient Email</Label>
+                                        <Input
+                                            id="test_recipient"
+                                            type="email"
+                                            value={testRecipient}
+                                            onChange={e => setTestRecipient(e.target.value)}
+                                            placeholder="you@example.com"
+                                        />
+                                    </div>
+                                    <div className="flex items-end">
+                                        <Button variant="outline" onClick={sendTestEmail} className="w-full" disabled={processing}>
+                                            Send Test Email
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
