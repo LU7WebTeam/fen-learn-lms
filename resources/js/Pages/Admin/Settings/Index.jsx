@@ -868,6 +868,15 @@ function EmailTab({ settings, onSave, processing }) {
                                     />
                                     <PlaceholderChips tokens={["platform_name", "inviter_name", "role_label"]} />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label>Test Recipient Email</Label>
+                                    <Input
+                                        type="email"
+                                        value={testRecipient}
+                                        onChange={e => setTestRecipient(e.target.value)}
+                                        placeholder="you@example.com"
+                                    />
+                                </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('invitation')} disabled={processing}>
                                         Send Invitation Test
@@ -907,6 +916,15 @@ function EmailTab({ settings, onSave, processing }) {
                                     />
                                     <PlaceholderChips tokens={["platform_name"]} />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label>Test Recipient Email</Label>
+                                    <Input
+                                        type="email"
+                                        value={testRecipient}
+                                        onChange={e => setTestRecipient(e.target.value)}
+                                        placeholder="you@example.com"
+                                    />
+                                </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('verification')} disabled={processing}>
                                         Send Verification Test
@@ -945,6 +963,15 @@ function EmailTab({ settings, onSave, processing }) {
                                         onChange={e => setResetBody(e.target.value)}
                                     />
                                     <PlaceholderChips tokens={["platform_name"]} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Test Recipient Email</Label>
+                                    <Input
+                                        type="email"
+                                        value={testRecipient}
+                                        onChange={e => setTestRecipient(e.target.value)}
+                                        placeholder="you@example.com"
+                                    />
                                 </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('reset')} disabled={processing}>
