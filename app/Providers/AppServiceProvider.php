@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\EmailBranding;
+use Carbon\Carbon;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -28,6 +33,44 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->applySmtpFromSettings();
+        $this->configureBrandedAuthEmails();
+    }
+
+    private function configureBrandedAuthEmails(): void
+    {
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            $branding = EmailBranding::data();
+
+            return (new MailMessage)
+                ->subject('Verify your email address')
+                ->view('emails.auth-verify-email', [
+                    ...$branding,
+                    'title' => 'Verify your email address',
+                    'email' => $notifiable->email,
+                    'actionUrl' => $url,
+                    'actionText' => 'Verify Email Address',
+                    'expiresInMinutes' => (int) config('auth.verification.expire', 60),
+                ]);
+        });
+
+        ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $branding = EmailBranding::data();
+            $resetUrl = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            return (new MailMessage)
+                ->subject('Reset your password')
+                ->view('emails.auth-reset-password', [
+                    ...$branding,
+                    'title' => 'Reset your password',
+                    'email' => $notifiable->email,
+                    'actionUrl' => $resetUrl,
+                    'actionText' => 'Reset Password',
+                    'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
+                ]);
+        });
     }
 
     private function applySmtpFromSettings(): void

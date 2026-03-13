@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Setting;
+use App\Support\EmailBranding;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -191,10 +192,15 @@ class SettingsController extends Controller
         }
 
         try {
-            Mail::raw(
-                "This is a test email from {$request->getHost()} sent at " . now()->toDateTimeString() . '.',
-                fn ($message) => $message->to($recipient)->subject('SMTP Test Email')
-            );
+            $branding = EmailBranding::data();
+
+            Mail::send('emails.smtp-test', [
+                ...$branding,
+                'host' => $request->getHost(),
+                'sentAt' => now()->toDateTimeString(),
+            ], function ($message) use ($recipient) {
+                $message->to($recipient)->subject('SMTP Test Email');
+            });
 
             return back()->with('success', "Test email sent successfully to {$recipient}.");
         } catch (\Throwable $e) {

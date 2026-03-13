@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\StaffInvitation;
 use App\Models\Setting;
+use App\Support\EmailBranding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -34,15 +35,19 @@ class StaffInvitationMail extends Mailable
             'super_admin'    => 'Super Admin',
         ];
 
+        $branding = EmailBranding::data();
+
         return new Content(
             view: 'emails.staff-invitation',
             with: [
                 'invitation'   => $this->invitation,
                 'acceptUrl'    => route('invitations.show', $this->invitation->token),
-                'platformName' => Setting::get('platform_name', config('app.name')),
+                'platformName' => $branding['platformName'],
                 'roleLabel'    => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
                 'inviterName'  => $this->invitation->inviter->name ?? 'An administrator',
                 'expiresAt'    => $this->invitation->expires_at->format('d M Y'),
+                'logoUrl'      => $branding['logoUrl'],
+                'theme'        => $branding['theme'],
             ],
         );
     }
