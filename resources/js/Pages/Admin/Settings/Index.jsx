@@ -154,6 +154,23 @@ function ImageUploadField({ label, description, currentUrl, onFileChange, onClea
     );
 }
 
+function PlaceholderChips({ tokens }) {
+    if (!tokens?.length) return null;
+
+    return (
+        <div className="mt-1 flex flex-wrap gap-1.5">
+            {tokens.map(token => (
+                <span
+                    key={token}
+                    className="inline-flex items-center rounded-full border border-muted-foreground/30 bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                >
+                    {`{{${token}}}`}
+                </span>
+            ))}
+        </div>
+    );
+}
+
 export default function SettingsIndex({ settings, customFonts = [] }) {
     const { flash } = usePage().props;
     const [processing, setProcessing] = useState(false);
@@ -829,15 +846,18 @@ function EmailTab({ settings, onSave, processing }) {
                                     <div className="space-y-2">
                                         <Label>Subject</Label>
                                         <Input value={invitationSubject} onChange={e => setInvitationSubject(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name", "inviter_name", "role_label"]} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Button text</Label>
                                         <Input value={invitationCta} onChange={e => setInvitationCta(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name", "inviter_name", "role_label"]} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Title</Label>
                                     <Input value={invitationTitle} onChange={e => setInvitationTitle(e.target.value)} />
+                                    <PlaceholderChips tokens={["platform_name", "inviter_name", "role_label"]} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Body</Label>
@@ -846,6 +866,7 @@ function EmailTab({ settings, onSave, processing }) {
                                         value={invitationBody}
                                         onChange={e => setInvitationBody(e.target.value)}
                                     />
+                                    <PlaceholderChips tokens={["platform_name", "inviter_name", "role_label"]} />
                                 </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('invitation')} disabled={processing}>
@@ -864,15 +885,18 @@ function EmailTab({ settings, onSave, processing }) {
                                     <div className="space-y-2">
                                         <Label>Subject</Label>
                                         <Input value={verificationSubject} onChange={e => setVerificationSubject(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name"]} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Button text</Label>
                                         <Input value={verificationCta} onChange={e => setVerificationCta(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name"]} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Title</Label>
                                     <Input value={verificationTitle} onChange={e => setVerificationTitle(e.target.value)} />
+                                    <PlaceholderChips tokens={["platform_name"]} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Body</Label>
@@ -881,6 +905,7 @@ function EmailTab({ settings, onSave, processing }) {
                                         value={verificationBody}
                                         onChange={e => setVerificationBody(e.target.value)}
                                     />
+                                    <PlaceholderChips tokens={["platform_name"]} />
                                 </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('verification')} disabled={processing}>
@@ -899,15 +924,18 @@ function EmailTab({ settings, onSave, processing }) {
                                     <div className="space-y-2">
                                         <Label>Subject</Label>
                                         <Input value={resetSubject} onChange={e => setResetSubject(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name"]} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Button text</Label>
                                         <Input value={resetCta} onChange={e => setResetCta(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name"]} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Title</Label>
                                     <Input value={resetTitle} onChange={e => setResetTitle(e.target.value)} />
+                                    <PlaceholderChips tokens={["platform_name"]} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Body</Label>
@@ -916,6 +944,7 @@ function EmailTab({ settings, onSave, processing }) {
                                         value={resetBody}
                                         onChange={e => setResetBody(e.target.value)}
                                     />
+                                    <PlaceholderChips tokens={["platform_name"]} />
                                 </div>
                                 <div className="flex justify-end">
                                     <Button variant="outline" onClick={() => sendTemplateTestEmail('reset')} disabled={processing}>
