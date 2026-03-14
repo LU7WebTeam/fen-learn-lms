@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DocumentationController as AdminDocumentationCont
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
 use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SystemLogsController as AdminSystemLogsController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
@@ -82,6 +83,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/activity-logs/export-json', [AdminActivityLogsController::class, 'exportJson'])->name('activity-logs.export-json');
     Route::post('/activity-logs/settings', [AdminActivityLogsController::class, 'updateSettings'])->name('activity-logs.settings.update');
     Route::post('/activity-logs/prune', [AdminActivityLogsController::class, 'pruneNow'])->name('activity-logs.prune');
+    Route::get('/system-logs', [AdminSystemLogsController::class, 'index'])->name('system-logs.index');
+    Route::get('/system-logs/export', [AdminSystemLogsController::class, 'export'])->name('system-logs.export');
 
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);

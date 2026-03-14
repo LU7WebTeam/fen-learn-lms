@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Com
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { Users, BookOpen, TrendingUp, Award } from 'lucide-react';
+import { Users, BookOpen, TrendingUp, Award, ShieldAlert } from 'lucide-react';
 
 const statusVariants = {
     draft:     'secondary',
@@ -29,7 +29,7 @@ function StatCard({ title, value, description, icon: Icon, trend }) {
     );
 }
 
-export default function AdminDashboard({ stats, recentCourses }) {
+export default function AdminDashboard({ stats, recentCourses, canViewSystemLogs, recentSystemErrors = [] }) {
     return (
         <AdminLayout title="Dashboard">
             <Head title="Admin Dashboard" />
@@ -66,6 +66,41 @@ export default function AdminDashboard({ stats, recentCourses }) {
                         icon={Award}
                     />
                 </div>
+
+                {canViewSystemLogs && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <ShieldAlert className="h-4 w-4 text-red-600" />
+                                    Recent System Errors
+                                </CardTitle>
+                                <CardDescription>Latest runtime errors from system logs</CardDescription>
+                            </div>
+                            <Button asChild variant="outline" size="sm">
+                                <Link href="/admin/system-logs?level=error">View System Logs</Link>
+                            </Button>
+                        </CardHeader>
+                        <CardContent>
+                            {recentSystemErrors.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No recent errors found.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {recentSystemErrors.map((error, index) => (
+                                        <div key={`${error.timestamp}-${index}`} className="rounded-md border border-red-200 bg-red-50 p-3">
+                                            <p className="text-sm font-medium text-red-800">{error.message || 'Unknown error'}</p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-red-700">
+                                                <span>{error.timestamp}</span>
+                                                {error.request_path && <span>{error.request_path}</span>}
+                                                {error.request_id && <span>Request: {error.request_id}</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">

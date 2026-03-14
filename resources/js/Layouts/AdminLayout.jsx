@@ -126,7 +126,11 @@ function NavUser({ user }) {
 }
 
 function AppSidebar() {
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const isSuperAdmin = props.auth?.user?.role === 'super_admin';
+    const platformItems = isSuperAdmin
+        ? [...navMain, { label: 'System Logs', href: '/admin/system-logs', icon: ScrollText }]
+        : navMain;
 
     function isActive(href) {
         return url.startsWith(href);
@@ -159,7 +163,7 @@ function AppSidebar() {
                     <SidebarGroupLabel>Platform</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {navMain.map(item => {
+                            {platformItems.map(item => {
                                 const Icon = item.icon;
                                 const active = isActive(item.href);
                                 return (
