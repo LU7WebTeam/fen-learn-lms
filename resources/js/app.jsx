@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from '@/Components/ui/toaster';
 import { ThemeProvider } from '@/Components/ThemeProvider';
+import AccessibilityHelper from '@/Components/AccessibilityHelper';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Free LMS';
 
@@ -21,6 +22,7 @@ createInertiaApp({
         root.render(
             <ThemeProvider>
                 <App {...props} />
+                <AccessibilityHelper />
                 <Toaster />
             </ThemeProvider>
         );

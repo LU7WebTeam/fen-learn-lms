@@ -44,16 +44,31 @@ import {
 import { useTheme } from '@/Components/ThemeProvider';
 import { cn } from '@/lib/utils';
 
-const navMain = [
-    { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Courses',   href: '/admin/courses',   icon: BookOpen        },
-    { label: 'Users',     href: '/admin/users',     icon: Users           },
-    { label: 'Documentation', href: '/admin/docs', icon: BookText },
-    { label: 'Activity Logs', href: '/admin/activity-logs', icon: ScrollText },
+const navSettings = [
+    { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-const navSecondary = [
-    { label: 'Settings', href: '/admin/settings', icon: Settings },
+const navGroups = [
+    {
+        label: 'Overview',
+        items: [
+            { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: 'Learning Management',
+        items: [
+            { label: 'Courses', href: '/admin/courses', icon: BookOpen },
+            { label: 'Users', href: '/admin/users', icon: Users },
+        ],
+    },
+    {
+        label: 'Insights & Docs',
+        items: [
+            { label: 'Activity Logs', href: '/admin/activity-logs', icon: ScrollText },
+            { label: 'Documentation', href: '/admin/docs', icon: BookText },
+        ],
+    },
 ];
 
 function getInitials(name) {
@@ -128,9 +143,17 @@ function NavUser({ user }) {
 function AppSidebar() {
     const { url, props } = usePage();
     const isSuperAdmin = props.auth?.user?.role === 'super_admin';
-    const platformItems = isSuperAdmin
-        ? [...navMain, { label: 'System Logs', href: '/admin/system-logs', icon: ScrollText }]
-        : navMain;
+    const groupedNavigation = navGroups.map(group => ({
+        ...group,
+        items: [...group.items],
+    }));
+
+    if (isSuperAdmin) {
+        const insightsGroup = groupedNavigation.find(group => group.label === 'Insights & Docs');
+        if (insightsGroup) {
+            insightsGroup.items.splice(1, 0, { label: 'System Logs', href: '/admin/system-logs', icon: ScrollText });
+        }
+    }
 
     function isActive(href) {
         return url.startsWith(href);
@@ -159,37 +182,40 @@ function AppSidebar() {
 
             {/* ── Content: main nav ── */}
             <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Platform</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {platformItems.map(item => {
-                                const Icon = item.icon;
-                                const active = isActive(item.href);
-                                return (
-                                    <SidebarMenuItem key={item.href}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={active}
-                                            tooltip={item.label}
-                                        >
-                                            <Link href={item.href}>
-                                                <Icon />
-                                                <span>{item.label}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                );
-                            })}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                {groupedNavigation.map(group => (
+                    <SidebarGroup key={group.label}>
+                        <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {group.items.map(item => {
+                                    const Icon = item.icon;
+                                    const active = isActive(item.href);
+                                    return (
+                                        <SidebarMenuItem key={item.href}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                isActive={active}
+                                                tooltip={item.label}
+                                            >
+                                                <Link href={item.href}>
+                                                    <Icon />
+                                                    <span>{item.label}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                ))}
 
                 {/* ── Secondary nav (pinned to bottom of content) ── */}
                 <SidebarGroup className="mt-auto">
+                    <SidebarGroupLabel>Workspace</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {navSecondary.map(item => {
+                            {navSettings.map(item => {
                                 const Icon = item.icon;
                                 return (
                                     <SidebarMenuItem key={item.href}>
