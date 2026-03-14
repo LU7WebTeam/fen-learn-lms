@@ -120,11 +120,16 @@ class LearnController extends Controller
 
         return Inertia::render('Learn/Show', [
             'course' => [
-                'id'       => $course->id,
-                'title'    => $course->title,
-                'title_ms' => $course->title_ms,
-                'slug'     => $course->slug,
-                'sections' => $course->sections,
+                'id'             => $course->id,
+                'title'          => $course->title,
+                'title_ms'       => $course->title_ms,
+                'slug'           => $course->slug,
+                'description'    => $course->description,
+                'description_ms' => $course->description_ms,
+                'category'       => $course->category,
+                'difficulty'     => $course->difficulty,
+                'cover_image'    => $course->cover_image,
+                'sections'       => $course->sections,
             ],
             'lesson'             => $lessonData,
             'enrollment'         => [
