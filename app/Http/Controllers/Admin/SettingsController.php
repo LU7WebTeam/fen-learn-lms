@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Setting;
 use App\Support\ActivityLogger;
+use App\Support\SystemLogger;
 use App\Support\EmailBranding;
 use App\Support\EmailContent;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,21 @@ class SettingsController extends Controller
         'learner_can_enroll'         => '1',
         'editor_can_manage_users'    => '1',
         'editor_can_access_settings' => '1',
+        'captcha_provider'           => 'none',
+        'captcha_enabled_login'      => '0',
+        'captcha_enabled_register'   => '0',
+        'captcha_enabled_forgot_password' => '0',
+        'captcha_site_key'           => '',
+        'captcha_secret_key'         => '',
+        'captcha_min_score'          => '0.5',
+        'analytics_enabled'          => '0',
+        'ga4_measurement_id'         => '',
+        'ga4_anonymize_ip'           => '1',
+        'ga4_debug_mode'             => '0',
+        'system_logging_enabled'     => '1',
+        'system_log_level'           => 'info',
+        'system_log_retention_days'  => '180',
+        'system_log_capture_context' => '1',
     ];
 
     public function index(Request $request): Response
@@ -69,6 +85,10 @@ class SettingsController extends Controller
 
         $stored = Setting::allAsArray();
         $settings = array_merge($this->defaults, $stored);
+        $settings['mail_password'] = '';
+        $settings['captcha_secret_key'] = filled((string) Setting::get('captcha_secret_key', ''))
+            ? '__configured__'
+            : '';
 
         return Inertia::render('Admin/Settings/Index', [
             'settings'    => $settings,
@@ -91,6 +111,9 @@ class SettingsController extends Controller
             'certificates' => $this->saveCertificates($request),
             'maintenance'  => $this->saveMaintenance($request),
             'role_access'  => $this->saveRoleAccess($request),
+            'security'     => $this->saveSecurity($request),
+            'analytics'    => $this->saveAnalytics($request),
+            'logging'      => $this->saveLogging($request),
             default        => null,
         };
 
@@ -101,6 +124,10 @@ class SettingsController extends Controller
                 ['group' => $group],
                 'updated'
             );
+
+            SystemLogger::write('info', 'Settings group updated', [
+                'settings_group' => $group,
+            ], $request);
         }
 
         return back()->with('success', 'Settings saved.');
@@ -420,5 +447,100 @@ class SettingsController extends Controller
         Setting::set('learner_can_enroll', $request->input('learner_can_enroll'));
         Setting::set('editor_can_manage_users', $request->input('editor_can_manage_users'));
         Setting::set('editor_can_access_settings', $request->input('editor_can_access_settings'));
+    }
+
+    private function saveSecurity(Request $request): void
+    {
+        $validated = $request->validate([
+            'captcha_provider' => 'required|in:none,turnstile,recaptcha',
+            'captcha_enabled_login' => 'required|in:0,1',
+            'captcha_enabled_register' => 'required|in:0,1',
+            'captcha_enabled_forgot_password' => 'required|in:0,1',
+            'captcha_site_key' => 'nullable|string|max:255',
+            'captcha_secret_key' => 'nullable|string|max:255',
+            'clear_captcha_secret_key' => 'nullable|in:0,1',
+            'captcha_min_score' => 'nullable|numeric|min:0|max:1',
+        ]);
+
+        $provider = $validated['captcha_provider'];
+        $siteKey = trim((string) ($validated['captcha_site_key'] ?? ''));
+        $newSecret = trim((string) ($validated['captcha_secret_key'] ?? ''));
+        $clearSecret = ($validated['clear_captcha_secret_key'] ?? '0') === '1';
+        $storedSecret = (string) Setting::get('captcha_secret_key', '');
+
+        if ($provider !== 'none') {
+            if ($siteKey === '') {
+                throw ValidationException::withMessages([
+                    'captcha_site_key' => 'Captcha site key is required when captcha is enabled.',
+                ]);
+            }
+
+            $hasSecret = $newSecret !== '' || (!$clearSecret && $storedSecret !== '');
+            if (!$hasSecret) {
+                throw ValidationException::withMessages([
+                    'captcha_secret_key' => 'Captcha secret key is required when captcha is enabled.',
+                ]);
+            }
+        }
+
+        Setting::set('captcha_provider', $provider);
+        Setting::set('captcha_enabled_login', $validated['captcha_enabled_login']);
+        Setting::set('captcha_enabled_register', $validated['captcha_enabled_register']);
+        Setting::set('captcha_enabled_forgot_password', $validated['captcha_enabled_forgot_password']);
+        Setting::set('captcha_site_key', $siteKey);
+        Setting::set('captcha_min_score', (string) ($validated['captcha_min_score'] ?? '0.5'));
+
+        if ($clearSecret) {
+            Setting::set('captcha_secret_key', '');
+            return;
+        }
+
+        if ($newSecret !== '') {
+            Setting::set('captcha_secret_key', $newSecret);
+        }
+    }
+
+    private function saveAnalytics(Request $request): void
+    {
+        $validated = $request->validate([
+            'analytics_enabled' => 'required|in:0,1',
+            'ga4_measurement_id' => [
+                'nullable',
+                'string',
+                'max:50',
+                'regex:/^G-[A-Z0-9]+$/i',
+            ],
+            'ga4_anonymize_ip' => 'required|in:0,1',
+            'ga4_debug_mode' => 'required|in:0,1',
+        ]);
+
+        $enabled = $validated['analytics_enabled'] === '1';
+        $measurementId = strtoupper(trim((string) ($validated['ga4_measurement_id'] ?? '')));
+
+        if ($enabled && $measurementId === '') {
+            throw ValidationException::withMessages([
+                'ga4_measurement_id' => 'GA4 Measurement ID is required when analytics is enabled.',
+            ]);
+        }
+
+        Setting::set('analytics_enabled', $validated['analytics_enabled']);
+        Setting::set('ga4_measurement_id', $measurementId);
+        Setting::set('ga4_anonymize_ip', $validated['ga4_anonymize_ip']);
+        Setting::set('ga4_debug_mode', $validated['ga4_debug_mode']);
+    }
+
+    private function saveLogging(Request $request): void
+    {
+        $validated = $request->validate([
+            'system_logging_enabled' => 'required|in:0,1',
+            'system_log_level' => 'required|in:debug,info,warning,error',
+            'system_log_retention_days' => 'required|integer|min:1|max:3650',
+            'system_log_capture_context' => 'required|in:0,1',
+        ]);
+
+        Setting::set('system_logging_enabled', $validated['system_logging_enabled']);
+        Setting::set('system_log_level', $validated['system_log_level']);
+        Setting::set('system_log_retention_days', (string) $validated['system_log_retention_days']);
+        Setting::set('system_log_capture_context', $validated['system_log_capture_context']);
     }
 }

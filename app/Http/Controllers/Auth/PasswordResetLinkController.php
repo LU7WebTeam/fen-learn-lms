@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\CaptchaVerifier;
+use App\Support\SystemLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -29,6 +31,8 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        CaptchaVerifier::enforce($request, 'forgot_password');
+
         $request->validate([
             'email' => 'required|email',
         ]);
@@ -41,8 +45,18 @@ class PasswordResetLinkController extends Controller
         );
 
         if ($status == Password::RESET_LINK_SENT) {
+            SystemLogger::write('info', 'Password reset link requested', [
+                'auth_flow' => 'forgot_password',
+                'email_hash' => hash('sha256', strtolower(trim((string) $request->input('email', '')))),
+            ], $request);
+
             return back()->with('status', __($status));
         }
+
+        SystemLogger::write('warning', 'Password reset link request failed', [
+            'auth_flow' => 'forgot_password',
+            'reset_status' => $status,
+        ], $request);
 
         throw ValidationException::withMessages([
             'email' => [trans($status)],

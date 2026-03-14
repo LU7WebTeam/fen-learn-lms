@@ -2,25 +2,41 @@ import { useState } from 'react';
 import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock, User } from 'lucide-react';
+import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 
 export default function Register() {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [captchaClientError, setCaptchaClientError] = useState('');
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, transform, processing, errors, reset } = useForm({
         name:                 '',
         email:                '',
         password:             '',
         password_confirmation: '',
+        captcha_token: '',
     });
 
-    function submit(e) {
+    async function submit(e) {
         e.preventDefault();
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
+
+        setCaptchaClientError('');
+
+        const enabled = isCaptchaEnabled(captchaConfig, 'register');
+        const token = await resolveCaptchaToken(captchaConfig, 'register', data.captcha_token);
+
+        if (enabled && !token) {
+            setCaptchaClientError('Captcha verification is required.');
+            return;
+        }
+
+        transform((current) => ({ ...current, captcha_token: token || '' }))
+            .post(route('register'), {
+                onFinish: () => reset('password', 'password_confirmation'),
+            });
     }
 
     return (
@@ -158,6 +174,14 @@ export default function Register() {
                         >
                             {processing ? 'Creating account…' : 'Create account'}
                         </button>
+
+                        <CaptchaField
+                            config={captchaConfig}
+                            action="register"
+                            token={data.captcha_token}
+                            onTokenChange={(value) => setData('captcha_token', value)}
+                            error={errors.captcha_token || captchaClientError}
+                        />
                     </form>
 
                     <p className="text-center text-sm text-gray-500">

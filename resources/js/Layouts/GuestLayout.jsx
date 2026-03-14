@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { GraduationCap } from 'lucide-react';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 
 export default function GuestLayout({ children, fullWidth = false }) {
     return (
@@ -7,6 +8,7 @@ export default function GuestLayout({ children, fullWidth = false }) {
             'flex min-h-screen flex-col items-center bg-gray-100 pt-6',
             fullWidth ? 'sm:pt-6' : 'sm:justify-center sm:pt-0',
         ].join(' ')}>
+            <AnalyticsTracker />
             <div>
                 <Link href="/" className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-gray-900">
                     <GraduationCap className="h-7 w-7 text-primary" />

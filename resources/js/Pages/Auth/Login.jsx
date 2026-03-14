@@ -2,21 +2,37 @@ import { useState } from 'react';
 import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock } from 'lucide-react';
+import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 
 export default function Login({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
+    const [captchaClientError, setCaptchaClientError] = useState('');
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, transform, processing, errors, reset } = useForm({
         email:    '',
         password: '',
         remember: false,
+        captcha_token: '',
     });
 
-    function submit(e) {
+    async function submit(e) {
         e.preventDefault();
-        post(route('login'), { onFinish: () => reset('password') });
+
+        setCaptchaClientError('');
+
+        const enabled = isCaptchaEnabled(captchaConfig, 'login');
+        const token = await resolveCaptchaToken(captchaConfig, 'login', data.captcha_token);
+
+        if (enabled && !token) {
+            setCaptchaClientError('Captcha verification is required.');
+            return;
+        }
+
+        transform((current) => ({ ...current, captcha_token: token || '' }))
+            .post(route('login'), { onFinish: () => reset('password') });
     }
 
     return (
@@ -126,6 +142,14 @@ export default function Login({ status, canResetPassword }) {
                         >
                             {processing ? 'Signing in…' : 'Sign in'}
                         </button>
+
+                        <CaptchaField
+                            config={captchaConfig}
+                            action="login"
+                            token={data.captcha_token}
+                            onTokenChange={(value) => setData('captcha_token', value)}
+                            error={errors.captcha_token || captchaClientError}
+                        />
                     </form>
 
                     <div className="space-y-3 text-center text-sm text-gray-500">

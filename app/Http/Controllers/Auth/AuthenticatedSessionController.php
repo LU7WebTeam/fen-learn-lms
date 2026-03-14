@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\CaptchaVerifier;
+use App\Support\SystemLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,9 +31,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        CaptchaVerifier::enforce($request, 'login');
+
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        SystemLogger::write('info', 'Learner login success', [
+            'auth_flow' => 'login',
+        ], $request);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -41,6 +49,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        SystemLogger::write('info', 'Learner logout', [
+            'auth_flow' => 'logout',
+        ], $request);
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

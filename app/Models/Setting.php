@@ -9,6 +9,11 @@ class Setting extends Model
 {
     protected $fillable = ['key', 'value'];
 
+    private const ENCRYPTED_KEYS = [
+        'mail_password',
+        'captcha_secret_key',
+    ];
+
     public static function get(string $key, mixed $default = null): mixed
     {
         $setting = static::where('key', $key)->first();
@@ -19,7 +24,7 @@ class Setting extends Model
         $value = $setting->value;
 
         // Backward compatible: decrypt when value is encrypted, otherwise return raw legacy plaintext.
-        if ($key === 'mail_password' && filled($value)) {
+        if (in_array($key, self::ENCRYPTED_KEYS, true) && filled($value)) {
             try {
                 return Crypt::decryptString($value);
             } catch (\Throwable) {
@@ -32,7 +37,7 @@ class Setting extends Model
 
     public static function set(string $key, mixed $value): void
     {
-        if ($key === 'mail_password') {
+        if (in_array($key, self::ENCRYPTED_KEYS, true)) {
             $value = filled($value)
                 ? Crypt::encryptString((string) $value)
                 : '';

@@ -20,6 +20,8 @@ import {
     Users,
     Globe,
     Mail,
+    BarChart3,
+    ScrollText,
     Award,
     Wrench,
     Upload,
@@ -231,6 +233,15 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                         <TabsTrigger value="role_access" className="gap-1.5">
                             <ShieldCheck className="h-3.5 w-3.5" />Role Access
                         </TabsTrigger>
+                        <TabsTrigger value="security" className="gap-1.5">
+                            <Lock className="h-3.5 w-3.5" />Security
+                        </TabsTrigger>
+                        <TabsTrigger value="analytics" className="gap-1.5">
+                            <BarChart3 className="h-3.5 w-3.5" />Analytics
+                        </TabsTrigger>
+                        <TabsTrigger value="logging" className="gap-1.5">
+                            <ScrollText className="h-3.5 w-3.5" />Logging
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── BRANDING ── */}
@@ -272,9 +283,321 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                     <TabsContent value="role_access">
                         <RoleAccessTab settings={settings} onSave={submitGroup} processing={processing} />
                     </TabsContent>
+
+                    {/* ── SECURITY ── */}
+                    <TabsContent value="security">
+                        <SecurityTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
+
+                    {/* ── ANALYTICS ── */}
+                    <TabsContent value="analytics">
+                        <AnalyticsTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
+
+                    {/* ── LOGGING ── */}
+                    <TabsContent value="logging">
+                        <LoggingTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
                 </Tabs>
             </div>
         </AdminLayout>
+    );
+}
+
+function SecurityTab({ settings, onSave, processing }) {
+    const [provider, setProvider] = useState(settings.captcha_provider || 'none');
+    const [enabledLogin, setEnabledLogin] = useState(settings.captcha_enabled_login === '1');
+    const [enabledRegister, setEnabledRegister] = useState(settings.captcha_enabled_register === '1');
+    const [enabledForgotPassword, setEnabledForgotPassword] = useState(settings.captcha_enabled_forgot_password === '1');
+    const [siteKey, setSiteKey] = useState(settings.captcha_site_key || '');
+    const [secretKey, setSecretKey] = useState('');
+    const [clearSecret, setClearSecret] = useState(false);
+    const [showSecret, setShowSecret] = useState(false);
+    const [minScore, setMinScore] = useState(settings.captcha_min_score || '0.5');
+
+    const hasSavedSecret = Boolean(settings.captcha_secret_key);
+    const captchaEnabled = provider !== 'none';
+
+    function save() {
+        onSave('security', {
+            captcha_provider: provider,
+            captcha_enabled_login: enabledLogin ? '1' : '0',
+            captcha_enabled_register: enabledRegister ? '1' : '0',
+            captcha_enabled_forgot_password: enabledForgotPassword ? '1' : '0',
+            captcha_site_key: siteKey,
+            captcha_secret_key: secretKey,
+            clear_captcha_secret_key: clearSecret ? '1' : '0',
+            captcha_min_score: minScore,
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" /> Captcha Security
+                </CardTitle>
+                <CardDescription>
+                    Configure bot protection for authentication forms using Cloudflare Turnstile or Google reCAPTCHA.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Captcha Provider</Label>
+                    <Select value={provider} onValueChange={setProvider}>
+                        <SelectTrigger className="w-64">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Disabled</SelectItem>
+                            <SelectItem value="turnstile">Cloudflare Turnstile</SelectItem>
+                            <SelectItem value="recaptcha">Google reCAPTCHA v3</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {captchaEnabled && (
+                    <>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="captcha_site_key">Site Key</Label>
+                                <Input
+                                    id="captcha_site_key"
+                                    value={siteKey}
+                                    onChange={(e) => setSiteKey(e.target.value)}
+                                    placeholder="Public site key"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="captcha_secret_key">Secret Key</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="captcha_secret_key"
+                                        type={showSecret ? 'text' : 'password'}
+                                        value={secretKey}
+                                        onChange={(e) => {
+                                            setSecretKey(e.target.value);
+                                            if (e.target.value !== '') {
+                                                setClearSecret(false);
+                                            }
+                                        }}
+                                        placeholder={hasSavedSecret ? 'Leave blank to keep existing secret' : 'Secret key'}
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSecret(v => !v)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                                <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                                    <input
+                                        type="checkbox"
+                                        checked={clearSecret}
+                                        onChange={(e) => {
+                                            setClearSecret(e.target.checked);
+                                            if (e.target.checked) {
+                                                setSecretKey('');
+                                            }
+                                        }}
+                                    />
+                                    Clear stored secret key on save
+                                </label>
+                            </div>
+                        </div>
+
+                        {provider === 'recaptcha' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="captcha_min_score">Minimum Score (0.0 to 1.0)</Label>
+                                <Input
+                                    id="captcha_min_score"
+                                    type="number"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value={minScore}
+                                    onChange={(e) => setMinScore(e.target.value)}
+                                    className="w-40"
+                                />
+                            </div>
+                        )}
+                    </>
+                )}
+
+                <Separator />
+
+                <div className="space-y-3">
+                    <p className="text-sm font-medium">Protected Forms</p>
+                    <SwitchRow
+                        label="Login form"
+                        description="Require captcha verification before sign-in."
+                        checked={enabledLogin}
+                        onChange={setEnabledLogin}
+                    />
+                    <SwitchRow
+                        label="Registration form"
+                        description="Require captcha verification before account creation."
+                        checked={enabledRegister}
+                        onChange={setEnabledRegister}
+                    />
+                    <SwitchRow
+                        label="Forgot password form"
+                        description="Require captcha verification before reset link requests."
+                        checked={enabledForgotPassword}
+                        onChange={setEnabledForgotPassword}
+                    />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save Security Settings</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function AnalyticsTab({ settings, onSave, processing }) {
+    const [enabled, setEnabled] = useState(settings.analytics_enabled === '1');
+    const [measurementId, setMeasurementId] = useState(settings.ga4_measurement_id || '');
+    const [anonymizeIp, setAnonymizeIp] = useState(settings.ga4_anonymize_ip !== '0');
+    const [debugMode, setDebugMode] = useState(settings.ga4_debug_mode === '1');
+
+    function save() {
+        onSave('analytics', {
+            analytics_enabled: enabled ? '1' : '0',
+            ga4_measurement_id: measurementId,
+            ga4_anonymize_ip: anonymizeIp ? '1' : '0',
+            ga4_debug_mode: debugMode ? '1' : '0',
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" /> Google Analytics (GA4)
+                </CardTitle>
+                <CardDescription>
+                    Configure GA4 tracking and privacy options for the platform.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <SwitchRow
+                    label="Enable Analytics"
+                    description="Inject GA4 tracking script on frontend pages when configured."
+                    checked={enabled}
+                    onChange={setEnabled}
+                />
+
+                <div className="space-y-2">
+                    <Label htmlFor="ga4_measurement_id">GA4 Measurement ID</Label>
+                    <Input
+                        id="ga4_measurement_id"
+                        value={measurementId}
+                        onChange={(e) => setMeasurementId(e.target.value.toUpperCase())}
+                        placeholder="G-XXXXXXXXXX"
+                        className="max-w-xs"
+                    />
+                    <p className="text-xs text-muted-foreground">Format: G-XXXXXXXXXX</p>
+                </div>
+
+                <SwitchRow
+                    label="Anonymize IP"
+                    description="Mask visitor IP addresses for privacy-sensitive analytics reporting."
+                    checked={anonymizeIp}
+                    onChange={setAnonymizeIp}
+                />
+
+                <SwitchRow
+                    label="Debug Mode"
+                    description="Enable debug-friendly analytics behavior for troubleshooting setups."
+                    checked={debugMode}
+                    onChange={setDebugMode}
+                />
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save Analytics Settings</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function LoggingTab({ settings, onSave, processing }) {
+    const [enabled, setEnabled] = useState(settings.system_logging_enabled !== '0');
+    const [level, setLevel] = useState(settings.system_log_level || 'info');
+    const [retentionDays, setRetentionDays] = useState(settings.system_log_retention_days || '180');
+    const [captureContext, setCaptureContext] = useState(settings.system_log_capture_context !== '0');
+
+    function save() {
+        onSave('logging', {
+            system_logging_enabled: enabled ? '1' : '0',
+            system_log_level: level,
+            system_log_retention_days: retentionDays,
+            system_log_capture_context: captureContext ? '1' : '0',
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <ScrollText className="h-4 w-4" /> System Logging
+                </CardTitle>
+                <CardDescription>
+                    Configure system log generation policy and retention defaults.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <SwitchRow
+                    label="Enable System Logging"
+                    description="Write technical operational logs for platform monitoring and troubleshooting."
+                    checked={enabled}
+                    onChange={setEnabled}
+                />
+
+                <div className="space-y-2">
+                    <Label>Log Level</Label>
+                    <Select value={level} onValueChange={setLevel}>
+                        <SelectTrigger className="w-48">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="debug">Debug</SelectItem>
+                            <SelectItem value="info">Info</SelectItem>
+                            <SelectItem value="warning">Warning</SelectItem>
+                            <SelectItem value="error">Error</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="system_log_retention_days">Retention (days)</Label>
+                    <Input
+                        id="system_log_retention_days"
+                        type="number"
+                        min="1"
+                        max="3650"
+                        value={retentionDays}
+                        onChange={(e) => setRetentionDays(e.target.value)}
+                        className="w-40"
+                    />
+                </div>
+
+                <SwitchRow
+                    label="Capture Request Context"
+                    description="Include metadata such as request ID, route, and user identifiers in logs."
+                    checked={captureContext}
+                    onChange={setCaptureContext}
+                />
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save Logging Settings</Button>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

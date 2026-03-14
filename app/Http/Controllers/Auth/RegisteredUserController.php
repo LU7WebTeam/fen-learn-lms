@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\CaptchaVerifier;
+use App\Support\SystemLogger;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +49,8 @@ class RegisteredUserController extends Controller
             return redirect()->route('login')->with('error', 'Public registration is currently disabled.');
         }
 
+        CaptchaVerifier::enforce($request, 'register');
+
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|lowercase|email|max:255|unique:'.User::class,
@@ -69,6 +73,12 @@ class RegisteredUserController extends Controller
         }
 
         Auth::login($user);
+
+        SystemLogger::write('info', 'User registration completed', [
+            'auth_flow' => 'register',
+            'registered_user_id' => $user->id,
+            'registered_role' => $user->role,
+        ], $request);
 
         return redirect(route('dashboard', absolute: false));
     }

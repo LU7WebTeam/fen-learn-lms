@@ -8,6 +8,7 @@ import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/Components/ui/accordion';
 import { Separator } from '@/Components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { BookOpen, Play, Award, Clock, ChevronRight, Video, FileText, HelpCircle, Check, Lock } from 'lucide-react';
 import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
 
@@ -191,22 +192,60 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                     </div>
                 </div>
 
-                {/* Introduction (BlockNote rich content) */}
-                {Array.isArray(courseIntro) && courseIntro.length > 0 && (
-                    <>
-                        <Separator className="my-8" />
-                        <div>
-                            <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
-                            <BlockNoteRenderer content={courseIntro} />
-                        </div>
-                    </>
-                )}
+                {enrolled ? (
+                    <Tabs defaultValue="main" className="w-full">
+                        <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
+                            <TabsTrigger value="main">Main</TabsTrigger>
+                            <TabsTrigger value="activity">Activity</TabsTrigger>
+                        </TabsList>
 
-                <Separator className="my-8" />
+                        <TabsContent value="main" className="space-y-8">
+                            {/* Introduction (BlockNote rich content) */}
+                            {Array.isArray(courseIntro) && courseIntro.length > 0 && (
+                                <div>
+                                    <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
+                                    <BlockNoteRenderer content={courseIntro} />
+                                </div>
+                            )}
 
-                {enrolled && (
-                    <>
-                        <div>
+                            {/* Curriculum */}
+                            <div>
+                                <h2 className="mb-4 text-xl font-semibold">Course Curriculum</h2>
+                                {course.sections.length === 0 ? (
+                                    <p className="text-muted-foreground">No lessons added yet.</p>
+                                ) : (
+                                    <Accordion type="multiple" defaultValue={course.sections.map((s) => String(s.id))}>
+                                        {course.sections.map((section) => (
+                                            <AccordionItem key={section.id} value={String(section.id)}>
+                                                <AccordionTrigger className="text-base font-medium">
+                                                    <span className="flex items-center gap-2">
+                                                        {tl(section, 'title', locale)}
+                                                        <span className="text-xs font-normal text-muted-foreground">
+                                                            {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </span>
+                                                </AccordionTrigger>
+                                                <AccordionContent>
+                                                    <div className="space-y-0.5">
+                                                        {section.lessons.map((lesson) => (
+                                                            <LessonRow
+                                                                key={lesson.id}
+                                                                lesson={lesson}
+                                                                completed={completedIds.includes(lesson.id)}
+                                                                courseSlug={course.slug}
+                                                                enrolled={enrolled}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                )}
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="activity">
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="text-xl font-semibold">Your Activity in This Course</h2>
                                 <span className="text-xs text-muted-foreground">{learnerActivity.length} events</span>
@@ -240,47 +279,60 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                     </table>
                                 </div>
                             )}
-                        </div>
+                        </TabsContent>
+                    </Tabs>
+                ) : (
+                    <>
+                        {/* Introduction (BlockNote rich content) */}
+                        {Array.isArray(courseIntro) && courseIntro.length > 0 && (
+                            <>
+                                <Separator className="my-8" />
+                                <div>
+                                    <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
+                                    <BlockNoteRenderer content={courseIntro} />
+                                </div>
+                            </>
+                        )}
 
                         <Separator className="my-8" />
+
+                        {/* Curriculum */}
+                        <div>
+                            <h2 className="mb-4 text-xl font-semibold">Course Curriculum</h2>
+                            {course.sections.length === 0 ? (
+                                <p className="text-muted-foreground">No lessons added yet.</p>
+                            ) : (
+                                <Accordion type="multiple" defaultValue={course.sections.map((s) => String(s.id))}>
+                                    {course.sections.map((section) => (
+                                        <AccordionItem key={section.id} value={String(section.id)}>
+                                            <AccordionTrigger className="text-base font-medium">
+                                                <span className="flex items-center gap-2">
+                                                    {tl(section, 'title', locale)}
+                                                    <span className="text-xs font-normal text-muted-foreground">
+                                                        {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
+                                                    </span>
+                                                </span>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="space-y-0.5">
+                                                    {section.lessons.map((lesson) => (
+                                                        <LessonRow
+                                                            key={lesson.id}
+                                                            lesson={lesson}
+                                                            completed={completedIds.includes(lesson.id)}
+                                                            courseSlug={course.slug}
+                                                            enrolled={enrolled}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            )}
+                        </div>
                     </>
                 )}
-
-                {/* Curriculum */}
-                <div>
-                    <h2 className="mb-4 text-xl font-semibold">Course Curriculum</h2>
-                    {course.sections.length === 0 ? (
-                        <p className="text-muted-foreground">No lessons added yet.</p>
-                    ) : (
-                        <Accordion type="multiple" defaultValue={course.sections.map((s) => String(s.id))}>
-                            {course.sections.map((section) => (
-                                <AccordionItem key={section.id} value={String(section.id)}>
-                                    <AccordionTrigger className="text-base font-medium">
-                                        <span className="flex items-center gap-2">
-                                            {tl(section, 'title', locale)}
-                                            <span className="text-xs font-normal text-muted-foreground">
-                                                {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
-                                            </span>
-                                        </span>
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="space-y-0.5">
-                                            {section.lessons.map((lesson) => (
-                                                <LessonRow
-                                                    key={lesson.id}
-                                                    lesson={lesson}
-                                                    completed={completedIds.includes(lesson.id)}
-                                                    courseSlug={course.slug}
-                                                    enrolled={enrolled}
-                                                />
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    )}
-                </div>
             </div>
         </Layout>
     );
