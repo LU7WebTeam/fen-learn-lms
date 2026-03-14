@@ -17,7 +17,8 @@ import {
 } from '@/Components/ui/dialog';
 import {
     Check, ChevronLeft, ChevronRight, Keyboard, Menu,
-    Video, FileText, HelpCircle, GraduationCap, Award, Lock
+    Video, FileText, HelpCircle, GraduationCap, Award, Lock, LayoutDashboard, User,
+    BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -322,17 +323,37 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [], locale }) {
+    const courseTitle = tl(course, 'title', locale);
+    const courseDescription = tl(course, 'description', locale);
+
     return (
         <div className="flex h-full flex-col">
             <div className="border-b px-4 py-4">
-                <Link
-                    href={route('courses.show', course.slug)}
-                    className="flex items-center gap-2 text-sm font-semibold hover:underline"
-                >
-                    <GraduationCap className="h-4 w-4 shrink-0" />
-                    <span className="line-clamp-1">{tl(course, 'title', locale)}</span>
+                <Link href={route('courses.show', course.slug)} className="block overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-sm">
+                    {course.cover_image ? (
+                        <img
+                            src={course.cover_image}
+                            alt={courseTitle}
+                            className="h-32 w-full object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-32 w-full items-center justify-center bg-muted text-muted-foreground">
+                            <BookOpen className="h-8 w-8" />
+                        </div>
+                    )}
+                    <div className="space-y-2 p-3">
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                            <GraduationCap className="h-3.5 w-3.5" />
+                            Course Overview
+                        </div>
+                        <p className="line-clamp-2 text-sm font-semibold leading-snug">{courseTitle}</p>
+                        {courseDescription && (
+                            <p className="line-clamp-2 text-xs text-muted-foreground">{courseDescription}</p>
+                        )}
+                    </div>
                 </Link>
-                <div className="mt-2 space-y-1">
+
+                <div className="mt-3 space-y-1">
                     <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Progress</span>
                         <span>{enrollment.progress}%</span>
@@ -381,6 +402,25 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                         })}
                     </div>
                 ))}
+            </div>
+
+            <div className="border-t p-3">
+                <nav className="space-y-1">
+                    <Link
+                        href={route('dashboard')}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                        <LayoutDashboard className="h-4 w-4" />
+                        My Learning
+                    </Link>
+                    <Link
+                        href={route('profile.edit')}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                        <User className="h-4 w-4" />
+                        Profile
+                    </Link>
+                </nav>
             </div>
         </div>
     );
