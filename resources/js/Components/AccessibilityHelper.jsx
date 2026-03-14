@@ -12,6 +12,8 @@ const DEFAULT_PREFERENCES = {
     reducedMotion: false,
     strongFocus: false,
     dyslexicFont: false,
+    captionsByDefault: true,
+    textFirstLearning: false,
 };
 
 function readStoredPreferences() {
@@ -181,6 +183,24 @@ export default function AccessibilityHelper() {
                                 type="checkbox"
                                 checked={preferences.dyslexicFont}
                                 onChange={(e) => updatePreference('dyslexicFont', e.target.checked)}
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between rounded-md border p-2 text-xs">
+                            <span>Enable captions by default</span>
+                            <input
+                                type="checkbox"
+                                checked={preferences.captionsByDefault}
+                                onChange={(e) => updatePreference('captionsByDefault', e.target.checked)}
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between rounded-md border p-2 text-xs">
+                            <span>Show learning text before video</span>
+                            <input
+                                type="checkbox"
+                                checked={preferences.textFirstLearning}
+                                onChange={(e) => updatePreference('textFirstLearning', e.target.checked)}
                             />
                         </label>
                     </div>

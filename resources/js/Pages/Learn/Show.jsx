@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
@@ -13,12 +13,43 @@ import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import {
-    Check, ChevronLeft, ChevronRight, Menu,
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from '@/Components/ui/dialog';
+import {
+    Check, ChevronLeft, ChevronRight, Keyboard, Menu,
     Video, FileText, HelpCircle, GraduationCap, Award, Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: FileText };
+const A11Y_PREFS_STORAGE_KEY = 'a11y_preferences_v1';
+const DEFAULT_A11Y_MEDIA_PREFERENCES = {
+    captionsByDefault: true,
+    textFirstLearning: false,
+};
+
+function getA11yMediaPreferences() {
+    if (typeof window === 'undefined') {
+        return DEFAULT_A11Y_MEDIA_PREFERENCES;
+    }
+
+    try {
+        const raw = window.localStorage.getItem(A11Y_PREFS_STORAGE_KEY);
+        if (!raw) {
+            return DEFAULT_A11Y_MEDIA_PREFERENCES;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        return {
+            ...DEFAULT_A11Y_MEDIA_PREFERENCES,
+            captionsByDefault: parsed?.captionsByDefault !== false,
+            textFirstLearning: !!parsed?.textFirstLearning,
+        };
+    } catch {
+        return DEFAULT_A11Y_MEDIA_PREFERENCES;
+    }
+}
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
@@ -365,6 +396,15 @@ export default function LearnShow({
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
+    const [showShortcuts, setShowShortcuts] = useState(false);
+    const [a11yMediaPreferences, setA11yMediaPreferences] = useState(DEFAULT_A11Y_MEDIA_PREFERENCES);
+    const sidebarRef = useRef(null);
+    const mainRef = useRef(null);
+    const actionsRef = useRef(null);
+
+    useEffect(() => {
+        setA11yMediaPreferences(getA11yMediaPreferences());
+    }, []);
 
     const handleComplete = useCallback(() => {
         if (completed || completing) return;
@@ -397,9 +437,64 @@ export default function LearnShow({
     const lessonTitle = tl(lesson, 'title', locale);
     const courseTitle = tl(course, 'title', locale);
 
+    useEffect(() => {
+        function handleShortcuts(event) {
+            const tag = event.target?.tagName;
+            const isTypingTarget = tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable;
+
+            if (isTypingTarget) {
+                return;
+            }
+
+            if (event.key === '?') {
+                event.preventDefault();
+                setShowShortcuts(true);
+                return;
+            }
+
+            if (!event.altKey) {
+                return;
+            }
+
+            if (event.key.toLowerCase() === 's') {
+                event.preventDefault();
+                sidebarRef.current?.focus();
+            }
+
+            if (event.key.toLowerCase() === 'm') {
+                event.preventDefault();
+                mainRef.current?.focus();
+            }
+
+            if (event.key.toLowerCase() === 'c' && lesson.type !== 'quiz' && !completed && canComplete) {
+                event.preventDefault();
+                handleComplete();
+            }
+
+            if (event.key.toLowerCase() === 'n' && nextLesson) {
+                event.preventDefault();
+                router.get(route('learn.lesson', [course.slug, nextLesson.id]));
+            }
+
+            if (event.key.toLowerCase() === 'p' && prevLesson) {
+                event.preventDefault();
+                router.get(route('learn.lesson', [course.slug, prevLesson.id]));
+            }
+        }
+
+        window.addEventListener('keydown', handleShortcuts);
+        return () => window.removeEventListener('keydown', handleShortcuts);
+    }, [canComplete, completed, course.slug, handleComplete, lesson.type, nextLesson, prevLesson]);
+
     return (
         <>
             <Head title={`${lessonTitle} — ${courseTitle}`} />
+
+            <div className="sr-only focus-within:not-sr-only focus-within:fixed focus-within:left-3 focus-within:top-3 focus-within:z-[120] focus-within:rounded-lg focus-within:border focus-within:bg-background focus-within:p-2 focus-within:shadow-lg">
+                <a href="#lesson-main" className="mr-3 text-sm underline">Skip to lesson content</a>
+                <a href="#lesson-sidebar" className="mr-3 text-sm underline">Skip to lesson list</a>
+                <a href="#lesson-actions" className="text-sm underline">Skip to lesson actions</a>
+            </div>
 
             <div className="flex h-screen flex-col overflow-hidden bg-background">
                 {/* Top bar */}
@@ -431,6 +526,16 @@ export default function LearnShow({
                     </Link>
 
                     <div className="ml-auto flex items-center gap-3">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowShortcuts(true)}
+                            className="hidden gap-1.5 text-muted-foreground md:inline-flex"
+                        >
+                            <Keyboard className="h-4 w-4" />
+                            Shortcuts
+                        </Button>
                         {completed && (
                             <Badge variant="outline" className="hidden gap-1 text-green-600 border-green-300 sm:flex">
                                 <Check className="h-3.5 w-3.5" />
@@ -445,7 +550,12 @@ export default function LearnShow({
 
                 <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar — desktop */}
-                    <aside className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block">
+                    <aside
+                        id="lesson-sidebar"
+                        ref={sidebarRef}
+                        tabIndex={-1}
+                        className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block focus:outline-none"
+                    >
                         <SidebarContent
                             course={course}
                             lesson={lesson}
@@ -457,7 +567,7 @@ export default function LearnShow({
                     </aside>
 
                     {/* Content */}
-                    <main className="flex-1 overflow-y-auto">
+                    <main id="lesson-main" ref={mainRef} tabIndex={-1} className="flex-1 overflow-y-auto focus:outline-none">
                         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
                             {/* Lesson title */}
                             <div className="mb-6 flex items-center gap-2">
@@ -496,20 +606,24 @@ export default function LearnShow({
                             {/* ── Video ── */}
                             {lesson.type === 'video' && !isLocked && (() => {
                                 const notes = tl(lesson, 'content', locale);
+                                const notesPanel = notes && (
+                                    <div>
+                                        <h2 className="mb-3 text-base font-semibold">Transcript & Notes</h2>
+                                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                );
+
                                 return (
                                     <div className="space-y-6">
+                                        {a11yMediaPreferences.textFirstLearning && notesPanel}
                                         <VideoPlayer
                                             url={lesson.video_url}
                                             onWatchComplete={() => setVideoWatched(true)}
+                                            captionsDefault={a11yMediaPreferences.captionsByDefault}
                                         />
-                                        {notes && (
-                                            <div>
-                                                <h2 className="mb-3 text-base font-semibold">Notes</h2>
-                                                <div className="prose prose-sm dark:prose-invert max-w-none">
-                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
-                                                </div>
-                                            </div>
-                                        )}
+                                        {!a11yMediaPreferences.textFirstLearning && notesPanel}
                                     </div>
                                 );
                             })()}
@@ -578,7 +692,7 @@ export default function LearnShow({
                             <Separator className="my-8" />
 
                             {/* Bottom navigation */}
-                            <div className="flex items-center justify-between gap-4">
+                            <div id="lesson-actions" ref={actionsRef} tabIndex={-1} className="flex items-center justify-between gap-4 focus:outline-none">
                                 <Button
                                     variant="outline"
                                     disabled={!prevLesson}
@@ -641,6 +755,44 @@ export default function LearnShow({
                     </main>
                 </div>
             </div>
+
+            <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Keyboard shortcuts</DialogTitle>
+                        <DialogDescription>
+                            Use these shortcuts to move faster through the lesson page.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Open this shortcuts dialog</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">?</kbd>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Focus lesson list</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + S</kbd>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Focus lesson content</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + M</kbd>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Previous lesson</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + P</kbd>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Next lesson</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + N</kbd>
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                            <span>Mark lesson complete</span>
+                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + C</kbd>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

@@ -71,7 +71,7 @@ function loadYouTubeAPI(cb) {
     });
 }
 
-function YouTubePlayer({ videoId, onWatchComplete }) {
+function YouTubePlayer({ videoId, onWatchComplete, captionsDefault }) {
     const divRef     = useRef(null);
     const playerRef  = useRef(null);
     const maxRef     = useRef(0);
@@ -93,6 +93,8 @@ function YouTubePlayer({ videoId, onWatchComplete }) {
                     iv_load_policy:3, // no annotation cards
                     showinfo:      0, // no title overlay (legacy, still respected)
                     color:        'white',
+                    cc_load_policy: captionsDefault ? 1 : 0,
+                    cc_lang_pref:  'en',
                 },
                 events: {
                     onStateChange(e) {
@@ -133,7 +135,7 @@ function YouTubePlayer({ videoId, onWatchComplete }) {
             clearInterval(timerRef.current);
             playerRef.current?.destroy?.();
         };
-    }, [videoId]);
+    }, [videoId, captionsDefault]);
 
     return (
         <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
@@ -159,7 +161,7 @@ function loadVimeoAPI(cb) {
     });
 }
 
-function VimeoPlayer({ videoId, onWatchComplete }) {
+function VimeoPlayer({ videoId, onWatchComplete, captionsDefault }) {
     const divRef    = useRef(null);
     const playerRef = useRef(null);
     const maxRef    = useRef(0);
@@ -178,6 +180,7 @@ function VimeoPlayer({ videoId, onWatchComplete }) {
                 byline:     false,   // hide author name
                 portrait:   false,   // hide author avatar
                 dnt:        true,    // do not track
+                texttrack:  captionsDefault ? 'en' : null,
             });
             playerRef.current = p;
 
@@ -205,7 +208,7 @@ function VimeoPlayer({ videoId, onWatchComplete }) {
             destroyed = true;
             playerRef.current?.destroy?.();
         };
-    }, [videoId]);
+    }, [videoId, captionsDefault]);
 
     return (
         <div className="overflow-hidden rounded-xl">
@@ -277,7 +280,7 @@ function WatchedBadge({ watched }) {
 
 // ─── Public export ────────────────────────────────────────────────────────────
 
-export default function VideoPlayer({ url, onWatchComplete }) {
+export default function VideoPlayer({ url, onWatchComplete, captionsDefault = false }) {
     const [watched, setWatched] = useState(false);
 
     function handleComplete() {
@@ -299,9 +302,26 @@ export default function VideoPlayer({ url, onWatchComplete }) {
 
     return (
         <div className="space-y-3">
-            {ytId    && <YouTubePlayer videoId={ytId}    onWatchComplete={handleComplete} />}
-            {vimeoId && <VimeoPlayer   videoId={vimeoId} onWatchComplete={handleComplete} />}
+            {ytId && (
+                <YouTubePlayer
+                    videoId={ytId}
+                    onWatchComplete={handleComplete}
+                    captionsDefault={captionsDefault}
+                />
+            )}
+            {vimeoId && (
+                <VimeoPlayer
+                    videoId={vimeoId}
+                    onWatchComplete={handleComplete}
+                    captionsDefault={captionsDefault}
+                />
+            )}
             {!ytId && !vimeoId && <NativePlayer url={url} onWatchComplete={handleComplete} />}
+            {captionsDefault && (
+                <p className="text-xs text-muted-foreground">
+                    Captions are set to open by default when the provider supports them.
+                </p>
+            )}
             <WatchedBadge watched={watched} />
         </div>
     );
