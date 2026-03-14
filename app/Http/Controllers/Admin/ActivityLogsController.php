@@ -172,7 +172,6 @@ class ActivityLogsController extends Controller
                 'actor_name',
                 'actor_email',
                 'event',
-                'risk_level',
                 'description',
                 'subject_type',
                 'subject_id',
@@ -183,6 +182,7 @@ class ActivityLogsController extends Controller
                 'source_course_id',
                 'source_section_id',
                 'source_lesson_id',
+                'risk_level',
             ];
 
             if (! $detailed) {
@@ -199,7 +199,6 @@ class ActivityLogsController extends Controller
                                 'actor_name',
                                 'actor_email',
                                 'event',
-                                'risk_level',
                                 'description',
                                 'subject_type',
                                 'subject_id',
@@ -210,6 +209,7 @@ class ActivityLogsController extends Controller
                                 'source_course_id',
                                 'source_section_id',
                                 'source_lesson_id',
+                                'risk_level',
                             ]));
                         }
                     });
@@ -250,7 +250,6 @@ class ActivityLogsController extends Controller
                     $row['actor_name'],
                     $row['actor_email'],
                     $row['event'],
-                    $row['risk_level'],
                     $row['description'],
                     $row['subject_type'],
                     $row['subject_id'],
@@ -261,6 +260,7 @@ class ActivityLogsController extends Controller
                     $row['source_course_id'],
                     $row['source_section_id'],
                     $row['source_lesson_id'],
+                    $row['risk_level'],
                     $row['raw_properties_json'],
                     ...$flatValues,
                 ]);
