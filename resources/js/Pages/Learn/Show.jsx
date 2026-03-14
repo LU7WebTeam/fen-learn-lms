@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
@@ -19,15 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: FileText };
-
-const LEARNER_ACTIVITY_EVENT_LABELS = {
-    enrollment_started: 'Enrollment Started',
-    lesson_completed: 'Lesson Completed',
-    quiz_attempt_submitted: 'Quiz Attempt Submitted',
-    quiz_passed: 'Quiz Passed',
-    quiz_failed: 'Quiz Failed',
-    course_completed: 'Course Completed',
-};
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
@@ -368,15 +359,12 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
 
 export default function LearnShow({
     course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
-    nextLesson, prevLesson, allAttempts, learnerActivity,
+    nextLesson, prevLesson, allAttempts,
 }) {
     const { locale } = usePage().props;
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
-    const [activityEventFilter, setActivityEventFilter] = useState('all');
-    const [activityDateFrom, setActivityDateFrom] = useState('');
-    const [activityDateTo, setActivityDateTo] = useState('');
 
     const handleComplete = useCallback(() => {
         if (completed || completing) return;
@@ -408,31 +396,6 @@ export default function LearnShow({
 
     const lessonTitle = tl(lesson, 'title', locale);
     const courseTitle = tl(course, 'title', locale);
-
-    const learnerActivityEventOptions = useMemo(
-        () => [...new Set((learnerActivity ?? []).map((item) => item.event).filter(Boolean))],
-        [learnerActivity],
-    );
-
-    const filteredLearnerActivity = useMemo(
-        () => (learnerActivity ?? []).filter((item) => {
-            if (activityEventFilter !== 'all' && item.event !== activityEventFilter) {
-                return false;
-            }
-
-            const activityDate = item.created_at_raw;
-            if (activityDateFrom && activityDate && activityDate < activityDateFrom) {
-                return false;
-            }
-
-            if (activityDateTo && activityDate && activityDate > activityDateTo) {
-                return false;
-            }
-
-            return true;
-        }),
-        [learnerActivity, activityEventFilter, activityDateFrom, activityDateTo],
-    );
 
     return (
         <>
@@ -611,75 +574,6 @@ export default function LearnShow({
                                     </div>
                                 );
                             })()}
-
-                            {!isLocked && Array.isArray(learnerActivity) && learnerActivity.length > 0 && (
-                                <div className="mt-8 rounded-lg border">
-                                    <div className="flex items-center justify-between border-b px-4 py-3">
-                                        <h2 className="text-sm font-semibold">Your Activity in This Course</h2>
-                                        <span className="text-xs text-muted-foreground">{filteredLearnerActivity.length} of {learnerActivity.length} events</span>
-                                    </div>
-                                    <div className="grid gap-3 border-b px-4 py-3 md:grid-cols-4">
-                                        <div className="md:col-span-2">
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Event</label>
-                                            <select
-                                                value={activityEventFilter}
-                                                onChange={(e) => setActivityEventFilter(e.target.value)}
-                                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            >
-                                                <option value="all">All events</option>
-                                                {learnerActivityEventOptions.map((event) => (
-                                                    <option key={event} value={event}>{LEARNER_ACTIVITY_EVENT_LABELS[event] ?? event}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">From</label>
-                                            <input
-                                                type="date"
-                                                value={activityDateFrom}
-                                                onChange={(e) => setActivityDateFrom(e.target.value)}
-                                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">To</label>
-                                            <input
-                                                type="date"
-                                                value={activityDateTo}
-                                                onChange={(e) => setActivityDateTo(e.target.value)}
-                                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="max-h-72 overflow-y-auto">
-                                        {filteredLearnerActivity.length === 0 ? (
-                                            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                                                No activity matches the selected filters.
-                                            </div>
-                                        ) : (
-                                            filteredLearnerActivity.map((item) => (
-                                                <div key={item.id} className="border-b px-4 py-3 last:border-b-0">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <Badge variant="outline">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</Badge>
-                                                        {item.properties?.lesson_title && (
-                                                            <span className="text-sm font-medium">{item.properties.lesson_title}</span>
-                                                        )}
-                                                        {item.properties?.percentage !== null && item.properties?.percentage !== undefined && (
-                                                            <span className="text-xs text-muted-foreground">Score: {item.properties.percentage}%</span>
-                                                        )}
-                                                        {typeof item.properties?.passed === 'boolean' && (
-                                                            <span className={`text-xs ${item.properties.passed ? 'text-green-600' : 'text-red-600'}`}>
-                                                                {item.properties.passed ? 'Passed' : 'Failed'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="mt-1 text-xs text-muted-foreground">{item.created_at}</div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                             <Separator className="my-8" />
 

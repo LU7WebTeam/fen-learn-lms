@@ -77,6 +77,25 @@ function LearnerActivityPanel({ activities = [], students = [] }) {
         return true;
     });
 
+    function renderResult(item) {
+        const hasScore = item.properties?.percentage !== null && item.properties?.percentage !== undefined;
+        const hasPassed = typeof item.properties?.passed === 'boolean';
+
+        if (!hasScore && !hasPassed) {
+            return '-';
+        }
+
+        if (hasScore && hasPassed) {
+            return `${item.properties.percentage}% (${item.properties.passed ? 'Passed' : 'Failed'})`;
+        }
+
+        if (hasScore) {
+            return `${item.properties.percentage}%`;
+        }
+
+        return item.properties.passed ? 'Passed' : 'Failed';
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -126,27 +145,36 @@ function LearnerActivityPanel({ activities = [], students = [] }) {
                         No learner activity events for this filter.
                     </div>
                 ) : (
-                    <div className="space-y-2">
-                        {visible.map((item) => (
-                            <div key={item.id} className="rounded-md border px-4 py-3">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline">{ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</Badge>
-                                    <span className="text-sm font-medium">{item.learner?.name ?? 'Unknown learner'}</span>
-                                    {item.properties?.lesson_title && (
-                                        <span className="text-sm text-muted-foreground">- {item.properties.lesson_title}</span>
-                                    )}
-                                    {item.properties?.percentage !== null && item.properties?.percentage !== undefined && (
-                                        <span className="text-xs text-muted-foreground">Score: {item.properties.percentage}%</span>
-                                    )}
-                                    {typeof item.properties?.passed === 'boolean' && (
-                                        <span className={`text-xs ${item.properties.passed ? 'text-green-600' : 'text-red-600'}`}>
-                                            {item.properties.passed ? 'Passed' : 'Failed'}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="mt-1 text-xs text-muted-foreground">{item.created_at}</div>
-                            </div>
-                        ))}
+                    <div className="overflow-x-auto rounded-md border">
+                        <table className="w-full min-w-[720px] text-sm">
+                            <thead className="bg-muted/40 text-left">
+                                <tr>
+                                    <th className="px-3 py-2 font-medium">Event</th>
+                                    <th className="px-3 py-2 font-medium">Learner</th>
+                                    <th className="px-3 py-2 font-medium">Lesson/Item</th>
+                                    <th className="px-3 py-2 font-medium">Result</th>
+                                    <th className="px-3 py-2 font-medium">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visible.map((item) => (
+                                    <tr key={item.id} className="border-t align-top">
+                                        <td className="px-3 py-2">{ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</td>
+                                        <td className="px-3 py-2">
+                                            <div className="font-medium">{item.learner?.name ?? 'Unknown learner'}</div>
+                                            {item.learner?.email && (
+                                                <div className="text-xs text-muted-foreground">{item.learner.email}</div>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2 text-muted-foreground">
+                                            {item.properties?.lesson_title ?? '-'}
+                                        </td>
+                                        <td className="px-3 py-2">{renderResult(item)}</td>
+                                        <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </CardContent>

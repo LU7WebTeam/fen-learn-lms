@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Activitylog\Models\Activity;
 
 class LearnController extends Controller
 {
@@ -119,35 +118,6 @@ class LearnController extends Controller
             $lastAttempt = $attempts->last();
         }
 
-        $learnerActivity = Activity::query()
-            ->where('log_name', 'learner_course')
-            ->where('causer_id', $request->user()->id)
-            ->where('properties->course_id', $course->id)
-            ->latest()
-            ->limit(200)
-            ->get()
-            ->map(function (Activity $activity) {
-                $properties = $activity->properties?->toArray() ?? [];
-
-                return [
-                    'id' => $activity->id,
-                    'event' => $activity->event,
-                    'description' => $activity->description,
-                    'created_at' => $activity->created_at?->format('M j, Y g:i A'),
-                    'created_at_raw' => $activity->created_at?->toDateString(),
-                    'properties' => [
-                        'lesson_title' => $properties['lesson_title'] ?? null,
-                        'lesson_type' => $properties['lesson_type'] ?? null,
-                        'score' => $properties['score'] ?? null,
-                        'max_score' => $properties['max_score'] ?? null,
-                        'percentage' => $properties['percentage'] ?? null,
-                        'passed' => $properties['passed'] ?? null,
-                        'attempt_number' => $properties['attempt_number'] ?? null,
-                    ],
-                ];
-            })
-            ->values();
-
         return Inertia::render('Learn/Show', [
             'course' => [
                 'id'       => $course->id,
@@ -171,7 +141,6 @@ class LearnController extends Controller
             'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title, 'title_ms' => $prev->title_ms] : null,
             'lastAttempt'        => $lastAttempt,
             'allAttempts'        => $allAttempts,
-            'learnerActivity'    => $learnerActivity,
         ]);
     }
 

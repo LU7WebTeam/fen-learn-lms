@@ -6,6 +6,7 @@ use App\Models\Course;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class CourseController extends Controller
 {
@@ -62,6 +63,7 @@ class CourseController extends Controller
         $enrollment       = null;
         $completedIds     = [];
         $firstLesson      = null;
+        $learnerActivity  = [];
 
         if ($user = $request->user()) {
             $enrollment = $user->enrollments()
@@ -73,6 +75,35 @@ class CourseController extends Controller
                 $completedIds = $enrollment->lessonProgress
                     ->whereNotNull('completed_at')
                     ->pluck('lesson_id')
+                    ->all();
+
+                $learnerActivity = Activity::query()
+                    ->where('log_name', 'learner_course')
+                    ->where('causer_id', $user->id)
+                    ->where('properties->course_id', $course->id)
+                    ->latest()
+                    ->limit(200)
+                    ->get()
+                    ->map(function (Activity $activity) {
+                        $properties = $activity->properties?->toArray() ?? [];
+
+                        return [
+                            'id' => $activity->id,
+                            'event' => $activity->event,
+                            'description' => $activity->description,
+                            'created_at' => $activity->created_at?->format('M j, Y g:i A'),
+                            'properties' => [
+                                'lesson_title' => $properties['lesson_title'] ?? null,
+                                'lesson_type' => $properties['lesson_type'] ?? null,
+                                'score' => $properties['score'] ?? null,
+                                'max_score' => $properties['max_score'] ?? null,
+                                'percentage' => $properties['percentage'] ?? null,
+                                'passed' => $properties['passed'] ?? null,
+                                'attempt_number' => $properties['attempt_number'] ?? null,
+                            ],
+                        ];
+                    })
+                    ->values()
                     ->all();
             }
         }
@@ -93,6 +124,7 @@ class CourseController extends Controller
             ] : null,
             'completedIds'     => $completedIds,
             'firstLessonId'    => $firstLesson?->id,
+            'learnerActivity'  => $learnerActivity,
         ]);
     }
 }

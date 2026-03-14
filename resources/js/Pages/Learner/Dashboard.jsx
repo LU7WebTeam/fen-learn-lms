@@ -13,6 +13,34 @@ const difficultyColors = {
     advanced:     'destructive',
 };
 
+const LEARNER_ACTIVITY_EVENT_LABELS = {
+    enrollment_started: 'Enrollment Started',
+    lesson_completed: 'Lesson Completed',
+    quiz_attempt_submitted: 'Quiz Attempt Submitted',
+    quiz_passed: 'Quiz Passed',
+    quiz_failed: 'Quiz Failed',
+    course_completed: 'Course Completed',
+};
+
+function renderActivityResult(item) {
+    const hasScore = item.properties?.percentage !== null && item.properties?.percentage !== undefined;
+    const hasPassed = typeof item.properties?.passed === 'boolean';
+
+    if (!hasScore && !hasPassed) {
+        return '-';
+    }
+
+    if (hasScore && hasPassed) {
+        return `${item.properties.percentage}% (${item.properties.passed ? 'Passed' : 'Failed'})`;
+    }
+
+    if (hasScore) {
+        return `${item.properties.percentage}%`;
+    }
+
+    return item.properties.passed ? 'Passed' : 'Failed';
+}
+
 function getGreeting() {
     const h = new Date().getHours();
     if (h < 12) return { text: 'Good morning', Icon: Sun,     color: 'text-yellow-500' };
@@ -226,7 +254,7 @@ function EmptyState({ message, actionLabel, actionHref }) {
     );
 }
 
-export default function Dashboard({ inProgress, completed }) {
+export default function Dashboard({ inProgress, completed, learnerActivity = [] }) {
     const { auth } = usePage().props;
 
     return (
@@ -269,6 +297,46 @@ export default function Dashboard({ inProgress, completed }) {
                         </section>
                     </>
                 )}
+
+                <Separator className="my-10" />
+
+                <section>
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-xl font-semibold">Overall Activity</h2>
+                        <span className="text-xs text-muted-foreground">{learnerActivity.length} events</span>
+                    </div>
+
+                    {learnerActivity.length === 0 ? (
+                        <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                            No activity yet. Enroll in a course to start building your learning history.
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-lg border">
+                            <table className="w-full min-w-[860px] text-sm">
+                                <thead className="bg-muted/40 text-left">
+                                    <tr>
+                                        <th className="px-3 py-2 font-medium">Course</th>
+                                        <th className="px-3 py-2 font-medium">Event</th>
+                                        <th className="px-3 py-2 font-medium">Lesson/Item</th>
+                                        <th className="px-3 py-2 font-medium">Result</th>
+                                        <th className="px-3 py-2 font-medium">Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {learnerActivity.map((item) => (
+                                        <tr key={item.id} className="border-t align-top">
+                                            <td className="px-3 py-2 font-medium">{item.course_title ?? '-'}</td>
+                                            <td className="px-3 py-2">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</td>
+                                            <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_title ?? '-'}</td>
+                                            <td className="px-3 py-2">{renderActivityResult(item)}</td>
+                                            <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
             </div>
         </AuthenticatedLayout>
     );

@@ -15,6 +15,34 @@ const DIFFICULTY_COLORS = { beginner: 'secondary', intermediate: 'default', adva
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
 
+const LEARNER_ACTIVITY_EVENT_LABELS = {
+    enrollment_started: 'Enrollment Started',
+    lesson_completed: 'Lesson Completed',
+    quiz_attempt_submitted: 'Quiz Attempt Submitted',
+    quiz_passed: 'Quiz Passed',
+    quiz_failed: 'Quiz Failed',
+    course_completed: 'Course Completed',
+};
+
+function renderActivityResult(item) {
+    const hasScore = item.properties?.percentage !== null && item.properties?.percentage !== undefined;
+    const hasPassed = typeof item.properties?.passed === 'boolean';
+
+    if (!hasScore && !hasPassed) {
+        return '-';
+    }
+
+    if (hasScore && hasPassed) {
+        return `${item.properties.percentage}% (${item.properties.passed ? 'Passed' : 'Failed'})`;
+    }
+
+    if (hasScore) {
+        return `${item.properties.percentage}%`;
+    }
+
+    return item.properties.passed ? 'Passed' : 'Failed';
+}
+
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
     const { locale } = usePage().props;
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
@@ -43,7 +71,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
     );
 }
 
-export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId }) {
+export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId, learnerActivity = [] }) {
     const { auth, locale } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
 
@@ -175,6 +203,48 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 )}
 
                 <Separator className="my-8" />
+
+                {enrolled && (
+                    <>
+                        <div>
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-xl font-semibold">Your Activity in This Course</h2>
+                                <span className="text-xs text-muted-foreground">{learnerActivity.length} events</span>
+                            </div>
+
+                            {learnerActivity.length === 0 ? (
+                                <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+                                    No activity yet. Start learning to see your progress history.
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto rounded-lg border">
+                                    <table className="w-full min-w-[760px] text-sm">
+                                        <thead className="bg-muted/40 text-left">
+                                            <tr>
+                                                <th className="px-3 py-2 font-medium">Event</th>
+                                                <th className="px-3 py-2 font-medium">Lesson/Item</th>
+                                                <th className="px-3 py-2 font-medium">Result</th>
+                                                <th className="px-3 py-2 font-medium">Timestamp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {learnerActivity.map((item) => (
+                                                <tr key={item.id} className="border-t align-top">
+                                                    <td className="px-3 py-2">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</td>
+                                                    <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_title ?? '-'}</td>
+                                                    <td className="px-3 py-2">{renderActivityResult(item)}</td>
+                                                    <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        <Separator className="my-8" />
+                    </>
+                )}
 
                 {/* Curriculum */}
                 <div>
