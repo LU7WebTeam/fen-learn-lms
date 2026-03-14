@@ -70,6 +70,8 @@ class SettingsController extends Controller
         'system_log_level'           => 'info',
         'system_log_retention_days'  => '180',
         'system_log_capture_context' => '1',
+        'system_log_redaction_enabled' => '1',
+        'system_log_redacted_keys'   => 'email,password,token,secret,authorization,cookie,set-cookie,api_key,api-key,captcha_secret_key,mail_password',
     ];
 
     public function index(Request $request): Response
@@ -536,11 +538,15 @@ class SettingsController extends Controller
             'system_log_level' => 'required|in:debug,info,warning,error',
             'system_log_retention_days' => 'required|integer|min:1|max:3650',
             'system_log_capture_context' => 'required|in:0,1',
+            'system_log_redaction_enabled' => 'required|in:0,1',
+            'system_log_redacted_keys' => 'nullable|string|max:1000',
         ]);
 
         Setting::set('system_logging_enabled', $validated['system_logging_enabled']);
         Setting::set('system_log_level', $validated['system_log_level']);
         Setting::set('system_log_retention_days', (string) $validated['system_log_retention_days']);
         Setting::set('system_log_capture_context', $validated['system_log_capture_context']);
+        Setting::set('system_log_redaction_enabled', $validated['system_log_redaction_enabled']);
+        Setting::set('system_log_redacted_keys', trim((string) ($validated['system_log_redacted_keys'] ?? '')));
     }
 }

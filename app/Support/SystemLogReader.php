@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -10,6 +11,8 @@ class SystemLogReader
     public function read(array $filters = []): Collection
     {
         $entries = collect();
+        $redactionEnabled = $this->redactionEnabled();
+        $redactedKeys = $this->redactedKeys();
 
         foreach ($this->logFiles() as $filePath) {
             $lines = @file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
@@ -17,6 +20,10 @@ class SystemLogReader
             foreach ($lines as $line) {
                 $entry = $this->parseLine($line, basename($filePath));
                 if ($entry) {
+                    if ($redactionEnabled) {
+                        $entry = $this->applyRedaction($entry, $redactedKeys);
+                    }
+
                     $entries->push($entry);
                 }
             }
@@ -119,5 +126,73 @@ class SystemLogReader
         }
 
         return true;
+    }
+
+    private function redactionEnabled(): bool
+    {
+        try {
+            return Setting::get('system_log_redaction_enabled', '1') === '1';
+        } catch (\Throwable) {
+            return true;
+        }
+    }
+
+    private function redactedKeys(): array
+    {
+        $defaults = 'email,password,token,secret,authorization,cookie,set-cookie,api_key,api-key,captcha_secret_key,mail_password';
+
+        try {
+            $csv = (string) Setting::get('system_log_redacted_keys', $defaults);
+        } catch (\Throwable) {
+            $csv = $defaults;
+        }
+
+        return collect(explode(',', $csv))
+            ->map(fn (string $key) => strtolower(trim($key)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function applyRedaction(array $entry, array $redactedKeys): array
+    {
+        $redactedContext = $this->redactArray((array) ($entry['context'] ?? []), $redactedKeys);
+
+        $entry['context'] = $redactedContext;
+        $entry['request_id'] = $redactedContext['request_id'] ?? $entry['request_id'] ?? null;
+        $entry['user_id'] = $redactedContext['user_id'] ?? $entry['user_id'] ?? null;
+        $entry['route_name'] = $redactedContext['route_name'] ?? $entry['route_name'] ?? null;
+        $entry['request_path'] = $redactedContext['request_path'] ?? $entry['request_path'] ?? null;
+        $entry['request_method'] = $redactedContext['request_method'] ?? $entry['request_method'] ?? null;
+        $entry['request_ip'] = $redactedContext['request_ip'] ?? $entry['request_ip'] ?? null;
+
+        // Prevent exposing unredacted payload through fallback/raw content.
+        $entry['raw_line'] = null;
+
+        return $entry;
+    }
+
+    private function redactArray(array $data, array $redactedKeys): array
+    {
+        $redacted = [];
+
+        foreach ($data as $key => $value) {
+            $normalizedKey = strtolower((string) $key);
+
+            if (in_array($normalizedKey, $redactedKeys, true)) {
+                $redacted[$key] = '[REDACTED]';
+                continue;
+            }
+
+            if (is_array($value)) {
+                $redacted[$key] = $this->redactArray($value, $redactedKeys);
+                continue;
+            }
+
+            $redacted[$key] = $value;
+        }
+
+        return $redacted;
     }
 }

@@ -530,6 +530,10 @@ function LoggingTab({ settings, onSave, processing }) {
     const [level, setLevel] = useState(settings.system_log_level || 'info');
     const [retentionDays, setRetentionDays] = useState(settings.system_log_retention_days || '180');
     const [captureContext, setCaptureContext] = useState(settings.system_log_capture_context !== '0');
+    const [redactionEnabled, setRedactionEnabled] = useState(settings.system_log_redaction_enabled !== '0');
+    const [redactedKeys, setRedactedKeys] = useState(
+        settings.system_log_redacted_keys || 'email,password,token,secret,authorization,cookie,set-cookie,api_key,api-key,captcha_secret_key,mail_password'
+    );
 
     function save() {
         onSave('logging', {
@@ -537,6 +541,8 @@ function LoggingTab({ settings, onSave, processing }) {
             system_log_level: level,
             system_log_retention_days: retentionDays,
             system_log_capture_context: captureContext ? '1' : '0',
+            system_log_redaction_enabled: redactionEnabled ? '1' : '0',
+            system_log_redacted_keys: redactedKeys,
         });
     }
 
@@ -592,6 +598,26 @@ function LoggingTab({ settings, onSave, processing }) {
                     checked={captureContext}
                     onChange={setCaptureContext}
                 />
+
+                <SwitchRow
+                    label="Redact Sensitive Fields"
+                    description="Mask sensitive keys in system log context for both admin UI and exports."
+                    checked={redactionEnabled}
+                    onChange={setRedactionEnabled}
+                />
+
+                <div className="space-y-2">
+                    <Label htmlFor="system_log_redacted_keys">Redacted keys (comma separated)</Label>
+                    <Input
+                        id="system_log_redacted_keys"
+                        value={redactedKeys}
+                        onChange={(e) => setRedactedKeys(e.target.value)}
+                        placeholder="email,password,token,secret,authorization"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Example keys: email, password, token, secret, authorization, cookie.
+                    </p>
+                </div>
 
                 <div className="flex justify-end pt-2">
                     <Button onClick={save} disabled={processing}>Save Logging Settings</Button>
