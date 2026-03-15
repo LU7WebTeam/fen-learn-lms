@@ -33,14 +33,20 @@ function NavItems({ mobile = false }) {
 
 export default function AuthenticatedLayout({ children }) {
     const t = useT();
+    const { platform } = usePage().props;
+    const platformName = platform?.name || 'Free LMS';
+    const platformLogoUrl = platform?.logo_url || null;
     return (
         <div className="min-h-screen bg-background">
             <AnalyticsTracker />
             <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center gap-2 font-bold text-foreground">
-                        <GraduationCap className="h-6 w-6 text-primary" />
-                        <span className="hidden sm:inline">Free LMS</span>
+                        {platformLogoUrl
+                            ? <img src={platformLogoUrl} alt={platformName} className="h-6 w-auto" />
+                            : <GraduationCap className="h-6 w-6 text-primary" />
+                        }
+                        <span className="hidden sm:inline">{platformName}</span>
                     </Link>
 
                     <nav className="hidden flex-1 items-center gap-6 sm:flex">
@@ -59,8 +65,11 @@ export default function AuthenticatedLayout({ children }) {
                             </SheetTrigger>
                             <SheetContent side="left" className="w-72">
                                 <div className="flex items-center gap-2 pb-4 font-bold">
-                                    <GraduationCap className="h-6 w-6 text-primary" />
-                                    Free LMS
+                                    {platformLogoUrl
+                                        ? <img src={platformLogoUrl} alt={platformName} className="h-6 w-auto" />
+                                        : <GraduationCap className="h-6 w-6 text-primary" />
+                                    }
+                                    {platformName}
                                 </div>
                                 <nav className="flex flex-col gap-1">
                                     <NavItems mobile />
