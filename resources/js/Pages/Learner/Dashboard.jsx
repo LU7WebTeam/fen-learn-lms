@@ -6,6 +6,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
 import { BookOpen, Play, Award, GraduationCap, Sun, Sunset, Moon, TrendingUp, CheckCircle2, Library } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 const difficultyColors = {
     beginner:     'secondary',
@@ -43,13 +44,15 @@ function renderActivityResult(item) {
 
 function getGreeting() {
     const h = new Date().getHours();
-    if (h < 12) return { text: 'Good morning', Icon: Sun,     color: 'text-yellow-500' };
-    if (h < 18) return { text: 'Good afternoon', Icon: Sunset, color: 'text-orange-500' };
-    return             { text: 'Good evening',   Icon: Moon,   color: 'text-indigo-400' };
+    if (h < 12) return { key: 'dashboard.greeting.morning', Icon: Sun,     color: 'text-yellow-500' };
+    if (h < 18) return { key: 'dashboard.greeting.afternoon', Icon: Sunset, color: 'text-orange-500' };
+    return             { key: 'dashboard.greeting.evening',   Icon: Moon,   color: 'text-indigo-400' };
 }
 
 function WelcomeHero({ user, inProgress, completed }) {
-    const { text, Icon, color } = getGreeting();
+    const { key, Icon, color } = getGreeting();
+    const t = useT();
+    const greetingText = t(key);
     const firstName = user?.name?.split(' ')[0] ?? 'there';
     const totalEnrolled = inProgress.length + completed.length;
     const activeCount   = inProgress.filter(e => e.progress > 0 && !e.is_completed).length;
@@ -63,15 +66,15 @@ function WelcomeHero({ user, inProgress, completed }) {
                         <div className="flex items-center gap-2">
                             <Icon className={`h-6 w-6 ${color}`} />
                             <h1 className="text-2xl font-bold tracking-tight">
-                                {text}, {firstName}!
+                                {greetingText}, {firstName}!
                             </h1>
                         </div>
                         <p className="text-muted-foreground text-sm">
                             {activeCount > 0
-                                ? `You have ${activeCount} course${activeCount !== 1 ? 's' : ''} in progress. Keep it up!`
+                                ? t(activeCount !== 1 ? 'dashboard.hero.active_p' : 'dashboard.hero.active_s', { n: activeCount })
                                 : totalEnrolled === 0
-                                    ? "You haven't enrolled in any courses yet. Start learning today!"
-                                    : "All caught up! Browse the catalog to find something new."}
+                                    ? t('dashboard.hero.no_enrollments')
+                                    : t('dashboard.hero.all_caught_up')}
                         </p>
                     </div>
 
@@ -80,7 +83,7 @@ function WelcomeHero({ user, inProgress, completed }) {
                         <Button asChild size="sm" variant="outline">
                             <Link href="/courses">
                                 <Library className="mr-2 h-4 w-4" />
-                                Browse Catalog
+                                {t('dashboard.hero.browse_catalog')}
                             </Link>
                         </Button>
                     </div>
@@ -91,17 +94,17 @@ function WelcomeHero({ user, inProgress, completed }) {
                     <div className="rounded-lg border bg-background/80 px-4 py-3 text-center">
                         <GraduationCap className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
                         <div className="text-xl font-bold">{totalEnrolled}</div>
-                        <div className="text-xs text-muted-foreground">Enrolled</div>
+                        <div className="text-xs text-muted-foreground">{t('dashboard.hero.enrolled')}</div>
                     </div>
                     <div className="rounded-lg border bg-background/80 px-4 py-3 text-center">
                         <TrendingUp className="mx-auto mb-1 h-5 w-5 text-primary" />
                         <div className="text-xl font-bold">{inProgress.length}</div>
-                        <div className="text-xs text-muted-foreground">In Progress</div>
+                        <div className="text-xs text-muted-foreground">{t('dashboard.hero.in_progress')}</div>
                     </div>
                     <div className="rounded-lg border bg-background/80 px-4 py-3 text-center">
                         <CheckCircle2 className="mx-auto mb-1 h-5 w-5 text-green-500" />
                         <div className="text-xl font-bold">{completed.length}</div>
-                        <div className="text-xs text-muted-foreground">Completed</div>
+                        <div className="text-xs text-muted-foreground">{t('dashboard.hero.completed')}</div>
                     </div>
                 </div>
             </CardContent>
@@ -110,6 +113,7 @@ function WelcomeHero({ user, inProgress, completed }) {
 }
 
 function ContinueLearning({ inProgress }) {
+    const t = useT();
     // Pick the furthest-along incomplete course as the "continue" candidate
     const active = inProgress
         .filter(e => e.progress > 0 && e.progress < 100)
@@ -134,13 +138,13 @@ function ContinueLearning({ inProgress }) {
                 )}
                 <CardContent className="flex flex-1 flex-col justify-between gap-4 p-5">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">Continue where you left off</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">{t('dashboard.continue.heading')}</p>
                         <h3 className="text-lg font-semibold leading-snug">{course.title}</h3>
                         {course.category && <p className="text-sm text-muted-foreground mt-0.5">{course.category}</p>}
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Progress</span>
+                            <span>{t('dashboard.continue.progress')}</span>
                             <span>{progress}%</span>
                         </div>
                         <Progress value={progress} className="h-2" />
@@ -149,7 +153,7 @@ function ContinueLearning({ inProgress }) {
                         <Button asChild size="sm">
                             <Link href={resumeHref}>
                                 <Play className="mr-2 h-3.5 w-3.5" />
-                                Resume
+                                {t('dashboard.continue.resume')}
                             </Link>
                         </Button>
                     </div>
@@ -163,6 +167,7 @@ function ContinueLearning({ inProgress }) {
 
 function CourseCard({ enrollment, completed = false }) {
     const { course, progress, last_lesson_id, certificate_uuid } = enrollment;
+    const t = useT();
 
     return (
         <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
@@ -194,7 +199,7 @@ function CourseCard({ enrollment, completed = false }) {
                 {!completed && (
                     <div className="space-y-1">
                         <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Progress</span>
+                            <span>{t('dashboard.card.progress')}</span>
                             <span>{progress}%</span>
                         </div>
                         <Progress value={progress} className="h-2" />
@@ -203,7 +208,7 @@ function CourseCard({ enrollment, completed = false }) {
                 {completed && (
                     <div className="flex items-center gap-2 text-sm text-green-600">
                         <Award className="h-4 w-4" />
-                        <span className="font-medium">Completed!</span>
+                        <span className="font-medium">{t('dashboard.card.completed')}</span>
                     </div>
                 )}
             </CardContent>
@@ -216,7 +221,7 @@ function CourseCard({ enrollment, completed = false }) {
                             : `/learn/${course.slug}`}
                         >
                             <Play className="mr-1 h-3.5 w-3.5" />
-                            {progress > 0 ? 'Resume' : 'Start'}
+                            {progress > 0 ? t('dashboard.card.resume') : t('dashboard.card.start')}
                         </Link>
                     </Button>
                 )}
@@ -224,14 +229,14 @@ function CourseCard({ enrollment, completed = false }) {
                     <Button asChild variant="outline" size="sm" className="flex-1 border-[#8B1A4A] text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white">
                         <Link href={`/certificate/${certificate_uuid}`}>
                             <Award className="mr-1 h-3.5 w-3.5" />
-                            View Certificate
+                            {t('dashboard.card.view_certificate')}
                         </Link>
                     </Button>
                 )}
                 {completed && (
                     <Button asChild variant="ghost" size="sm" className="flex-1">
                         <Link href={`/learn/${course.slug}`}>
-                            Review
+                            {t('dashboard.card.review')}
                         </Link>
                     </Button>
                 )}
@@ -256,10 +261,11 @@ function EmptyState({ message, actionLabel, actionHref }) {
 
 export default function Dashboard({ inProgress, completed, learnerActivity = [] }) {
     const { auth } = usePage().props;
+    const t = useT();
 
     return (
         <AuthenticatedLayout>
-            <Head title="My Learning" />
+            <Head title={t('dashboard.title')} />
 
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
@@ -268,11 +274,11 @@ export default function Dashboard({ inProgress, completed, learnerActivity = [] 
                 <ContinueLearning inProgress={inProgress} />
 
                 <section className="mb-10">
-                    <h2 className="mb-4 text-xl font-semibold">In Progress</h2>
+                    <h2 className="mb-4 text-xl font-semibold">{t('dashboard.section.in_progress')}</h2>
                     {inProgress.length === 0 ? (
                         <EmptyState
-                            message="You haven't started any courses yet."
-                            actionLabel="Browse the Catalog"
+                            message={t('dashboard.empty.not_started')}
+                            actionLabel={t('dashboard.empty.browse_catalog')}
                             actionHref="/courses"
                         />
                     ) : (
@@ -288,7 +294,7 @@ export default function Dashboard({ inProgress, completed, learnerActivity = [] 
                     <>
                         <Separator className="mb-10" />
                         <section>
-                            <h2 className="mb-4 text-xl font-semibold">Completed</h2>
+                            <h2 className="mb-4 text-xl font-semibold">{t('dashboard.section.completed')}</h2>
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                 {completed.map((enrollment) => (
                                     <CourseCard key={enrollment.id} enrollment={enrollment} completed />
@@ -302,31 +308,31 @@ export default function Dashboard({ inProgress, completed, learnerActivity = [] 
 
                 <section>
                     <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-xl font-semibold">Overall Activity</h2>
-                        <span className="text-xs text-muted-foreground">{learnerActivity.length} events</span>
+                        <h2 className="text-xl font-semibold">{t('dashboard.activity.title')}</h2>
+                        <span className="text-xs text-muted-foreground">{t('dashboard.activity.events', { n: learnerActivity.length })}</span>
                     </div>
 
                     {learnerActivity.length === 0 ? (
                         <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-                            No activity yet. Enroll in a course to start building your learning history.
+                            {t('dashboard.activity.empty')}
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-lg border">
                             <table className="w-full min-w-[860px] text-sm">
                                 <thead className="bg-muted/40 text-left">
                                     <tr>
-                                        <th className="px-3 py-2 font-medium">Course</th>
-                                        <th className="px-3 py-2 font-medium">Event</th>
-                                        <th className="px-3 py-2 font-medium">Lesson/Item</th>
-                                        <th className="px-3 py-2 font-medium">Result</th>
-                                        <th className="px-3 py-2 font-medium">Timestamp</th>
+                                        <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_course')}</th>
+                                        <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_event')}</th>
+                                        <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_lesson')}</th>
+                                        <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_result')}</th>
+                                        <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_time')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {learnerActivity.map((item) => (
                                         <tr key={item.id} className="border-t align-top">
                                             <td className="px-3 py-2 font-medium">{item.course_title ?? '-'}</td>
-                                            <td className="px-3 py-2">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</td>
+                                            <td className="px-3 py-2">{t('courses.show.event.' + item.event)}</td>
                                             <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_title ?? '-'}</td>
                                             <td className="px-3 py-2">{renderActivityResult(item)}</td>
                                             <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>

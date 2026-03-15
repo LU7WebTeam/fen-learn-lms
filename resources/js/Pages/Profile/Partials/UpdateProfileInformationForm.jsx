@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Camera, X } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -55,6 +56,7 @@ export default function UpdateProfileInformation({
     const user = usePage().props.auth.user;
     const avatarInput = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(user.avatar || null);
+    const t = useT();
 
     const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         _method:      'patch',
@@ -93,9 +95,9 @@ export default function UpdateProfileInformation({
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('profile.info.title')}</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Update your personal details, learner profile, and profile picture.
+                    {t('profile.info.subtitle')}
                 </p>
             </header>
 
@@ -126,7 +128,7 @@ export default function UpdateProfileInformation({
                                 onClick={() => avatarInput.current?.click()}
                                 className="text-sm font-medium text-gray-700 hover:text-gray-900 underline underline-offset-2"
                             >
-                                Change photo
+                                {t('profile.info.change_photo')}
                             </button>
                             {previewUrl && (
                                 <button
@@ -134,10 +136,10 @@ export default function UpdateProfileInformation({
                                     onClick={handleAvatarClear}
                                     className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
                                 >
-                                    <X className="h-3 w-3" /> Remove photo
+                                    <X className="h-3 w-3" /> {t('profile.info.remove_photo')}
                                 </button>
                             )}
-                            <p className="text-xs text-gray-400">JPG, PNG or GIF · max 2 MB</p>
+                            <p className="text-xs text-gray-400">{t('profile.info.photo_hint')}</p>
                         </div>
 
                         <input
@@ -153,7 +155,7 @@ export default function UpdateProfileInformation({
 
                 {/* Name */}
                 <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                    <InputLabel htmlFor="name" value={t('profile.info.name')} />
                     <TextInput
                         id="name"
                         className="mt-1 block w-full"
@@ -168,7 +170,7 @@ export default function UpdateProfileInformation({
 
                 {/* Email */}
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('profile.info.email')} />
                     <TextInput
                         id="email"
                         type="email"
@@ -183,31 +185,31 @@ export default function UpdateProfileInformation({
 
                 <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="gender" value="Gender" />
+                        <InputLabel htmlFor="gender" value={t('profile.info.gender')} />
                         <select
                             id="gender"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.gender}
                             onChange={(e) => setData('gender', e.target.value)}
                         >
-                            <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
+                            <option value="">{t('profile.info.select_gender')}</option>
+                            <option value="male">{t('profile.info.male')}</option>
+                            <option value="female">{t('profile.info.female')}</option>
                         </select>
                         <InputError className="mt-2" message={errors.gender} />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="race" value="Race / Ethnicity" />
+                        <InputLabel htmlFor="race" value={t('profile.info.race')} />
                         <select
                             id="race"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.race}
                             onChange={(e) => setData('race', e.target.value)}
                         >
-                            <option value="">Select race</option>
+                            <option value="">{t('profile.info.select_race')}</option>
                             {RACES.map((race) => (
-                                <option key={race.value} value={race.value}>{race.label}</option>
+                                <option key={race.value} value={race.value}>{t('profile.info.race.' + race.value)}</option>
                             ))}
                         </select>
                         <InputError className="mt-2" message={errors.race} />
@@ -216,14 +218,14 @@ export default function UpdateProfileInformation({
 
                 <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="state" value="State" />
+                        <InputLabel htmlFor="state" value={t('profile.info.state')} />
                         <select
                             id="state"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.state}
                             onChange={(e) => setData('state', e.target.value)}
                         >
-                            <option value="">Select state</option>
+                            <option value="">{t('profile.info.select_state')}</option>
                             {MALAYSIAN_STATES.map((state) => (
                                 <option key={state} value={state}>{state}</option>
                             ))}
@@ -232,7 +234,7 @@ export default function UpdateProfileInformation({
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="birthdate" value="Date of Birth" />
+                        <InputLabel htmlFor="birthdate" value={t('profile.info.birthdate')} />
                         <TextInput
                             id="birthdate"
                             type="date"
@@ -247,23 +249,23 @@ export default function UpdateProfileInformation({
 
                 <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                        <InputLabel htmlFor="occupation" value="Occupation" />
+                        <InputLabel htmlFor="occupation" value={t('profile.info.occupation')} />
                         <select
                             id="occupation"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.occupation}
                             onChange={(e) => setData('occupation', e.target.value)}
                         >
-                            <option value="">Select occupation</option>
+                            <option value="">{t('profile.info.select_occupation')}</option>
                             {OCCUPATIONS.map((occupation) => (
-                                <option key={occupation.value} value={occupation.value}>{occupation.label}</option>
+                                <option key={occupation.value} value={occupation.value}>{t('profile.info.occupation.' + occupation.value)}</option>
                             ))}
                         </select>
                         <InputError className="mt-2" message={errors.occupation} />
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="organization" value="Organization / Institution" />
+                        <InputLabel htmlFor="organization" value={t('profile.info.organization')} />
                         <TextInput
                             id="organization"
                             className="mt-1 block w-full"
@@ -278,26 +280,26 @@ export default function UpdateProfileInformation({
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
                         <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.{' '}
+                            {t('profile.info.unverified')}{' '}
                             <Link
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
                                 className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
-                                Click here to re-send the verification email.
+                                {t('profile.info.resend')}
                             </Link>
                         </p>
                         {status === 'verification-link-sent' && (
                             <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your email address.
+                                {t('profile.info.verification_sent')}
                             </div>
                         )}
                     </div>
                 )}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>{t('profile.info.save')}</PrimaryButton>
                     <Transition
                         show={recentlySuccessful}
                         enter="transition ease-in-out"
@@ -305,7 +307,7 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">Saved.</p>
+                        <p className="text-sm text-gray-600">{t('profile.info.saved')}</p>
                     </Transition>
                 </div>
             </form>
