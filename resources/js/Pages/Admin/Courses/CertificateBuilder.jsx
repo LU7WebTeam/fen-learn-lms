@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ImageUploadWithUrl from '@/Components/ImageUploadWithUrl';
 import { Button } from '@/Components/ui/button';
@@ -23,7 +23,7 @@ const PAGE_DIMS = {
 // ─── Live Preview ──────────────────────────────────────────────────────────────
 const PREVIEW_W = 520; // px target width
 
-function CertPreview({ template, courseTitle, customFonts = [] }) {
+function CertPreview({ template, courseTitle, customFonts = [], platformName = 'Free LMS' }) {
     const size        = template.size        || 'a4';
     const orientation = template.orientation || 'landscape';
     const [pageW, pageH] = PAGE_DIMS[size]?.[orientation] || [297, 210];
@@ -110,7 +110,7 @@ function CertPreview({ template, courseTitle, customFonts = [] }) {
                                 alignItems: 'center', justifyContent: 'center',
                             }}>
                                 <div style={{ color: '#fff', fontSize: nativeH * 0.038, fontWeight: 'bold', letterSpacing: 4 }}>
-                                    {branding.logo_text || 'FENLearn'}
+                                    {branding.logo_text || platformName}
                                 </div>
                                 {branding.tagline && (
                                     <div style={{ color: '#F0D9A8', fontSize: nativeH * 0.018, marginTop: 2 }}>
@@ -329,6 +329,8 @@ function FieldRow({ field, onChange }) {
 
 // ─── Main exported builder ──────────────────────────────────────────────────
 export default function CertificateBuilder({ course, defaultTemplate, sections, customFonts = [] }) {
+    const { platform } = usePage().props;
+    const platformName = platform?.name || 'Free LMS';
     const existing = course.certificate_template;
     const initial  = existing ?? defaultTemplate;
 
@@ -614,7 +616,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
                                             <Input
                                                 value={tpl.branding?.logo_text || ''}
                                                 onChange={e => setNested('branding', { logo_text: e.target.value })}
-                                                placeholder="FENLearn"
+                                                placeholder={platformName}
                                             />
                                         </div>
                                         <div className="space-y-1.5">
@@ -822,7 +824,12 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
                                 {(tpl.size || 'a4').toUpperCase()} · {tpl.orientation || 'landscape'}
                             </Badge>
                         </div>
-                        <CertPreview template={tpl} courseTitle={course.title} customFonts={customFonts} />
+                        <CertPreview
+                            template={tpl}
+                            courseTitle={course.title}
+                            customFonts={customFonts}
+                            platformName={platformName}
+                        />
                         <p className="mt-2 text-xs text-muted-foreground">
                             Preview uses sample data. The actual PDF renders using the learner's real information.
                         </p>

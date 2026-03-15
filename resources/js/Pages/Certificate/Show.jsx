@@ -5,7 +5,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Separator } from '@/Components/ui/separator';
 
-export default function CertificateShow({ certificate }) {
+export default function CertificateShow({ certificate, platform }) {
     const {
         uuid,
         user_name,
@@ -15,6 +15,7 @@ export default function CertificateShow({ certificate }) {
         completed_at,
         download_url,
     } = certificate;
+    const platformName = platform?.name || 'Free LMS';
 
     return (
         <>
@@ -28,7 +29,7 @@ export default function CertificateShow({ certificate }) {
                             href="/"
                             className="flex items-center gap-2 text-sm font-semibold tracking-widest text-indigo-700 uppercase"
                         >
-                            FENLearn
+                            {platformName}
                         </Link>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -42,7 +43,7 @@ export default function CertificateShow({ certificate }) {
                     <Card className="overflow-hidden shadow-2xl border-0">
                         {/* Crimson header bar */}
                         <div className="bg-[#8B1A4A] px-10 py-6 text-center text-white">
-                            <p className="text-xs tracking-[0.3em] uppercase text-[#F0D9A8] mb-1">FEN Network · FENLearn Platform</p>
+                            <p className="text-xs tracking-[0.3em] uppercase text-[#F0D9A8] mb-1">FEN Network · {platformName}</p>
                             <h1 className="text-3xl font-bold tracking-tight">Certificate of Achievement</h1>
                         </div>
 
@@ -125,7 +126,7 @@ export default function CertificateShow({ certificate }) {
                         <div>
                             <p className="text-sm font-semibold text-green-800">Authentic Certificate</p>
                             <p className="text-sm text-green-700 mt-0.5">
-                                This certificate is verified by FENLearn. Share this page URL or the certificate ID
+                                This certificate is verified by {platformName}. Share this page URL or the certificate ID
                                 to allow anyone to confirm its authenticity.
                             </p>
                         </div>

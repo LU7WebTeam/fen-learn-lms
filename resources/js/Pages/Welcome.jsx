@@ -13,15 +13,23 @@ function Heading({ as: Tag = 'h2', className = '', children }) {
     return <Tag className={`font-heading font-bold tracking-tight ${className}`}>{children}</Tag>;
 }
 
-function Nav({ auth }) {
+function Nav({ auth, platform }) {
+    const platformName = platform?.name || 'Free LMS';
+
     return (
         <nav className="sticky inset-x-0 top-0 z-50 border-b border-sky-100/80 bg-white/90 backdrop-blur-md">
             <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
                 <Link href="/" className="flex shrink-0 items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100">
-                        <GraduationCap className="h-5 w-5 text-sky-700" />
-                    </span>
-                    <span className="font-heading text-lg font-bold text-slate-900">FENLearn</span>
+                    {platform?.logo_url ? (
+                        <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-sky-200 bg-white">
+                            <img src={platform.logo_url} alt={platformName} className="h-8 w-8 object-contain" />
+                        </span>
+                    ) : (
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100">
+                            <GraduationCap className="h-5 w-5 text-sky-700" />
+                        </span>
+                    )}
+                    <span className="font-heading text-lg font-bold text-slate-900">{platformName}</span>
                 </Link>
 
                 <div className="hidden flex-1 items-center gap-6 sm:flex">
@@ -60,7 +68,9 @@ function Nav({ auth }) {
     );
 }
 
-function Hero({ auth }) {
+function Hero({ auth, platform }) {
+    const platformName = platform?.name || 'Free LMS';
+
     return (
         <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#99f6e4,transparent_38%),radial-gradient(circle_at_bottom_right,#fef08a,transparent_42%),#f8fafc] py-10 sm:py-14">
             <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:px-6 lg:grid-cols-12 lg:px-8">
@@ -70,11 +80,11 @@ function Hero({ auth }) {
 
                     <div className="relative mb-4 inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
                         <Sparkles className="h-3.5 w-3.5" />
-                        FEN E-Learning Platform
+                        {platformName}
                     </div>
 
                     <Heading as="h1" className="relative text-3xl text-slate-900 sm:text-4xl lg:text-5xl">
-                        Kickstart Your Financial Management Journey with FEN E-Learning Platform
+                        Kickstart Your Financial Management Journey with {platformName}
                     </Heading>
 
                     <p className="relative mt-4 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg">
@@ -109,7 +119,7 @@ function Hero({ auth }) {
                 <article id="about" className="rounded-3xl border border-amber-200 bg-amber-50 p-8 lg:col-span-7">
                     <p className="text-sm font-semibold uppercase tracking-wide text-amber-700">About FEN Learn</p>
                     <p className="mt-3 text-lg leading-relaxed text-slate-700">
-                        FEN E-Learning Platform is brought to you by the Financial Education Network (FEN), an inter-agency platform comprising institutions and agencies committed to improving the financial literacy of Malaysians.
+                        {platformName} is brought to you by the Financial Education Network (FEN), an inter-agency platform comprising institutions and agencies committed to improving the financial literacy of Malaysians.
                     </p>
                 </article>
 
@@ -411,16 +421,24 @@ function FAQSection() {
     );
 }
 
-function Footer() {
+function Footer({ platform }) {
+    const platformName = platform?.name || 'Free LMS';
+
     return (
         <footer className="border-t border-slate-200 bg-white py-10">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
                     <div className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100">
-                            <GraduationCap className="h-4 w-4 text-sky-700" />
-                        </span>
-                        <span className="font-heading font-bold text-slate-900">FENLearn</span>
+                        {platform?.logo_url ? (
+                            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg border border-sky-200 bg-white">
+                                <img src={platform.logo_url} alt={platformName} className="h-7 w-7 object-contain" />
+                            </span>
+                        ) : (
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100">
+                                <GraduationCap className="h-4 w-4 text-sky-700" />
+                            </span>
+                        )}
+                        <span className="font-heading font-bold text-slate-900">{platformName}</span>
                     </div>
                     <p className="text-center text-xs text-slate-500">
                         © {new Date().getFullYear()} FEN Network. All rights reserved.
@@ -436,18 +454,20 @@ function Footer() {
     );
 }
 
-export default function Welcome({ auth }) {
+export default function Welcome({ auth, platform }) {
+    const platformName = platform?.name || 'Free LMS';
+
     return (
         <>
-            <Head title="FENLearn - Kickstart Your Financial Management Journey" />
+            <Head title={`${platformName} - Kickstart Your Financial Management Journey`} />
             <div className="font-sans antialiased">
-                <Nav auth={auth} />
-                <Hero auth={auth} />
+                <Nav auth={auth} platform={platform} />
+                <Hero auth={auth} platform={platform} />
                 <ImpactStats />
                 <ProaktifSection />
                 <Features />
                 <FAQSection />
-                <Footer />
+                <Footer platform={platform} />
             </div>
         </>
     );
