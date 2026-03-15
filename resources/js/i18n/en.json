@@ -35,6 +35,21 @@
   "auth.forgot_password.description": "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.",
   "auth.forgot_password.submit": "Email Password Reset Link",
 
+  "auth.verify_email.title": "Verify your email",
+  "auth.verify_email.description": "Thanks for signing up! Please verify your email address by clicking the link we sent you. If you didn't receive it, we'll gladly send another.",
+  "auth.verify_email.resend": "Resend Verification Email",
+  "auth.verify_email.resending": "Sending\u2026",
+  "auth.verify_email.sent": "A new verification link has been sent to your email address.",
+  "auth.verify_email.logout": "Log Out",
+
+  "auth.reset_password.title": "Set new password",
+  "auth.reset_password.subtitle": "Choose a strong password for your account.",
+  "auth.reset_password.email": "Email address",
+  "auth.reset_password.password": "New password",
+  "auth.reset_password.confirm_password": "Confirm new password",
+  "auth.reset_password.submit": "Reset Password",
+  "auth.reset_password.submitting": "Resetting\u2026",
+
   "auth.captcha.required": "Captcha verification is required.",
 
   "profile_setup.title": "Complete your profile",

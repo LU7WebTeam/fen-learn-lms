@@ -1,50 +1,78 @@
-import PrimaryButton from '@/Components/PrimaryButton';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { BookOpen, MailCheck } from 'lucide-react';
+import InputError from '@/Components/InputError';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
+import { useT } from '@/lib/i18n';
 
 export default function VerifyEmail({ status }) {
-    const { post, processing } = useForm({});
+    const { props } = usePage();
+    const platform = props.platform ?? {};
+    const t = useT();
 
-    const submit = (e) => {
+    const { post, processing, errors } = useForm({});
+
+    function submit(e) {
         e.preventDefault();
-
         post(route('verification.send'));
-    };
+    }
 
     return (
-        <GuestLayout>
-            <Head title="Email Verification" />
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <AnalyticsTracker />
+            <Head title={t('auth.verify_email.title')} />
 
-            <div className="mb-4 text-sm text-gray-600">
-                Thanks for signing up! Before getting started, could you verify
-                your email address by clicking on the link we just emailed to
-                you? If you didn't receive the email, we will gladly send you
-                another.
-            </div>
-
-            {status === 'verification-link-sent' && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    A new verification link has been sent to the email address
-                    you provided during registration.
+            <div className="w-full max-w-sm space-y-8">
+                {/* Logo */}
+                <div className="flex flex-col items-center gap-2">
+                    {platform.logo_url ? (
+                        <img src={platform.logo_url} alt={platform.name} className="h-9 w-auto" />
+                    ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                            <BookOpen className="h-5 w-5" />
+                        </div>
+                    )}
+                    <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                 </div>
-            )}
 
-            <form onSubmit={submit}>
-                <div className="mt-4 flex items-center justify-between">
-                    <PrimaryButton disabled={processing}>
-                        Resend Verification Email
-                    </PrimaryButton>
+                {/* Icon + heading */}
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+                        <MailCheck className="h-7 w-7 text-emerald-600" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('auth.verify_email.title')}</h1>
+                    <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
+                        {t('auth.verify_email.description')}
+                    </p>
+                </div>
+
+                {/* Success message */}
+                {status === 'verification-link-sent' && (
+                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 text-center">
+                        {t('auth.verify_email.sent')}
+                    </div>
+                )}
+
+                <InputError message={errors.email} />
+
+                <form onSubmit={submit} className="space-y-3">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="w-full rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
+                    >
+                        {processing ? t('auth.verify_email.resending') : t('auth.verify_email.resend')}
+                    </button>
 
                     <Link
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="w-full rounded-lg border border-gray-200 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900 block text-center"
                     >
-                        Log Out
+                        {t('auth.verify_email.logout')}
                     </Link>
-                </div>
-            </form>
-        </GuestLayout>
+                </form>
+            </div>
+        </div>
     );
 }

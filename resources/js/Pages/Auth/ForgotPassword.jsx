@@ -31,8 +31,8 @@ export default function ForgotPassword({ status }) {
             return;
         }
 
-        transform((current) => ({ ...current, captcha_token: token || '' }))
-            .post(route('password.email'));
+        transform((current) => ({ ...current, captcha_token: token || '' }));
+        post(route('password.email'));
     };
 
     return (

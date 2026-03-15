@@ -35,6 +35,21 @@
   "auth.forgot_password.description": "Terlupa kata laluan? Tiada masalah. Masukkan alamat e-mel anda dan kami akan menghantar pautan penetapan semula kata laluan kepada anda.",
   "auth.forgot_password.submit": "Hantar Pautan Tetapan Semula",
 
+  "auth.verify_email.title": "Sahkan e-mel anda",
+  "auth.verify_email.description": "Terima kasih kerana mendaftar! Sila sahkan alamat e-mel anda dengan mengklik pautan yang kami hantar. Jika anda tidak menerimanya, kami akan menghantar yang lain.",
+  "auth.verify_email.resend": "Hantar Semula E-mel Pengesahan",
+  "auth.verify_email.resending": "Menghantar\u2026",
+  "auth.verify_email.sent": "Pautan pengesahan baharu telah dihantar ke alamat e-mel anda.",
+  "auth.verify_email.logout": "Log Keluar",
+
+  "auth.reset_password.title": "Tetapkan kata laluan baharu",
+  "auth.reset_password.subtitle": "Pilih kata laluan yang kukuh untuk akaun anda.",
+  "auth.reset_password.email": "Alamat e-mel",
+  "auth.reset_password.password": "Kata laluan baharu",
+  "auth.reset_password.confirm_password": "Sahkan kata laluan baharu",
+  "auth.reset_password.submit": "Tetapkan Semula Kata Laluan",
+  "auth.reset_password.submitting": "Menetapkan semula\u2026",
+
   "auth.captcha.required": "Pengesahan captcha diperlukan.",
 
   "profile_setup.title": "Lengkapkan profil anda",
