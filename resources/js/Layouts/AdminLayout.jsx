@@ -143,6 +143,8 @@ function NavUser({ user }) {
 function AppSidebar() {
     const { url, props } = usePage();
     const isSuperAdmin = props.auth?.user?.role === 'super_admin';
+    const platformName = props.platform?.name || 'Free LMS';
+    const platformLogoUrl = props.platform?.logo_url || null;
     const groupedNavigation = navGroups.map(group => ({
         ...group,
         items: [...group.items],
@@ -167,11 +169,21 @@ function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/">
-                                <div className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                                    <GraduationCap className="h-4 w-4" />
-                                </div>
+                                {platformLogoUrl ? (
+                                    <div className="flex aspect-square h-8 w-8 items-center justify-center overflow-hidden rounded-lg border bg-background">
+                                        <img
+                                            src={platformLogoUrl}
+                                            alt={platformName}
+                                            className="h-8 w-8 object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                                        <GraduationCap className="h-4 w-4" />
+                                    </div>
+                                )}
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">FENLearn</span>
+                                    <span className="truncate font-semibold">{platformName}</span>
                                     <span className="truncate text-xs text-muted-foreground">Admin</span>
                                 </div>
                             </Link>
