@@ -429,7 +429,7 @@ function QuizEditor({ data, setData, errors, lang }) {
     }
 
     function addQuestion() {
-        save([...questions, { id: Date.now(), type: 'text', text: '', options: ['', '', '', ''], correct: 0 }]);
+        save([...questions, { id: Date.now(), type: 'text', text: '', options: ['', '', '', ''], correct: 0, multi_answer: false }]);
     }
 
     function updateQuestion(idx, field, value) {
@@ -476,9 +476,38 @@ function QuizEditor({ data, setData, errors, lang }) {
         const qs = questions.map((q, i) => {
             if (i !== qIdx) return q;
             const options = q.options.filter((_, j) => j !== oIdx);
-            const correct = q.correct >= options.length ? 0 : (q.correct > oIdx ? q.correct - 1 : q.correct);
+            let correct;
+            if (Array.isArray(q.correct)) {
+                correct = q.correct.filter(ci => ci !== oIdx).map(ci => ci > oIdx ? ci - 1 : ci);
+                if (correct.length === 0) correct = [0];
+            } else {
+                correct = q.correct >= options.length ? 0 : (q.correct > oIdx ? q.correct - 1 : q.correct);
+            }
             return { ...q, options, correct };
         });
+        save(qs);
+    }
+
+    function toggleMultiAnswer(qIdx) {
+        const q = questions[qIdx];
+        const nowMulti = !q.multi_answer;
+        let correct;
+        if (nowMulti) {
+            correct = typeof q.correct === 'number' ? [q.correct] : (Array.isArray(q.correct) ? q.correct : [0]);
+        } else {
+            correct = Array.isArray(q.correct) ? (q.correct[0] ?? 0) : (typeof q.correct === 'number' ? q.correct : 0);
+        }
+        const qs = questions.map((item, i) => i === qIdx ? { ...item, multi_answer: nowMulti, correct } : item);
+        save(qs);
+    }
+
+    function toggleCorrectAnswer(qIdx, oIdx) {
+        const q = questions[qIdx];
+        const current = Array.isArray(q.correct) ? q.correct : [typeof q.correct === 'number' ? q.correct : 0];
+        const updated = current.includes(oIdx)
+            ? current.filter(ci => ci !== oIdx)
+            : [...current, oIdx].sort((a, b) => a - b);
+        const qs = questions.map((item, i) => i === qIdx ? { ...item, correct: updated.length > 0 ? updated : [0] } : item);
         save(qs);
     }
 
@@ -544,7 +573,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                     {questions.map((q, qIdx) => (
                         <Card key={q.id ?? qIdx}>
                             <CardHeader className="flex flex-row items-start justify-between pb-2">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     <CardTitle className="text-sm font-medium">Question {qIdx + 1}</CardTitle>
                                     <div className="flex rounded border p-0.5 gap-0.5">
                                         <button
@@ -564,6 +593,14 @@ function QuizEditor({ data, setData, errors, lang }) {
                                             <ImageIcon className="h-3 w-3" /> Images
                                         </button>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleMultiAnswer(qIdx)}
+                                        title={q.multi_answer ? 'Switch to single correct answer' : 'Allow multiple correct answers'}
+                                        className={['flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors', q.multi_answer ? 'border-green-400 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400' : 'border-muted text-muted-foreground hover:text-foreground'].join(' ')}
+                                    >
+                                        <Check className="h-3 w-3" /> Multi
+                                    </button>
                                 </div>
                                 <Button
                                     type="button"
@@ -586,15 +623,21 @@ function QuizEditor({ data, setData, errors, lang }) {
                                 {/* ── Text options ── */}
                                 {(q.type ?? 'text') === 'text' && (
                                     <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground">Answer options — click the circle to mark the correct one</Label>
-                                        {q.options.map((opt, oIdx) => (
+                                        <Label className="text-xs text-muted-foreground">
+                                            {q.multi_answer ? 'Answer options — check all correct answers' : 'Answer options — click the circle to mark the correct one'}
+                                        </Label>
+                                        {q.options.map((opt, oIdx) => {
+                                            const isMarkedCorrect = q.multi_answer
+                                                ? (Array.isArray(q.correct) && q.correct.includes(oIdx))
+                                                : q.correct === oIdx;
+                                            return (
                                             <div key={oIdx} className="flex items-center gap-2">
                                                 <button
                                                     type="button"
-                                                    onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
-                                                    className={['flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors', q.correct === oIdx ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
+                                                    onClick={() => q.multi_answer ? toggleCorrectAnswer(qIdx, oIdx) : updateQuestion(qIdx, 'correct', oIdx)}
+                                                    className={['flex h-5 w-5 flex-shrink-0 items-center justify-center border-2 transition-colors', q.multi_answer ? 'rounded' : 'rounded-full', isMarkedCorrect ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
                                                 >
-                                                    {q.correct === oIdx && <Check className="h-3 w-3" />}
+                                                    {isMarkedCorrect && <Check className="h-3 w-3" />}
                                                 </button>
                                                 <Input
                                                     value={opt}
@@ -608,7 +651,8 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                     </Button>
                                                 )}
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                         {q.options.length < 6 && (
                                             <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>
                                                 <Plus className="mr-1 h-3 w-3" /> Add option
@@ -622,8 +666,12 @@ function QuizEditor({ data, setData, errors, lang }) {
                                     <div className="space-y-3">
                                         <Label className="text-xs text-muted-foreground">Image options — click the ring to mark correct, hover image to delete</Label>
                                         <div className="grid grid-cols-2 gap-3">
-                                            {q.options.map((opt, oIdx) => (
-                                                <div key={oIdx} className={['rounded-lg border-2 p-2 transition-colors', q.correct === oIdx ? 'border-green-500' : 'border-border'].join(' ')}>
+                                            {q.options.map((opt, oIdx) => {
+                                                const isMarkedCorrect = q.multi_answer
+                                                    ? (Array.isArray(q.correct) && q.correct.includes(oIdx))
+                                                    : q.correct === oIdx;
+                                                return (
+                                                <div key={oIdx} className={['rounded-lg border-2 p-2 transition-colors', isMarkedCorrect ? 'border-green-500' : 'border-border'].join(' ')}>
                                                     <ImageOptionUpload
                                                         value={opt}
                                                         onChange={(val) => updateOption(qIdx, oIdx, val)}
@@ -631,10 +679,10 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                     <div className="mt-2 flex items-center gap-1.5">
                                                         <button
                                                             type="button"
-                                                            onClick={() => updateQuestion(qIdx, 'correct', oIdx)}
-                                                            className={['flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors', q.correct === oIdx ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
+                                                            onClick={() => q.multi_answer ? toggleCorrectAnswer(qIdx, oIdx) : updateQuestion(qIdx, 'correct', oIdx)}
+                                                            className={['flex h-4 w-4 flex-shrink-0 items-center justify-center border-2 transition-colors', q.multi_answer ? 'rounded' : 'rounded-full', isMarkedCorrect ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'].join(' ')}
                                                         >
-                                                            {q.correct === oIdx && <Check className="h-2.5 w-2.5" />}
+                                                            {isMarkedCorrect && <Check className="h-2.5 w-2.5" />}
                                                         </button>
                                                         <Input
                                                             value={typeof opt === 'object' ? (opt.label ?? '') : ''}
@@ -649,7 +697,8 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                         )}
                                                     </div>
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                         {q.options.length < 6 && (
                                             <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>

@@ -246,7 +246,7 @@ class LearnController extends Controller
 
         $request->validate([
             'answers'   => 'required|array',
-            'answers.*' => 'nullable|integer',
+            'answers.*' => 'nullable',
         ]);
 
         $quizData     = json_decode($lesson->content ?? '{}', true) ?? [];
@@ -269,18 +269,44 @@ class LearnController extends Controller
         $results   = [];
 
         foreach ($questions as $i => $question) {
-            $selected  = isset($answers[$i]) ? (int) $answers[$i] : null;
-            $isCorrect = $selected !== null && $selected === (int) $question['correct'];
-            if ($isCorrect) $correct++;
+            $isMulti = !empty($question['multi_answer']);
 
-            $results[] = [
-                'text'       => $question['text']    ?? '',
-                'type'       => $question['type']    ?? 'text',
-                'options'    => $question['options'] ?? [],
-                'selected'   => $selected,
-                'correct'    => (int) $question['correct'],
-                'is_correct' => $isCorrect,
-            ];
+            if ($isMulti) {
+                $correctSet  = is_array($question['correct'])
+                    ? array_map('intval', $question['correct'])
+                    : [(int) $question['correct']];
+                $selectedRaw = isset($answers[$i]) && is_array($answers[$i]) ? $answers[$i] : [];
+                $selected    = array_map('intval', $selectedRaw);
+                sort($selected);
+                sort($correctSet);
+                $isCorrect = $selected === $correctSet;
+                $results[] = [
+                    'text'         => $question['text']    ?? '',
+                    'type'         => $question['type']    ?? 'text',
+                    'multi_answer' => true,
+                    'options'      => $question['options'] ?? [],
+                    'selected'     => $selected,
+                    'correct'      => $correctSet,
+                    'is_correct'   => $isCorrect,
+                ];
+            } else {
+                $selected   = isset($answers[$i]) && !is_array($answers[$i]) ? (int) $answers[$i] : null;
+                $correctVal = is_array($question['correct'])
+                    ? (int) ($question['correct'][0] ?? 0)
+                    : (int) $question['correct'];
+                $isCorrect  = $selected !== null && $selected === $correctVal;
+                $results[]  = [
+                    'text'         => $question['text']    ?? '',
+                    'type'         => $question['type']    ?? 'text',
+                    'multi_answer' => false,
+                    'options'      => $question['options'] ?? [],
+                    'selected'     => $selected,
+                    'correct'      => $correctVal,
+                    'is_correct'   => $isCorrect,
+                ];
+            }
+
+            if ($isCorrect) $correct++;
         }
 
         $percentage = $total > 0 ? (int) round(($correct / $total) * 100) : 0;

@@ -215,6 +215,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 
             {/* Questions */}
             {(showResult ? result.results : questions).map((q, qi) => {
+                const isMultiAnswer = q.multi_answer === true;
                 const chosen    = showResult ? q.selected : data.answers[qi];
                 const correct   = showResult ? q.correct  : null;
                 const isImgQ    = q.type === 'image_choice';
@@ -224,14 +225,22 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                             <span className="mr-2 text-muted-foreground text-sm">Q{qi + 1}.</span>
                             {q.text ?? q.question}
                         </p>
+                        {isMultiAnswer && !showResult && (
+                            <p className="text-xs text-muted-foreground">Select all that apply.</p>
+                        )}
 
                         {/* ── Text options ── */}
                         {!isImgQ && (
                         <div className="space-y-2">
                             {q.options.map((opt, oi) => {
-                                const isChosen  = chosen === oi;
-                                const isCorrect = showResult && oi === correct;
-                                const isWrong   = showResult && isChosen && oi !== correct;
+                                const isChosen  = isMultiAnswer
+                                    ? (Array.isArray(chosen) && chosen.includes(oi))
+                                    : chosen === oi;
+                                const isCorrect = showResult && (isMultiAnswer
+                                    ? (Array.isArray(correct) && correct.includes(oi))
+                                    : oi === correct);
+                                const isWrong   = showResult && isChosen && !isCorrect;
+                                const isMissed  = showResult && isMultiAnswer && !isChosen && Array.isArray(correct) && correct.includes(oi);
                                 const optLabel  = typeof opt === 'object' ? (opt.label ?? '') : opt;
                                 return (
                                     <label
@@ -242,20 +251,36 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                             !showResult && !isChosen && 'hover:bg-muted/50',
                                             isCorrect && 'border-green-500 bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300',
                                             isWrong   && 'border-red-400 bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300',
+                                            isMissed  && 'border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
                                             showResult && 'cursor-default'
                                         )}
                                     >
-                                        <input
-                                            type="radio"
-                                            name={`q-${qi}`}
-                                            value={oi}
-                                            disabled={showResult}
-                                            checked={isChosen ?? false}
-                                            onChange={() => setData('answers', { ...data.answers, [qi]: oi })}
-                                            className="accent-primary shrink-0"
-                                        />
+                                        {isMultiAnswer ? (
+                                            <input
+                                                type="checkbox"
+                                                disabled={showResult}
+                                                checked={Array.isArray(data.answers[qi]) && data.answers[qi].includes(oi)}
+                                                onChange={() => {
+                                                    const prev = Array.isArray(data.answers[qi]) ? data.answers[qi] : [];
+                                                    const next = prev.includes(oi) ? prev.filter(x => x !== oi) : [...prev, oi];
+                                                    setData('answers', { ...data.answers, [qi]: next });
+                                                }}
+                                                className="accent-primary shrink-0"
+                                            />
+                                        ) : (
+                                            <input
+                                                type="radio"
+                                                name={`q-${qi}`}
+                                                value={oi}
+                                                disabled={showResult}
+                                                checked={isChosen ?? false}
+                                                onChange={() => setData('answers', { ...data.answers, [qi]: oi })}
+                                                className="accent-primary shrink-0"
+                                            />
+                                        )}
                                         <span className="flex-1">{optLabel}</span>
                                         {isCorrect && <Check className="h-4 w-4 text-green-600 shrink-0" />}
+                                        {isMissed  && <Check className="h-4 w-4 text-amber-500 shrink-0" />}
                                     </label>
                                 );
                             })}
@@ -266,9 +291,13 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                         {isImgQ && (
                             <div className="grid grid-cols-2 gap-3">
                                 {q.options.map((opt, oi) => {
-                                    const isChosen  = chosen === oi;
-                                    const isCorrect = showResult && oi === correct;
-                                    const isWrong   = showResult && isChosen && oi !== correct;
+                                    const isChosen  = isMultiAnswer
+                                        ? (Array.isArray(chosen) && chosen.includes(oi))
+                                        : chosen === oi;
+                                    const isCorrect = showResult && (isMultiAnswer
+                                        ? (Array.isArray(correct) && correct.includes(oi))
+                                        : oi === correct);
+                                    const isWrong   = showResult && isChosen && !isCorrect;
                                     const imgUrl    = typeof opt === 'object' ? opt.image_url : '';
                                     const label     = typeof opt === 'object' ? (opt.label || '') : '';
                                     return (
@@ -276,7 +305,16 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                             key={oi}
                                             type="button"
                                             disabled={showResult}
-                                            onClick={() => !showResult && setData('answers', { ...data.answers, [qi]: oi })}
+                                            onClick={() => {
+                                                if (showResult) return;
+                                                if (isMultiAnswer) {
+                                                    const prev = Array.isArray(data.answers[qi]) ? data.answers[qi] : [];
+                                                    const next = prev.includes(oi) ? prev.filter(x => x !== oi) : [...prev, oi];
+                                                    setData('answers', { ...data.answers, [qi]: next });
+                                                } else {
+                                                    setData('answers', { ...data.answers, [qi]: oi });
+                                                }
+                                            }}
                                             className={cn(
                                                 'rounded-xl border-2 overflow-hidden text-left w-full transition-colors',
                                                 !showResult && isChosen  && 'border-primary',
@@ -309,11 +347,19 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             {!showResult && !limitReached && (
                 <Button
                     onClick={handleSubmit}
-                    disabled={processing || Object.keys(data.answers).length < questions.length}
+                    disabled={processing || questions.some((q, i) =>
+                        q.multi_answer
+                            ? !Array.isArray(data.answers[i]) || data.answers[i].length === 0
+                            : data.answers[i] === undefined || data.answers[i] === null
+                    )}
                     className="w-full"
                     size="lg"
                 >
-                    {processing ? 'Submitting…' : `Submit Quiz (${Object.keys(data.answers).length}/${questions.length} answered)`}
+                    {processing ? 'Submitting…' : `Submit Quiz (${questions.filter((q, i) =>
+                        q.multi_answer
+                            ? Array.isArray(data.answers[i]) && data.answers[i].length > 0
+                            : data.answers[i] !== undefined && data.answers[i] !== null
+                    ).length}/${questions.length} answered)`}
                 </Button>
             )}
         </div>
