@@ -15,7 +15,7 @@ class CustomFontController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'             => 'required|string|max:120',
+            'name'             => 'nullable|string|max:120',
             'family'           => 'nullable|string|max:120',
             // Keep validation extension-based because browser MIME reporting for font files varies widely.
             'regular_file'     => 'required|file|mimes:ttf,otf|max:5120',
@@ -24,7 +24,21 @@ class CustomFontController extends Controller
             'bold_italic_file' => 'nullable|file|mimes:ttf,otf|max:5120',
         ]);
 
-        $folder = 'fonts/' . now()->format('YmdHis') . '-' . Str::slug($validated['name']);
+        $derivedName = pathinfo($request->file('regular_file')->getClientOriginalName(), PATHINFO_FILENAME);
+        $fontName = trim((string) ($validated['name'] ?? ''));
+        if ($fontName === '') {
+            $fontName = Str::of($derivedName)
+                ->replace(['_', '-'], ' ')
+                ->squish()
+                ->title()
+                ->toString();
+        }
+
+        if ($fontName === '') {
+            $fontName = 'Custom Font';
+        }
+
+        $folder = 'fonts/' . now()->format('YmdHis') . '-' . Str::slug($fontName);
 
         $regular = $request->file('regular_file')->store($folder, 'public');
         $bold = $request->hasFile('bold_file')
@@ -38,8 +52,8 @@ class CustomFontController extends Controller
             : null;
 
         CustomFont::create([
-            'name'             => $validated['name'],
-            'family'           => $validated['family'] ?: $validated['name'],
+            'name'             => $fontName,
+            'family'           => $validated['family'] ?: $fontName,
             'regular_path'     => $regular,
             'bold_path'        => $bold,
             'italic_path'      => $italic,

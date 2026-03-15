@@ -634,10 +634,11 @@ function FontsTab({ customFonts, processing, errors = {} }) {
     const [boldFile, setBoldFile] = useState(null);
     const [italicFile, setItalicFile] = useState(null);
     const [boldItalicFile, setBoldItalicFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
     function upload() {
         const formData = new FormData();
-        formData.append('name', name);
+        if (name?.trim()) formData.append('name', name.trim());
         formData.append('family', family);
         if (regularFile) formData.append('regular_file', regularFile);
         if (boldFile) formData.append('bold_file', boldFile);
@@ -647,6 +648,7 @@ function FontsTab({ customFonts, processing, errors = {} }) {
         router.post(route('admin.settings.fonts.store'), formData, {
             forceFormData: true,
             preserveScroll: true,
+            onStart: () => setUploading(true),
             onSuccess: () => {
                 setName('');
                 setFamily('');
@@ -655,6 +657,7 @@ function FontsTab({ customFonts, processing, errors = {} }) {
                 setItalicFile(null);
                 setBoldItalicFile(null);
             },
+            onFinish: () => setUploading(false),
         });
     }
 
@@ -686,8 +689,8 @@ function FontsTab({ customFonts, processing, errors = {} }) {
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                        <Label htmlFor="font_name">Font Name</Label>
-                        <Input id="font_name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Montserrat" />
+                        <Label htmlFor="font_name">Font Name (optional)</Label>
+                        <Input id="font_name" value={name} onChange={e => setName(e.target.value)} placeholder="Auto from file name if blank" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="font_family">CSS Family Name</Label>
@@ -721,7 +724,7 @@ function FontsTab({ customFonts, processing, errors = {} }) {
                 {fontUploadError && <ErrorBanner message={fontUploadError} />}
 
                 <div className="flex justify-end">
-                    <Button onClick={upload} disabled={processing || !name || !regularFile}>Upload Font</Button>
+                    <Button onClick={upload} disabled={processing || uploading || !regularFile}>Upload Font</Button>
                 </div>
 
                 <Separator />
