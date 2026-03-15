@@ -17,11 +17,11 @@ class CustomFontController extends Controller
         $validated = $request->validate([
             'name'             => 'nullable|string|max:120',
             'family'           => 'nullable|string|max:120',
-            // Keep validation extension-based because browser MIME reporting for font files varies widely.
-            'regular_file'     => 'required|file|mimes:ttf,otf|max:5120',
-            'bold_file'        => 'nullable|file|mimes:ttf,otf|max:5120',
-            'italic_file'      => 'nullable|file|mimes:ttf,otf|max:5120',
-            'bold_italic_file' => 'nullable|file|mimes:ttf,otf|max:5120',
+            // Rely on original file extension because MIME detection for fonts is inconsistent across OS/browser uploads.
+            'regular_file'     => 'required|file|extensions:ttf,otf|max:5120',
+            'bold_file'        => 'nullable|file|extensions:ttf,otf|max:5120',
+            'italic_file'      => 'nullable|file|extensions:ttf,otf|max:5120',
+            'bold_italic_file' => 'nullable|file|extensions:ttf,otf|max:5120',
         ]);
 
         $derivedName = pathinfo($request->file('regular_file')->getClientOriginalName(), PATHINFO_FILENAME);
