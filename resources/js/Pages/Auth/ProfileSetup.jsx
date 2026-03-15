@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/Components/ui/select';
+import { useT } from '@/lib/i18n';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -78,6 +79,7 @@ function FormField({ label, required, error, children, hint }) {
 
 export default function ProfileSetup({ user }) {
     const { platform } = usePage().props;
+    const t = useT();
 
     const { data, setData, post, processing, errors } = useForm({
         name:         user?.name ?? '',
@@ -113,9 +115,9 @@ export default function ProfileSetup({ user }) {
                         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                             <User className="h-7 w-7 text-primary" />
                         </div>
-                        <h1 className="text-2xl font-bold tracking-tight">Complete your profile</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">{t('profile_setup.title')}</h1>
                         <p className="mt-1.5 text-sm text-muted-foreground">
-                            Just a few more details to personalize your learning experience.
+                            {t('profile_setup.subtitle')}
                         </p>
                     </div>
 
@@ -123,17 +125,17 @@ export default function ProfileSetup({ user }) {
                     <div className="mb-8 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">✓</span>
-                            Account created
+                            {t('profile_setup.step_account_created')}
                         </span>
                         <ChevronRight className="h-3.5 w-3.5" />
                         <span className="flex items-center gap-1.5 font-medium text-foreground">
                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                            Profile info
+                            {t('profile_setup.step_profile_info')}
                         </span>
                         <ChevronRight className="h-3.5 w-3.5" />
                         <span className="flex items-center gap-1.5">
                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-bold">3</span>
-                            Start learning
+                            {t('profile_setup.step_start_learning')}
                         </span>
                     </div>
 
@@ -258,7 +260,7 @@ export default function ProfileSetup({ user }) {
                                     size="lg"
                                     disabled={processing}
                                 >
-                                    {processing ? 'Saving…' : 'Complete Profile & Continue →'}
+                                    {processing ? t('profile_setup.submitting') : t('profile_setup.submit')}
                                 </Button>
                             </div>
                         </form>

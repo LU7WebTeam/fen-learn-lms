@@ -5,11 +5,13 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
+import { useT } from '@/lib/i18n';
 
 export default function ForgotPassword({ status }) {
     const { props } = usePage();
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const t = useT();
 
     const { data, setData, post, transform, processing, errors } = useForm({
         email: '',
@@ -25,7 +27,7 @@ export default function ForgotPassword({ status }) {
         const token = await resolveCaptchaToken(captchaConfig, 'forgot_password', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError('Captcha verification is required.');
+            setCaptchaClientError(t('auth.captcha.required'));
             return;
         }
 
@@ -38,9 +40,7 @@ export default function ForgotPassword({ status }) {
             <Head title="Forgot Password" />
 
             <div className="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
+                {t('auth.forgot_password.description')}
             </div>
 
             {status && (
@@ -74,7 +74,7 @@ export default function ForgotPassword({ status }) {
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
+                        {t('auth.forgot_password.submit')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -1,8 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { GraduationCap } from 'lucide-react';
 import AnalyticsTracker from '@/Components/AnalyticsTracker';
+import { useT } from '@/lib/i18n';
 
 export default function GuestLayout({ children, fullWidth = false }) {
+    const t = useT();
     return (
         <div className={[
             'flex min-h-screen flex-col items-center bg-gray-100 pt-6',
@@ -26,11 +28,11 @@ export default function GuestLayout({ children, fullWidth = false }) {
             </div>
 
             <footer className="mt-8 pb-6 text-center text-xs text-gray-500 flex items-center gap-3">
-                <Link href={route('about')} className="hover:text-gray-700 hover:underline">About</Link>
+                <Link href={route('about')} className="hover:text-gray-700 hover:underline">{t('nav.about')}</Link>
                 <span>&middot;</span>
-                <Link href={route('terms')} className="hover:text-gray-700 hover:underline">Terms</Link>
+                <Link href={route('terms')} className="hover:text-gray-700 hover:underline">{t('nav.terms')}</Link>
                 <span>&middot;</span>
-                <Link href={route('privacy')} className="hover:text-gray-700 hover:underline">Privacy</Link>
+                <Link href={route('privacy')} className="hover:text-gray-700 hover:underline">{t('nav.privacy')}</Link>
             </footer>
         </div>
     );

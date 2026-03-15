@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock } from 'lucide-react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
+import { useT } from '@/lib/i18n';
 
 export default function Login({ status, canResetPassword }) {
     const { props } = usePage();
@@ -10,6 +11,7 @@ export default function Login({ status, canResetPassword }) {
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const t = useT();
 
     const { data, setData, post, transform, processing, errors, reset } = useForm({
         email:    '',
@@ -27,7 +29,7 @@ export default function Login({ status, canResetPassword }) {
         const token = await resolveCaptchaToken(captchaConfig, 'login', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError('Captcha verification is required.');
+            setCaptchaClientError(t('auth.captcha.required'));
             return;
         }
 
@@ -55,9 +57,9 @@ export default function Login({ status, canResetPassword }) {
                             )}
                             <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('auth.login.title')}</h1>
                         <p className="text-sm text-gray-500">
-                            Sign in to continue your learning journey.
+                            {t('auth.login.subtitle')}
                         </p>
                     </div>
 
@@ -70,7 +72,7 @@ export default function Login({ status, canResetPassword }) {
                     <form onSubmit={submit} className="space-y-5">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="email">
-                                Email address
+                                {t('auth.login.email')}
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -91,11 +93,11 @@ export default function Login({ status, canResetPassword }) {
                         <div className="space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <label className="text-sm font-medium text-gray-700" htmlFor="password">
-                                    Password
+                                    {t('auth.login.password')}
                                 </label>
                                 {canResetPassword && (
                                     <Link href={route('password.request')} className="text-xs text-gray-500 hover:text-gray-800 transition-colors">
-                                        Forgot password?
+                                        {t('auth.login.forgot_password')}
                                     </Link>
                                 )}
                             </div>
@@ -131,7 +133,7 @@ export default function Login({ status, canResetPassword }) {
                                 className="h-4 w-4 rounded border-gray-300 text-gray-900"
                             />
                             <label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
-                                Remember me
+                                {t('auth.login.remember_me')}
                             </label>
                         </div>
 
@@ -140,7 +142,7 @@ export default function Login({ status, canResetPassword }) {
                             disabled={processing}
                             className="w-full rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
                         >
-                            {processing ? 'Signing in…' : 'Sign in'}
+                            {processing ? t('auth.login.submitting') : t('auth.login.submit')}
                         </button>
 
                         <CaptchaField
@@ -154,15 +156,15 @@ export default function Login({ status, canResetPassword }) {
 
                     <div className="space-y-3 text-center text-sm text-gray-500">
                         <p>
-                            Don't have an account?{' '}
+                            {t('auth.login.no_account')}{' '}
                             <Link href={route('register')} className="font-medium text-gray-800 hover:text-gray-900">
-                                Register
+                                {t('auth.login.register')}
                             </Link>
                         </p>
                         <p>
-                            Are you an admin?{' '}
+                            {t('auth.login.are_you_admin')}{' '}
                             <Link href={route('admin.login')} className="font-medium text-gray-800 hover:text-gray-900">
-                                Admin login
+                                {t('auth.login.admin_login')}
                             </Link>
                         </p>
                     </div>

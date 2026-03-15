@@ -7,6 +7,7 @@ import VideoPlayer from '@/Components/VideoPlayer';
 import UserMenu from '@/Components/UserMenu';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { tl } from '@/lib/locale';
+import { useT } from '@/lib/i18n';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
@@ -56,6 +57,7 @@ function getA11yMediaPreferences() {
 
 function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     const { flash } = usePage().props;
+    const t = useT();
     const result = flash?.quiz_result ?? null;
 
     let quizData = { questions: [], passing_score: 70, max_attempts: 0 };
@@ -133,8 +135,8 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 )}>
                     <Lock className="h-4 w-4 shrink-0" />
                     {limitReached
-                        ? `You have used all ${maxAttempts} allowed attempt${maxAttempts !== 1 ? 's' : ''} for this quiz.`
-                        : `${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining of ${maxAttempts} allowed`}
+                        ? t(maxAttempts === 1 ? 'learn.quiz.attempts_exhausted_s' : 'learn.quiz.attempts_exhausted_p', { n: maxAttempts })
+                        : t(attemptsLeft === 1 ? 'learn.quiz.attempts_remaining_s' : 'learn.quiz.attempts_remaining_p', { left: attemptsLeft, total: maxAttempts })}
                 </div>
             )}
 
@@ -142,13 +144,13 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             {!showResult && allAttempts.length > 0 && (
                 <div className="rounded-lg border overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b">
-                        <p className="text-sm font-medium">Your attempt history</p>
-                        <span className="text-xs text-muted-foreground">Best: {Math.max(...allAttempts.map(a => a.percentage))}%</span>
+                        <p className="text-sm font-medium">{t('learn.quiz.attempt_history')}</p>
+                        <span className="text-xs text-muted-foreground">{t('learn.quiz.best', { n: Math.max(...allAttempts.map(a => a.percentage)) })}</span>
                     </div>
                     <div className="divide-y">
                         {allAttempts.map((a, i) => (
                             <div key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                                <span className="text-muted-foreground">Attempt {a.attempt_number}</span>
+                                <span className="text-muted-foreground">{t('learn.quiz.attempt_n', { n: a.attempt_number })}</span>
                                 <div className="flex items-center gap-4">
                                     <div className="hidden sm:block w-24 h-1.5 rounded-full bg-muted overflow-hidden">
                                         <div
@@ -161,7 +163,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                     </span>
                                     {a.passed
                                         ? <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                                        : <span className="text-xs text-muted-foreground shrink-0">need {passingScore}%</span>}
+                                        : <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.need_pct', { n: passingScore })}</span>}
                                     <span className="hidden md:block text-xs text-muted-foreground shrink-0">{a.created_at}</span>
                                 </div>
                             </div>
@@ -178,8 +180,8 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                         ? 'border-green-200 bg-green-50 text-green-700'
                         : 'border-amber-200 bg-amber-50 text-amber-700'
                 )}>
-                    <span className="font-medium">Last attempt:</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
-                    {lastAttempt.passed ? ' — Passed ✓' : ` — Need ${passingScore}% to pass`}
+                    <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
+                    {lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`}
                 </div>
             )}
 
@@ -199,16 +201,16 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                     </p>
                     <p className="text-sm text-muted-foreground">
                         {result.passed
-                            ? '🎉 Great job! You passed this quiz.'
-                            : `You need ${result.passing_score}% to pass. Review the answers below and try again.`}
+                            ? t('learn.quiz.passed')
+                            : t('learn.quiz.failed', { n: result.passing_score })}
                     </p>
                     {!result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
                         <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
-                            Try Again
+                            {t('learn.quiz.try_again')}
                         </Button>
                     )}
                     {!result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
-                        <p className="mt-3 text-sm text-muted-foreground">No more attempts allowed.</p>
+                        <p className="mt-3 text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
                     )}
                 </div>
             )}
@@ -226,7 +228,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                             {q.text ?? q.question}
                         </p>
                         {isMultiAnswer && !showResult && (
-                            <p className="text-xs text-muted-foreground">Select all that apply.</p>
+                            <p className="text-xs text-muted-foreground">{t('learn.quiz.select_all_that_apply')}</p>
                         )}
 
                         {/* ── Text options ── */}
@@ -327,7 +329,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                             {imgUrl ? (
                                                 <img src={imgUrl} alt={label || `Option ${oi + 1}`} className="aspect-video w-full object-cover" />
                                             ) : (
-                                                <div className="flex aspect-video w-full items-center justify-center bg-muted text-muted-foreground text-xs">No image</div>
+                                                <div className="flex aspect-video w-full items-center justify-center bg-muted text-muted-foreground text-xs">{t('learn.lesson.no_image')}</div>
                                             )}
                                             <div className={cn('flex items-center justify-between px-2 py-1.5', isCorrect && 'bg-green-50 dark:bg-green-950/40', isWrong && 'bg-red-50 dark:bg-red-950/40')}>
                                                 <span className={cn('text-xs font-medium', isCorrect && 'text-green-800 dark:text-green-300', isWrong && 'text-red-800 dark:text-red-300')}>
@@ -355,11 +357,13 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                     className="w-full"
                     size="lg"
                 >
-                    {processing ? 'Submitting…' : `Submit Quiz (${questions.filter((q, i) =>
-                        q.multi_answer
-                            ? Array.isArray(data.answers[i]) && data.answers[i].length > 0
-                            : data.answers[i] !== undefined && data.answers[i] !== null
-                    ).length}/${questions.length} answered)`}
+                    {processing
+                        ? t('learn.quiz.submitting')
+                        : `${t('learn.quiz.submit')} (${t('learn.quiz.answered', { n: questions.filter((q, i) =>
+                            q.multi_answer
+                                ? Array.isArray(data.answers[i]) && data.answers[i].length > 0
+                                : data.answers[i] !== undefined && data.answers[i] !== null
+                        ).length, total: questions.length })})`}
                 </Button>
             )}
         </div>
@@ -371,6 +375,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [], locale }) {
     const courseTitle = tl(course, 'title', locale);
     const courseDescription = tl(course, 'description', locale);
+    const t = useT();
 
     return (
         <div className="flex h-full flex-col">
@@ -390,7 +395,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                     <div className="space-y-2 p-3">
                         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                             <GraduationCap className="h-3.5 w-3.5" />
-                            Course Overview
+                            {t('learn.sidebar.course_overview')}
                         </div>
                         <p className="line-clamp-2 text-sm font-semibold leading-snug">{courseTitle}</p>
                         {courseDescription && (
@@ -401,7 +406,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
 
                 <div className="mt-3 space-y-1">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Progress</span>
+                        <span>{t('learn.sidebar.progress')}</span>
                         <span>{enrollment.progress}%</span>
                     </div>
                     <Progress value={enrollment.progress} className="h-1.5" />
@@ -457,14 +462,14 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                         className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                         <LayoutDashboard className="h-4 w-4" />
-                        My Learning
+                        {t('learn.sidebar.my_learning')}
                     </Link>
                     <Link
                         href={route('profile.edit')}
                         className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                         <User className="h-4 w-4" />
-                        Profile
+                        {t('learn.sidebar.profile')}
                     </Link>
                 </nav>
             </div>
@@ -479,6 +484,7 @@ export default function LearnShow({
     nextLesson, prevLesson, allAttempts,
 }) {
     const { locale } = usePage().props;
+    const t = useT();
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
@@ -577,9 +583,9 @@ export default function LearnShow({
             <Head title={`${lessonTitle} — ${courseTitle}`} />
 
             <div className="sr-only focus-within:not-sr-only focus-within:fixed focus-within:left-3 focus-within:top-3 focus-within:z-[120] focus-within:rounded-lg focus-within:border focus-within:bg-background focus-within:p-2 focus-within:shadow-lg">
-                <a href="#lesson-main" className="mr-3 text-sm underline">Skip to lesson content</a>
-                <a href="#lesson-sidebar" className="mr-3 text-sm underline">Skip to lesson list</a>
-                <a href="#lesson-actions" className="text-sm underline">Skip to lesson actions</a>
+                <a href="#lesson-main" className="mr-3 text-sm underline">{t('learn.lesson.skip_to_content')}</a>
+                <a href="#lesson-sidebar" className="mr-3 text-sm underline">{t('learn.lesson.skip_to_list')}</a>
+                <a href="#lesson-actions" className="text-sm underline">{t('learn.lesson.skip_to_actions')}</a>
             </div>
 
             <div className="flex h-screen flex-col overflow-hidden bg-background">
@@ -620,12 +626,12 @@ export default function LearnShow({
                             className="hidden gap-1.5 text-muted-foreground md:inline-flex"
                         >
                             <Keyboard className="h-4 w-4" />
-                            Shortcuts
+                            {t('learn.lesson.shortcuts_button')}
                         </Button>
                         {completed && (
                             <Badge variant="outline" className="hidden gap-1 text-green-600 border-green-300 sm:flex">
                                 <Check className="h-3.5 w-3.5" />
-                                Completed
+                                {t('learn.lesson.completed')}
                             </Badge>
                         )}
                         <span className="text-sm text-muted-foreground">{enrollment.progress}%</span>
@@ -785,7 +791,7 @@ export default function LearnShow({
                                     onClick={() => prevLesson && router.get(route('learn.lesson', [course.slug, prevLesson.id]))}
                                 >
                                     <ChevronLeft className="mr-1 h-4 w-4" />
-                                    {prevLesson ? tl(prevLesson, 'title', locale) : 'Previous'}
+                                    {prevLesson ? tl(prevLesson, 'title', locale) : t('learn.lesson.previous')}
                                 </Button>
 
                                 <div className="flex items-center gap-3">
@@ -794,20 +800,20 @@ export default function LearnShow({
                                         completed ? (
                                             <Badge variant="outline" className="gap-1.5 text-green-600 border-green-300 px-3 py-1.5">
                                                 <Check className="h-4 w-4" />
-                                                Lesson Complete
+                                                {t('learn.lesson.lesson_complete')}
                                             </Badge>
                                         ) : (
                                             <Button
                                                 onClick={handleComplete}
                                                 disabled={completing || !canComplete}
                                                 variant={canComplete ? 'default' : 'outline'}
-                                                title={!canComplete ? 'Watch the full video to unlock' : undefined}
+                                                title={!canComplete ? t('learn.lesson.watch_video') : undefined}
                                             >
                                                 {completing
-                                                    ? 'Saving…'
+                                                    ? t('learn.lesson.marking')
                                                     : canComplete
-                                                        ? 'Mark as Complete'
-                                                        : 'Watch video to continue'}
+                                                        ? t('learn.lesson.mark_complete')
+                                                        : t('learn.lesson.watch_video')}
                                             </Button>
                                         )
                                     )}
@@ -815,7 +821,7 @@ export default function LearnShow({
                                     {/* Next / Course complete */}
                                     {nextLesson ? (
                                         <Button onClick={() => router.get(route('learn.lesson', [course.slug, nextLesson.id]))}>
-                                            Next
+                                            {t('learn.lesson.next_lesson')}
                                             <ChevronRight className="ml-1 h-4 w-4" />
                                         </Button>
                                     ) : (enrollment.completed_at || (completed && !nextLesson)) ? (
@@ -845,35 +851,35 @@ export default function LearnShow({
             <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Keyboard shortcuts</DialogTitle>
+                        <DialogTitle>{t('learn.shortcuts.title')}</DialogTitle>
                         <DialogDescription>
-                            Use these shortcuts to move faster through the lesson page.
+                            {t('learn.shortcuts.description')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Open this shortcuts dialog</span>
+                            <span>{t('learn.shortcuts.open_dialog')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">?</kbd>
                         </div>
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Focus lesson list</span>
+                            <span>{t('learn.shortcuts.focus_list')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + S</kbd>
                         </div>
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Focus lesson content</span>
+                            <span>{t('learn.shortcuts.focus_content')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + M</kbd>
                         </div>
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Previous lesson</span>
+                            <span>{t('learn.shortcuts.previous_lesson')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + P</kbd>
                         </div>
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Next lesson</span>
+                            <span>{t('learn.shortcuts.next_lesson')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + N</kbd>
                         </div>
                         <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>Mark lesson complete</span>
+                            <span>{t('learn.shortcuts.mark_complete')}</span>
                             <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + C</kbd>
                         </div>
                     </div>

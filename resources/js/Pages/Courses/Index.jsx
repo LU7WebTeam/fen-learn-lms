@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/Components/ui/progress';
 import { BookOpen, Play, GraduationCap, Clock } from 'lucide-react';
 import { tl } from '@/lib/locale';
+import { useT } from '@/lib/i18n';
 import LangSwitcher from '@/Components/LangSwitcher';
 
 const DIFFICULTY_COLORS = {
@@ -20,6 +21,7 @@ function CourseCard({ course, enrolled }) {
     const { locale } = usePage().props;
     const title       = tl(course, 'title', locale);
     const description = tl(course, 'description', locale);
+    const t = useT();
 
     return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -57,8 +59,8 @@ function CourseCard({ course, enrolled }) {
                         <Button asChild className="w-full sm:w-auto" variant={enrolled ? 'outline' : 'default'}>
                             <Link href={route('courses.show', course.slug)}>
                                 {enrolled
-                                    ? <><Play className="mr-2 h-4 w-4" />Continue</>
-                                    : 'View Course'}
+                                    ? <><Play className="mr-2 h-4 w-4" />{t('courses.index.continue')}</>
+                                    : t('courses.index.view_course')}
                             </Link>
                         </Button>
                     </CardFooter>
@@ -78,28 +80,29 @@ function Filters({ categories, filters }) {
     }
 
     const hasFilters = filters.category || filters.difficulty;
+    const t = useT();
 
     return (
         <div className="flex flex-wrap items-center gap-3">
             <Select value={filters.difficulty || 'all'} onValueChange={(v) => update('difficulty', v)}>
                 <SelectTrigger className="w-40">
-                    <SelectValue placeholder="All Difficulties" />
+                    <SelectValue placeholder={t('courses.index.filter_difficulty')} />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">All Difficulties</SelectItem>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
+                    <SelectItem value="all">{t('courses.index.filter_difficulty')}</SelectItem>
+                    <SelectItem value="beginner">{t('courses.index.filter_beginner')}</SelectItem>
+                    <SelectItem value="intermediate">{t('courses.index.filter_intermediate')}</SelectItem>
+                    <SelectItem value="advanced">{t('courses.index.filter_advanced')}</SelectItem>
                 </SelectContent>
             </Select>
 
             {categories.length > 0 && (
                 <Select value={filters.category || 'all'} onValueChange={(v) => update('category', v)}>
                     <SelectTrigger className="w-44">
-                        <SelectValue placeholder="All Categories" />
+                        <SelectValue placeholder={t('courses.index.filter_category')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="all">{t('courses.index.filter_category')}</SelectItem>
                         {categories.map((cat) => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
@@ -109,7 +112,7 @@ function Filters({ categories, filters }) {
 
             {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground">
-                    Clear filters
+                    {t('courses.index.clear_filters')}
                 </Button>
             )}
         </div>
@@ -119,17 +122,18 @@ function Filters({ categories, filters }) {
 export default function CoursesIndex({ courses, enrolledIds, categories, filters }) {
     const { auth } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
+    const t = useT();
 
     return (
         <Layout fullWidth={!auth?.user}>
-            <Head title="Course Catalog" />
+            <Head title={t('courses.index.title')} />
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Course Catalog</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">{t('courses.index.title')}</h1>
                         <p className="mt-1 text-muted-foreground">
-                            {courses.total} course{courses.total !== 1 ? 's' : ''} available
+                            {t(courses.total !== 1 ? 'courses.index.available_other' : 'courses.index.available_one', { n: courses.total })}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -141,7 +145,7 @@ export default function CoursesIndex({ courses, enrolledIds, categories, filters
                 {courses.data.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-24 text-center">
                         <GraduationCap className="mb-4 h-12 w-12 text-muted-foreground" />
-                        <p className="text-muted-foreground">No published courses yet.</p>
+                        <p className="text-muted-foreground">{t('courses.index.no_courses')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-5">

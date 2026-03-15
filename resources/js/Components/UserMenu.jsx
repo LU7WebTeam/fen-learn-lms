@@ -10,10 +10,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import { Button } from '@/Components/ui/button';
 import { LogOut, User, ShieldCheck } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 export default function UserMenu() {
     const { auth } = usePage().props;
     const user = auth?.user;
+    const t = useT();
     if (!user) return null;
 
     const initials = user.name
@@ -47,7 +49,7 @@ export default function UserMenu() {
                 <DropdownMenuItem asChild>
                     <Link href={route('profile.edit')} className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Profile Settings
+                        {t('user_menu.profile_settings')}
                     </Link>
                 </DropdownMenuItem>
 
@@ -55,7 +57,7 @@ export default function UserMenu() {
                     <DropdownMenuItem asChild>
                         <Link href={route('admin.dashboard')} className="flex items-center gap-2">
                             <ShieldCheck className="h-4 w-4" />
-                            Admin Panel
+                            {t('user_menu.admin_panel')}
                         </Link>
                     </DropdownMenuItem>
                 )}
@@ -67,7 +69,7 @@ export default function UserMenu() {
                     className="flex items-center gap-2 text-destructive focus:text-destructive"
                 >
                     <LogOut className="h-4 w-4" />
-                    Log Out
+                    {t('user_menu.log_out')}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

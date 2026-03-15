@@ -5,8 +5,10 @@ import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
 import LangSwitcher from '@/Components/LangSwitcher';
 import AnalyticsTracker from '@/Components/AnalyticsTracker';
+import { useT } from '@/lib/i18n';
 
 function NavItems({ mobile = false }) {
+    const t = useT();
     const linkClass = mobile
         ? 'flex items-center gap-3 px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md'
         : 'flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors';
@@ -15,21 +17,22 @@ function NavItems({ mobile = false }) {
         <>
             <Link href={route('dashboard')} className={linkClass}>
                 <LayoutDashboard className="h-4 w-4" />
-                My Learning
+                {t('nav.my_learning')}
             </Link>
             <Link href="/courses" className={linkClass}>
                 <BookOpen className="h-4 w-4" />
-                Catalog
+                {t('nav.catalog')}
             </Link>
             <Link href={route('profile.edit')} className={linkClass}>
                 <User className="h-4 w-4" />
-                Profile
+                {t('nav.profile')}
             </Link>
         </>
     );
 }
 
 export default function AuthenticatedLayout({ children }) {
+    const t = useT();
     return (
         <div className="min-h-screen bg-background">
             <AnalyticsTracker />
@@ -72,11 +75,11 @@ export default function AuthenticatedLayout({ children }) {
 
             <footer className="border-t mt-auto py-6 text-center text-xs text-muted-foreground">
                 <div className="flex items-center justify-center gap-3">
-                    <Link href={route('about')} className="hover:text-foreground hover:underline">About</Link>
+                    <Link href={route('about')} className="hover:text-foreground hover:underline">{t('nav.about')}</Link>
                     <span>&middot;</span>
-                    <Link href={route('terms')} className="hover:text-foreground hover:underline">Terms</Link>
+                    <Link href={route('terms')} className="hover:text-foreground hover:underline">{t('nav.terms')}</Link>
                     <span>&middot;</span>
-                    <Link href={route('privacy')} className="hover:text-foreground hover:underline">Privacy</Link>
+                    <Link href={route('privacy')} className="hover:text-foreground hover:underline">{t('nav.privacy')}</Link>
                 </div>
             </footer>
         </div>

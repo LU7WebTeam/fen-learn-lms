@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { tl } from '@/lib/locale';
+import { useT } from '@/lib/i18n';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -46,6 +47,7 @@ function renderActivityResult(item) {
 
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
     const { locale } = usePage().props;
+    const t = useT();
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
     const canOpen = enrolled || lesson.is_free_preview;
 
@@ -58,7 +60,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
                     : <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />}
             <span className={`flex-1 ${!canOpen ? 'text-muted-foreground' : ''}`}>{tl(lesson, 'title', locale)}</span>
             {lesson.is_free_preview && !enrolled && (
-                <Badge variant="outline" className="text-xs">Preview</Badge>
+                <Badge variant="outline" className="text-xs">{t('courses.show.preview_badge')}</Badge>
             )}
             {lesson.duration_minutes > 0 && (
                 <span className="text-xs text-muted-foreground">{lesson.duration_minutes}min</span>
@@ -75,6 +77,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
 export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId, learnerActivity = [] }) {
     const { auth, locale } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
+    const t = useT();
 
     const courseTitle       = tl(course, 'title', locale);
     const courseDescription = tl(course, 'description', locale);
@@ -163,21 +166,21 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                 <Button asChild className="w-full" size="lg">
                                     <Link href={route('learn.lesson', [course.slug, enrollment.last_lesson_id || firstLessonId])}>
                                         <Play className="mr-2 h-4 w-4" />
-                                        {enrollment.progress > 0 ? 'Resume Course' : 'Start Course'}
+                                        {enrollment.progress > 0 ? t('courses.show.resume_course') : t('courses.show.start_course')}
                                     </Link>
                                 </Button>
                             ) : auth?.user ? (
                                 <Button className="w-full" size="lg" onClick={handleEnroll}>
-                                    Enroll — Free
+                                    {t('courses.show.enroll_free')}
                                 </Button>
                             ) : (
                                 <div className="space-y-2">
                                     <Button asChild className="w-full" size="lg">
-                                        <Link href={route('register')}>Sign Up & Enroll Free</Link>
+                                        <Link href={route('register')}>{t('courses.show.sign_up_enroll')}</Link>
                                     </Button>
                                     <p className="text-center text-xs text-muted-foreground">
-                                        Already have an account?{' '}
-                                        <Link href={route('login')} className="underline">Log in</Link>
+                                        {t('courses.show.already_account')}{' '}
+                                        <Link href={route('login')} className="underline">{t('courses.show.log_in')}</Link>
                                     </p>
                                 </div>
                             )}
@@ -185,7 +188,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             {enrollment?.completed_at && (
                                 <div className="flex items-center justify-center gap-2 text-sm text-green-600 font-medium">
                                     <Award className="h-4 w-4" />
-                                    Completed!
+                                    {t('courses.show.completed')}
                                 </div>
                             )}
                         </div>
@@ -195,24 +198,24 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 {enrolled ? (
                     <Tabs defaultValue="main" className="w-full">
                         <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
-                            <TabsTrigger value="main">Main</TabsTrigger>
-                            <TabsTrigger value="activity">Activity</TabsTrigger>
+                            <TabsTrigger value="main">{t('courses.show.tab_main')}</TabsTrigger>
+                            <TabsTrigger value="activity">{t('courses.show.tab_activity')}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="main" className="space-y-8">
                             {/* Introduction (BlockNote rich content) */}
                             {Array.isArray(courseIntro) && courseIntro.length > 0 && (
                                 <div>
-                                    <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
+                                    <h2 className="mb-4 text-xl font-semibold">{t('courses.show.about_course')}</h2>
                                     <BlockNoteRenderer content={courseIntro} />
                                 </div>
                             )}
 
                             {/* Curriculum */}
                             <div>
-                                <h2 className="mb-4 text-xl font-semibold">Course Curriculum</h2>
+                                <h2 className="mb-4 text-xl font-semibold">{t('courses.show.curriculum')}</h2>
                                 {course.sections.length === 0 ? (
-                                    <p className="text-muted-foreground">No lessons added yet.</p>
+                                    <p className="text-muted-foreground">{t('courses.show.no_lessons')}</p>
                                 ) : (
                                     <Accordion type="multiple" defaultValue={course.sections.map((s) => String(s.id))}>
                                         {course.sections.map((section) => (
@@ -247,29 +250,29 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
                         <TabsContent value="activity">
                             <div className="mb-4 flex items-center justify-between">
-                                <h2 className="text-xl font-semibold">Your Activity in This Course</h2>
-                                <span className="text-xs text-muted-foreground">{learnerActivity.length} events</span>
+                                <h2 className="text-xl font-semibold">{t('courses.show.activity_title')}</h2>
+                                <span className="text-xs text-muted-foreground">{t('courses.show.activity_events', { n: learnerActivity.length })}</span>
                             </div>
 
                             {learnerActivity.length === 0 ? (
                                 <div className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
-                                    No activity yet. Start learning to see your progress history.
+                                    {t('courses.show.activity_empty')}
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto rounded-lg border">
                                     <table className="w-full min-w-[760px] text-sm">
                                         <thead className="bg-muted/40 text-left">
                                             <tr>
-                                                <th className="px-3 py-2 font-medium">Event</th>
-                                                <th className="px-3 py-2 font-medium">Lesson/Item</th>
-                                                <th className="px-3 py-2 font-medium">Result</th>
-                                                <th className="px-3 py-2 font-medium">Timestamp</th>
+                                                <th className="px-3 py-2 font-medium">{t('courses.show.activity_col_event')}</th>
+                                                <th className="px-3 py-2 font-medium">{t('courses.show.activity_col_lesson')}</th>
+                                                <th className="px-3 py-2 font-medium">{t('courses.show.activity_col_result')}</th>
+                                                <th className="px-3 py-2 font-medium">{t('courses.show.activity_col_time')}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {learnerActivity.map((item) => (
                                                 <tr key={item.id} className="border-t align-top">
-                                                    <td className="px-3 py-2">{LEARNER_ACTIVITY_EVENT_LABELS[item.event] ?? item.event}</td>
+                                                    <td className="px-3 py-2">{t('courses.show.event.' + item.event)}</td>
                                                     <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_title ?? '-'}</td>
                                                     <td className="px-3 py-2">{renderActivityResult(item)}</td>
                                                     <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
@@ -288,7 +291,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             <>
                                 <Separator className="my-8" />
                                 <div>
-                                    <h2 className="mb-4 text-xl font-semibold">About This Course</h2>
+                                    <h2 className="mb-4 text-xl font-semibold">{t('courses.show.about_course')}</h2>
                                     <BlockNoteRenderer content={courseIntro} />
                                 </div>
                             </>
@@ -298,9 +301,9 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
                         {/* Curriculum */}
                         <div>
-                            <h2 className="mb-4 text-xl font-semibold">Course Curriculum</h2>
+                            <h2 className="mb-4 text-xl font-semibold">{t('courses.show.curriculum')}</h2>
                             {course.sections.length === 0 ? (
-                                <p className="text-muted-foreground">No lessons added yet.</p>
+                                <p className="text-muted-foreground">{t('courses.show.no_lessons')}</p>
                             ) : (
                                 <Accordion type="multiple" defaultValue={course.sections.map((s) => String(s.id))}>
                                     {course.sections.map((section) => (

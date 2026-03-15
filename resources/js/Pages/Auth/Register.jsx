@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock, User } from 'lucide-react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
+import { useT } from '@/lib/i18n';
 
 export default function Register() {
     const { props } = usePage();
@@ -11,6 +12,7 @@ export default function Register() {
     const [showPass, setShowPass] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const t = useT();
 
     const { data, setData, post, transform, processing, errors, reset } = useForm({
         name:                 '',
@@ -29,7 +31,7 @@ export default function Register() {
         const token = await resolveCaptchaToken(captchaConfig, 'register', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError('Captcha verification is required.');
+            setCaptchaClientError(t('auth.captcha.required'));
             return;
         }
 
@@ -59,9 +61,9 @@ export default function Register() {
                             )}
                             <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('auth.register.title')}</h1>
                         <p className="text-sm text-gray-500">
-                            Start learning today — it's completely free.
+                            {t('auth.register.subtitle')}
                         </p>
                     </div>
 
@@ -69,7 +71,7 @@ export default function Register() {
                         {/* Name */}
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="name">
-                                Full name
+                                {t('auth.register.name')}
                             </label>
                             <div className="relative">
                                 <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -91,7 +93,7 @@ export default function Register() {
                         {/* Email */}
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="email">
-                                Email address
+                                {t('auth.register.email')}
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -112,7 +114,7 @@ export default function Register() {
                         {/* Password */}
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="password">
-                                Password
+                                {t('auth.register.password')}
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -141,7 +143,7 @@ export default function Register() {
                         {/* Confirm Password */}
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="password_confirmation">
-                                Confirm password
+                                {t('auth.register.confirm_password')}
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -172,7 +174,7 @@ export default function Register() {
                             disabled={processing}
                             className="w-full rounded-lg bg-gray-900 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
                         >
-                            {processing ? 'Creating account…' : 'Create account'}
+                            {processing ? t('auth.register.submitting') : t('auth.register.submit')}
                         </button>
 
                         <CaptchaField
@@ -185,9 +187,9 @@ export default function Register() {
                     </form>
 
                     <p className="text-center text-sm text-gray-500">
-                        Already have an account?{' '}
+                        {t('auth.register.already_have_account')}{' '}
                         <Link href={route('login')} className="font-medium text-gray-800 hover:text-gray-900">
-                            Sign in
+                            {t('auth.register.sign_in')}
                         </Link>
                     </p>
                 </div>
