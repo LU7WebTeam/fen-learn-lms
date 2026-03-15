@@ -17,10 +17,11 @@ class CustomFontController extends Controller
         $validated = $request->validate([
             'name'             => 'required|string|max:120',
             'family'           => 'nullable|string|max:120',
-            'regular_file'     => 'required|file|mimes:ttf,otf|mimetypes:font/ttf,font/otf,application/x-font-ttf,application/x-font-otf,application/octet-stream|max:5120',
-            'bold_file'        => 'nullable|file|mimes:ttf,otf|mimetypes:font/ttf,font/otf,application/x-font-ttf,application/x-font-otf,application/octet-stream|max:5120',
-            'italic_file'      => 'nullable|file|mimes:ttf,otf|mimetypes:font/ttf,font/otf,application/x-font-ttf,application/x-font-otf,application/octet-stream|max:5120',
-            'bold_italic_file' => 'nullable|file|mimes:ttf,otf|mimetypes:font/ttf,font/otf,application/x-font-ttf,application/x-font-otf,application/octet-stream|max:5120',
+            // Keep validation extension-based because browser MIME reporting for font files varies widely.
+            'regular_file'     => 'required|file|mimes:ttf,otf|max:5120',
+            'bold_file'        => 'nullable|file|mimes:ttf,otf|max:5120',
+            'italic_file'      => 'nullable|file|mimes:ttf,otf|max:5120',
+            'bold_italic_file' => 'nullable|file|mimes:ttf,otf|max:5120',
         ]);
 
         $folder = 'fonts/' . now()->format('YmdHis') . '-' . Str::slug($validated['name']);

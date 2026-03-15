@@ -174,7 +174,7 @@ function PlaceholderChips({ tokens }) {
 }
 
 export default function SettingsIndex({ settings, customFonts = [] }) {
-    const { flash } = usePage().props;
+    const { flash, errors = {} } = usePage().props;
     const [processing, setProcessing] = useState(false);
 
     function submitGroup(group, data, files = {}) {
@@ -271,7 +271,7 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
 
                     {/* ── CUSTOM FONTS ── */}
                     <TabsContent value="fonts">
-                        <FontsTab customFonts={customFonts} processing={processing} />
+                        <FontsTab customFonts={customFonts} processing={processing} errors={errors} />
                     </TabsContent>
 
                     {/* ── MAINTENANCE ── */}
@@ -627,7 +627,7 @@ function LoggingTab({ settings, onSave, processing }) {
     );
 }
 
-function FontsTab({ customFonts, processing }) {
+function FontsTab({ customFonts, processing, errors = {} }) {
     const [name, setName] = useState('');
     const [family, setFamily] = useState('');
     const [regularFile, setRegularFile] = useState(null);
@@ -646,6 +646,7 @@ function FontsTab({ customFonts, processing }) {
 
         router.post(route('admin.settings.fonts.store'), formData, {
             forceFormData: true,
+            preserveScroll: true,
             onSuccess: () => {
                 setName('');
                 setFamily('');
@@ -656,6 +657,15 @@ function FontsTab({ customFonts, processing }) {
             },
         });
     }
+
+    const fontUploadError = [
+        errors.name,
+        errors.family,
+        errors.regular_file,
+        errors.bold_file,
+        errors.italic_file,
+        errors.bold_italic_file,
+    ].find(Boolean);
 
     function removeFont(id) {
         router.delete(route('admin.settings.fonts.destroy', id), {
@@ -707,6 +717,8 @@ function FontsTab({ customFonts, processing }) {
                 <p className="text-xs text-muted-foreground">
                     Accepted formats: <code>.ttf</code>, <code>.otf</code>. Max size 5MB per file. Upload variants to improve bold/italic rendering in PDF certificates.
                 </p>
+
+                {fontUploadError && <ErrorBanner message={fontUploadError} />}
 
                 <div className="flex justify-end">
                     <Button onClick={upload} disabled={processing || !name || !regularFile}>Upload Font</Button>
