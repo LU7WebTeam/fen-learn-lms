@@ -35,10 +35,10 @@ export default function Register() {
             return;
         }
 
-        transform((current) => ({ ...current, captcha_token: token || '' }))
-            .post(route('register'), {
-                onFinish: () => reset('password', 'password_confirmation'),
-            });
+        transform((current) => ({ ...current, captcha_token: token || '' }));
+        post(route('register'), {
+            onFinish: () => reset('password', 'password_confirmation'),
+        });
     }
 
     return (

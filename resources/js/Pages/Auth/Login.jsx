@@ -33,8 +33,8 @@ export default function Login({ status, canResetPassword }) {
             return;
         }
 
-        transform((current) => ({ ...current, captcha_token: token || '' }))
-            .post(route('login'), { onFinish: () => reset('password') });
+        transform((current) => ({ ...current, captcha_token: token || '' }));
+        post(route('login'), { onFinish: () => reset('password') });
     }
 
     return (
