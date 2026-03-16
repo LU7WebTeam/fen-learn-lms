@@ -8,6 +8,7 @@ import {
     Circle,
     ChevronDown,
 } from 'lucide-react';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 
 function Heading({ as: Tag = 'h2', className = '', children }) {
     return <Tag className={`font-heading font-bold tracking-tight ${className}`}>{children}</Tag>;
@@ -39,6 +40,7 @@ function Nav({ auth, platform }) {
                 </div>
 
                 <div className="ml-auto flex items-center gap-2">
+                    <ThemeToggleButton className="h-9 w-9" />
                     {auth?.user ? (
                         <Link
                             href={route('dashboard')}

@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
 import LangSwitcher from '@/Components/LangSwitcher';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { useT } from '@/lib/i18n';
 
@@ -54,6 +55,7 @@ export default function AuthenticatedLayout({ children }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-2">
+                        <ThemeToggleButton />
                         <LangSwitcher />
                         <UserMenu />
 

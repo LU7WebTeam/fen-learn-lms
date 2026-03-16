@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { BookOpen, Users, Award, Globe } from 'lucide-react';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 
 export default function About() {
     const { platform } = usePage().props;
@@ -21,6 +22,7 @@ export default function About() {
                         <nav className="flex items-center gap-4 text-sm">
                             <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Catalog</Link>
                             <Link href={route('login')} className="text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+                            <ThemeToggleButton />
                         </nav>
                     </div>
                 </header>

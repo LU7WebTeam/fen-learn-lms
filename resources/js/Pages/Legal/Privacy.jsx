@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 
 function Section({ title, children }) {
     return (
@@ -30,6 +31,7 @@ export default function Privacy() {
                         <nav className="flex items-center gap-4 text-sm">
                             <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Catalog</Link>
                             <Link href={route('login')} className="text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+                            <ThemeToggleButton />
                         </nav>
                     </div>
                 </header>
