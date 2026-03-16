@@ -35,13 +35,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->authenticate();
 
+        $user = $request->user();
+
         $request->session()->regenerate();
 
         SystemLogger::write('info', 'Learner login success', [
             'auth_flow' => 'login',
         ], $request);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $defaultRoute = $user?->isAdmin() ? 'admin.dashboard' : 'dashboard';
+
+        return redirect()->intended(route($defaultRoute, absolute: false));
     }
 
     /**
