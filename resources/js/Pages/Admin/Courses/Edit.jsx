@@ -265,6 +265,58 @@ function LearnerProfilesPanel({ students = [] }) {
         return true;
     });
 
+    function escapeCsv(value) {
+        const text = value === null || value === undefined ? '' : String(value);
+        const escaped = text.replace(/"/g, '""');
+        return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
+    }
+
+    function handleExportCsv() {
+        const headers = [
+            'Learner Name',
+            'Email',
+            'Gender',
+            'State',
+            'Occupation',
+            'Organization',
+            'Birthdate',
+            'Enrolled At',
+            'Completed At',
+            'Progress (%)',
+            'Certificate Issued',
+        ];
+
+        const rows = visible.map((item) => [
+            item.user_name,
+            item.user_email,
+            item.user_gender || '',
+            item.user_state || '',
+            item.user_occupation || '',
+            item.user_organization || '',
+            item.user_birthdate || '',
+            item.enrolled_at || '',
+            item.completed_at || '',
+            item.progress ?? 0,
+            item.certificate_uuid ? 'Yes' : 'No',
+        ]);
+
+        const csv = [headers, ...rows]
+            .map((row) => row.map(escapeCsv).join(','))
+            .join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const downloadUrl = URL.createObjectURL(blob);
+        const dateStamp = new Date().toISOString().slice(0, 10);
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', `course-learners-${dateStamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -360,24 +412,29 @@ function LearnerProfilesPanel({ students = [] }) {
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>{visible.length} of {students.length} learners shown</span>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            setSearch('');
-                            setGender('all');
-                            setState('all');
-                            setOccupation('all');
-                            setCompletion('all');
-                            setEnrolledFrom('');
-                            setEnrolledTo('');
-                            setCompletedFrom('');
-                            setCompletedTo('');
-                        }}
-                    >
-                        Reset filters
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={handleExportCsv}>
+                            Export CSV
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setSearch('');
+                                setGender('all');
+                                setState('all');
+                                setOccupation('all');
+                                setCompletion('all');
+                                setEnrolledFrom('');
+                                setEnrolledTo('');
+                                setCompletedFrom('');
+                                setCompletedTo('');
+                            }}
+                        >
+                            Reset filters
+                        </Button>
+                    </div>
                 </div>
 
                 {visible.length === 0 ? (
