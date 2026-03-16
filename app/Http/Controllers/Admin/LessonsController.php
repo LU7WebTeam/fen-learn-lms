@@ -129,7 +129,7 @@ class LessonsController extends Controller
         $courseId = $lesson->section->course_id;
         $lesson->delete();
 
-        return redirect()->route('admin.courses.edit', $courseId)
+        return redirect()->route('admin.courses.edit', ['course' => $courseId, 'tab' => 'curriculum'])
             ->with('success', 'Lesson deleted.');
     }
 
@@ -168,7 +168,7 @@ class LessonsController extends Controller
             'source_lesson_id' => $lesson->id,
         ], 'created');
 
-        return redirect()->route('admin.courses.edit', $section->course_id)
+        return redirect()->route('admin.courses.edit', ['course' => $section->course_id, 'tab' => 'curriculum'])
             ->with('success', 'Lesson duplicated.');
     }
 

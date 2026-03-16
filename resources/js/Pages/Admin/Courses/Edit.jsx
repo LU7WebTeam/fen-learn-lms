@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -22,6 +22,23 @@ import {
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
+const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity'];
+
+function resolveInitialTab(courseId, pageUrl) {
+    const fallback = 'dashboard';
+
+    if (typeof window === 'undefined') {
+        return fallback;
+    }
+
+    const queryTab = new URLSearchParams(pageUrl?.split('?')[1] ?? '').get('tab');
+    if (queryTab && COURSE_EDIT_TABS.includes(queryTab)) {
+        return queryTab;
+    }
+
+    const stored = window.sessionStorage.getItem(`admin-course-edit-tab-${courseId}`);
+    return stored && COURSE_EDIT_TABS.includes(stored) ? stored : fallback;
+}
 
 function LangTab({ lang, setLang }) {
     return (
@@ -702,15 +719,25 @@ function CourseIntroductionForm({ course }) {
 }
 
 export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed }) {
+    const { url } = usePage();
     const [addingSection, setAddingSection] = useState(false);
     const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
     const [draggedId, setDraggedId] = useState(null);
     const [dragOverId, setDragOverId] = useState(null);
     const [reordering, setReordering] = useState(false);
+    const [activeTab, setActiveTab] = useState(() => resolveInitialTab(course.id, url));
 
     useEffect(() => {
         setSections([...course.sections].sort((a, b) => a.order - b.order));
     }, [course.sections]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        window.sessionStorage.setItem(`admin-course-edit-tab-${course.id}`, activeTab);
+    }, [course.id, activeTab]);
 
     function handleDragStart(e, id) {
         e.dataTransfer.effectAllowed = 'move';
@@ -794,7 +821,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                 )}
 
                 {/* Tabs */}
-                <Tabs defaultValue="dashboard">
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="w-full justify-start">
                         <TabsTrigger value="dashboard" className="gap-2">
                             <BarChart3 className="h-4 w-4" />Dashboard
