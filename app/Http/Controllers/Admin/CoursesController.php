@@ -228,11 +228,56 @@ class CoursesController extends Controller
             }), 1)
             : 0;
 
+        $attemptPercentages = $quizAttempts
+            ->map(function ($attempt) {
+                return $attempt->max_score > 0
+                    ? (($attempt->score / $attempt->max_score) * 100)
+                    : 0;
+            })
+            ->sort()
+            ->values();
+
+        $medianPercentage = 0;
+        if ($attemptPercentages->isNotEmpty()) {
+            $count = $attemptPercentages->count();
+            $mid = intdiv($count, 2);
+
+            $medianPercentage = $count % 2 === 0
+                ? round((($attemptPercentages[$mid - 1] + $attemptPercentages[$mid]) / 2), 1)
+                : round($attemptPercentages[$mid], 1);
+        }
+
+        $scoreDistribution = [
+            '0_39' => 0,
+            '40_59' => 0,
+            '60_79' => 0,
+            '80_100' => 0,
+        ];
+
+        foreach ($attemptPercentages as $pct) {
+            if ($pct < 40) {
+                $scoreDistribution['0_39']++;
+            } elseif ($pct < 60) {
+                $scoreDistribution['40_59']++;
+            } elseif ($pct < 80) {
+                $scoreDistribution['60_79']++;
+            } else {
+                $scoreDistribution['80_100']++;
+            }
+        }
+
+        $firstAttempts = $quizAttempts->where('attempt_number', 1)->values();
+        $firstAttemptCount = $firstAttempts->count();
+        $firstAttemptPassed = $firstAttempts->where('passed', true)->count();
+
         $perQuiz = $quizLessons->map(function ($lesson) use ($quizAttempts) {
             $attempts = $quizAttempts->where('lesson_id', $lesson->id)->values();
             $attemptCount = $attempts->count();
             $passedCount = $attempts->where('passed', true)->count();
             $failedCount = $attemptCount - $passedCount;
+            $firstAttempts = $attempts->where('attempt_number', 1)->values();
+            $firstAttemptCount = $firstAttempts->count();
+            $firstAttemptPassed = $firstAttempts->where('passed', true)->count();
             $avgPct = $attemptCount > 0
                 ? round($attempts->avg(function ($attempt) {
                     return $attempt->max_score > 0
@@ -249,6 +294,7 @@ class CoursesController extends Controller
                 'passed' => $passedCount,
                 'failed' => $failedCount,
                 'pass_rate' => $attemptCount > 0 ? round(($passedCount / $attemptCount) * 100, 1) : 0,
+                'first_attempt_pass_rate' => $firstAttemptCount > 0 ? round(($firstAttemptPassed / $firstAttemptCount) * 100, 1) : 0,
                 'avg_score_pct' => $avgPct,
             ];
         })->values();
@@ -273,6 +319,7 @@ class CoursesController extends Controller
                 $answeredCount = 0;
                 $correctCount = 0;
                 $optionCounts = collect($options)->mapWithKeys(fn($_, $optIdx) => [$optIdx => 0])->all();
+                $attemptsCount = $attempts->count();
 
                 foreach ($attempts as $attempt) {
                     $answers = is_array($attempt->answers) ? $attempt->answers : [];
@@ -317,12 +364,29 @@ class CoursesController extends Controller
                     'answered_count' => $answeredCount,
                     'correct_count' => $correctCount,
                     'incorrect_count' => max(0, $answeredCount - $correctCount),
+                    'skip_count' => max(0, $attemptsCount - $answeredCount),
+                    'skip_rate_pct' => $attemptsCount > 0 ? round(((max(0, $attemptsCount - $answeredCount) / $attemptsCount) * 100), 1) : 0,
+                    'total_attempts' => $attemptsCount,
                     'accuracy_pct' => $answeredCount > 0 ? round(($correctCount / $answeredCount) * 100, 1) : 0,
                     'option_counts' => $optionCounts,
                     'options' => $options,
                 ];
             });
         })->values();
+
+        $hardestQuestions = $perQuestion
+            ->filter(fn($q) => ($q['total_attempts'] ?? 0) > 0)
+            ->sort(function ($a, $b) {
+                if ($a['accuracy_pct'] !== $b['accuracy_pct']) {
+                    return $a['accuracy_pct'] <=> $b['accuracy_pct'];
+                }
+                if ($a['skip_rate_pct'] !== $b['skip_rate_pct']) {
+                    return $b['skip_rate_pct'] <=> $a['skip_rate_pct'];
+                }
+                return $b['total_attempts'] <=> $a['total_attempts'];
+            })
+            ->take(10)
+            ->values();
 
         $quizAnalytics = [
             'overview' => [
@@ -331,11 +395,17 @@ class CoursesController extends Controller
                 'passed' => $passedAttempts,
                 'failed' => $failedAttempts,
                 'pass_rate' => $totalAttempts > 0 ? round(($passedAttempts / $totalAttempts) * 100, 1) : 0,
+                'first_attempts' => $firstAttemptCount,
+                'first_passed' => $firstAttemptPassed,
+                'first_attempt_pass_rate' => $firstAttemptCount > 0 ? round(($firstAttemptPassed / $firstAttemptCount) * 100, 1) : 0,
                 'avg_score_pct' => $avgPercentage,
+                'median_score_pct' => $medianPercentage,
+                'score_distribution' => $scoreDistribution,
                 'unique_learners' => $quizAttempts->pluck('user_id')->unique()->count(),
             ],
             'per_quiz' => $perQuiz,
             'per_question' => $perQuestion,
+            'hardest_questions' => $hardestQuestions,
         ];
 
         return Inertia::render('Admin/Courses/Edit', [
