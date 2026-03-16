@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
-const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity', 'learner-profiles'];
+const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity', 'learner-profiles', 'quiz-analytics'];
 
 function resolveInitialTab(courseId, pageUrl) {
     const fallback = 'dashboard';
@@ -482,6 +482,121 @@ function LearnerProfilesPanel({ students = [] }) {
                 )}
             </CardContent>
         </Card>
+    );
+}
+
+function QuizAnalyticsPanel({ analytics }) {
+    const overview = analytics?.overview ?? {};
+    const perQuiz = analytics?.per_quiz ?? [];
+    const perQuestion = analytics?.per_question ?? [];
+
+    return (
+        <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Quiz Count</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-bold">{overview.quiz_count ?? 0}</CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Total Attempts</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-bold">{overview.attempts ?? 0}</CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Pass Rate</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-bold">{overview.pass_rate ?? 0}%</CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Average Marks</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-bold">{overview.avg_score_pct ?? 0}%</CardContent>
+                </Card>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Per Quiz Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {perQuiz.length === 0 ? (
+                        <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                            No quiz attempts yet for this course.
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-md border">
+                            <table className="w-full min-w-[760px] text-sm">
+                                <thead className="bg-muted/40 text-left">
+                                    <tr>
+                                        <th className="px-3 py-2 font-medium">Quiz</th>
+                                        <th className="px-3 py-2 font-medium">Section</th>
+                                        <th className="px-3 py-2 font-medium">Attempts</th>
+                                        <th className="px-3 py-2 font-medium">Passed</th>
+                                        <th className="px-3 py-2 font-medium">Failed</th>
+                                        <th className="px-3 py-2 font-medium">Pass Rate</th>
+                                        <th className="px-3 py-2 font-medium">Avg Marks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {perQuiz.map((item) => (
+                                        <tr key={item.lesson_id} className="border-t">
+                                            <td className="px-3 py-2 font-medium">{item.lesson_title}</td>
+                                            <td className="px-3 py-2 text-muted-foreground">{item.section_title || '-'}</td>
+                                            <td className="px-3 py-2">{item.attempts}</td>
+                                            <td className="px-3 py-2 text-green-700 dark:text-green-400">{item.passed}</td>
+                                            <td className="px-3 py-2 text-red-700 dark:text-red-400">{item.failed}</td>
+                                            <td className="px-3 py-2">{item.pass_rate}%</td>
+                                            <td className="px-3 py-2">{item.avg_score_pct}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Per Question Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {perQuestion.length === 0 ? (
+                        <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                            No question-level analytics yet.
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-md border">
+                            <table className="w-full min-w-[980px] text-sm">
+                                <thead className="bg-muted/40 text-left">
+                                    <tr>
+                                        <th className="px-3 py-2 font-medium">Quiz</th>
+                                        <th className="px-3 py-2 font-medium">Q#</th>
+                                        <th className="px-3 py-2 font-medium">Question</th>
+                                        <th className="px-3 py-2 font-medium">Answered</th>
+                                        <th className="px-3 py-2 font-medium">Correct</th>
+                                        <th className="px-3 py-2 font-medium">Incorrect</th>
+                                        <th className="px-3 py-2 font-medium">Accuracy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {perQuestion.map((item) => (
+                                        <tr key={`${item.lesson_id}-${item.question_index}`} className="border-t align-top">
+                                            <td className="px-3 py-2 text-muted-foreground">{item.lesson_title}</td>
+                                            <td className="px-3 py-2">{item.question_index}</td>
+                                            <td className="px-3 py-2 max-w-[360px]">
+                                                <p className="line-clamp-2">{item.question_text}</p>
+                                            </td>
+                                            <td className="px-3 py-2">{item.answered_count}</td>
+                                            <td className="px-3 py-2 text-green-700 dark:text-green-400">{item.correct_count}</td>
+                                            <td className="px-3 py-2 text-red-700 dark:text-red-400">{item.incorrect_count}</td>
+                                            <td className="px-3 py-2 font-medium">{item.accuracy_pct}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
     );
 }
 
@@ -1004,7 +1119,7 @@ function CourseIntroductionForm({ course }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed, quizAnalytics }) {
     const { url } = usePage();
     const [addingSection, setAddingSection] = useState(false);
     const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
@@ -1149,6 +1264,9 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                         <TabsTrigger value="learner-profiles" className="gap-2">
                             <Users className="h-4 w-4" />Learner Profiles
                         </TabsTrigger>
+                        <TabsTrigger value="quiz-analytics" className="gap-2">
+                            <BarChart3 className="h-4 w-4" />Quiz Analytics
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── Details tab ── */}
@@ -1243,6 +1361,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                     {/* ── Learner profiles tab ── */}
                     <TabsContent value="learner-profiles" className="mt-6">
                         <LearnerProfilesPanel students={students ?? []} />
+                    </TabsContent>
+
+                    {/* ── Quiz analytics tab ── */}
+                    <TabsContent value="quiz-analytics" className="mt-6">
+                        <QuizAnalyticsPanel analytics={quizAnalytics} />
                     </TabsContent>
 
                     {/* ── Introduction tab ── */}

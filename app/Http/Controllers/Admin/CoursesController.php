@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Course;
+use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\QuizAttempt;
 use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -201,6 +203,141 @@ class CoursesController extends Controller
             })
             ->values();
 
+        $quizLessons = Lesson::query()
+            ->where('type', 'quiz')
+            ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+            ->with('section:id,title')
+            ->get(['id', 'section_id', 'title', 'content']);
+
+        $quizLessonIds = $quizLessons->pluck('id');
+
+        $quizAttempts = $quizLessonIds->isNotEmpty()
+            ? QuizAttempt::query()
+                ->whereIn('lesson_id', $quizLessonIds)
+                ->get(['lesson_id', 'user_id', 'attempt_number', 'answers', 'score', 'max_score', 'passed', 'created_at'])
+            : collect();
+
+        $totalAttempts = $quizAttempts->count();
+        $passedAttempts = $quizAttempts->where('passed', true)->count();
+        $failedAttempts = $totalAttempts - $passedAttempts;
+        $avgPercentage = $totalAttempts > 0
+            ? round($quizAttempts->avg(function ($attempt) {
+                return $attempt->max_score > 0
+                    ? (($attempt->score / $attempt->max_score) * 100)
+                    : 0;
+            }), 1)
+            : 0;
+
+        $perQuiz = $quizLessons->map(function ($lesson) use ($quizAttempts) {
+            $attempts = $quizAttempts->where('lesson_id', $lesson->id)->values();
+            $attemptCount = $attempts->count();
+            $passedCount = $attempts->where('passed', true)->count();
+            $failedCount = $attemptCount - $passedCount;
+            $avgPct = $attemptCount > 0
+                ? round($attempts->avg(function ($attempt) {
+                    return $attempt->max_score > 0
+                        ? (($attempt->score / $attempt->max_score) * 100)
+                        : 0;
+                }), 1)
+                : 0;
+
+            return [
+                'lesson_id' => $lesson->id,
+                'lesson_title' => $lesson->title,
+                'section_title' => $lesson->section?->title,
+                'attempts' => $attemptCount,
+                'passed' => $passedCount,
+                'failed' => $failedCount,
+                'pass_rate' => $attemptCount > 0 ? round(($passedCount / $attemptCount) * 100, 1) : 0,
+                'avg_score_pct' => $avgPct,
+            ];
+        })->values();
+
+        $perQuestion = $quizLessons->flatMap(function ($lesson) use ($quizAttempts) {
+            $content = is_array($lesson->content)
+                ? $lesson->content
+                : (json_decode($lesson->content ?? '{}', true) ?: []);
+            $questions = $content['questions'] ?? [];
+            $attempts = $quizAttempts->where('lesson_id', $lesson->id)->values();
+
+            return collect($questions)->map(function ($question, $index) use ($lesson, $attempts) {
+                $isMulti = !empty($question['multi_answer']);
+                $options = is_array($question['options'] ?? null) ? $question['options'] : [];
+
+                $correctValues = $isMulti
+                    ? array_values(array_map('intval', (array) ($question['correct'] ?? [])))
+                    : [(int) (is_array($question['correct'] ?? null) ? ($question['correct'][0] ?? -1) : ($question['correct'] ?? -1))];
+
+                sort($correctValues);
+
+                $answeredCount = 0;
+                $correctCount = 0;
+                $optionCounts = collect($options)->mapWithKeys(fn($_, $optIdx) => [$optIdx => 0])->all();
+
+                foreach ($attempts as $attempt) {
+                    $answers = is_array($attempt->answers) ? $attempt->answers : [];
+                    $selectedRaw = $answers[$index] ?? null;
+
+                    if ($isMulti) {
+                        $selected = is_array($selectedRaw) ? array_values(array_map('intval', $selectedRaw)) : [];
+                        foreach ($selected as $sel) {
+                            if (array_key_exists($sel, $optionCounts)) {
+                                $optionCounts[$sel]++;
+                            }
+                        }
+
+                        if (count($selected) > 0) {
+                            $answeredCount++;
+                            sort($selected);
+                            if ($selected === $correctValues) {
+                                $correctCount++;
+                            }
+                        }
+                    } else {
+                        $selected = is_array($selectedRaw) ? null : (is_null($selectedRaw) ? null : (int) $selectedRaw);
+                        if (!is_null($selected)) {
+                            $answeredCount++;
+                            if (array_key_exists($selected, $optionCounts)) {
+                                $optionCounts[$selected]++;
+                            }
+                            if ($selected === ($correctValues[0] ?? -1)) {
+                                $correctCount++;
+                            }
+                        }
+                    }
+                }
+
+                return [
+                    'lesson_id' => $lesson->id,
+                    'lesson_title' => $lesson->title,
+                    'question_index' => $index + 1,
+                    'question_text' => $question['text'] ?? 'Untitled question',
+                    'question_type' => $question['type'] ?? 'text',
+                    'is_multi_answer' => $isMulti,
+                    'answered_count' => $answeredCount,
+                    'correct_count' => $correctCount,
+                    'incorrect_count' => max(0, $answeredCount - $correctCount),
+                    'accuracy_pct' => $answeredCount > 0 ? round(($correctCount / $answeredCount) * 100, 1) : 0,
+                    'option_counts' => $optionCounts,
+                    'options' => $options,
+                ];
+            });
+        })->values();
+
+        $quizAnalytics = [
+            'overview' => [
+                'quiz_count' => $quizLessons->count(),
+                'attempts' => $totalAttempts,
+                'passed' => $passedAttempts,
+                'failed' => $failedAttempts,
+                'pass_rate' => $totalAttempts > 0 ? round(($passedAttempts / $totalAttempts) * 100, 1) : 0,
+                'avg_score_pct' => $avgPercentage,
+                'unique_learners' => $quizAttempts->pluck('user_id')->unique()->count(),
+            ],
+            'per_quiz' => $perQuiz,
+            'per_question' => $perQuestion,
+        ];
+
         return Inertia::render('Admin/Courses/Edit', [
             'course'          => $course,
             'defaultTemplate' => \App\Models\Course::defaultCertificateTemplate(),
@@ -212,6 +349,7 @@ class CoursesController extends Controller
             'students'        => $students,
             'lessonStats'     => $lessonStats,
             'learnerActivityFeed' => $learnerActivityFeed,
+            'quizAnalytics'   => $quizAnalytics,
             'flash'           => session()->only(['success', 'error']),
         ]);
     }
