@@ -156,7 +156,9 @@ class CoursesController extends Controller
                 'user_occupation'      => $enrollment->user->occupation,
                 'user_organization'    => $enrollment->user->organization,
                 'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),
+                'enrolled_at_raw'      => $enrollment->enrolled_at?->toDateString(),
                 'completed_at'         => $enrollment->completed_at?->format('M j, Y'),
+                'completed_at_raw'     => $enrollment->completed_at?->toDateString(),
                 'progress'             => $totalLessons > 0
                     ? (int) round(($enrollment->lessonProgress->count() / $totalLessons) * 100) : 0,
                 'certificate_uuid'     => $enrollment->certificate_uuid,

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
-const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity'];
+const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity', 'learner-profiles'];
 
 function resolveInitialTab(courseId, pageUrl) {
     const fallback = 'dashboard';
@@ -188,6 +188,235 @@ function LearnerActivityPanel({ activities = [], students = [] }) {
                                         </td>
                                         <td className="px-3 py-2">{renderResult(item)}</td>
                                         <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function LearnerProfilesPanel({ students = [] }) {
+    const [search, setSearch] = useState('');
+    const [gender, setGender] = useState('all');
+    const [state, setState] = useState('all');
+    const [occupation, setOccupation] = useState('all');
+    const [completion, setCompletion] = useState('all');
+    const [enrolledFrom, setEnrolledFrom] = useState('');
+    const [enrolledTo, setEnrolledTo] = useState('');
+    const [completedFrom, setCompletedFrom] = useState('');
+    const [completedTo, setCompletedTo] = useState('');
+
+    const states = [...new Set(students.map((s) => s.user_state).filter(Boolean))].sort();
+    const occupations = [...new Set(students.map((s) => s.user_occupation).filter(Boolean))].sort();
+
+    const visible = students.filter((s) => {
+        const q = search.trim().toLowerCase();
+        if (q) {
+            const haystack = [
+                s.user_name,
+                s.user_email,
+                s.user_state,
+                s.user_occupation,
+                s.user_organization,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            if (!haystack.includes(q)) return false;
+        }
+
+        if (gender !== 'all' && (s.user_gender || '').toLowerCase() !== gender) {
+            return false;
+        }
+
+        if (state !== 'all' && s.user_state !== state) {
+            return false;
+        }
+
+        if (occupation !== 'all' && s.user_occupation !== occupation) {
+            return false;
+        }
+
+        if (completion === 'completed' && !s.completed_at_raw) {
+            return false;
+        }
+        if (completion === 'in_progress' && s.completed_at_raw) {
+            return false;
+        }
+
+        if (enrolledFrom && (!s.enrolled_at_raw || s.enrolled_at_raw < enrolledFrom)) {
+            return false;
+        }
+        if (enrolledTo && (!s.enrolled_at_raw || s.enrolled_at_raw > enrolledTo)) {
+            return false;
+        }
+
+        if (completedFrom && (!s.completed_at_raw || s.completed_at_raw < completedFrom)) {
+            return false;
+        }
+        if (completedTo && (!s.completed_at_raw || s.completed_at_raw > completedTo)) {
+            return false;
+        }
+
+        return true;
+    });
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Learner Profiles
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                    Filter learners by profile details and enrollment/completion dates.
+                </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="space-y-1.5 lg:col-span-2">
+                        <Label>Search learner</Label>
+                        <Input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Name, email, state, occupation..."
+                        />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Gender</Label>
+                        <Select value={gender} onValueChange={setGender}>
+                            <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Completion</Label>
+                        <Select value={completion} onValueChange={setCompletion}>
+                            <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="in_progress">In progress</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>State</Label>
+                        <Select value={state} onValueChange={setState}>
+                            <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                {states.map((item) => (
+                                    <SelectItem key={item} value={item}>{item}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Occupation</Label>
+                        <Select value={occupation} onValueChange={setOccupation}>
+                            <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                {occupations.map((item) => (
+                                    <SelectItem key={item} value={item}>{item}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Enrolled from</Label>
+                        <Input type="date" value={enrolledFrom} onChange={(e) => setEnrolledFrom(e.target.value)} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Enrolled to</Label>
+                        <Input type="date" value={enrolledTo} onChange={(e) => setEnrolledTo(e.target.value)} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Completed from</Label>
+                        <Input type="date" value={completedFrom} onChange={(e) => setCompletedFrom(e.target.value)} />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Completed to</Label>
+                        <Input type="date" value={completedTo} onChange={(e) => setCompletedTo(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{visible.length} of {students.length} learners shown</span>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                            setSearch('');
+                            setGender('all');
+                            setState('all');
+                            setOccupation('all');
+                            setCompletion('all');
+                            setEnrolledFrom('');
+                            setEnrolledTo('');
+                            setCompletedFrom('');
+                            setCompletedTo('');
+                        }}
+                    >
+                        Reset filters
+                    </Button>
+                </div>
+
+                {visible.length === 0 ? (
+                    <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                        No learners match the current filters.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto rounded-md border">
+                        <table className="w-full min-w-[1200px] text-sm">
+                            <thead className="bg-muted/40 text-left">
+                                <tr>
+                                    <th className="px-3 py-2 font-medium">Learner</th>
+                                    <th className="px-3 py-2 font-medium">Gender</th>
+                                    <th className="px-3 py-2 font-medium">State</th>
+                                    <th className="px-3 py-2 font-medium">Occupation</th>
+                                    <th className="px-3 py-2 font-medium">Organization</th>
+                                    <th className="px-3 py-2 font-medium">Birthdate</th>
+                                    <th className="px-3 py-2 font-medium">Enrolled</th>
+                                    <th className="px-3 py-2 font-medium">Completed</th>
+                                    <th className="px-3 py-2 font-medium">Progress</th>
+                                    <th className="px-3 py-2 font-medium">Certificate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visible.map((item) => (
+                                    <tr key={item.id} className="border-t align-top">
+                                        <td className="px-3 py-2">
+                                            <div className="font-medium">{item.user_name}</div>
+                                            <div className="text-xs text-muted-foreground">{item.user_email}</div>
+                                        </td>
+                                        <td className="px-3 py-2 capitalize">{item.user_gender || '-'}</td>
+                                        <td className="px-3 py-2">{item.user_state || '-'}</td>
+                                        <td className="px-3 py-2">{item.user_occupation || '-'}</td>
+                                        <td className="px-3 py-2">{item.user_organization || '-'}</td>
+                                        <td className="px-3 py-2">{item.user_birthdate || '-'}</td>
+                                        <td className="px-3 py-2">{item.enrolled_at || '-'}</td>
+                                        <td className="px-3 py-2">{item.completed_at || '-'}</td>
+                                        <td className="px-3 py-2">{item.progress}%</td>
+                                        <td className="px-3 py-2">{item.certificate_uuid ? 'Issued' : '-'}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -860,6 +1089,9 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                         <TabsTrigger value="learner-activity" className="gap-2">
                             <ScrollText className="h-4 w-4" />Learner Activity
                         </TabsTrigger>
+                        <TabsTrigger value="learner-profiles" className="gap-2">
+                            <Users className="h-4 w-4" />Learner Profiles
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── Details tab ── */}
@@ -949,6 +1181,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                     {/* ── Learner activity tab ── */}
                     <TabsContent value="learner-activity" className="mt-6">
                         <LearnerActivityPanel activities={learnerActivityFeed ?? []} students={students ?? []} />
+                    </TabsContent>
+
+                    {/* ── Learner profiles tab ── */}
+                    <TabsContent value="learner-profiles" className="mt-6">
+                        <LearnerProfilesPanel students={students ?? []} />
                     </TabsContent>
 
                     {/* ── Introduction tab ── */}
