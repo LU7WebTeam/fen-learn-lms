@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
 
 function Section({ title, children }) {
@@ -12,12 +11,14 @@ function Section({ title, children }) {
 }
 
 export default function Privacy() {
-    const { platform } = usePage().props;
-    const name = platform?.name || 'Free LMS';
+    const name = 'FEN Learn';
+    const website = 'fen-learn.fenetwork.my';
+    const country = 'Malaysia';
+    const updatedOn = '16 March 2026';
 
     return (
         <>
-            <Head title={`Privacy Policy — ${name}`} />
+            <Head title={`Privacy Policy - ${name}`} />
 
             <div className="min-h-screen bg-background">
                 <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
@@ -36,52 +37,105 @@ export default function Privacy() {
                 <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 space-y-10">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight mb-2">Privacy Policy</h1>
-                        <p className="text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <p className="text-sm text-muted-foreground">Last updated: {updatedOn}</p>
                     </div>
 
-                    <Section title="1. Information We Collect">
-                        <p>When you register and use {name}, we collect:</p>
+                    <Section title="1. Scope of this Policy">
+                        <p>
+                            This Privacy Policy explains how {name} ("we", "our", "us") collects, uses,
+                            stores, and protects personal data when you use our website at {website}
+                            (the "Platform").
+                        </p>
+                        <p>
+                            This policy applies to all learners, visitors, and registered users of the Platform in {country}.
+                        </p>
+                    </Section>
+
+                    <Section title="2. Information We Collect">
+                        <p>When you visit, register, or learn on {name}, we may collect:</p>
                         <ul className="list-disc pl-5 space-y-1">
-                            <li><strong>Account data:</strong> name, email address, and password (stored encrypted)</li>
-                            <li><strong>Profile data:</strong> gender, race, state, birthdate, occupation, and organisation (collected during onboarding)</li>
-                            <li><strong>Learning data:</strong> course enrolments, lesson progress, quiz results, and certificates earned</li>
-                            <li><strong>Usage data:</strong> login timestamps and general platform activity</li>
+                            <li><strong>Account information:</strong> full name, email address, login credentials</li>
+                            <li><strong>Profile details:</strong> onboarding details that you choose to provide</li>
+                            <li><strong>Learning records:</strong> enrollments, lesson progress, quiz attempts, results, and certificates</li>
+                            <li><strong>Technical data:</strong> browser type, IP address, device and session activity logs</li>
+                            <li><strong>Support communications:</strong> messages submitted through our support or contact channels</li>
                         </ul>
                     </Section>
 
-                    <Section title="2. How We Use Your Information">
-                        <p>We use the collected data to:</p>
+                    <Section title="3. How We Use Your Information">
+                        <p>We use personal data for legitimate operational and educational purposes, including to:</p>
                         <ul className="list-disc pl-5 space-y-1">
-                            <li>Provide and improve the learning experience</li>
-                            <li>Track your progress and issue certificates</li>
-                            <li>Send transactional emails (e.g. email verification, password resets)</li>
-                            <li>Generate anonymised analytics to understand platform usage</li>
+                            <li>create and manage user accounts</li>
+                            <li>deliver courses and track learner progress</li>
+                            <li>generate and verify certificates</li>
+                            <li>send service emails such as verification and password reset messages</li>
+                            <li>monitor platform stability, security, and abuse prevention</li>
+                            <li>improve course quality and user experience through analytics</li>
                         </ul>
                         <p>We do not sell your personal data to third parties.</p>
                     </Section>
 
-                    <Section title="3. Data Storage & Security">
-                        <p>Your data is stored securely. Passwords are hashed using industry-standard algorithms and are never stored in plain text. We implement appropriate technical measures to protect your information from unauthorised access.</p>
+                    <Section title="4. Legal Basis and Consent">
+                        <p>
+                            By creating an account or using the Platform, you consent to the collection and processing
+                            of your information as described in this policy and in accordance with applicable laws in {country}.
+                        </p>
                     </Section>
 
-                    <Section title="4. Cookies">
-                        <p>We use session cookies that are essential for the platform to function (authentication, CSRF protection). We do not use tracking or advertising cookies.</p>
+                    <Section title="5. Cookies and Similar Technologies">
+                        <p>
+                            We use essential cookies and session technologies to keep you signed in, protect forms,
+                            and maintain secure access to learning features. We do not use third-party advertising cookies.
+                        </p>
                     </Section>
 
-                    <Section title="5. Data Retention">
-                        <p>We retain your account data for as long as your account is active. You may request deletion of your account at any time from your profile settings. Upon deletion, your personal data will be removed from our systems within a reasonable period.</p>
+                    <Section title="6. Data Sharing and Disclosure">
+                        <p>We may share limited data only when necessary with:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>trusted service providers that help us operate the Platform</li>
+                            <li>authorities where disclosure is required by law or lawful request</li>
+                            <li>auditors or legal advisors under strict confidentiality obligations</li>
+                        </ul>
+                        <p>All such sharing is limited to what is necessary for the stated purpose.</p>
                     </Section>
 
-                    <Section title="6. Your Rights">
-                        <p>You have the right to access, correct, or delete your personal data. To exercise these rights, please contact us at the email below.</p>
+                    <Section title="7. Data Retention">
+                        <p>
+                            We keep your data only as long as needed for learning operations, compliance,
+                            and record-keeping. When no longer required, data is securely deleted or anonymized.
+                        </p>
                     </Section>
 
-                    <Section title="7. Changes to This Policy">
-                        <p>We may update this Privacy Policy from time to time. We will notify users of significant changes by posting a notice on the platform.</p>
+                    <Section title="8. Security Measures">
+                        <p>
+                            We apply reasonable administrative, technical, and organizational safeguards to protect
+                            personal data from unauthorized access, alteration, or loss. No online system can be guaranteed
+                            as 100% secure, but we continuously improve our controls.
+                        </p>
                     </Section>
 
-                    <Section title="8. Contact">
-                        <p>For privacy-related questions, please contact us at {platform?.contact_email || 'the contact email listed on the platform'}.</p>
+                    <Section title="9. Your Rights">
+                        <p>Subject to applicable law, you may request to:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>access your personal data</li>
+                            <li>correct inaccurate data</li>
+                            <li>delete your account and related data where applicable</li>
+                            <li>withdraw consent for non-essential processing</li>
+                        </ul>
+                    </Section>
+
+                    <Section title="10. Changes to this Privacy Policy">
+                        <p>
+                            We may revise this policy from time to time. Updates will be posted on {website}
+                            with a revised "Last updated" date.
+                        </p>
+                    </Section>
+
+                    <Section title="11. Contact">
+                        <p>
+                            For privacy questions about {name}, please contact the platform administrator through
+                            the official communication channels listed on {website}.
+                        </p>
                     </Section>
                 </main>
 

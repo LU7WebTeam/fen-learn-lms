@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
 
 function Section({ title, children }) {
@@ -12,12 +11,14 @@ function Section({ title, children }) {
 }
 
 export default function Terms() {
-    const { platform } = usePage().props;
-    const name = platform?.name || 'Free LMS';
+    const name = 'FEN Learn';
+    const website = 'fen-learn.fenetwork.my';
+    const country = 'Malaysia';
+    const updatedOn = '16 March 2026';
 
     return (
         <>
-            <Head title={`Terms of Use — ${name}`} />
+            <Head title={`Terms & Conditions - ${name}`} />
 
             <div className="min-h-screen bg-background">
                 <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
@@ -35,46 +36,95 @@ export default function Terms() {
 
                 <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 space-y-10">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight mb-2">Terms of Use</h1>
-                        <p className="text-sm text-muted-foreground">Last updated: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <h1 className="text-3xl font-bold tracking-tight mb-2">Terms & Conditions</h1>
+                        <p className="text-sm text-muted-foreground">Last updated: {updatedOn}</p>
                     </div>
 
                     <Section title="1. Acceptance of Terms">
-                        <p>By accessing or using {name}, you agree to be bound by these Terms of Use. If you do not agree, please do not use the platform.</p>
+                        <p>
+                            By accessing or using {website} (the "Platform"), you agree to be bound by these
+                            Terms & Conditions. If you do not agree, do not use the Platform.
+                        </p>
                     </Section>
 
-                    <Section title="2. Use of the Platform">
-                        <p>This platform is provided free of charge for educational purposes. You may:</p>
+                    <Section title="2. Eligibility and Accounts">
+                        <p>
+                            You must provide accurate information when creating an account and keep your login credentials secure.
+                            You are responsible for all activities under your account.
+                        </p>
+                    </Section>
+
+                    <Section title="3. Permitted Use">
+                        <p>{name} is provided for lawful educational use. You may:</p>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>Register and create a personal account</li>
                             <li>Access and complete published courses</li>
                             <li>Download certificates for your own use</li>
                         </ul>
-                        <p>You may not use the platform to violate any applicable laws, distribute spam, or attempt to gain unauthorised access to any system.</p>
-                    </Section>
-
-                    <Section title="3. User Accounts">
-                        <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate information when registering. We reserve the right to suspend accounts that violate these terms.</p>
+                        <p>You may not:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>use the Platform for unlawful, fraudulent, or abusive activity</li>
+                            <li>attempt unauthorized access, probing, or disruption of systems</li>
+                            <li>copy, redistribute, or resell learning materials without permission</li>
+                            <li>upload content that is harmful, infringing, or violates others' rights</li>
+                        </ul>
                     </Section>
 
                     <Section title="4. Intellectual Property">
-                        <p>All course content, including text, videos, images, and assessments, is the property of {name} or its content partners. You may not reproduce, distribute, or create derivative works without prior written permission.</p>
+                        <p>
+                            Unless otherwise stated, course content, branding, visuals, text, and software on {name}
+                            are owned by or licensed to us and are protected by applicable intellectual property laws.
+                        </p>
                     </Section>
 
-                    <Section title="5. Certificates">
-                        <p>Certificates issued by this platform are for educational recognition only. They do not constitute a formal qualification unless explicitly stated by the issuing organisation.</p>
+                    <Section title="5. Certificates and Outcomes">
+                        <p>
+                            Certificates issued through the Platform are evidence of course completion only and do not
+                            automatically represent professional licensing or government accreditation unless expressly stated.
+                        </p>
                     </Section>
 
-                    <Section title="6. Limitation of Liability">
-                        <p>{name} is provided "as is" without any warranty of any kind. We do not guarantee the accuracy, completeness, or suitability of any course content. To the extent permitted by law, we are not liable for any direct or indirect damages arising from your use of the platform.</p>
+                    <Section title="6. Platform Availability">
+                        <p>
+                            We may update, suspend, or discontinue parts of the Platform at any time, including for maintenance,
+                            security, or operational reasons.
+                        </p>
                     </Section>
 
-                    <Section title="7. Changes to Terms">
-                        <p>We may update these terms at any time. Continued use of the platform after changes constitutes acceptance of the revised terms.</p>
+                    <Section title="7. Disclaimer and Limitation of Liability">
+                        <p>
+                            The Platform is provided on an "as is" and "as available" basis. To the fullest extent
+                            permitted by law, we disclaim warranties and are not liable for indirect, incidental,
+                            special, or consequential losses arising from use of the Platform.
+                        </p>
                     </Section>
 
-                    <Section title="8. Contact">
-                        <p>For questions about these terms, please contact us at {platform?.contact_email || 'the contact email listed on the platform'}.</p>
+                    <Section title="8. Suspension and Termination">
+                        <p>
+                            We may suspend or terminate access to the Platform if these Terms are violated,
+                            to protect users, or where required by law.
+                        </p>
+                    </Section>
+
+                    <Section title="9. Changes to these Terms">
+                        <p>
+                            We may revise these Terms from time to time. Updated Terms will be posted on {website}
+                            with the latest revision date. Continued use after updates means you accept the revised Terms.
+                        </p>
+                    </Section>
+
+                    <Section title="10. Governing Law and Jurisdiction">
+                        <p>
+                            These Terms are governed by the laws of {country}. Any disputes related to these Terms
+                            will be subject to the exclusive jurisdiction of the courts of {country}.
+                        </p>
+                    </Section>
+
+                    <Section title="11. Contact">
+                        <p>
+                            For questions regarding these Terms & Conditions, contact the platform administrator through
+                            the official contact channels listed on {website}.
+                        </p>
                     </Section>
                 </main>
 
