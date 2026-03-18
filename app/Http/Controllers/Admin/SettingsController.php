@@ -49,6 +49,9 @@ class SettingsController extends Controller
         'reset_email_title'          => 'Reset your password',
         'reset_email_body'           => 'We received a request to reset your password for {{platform_name}}.',
         'reset_email_cta'            => 'Reset Password',
+        'course_completion_notify_learner' => '1',
+        'course_completion_notify_admins'  => '0',
+        'course_completion_admin_recipients' => '',
         'certificates_enabled'       => '1',
         'maintenance_mode'           => '0',
         'maintenance_message'        => 'We are currently down for scheduled maintenance. Please check back soon.',
@@ -221,6 +224,9 @@ class SettingsController extends Controller
             'reset_email_title'          => 'nullable|string|max:150',
             'reset_email_body'           => 'nullable|string|max:1000',
             'reset_email_cta'            => 'nullable|string|max:60',
+            'course_completion_notify_learner' => 'required|in:0,1',
+            'course_completion_notify_admins'  => 'required|in:0,1',
+            'course_completion_admin_recipients' => 'nullable|string|max:1000',
         ]);
 
         $this->validateEmailTemplateGuardrails($request);
@@ -244,6 +250,9 @@ class SettingsController extends Controller
         Setting::set('reset_email_title', $request->input('reset_email_title', $this->defaults['reset_email_title']));
         Setting::set('reset_email_body', $request->input('reset_email_body', $this->defaults['reset_email_body']));
         Setting::set('reset_email_cta', $request->input('reset_email_cta', $this->defaults['reset_email_cta']));
+        Setting::set('course_completion_notify_learner', $request->input('course_completion_notify_learner', $this->defaults['course_completion_notify_learner']));
+        Setting::set('course_completion_notify_admins', $request->input('course_completion_notify_admins', $this->defaults['course_completion_notify_admins']));
+        Setting::set('course_completion_admin_recipients', $request->input('course_completion_admin_recipients', $this->defaults['course_completion_admin_recipients']));
 
         if ($request->input('clear_mail_password') === '1') {
             Setting::set('mail_password', '');

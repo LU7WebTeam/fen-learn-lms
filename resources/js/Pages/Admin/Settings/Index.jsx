@@ -995,6 +995,9 @@ function EmailTab({ settings, onSave, processing }) {
     const [resetTitle, setResetTitle] = useState(settings.reset_email_title || 'Reset your password');
     const [resetBody, setResetBody] = useState(settings.reset_email_body || 'We received a request to reset your password for {{platform_name}}.');
     const [resetCta, setResetCta] = useState(settings.reset_email_cta || 'Reset Password');
+    const [completionNotifyLearner, setCompletionNotifyLearner] = useState(settings.course_completion_notify_learner === '1');
+    const [completionNotifyAdmins, setCompletionNotifyAdmins] = useState(settings.course_completion_notify_admins === '1');
+    const [completionAdminRecipients, setCompletionAdminRecipients] = useState(settings.course_completion_admin_recipients || '');
     const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
     const [activeSection, setActiveSection] = useState('smtp');
@@ -1022,6 +1025,9 @@ function EmailTab({ settings, onSave, processing }) {
             reset_email_title: resetTitle,
             reset_email_body: resetBody,
             reset_email_cta: resetCta,
+            course_completion_notify_learner: completionNotifyLearner ? '1' : '0',
+            course_completion_notify_admins: completionNotifyAdmins ? '1' : '0',
+            course_completion_admin_recipients: completionAdminRecipients,
         });
     }
 
@@ -1046,6 +1052,7 @@ function EmailTab({ settings, onSave, processing }) {
         { id: 'invitation', label: 'Staff Invitation' },
         { id: 'verification', label: 'Email Verification' },
         { id: 'reset', label: 'Password Reset' },
+        { id: 'completion', label: 'Course Completion' },
         { id: 'test', label: 'Test Email' },
     ];
 
@@ -1366,6 +1373,41 @@ function EmailTab({ settings, onSave, processing }) {
                                             Send Test Email
                                         </Button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeSection === 'completion' && (
+                            <div className="space-y-4">
+                                <p className="text-xs text-muted-foreground">
+                                    Configure who receives a notification when a learner completes a course. If a certificate is issued, the learner email reminds them to download it from the course page.
+                                </p>
+
+                                <SwitchRow
+                                    label="Notify learner on course completion"
+                                    description="Send a completion email to the learner who completed the course."
+                                    checked={completionNotifyLearner}
+                                    onChange={setCompletionNotifyLearner}
+                                />
+
+                                <SwitchRow
+                                    label="Notify admins on course completion"
+                                    description="Send a completion alert to admins when a learner finishes a course."
+                                    checked={completionNotifyAdmins}
+                                    onChange={setCompletionNotifyAdmins}
+                                />
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="course_completion_admin_recipients">Admin recipient emails</Label>
+                                    <Input
+                                        id="course_completion_admin_recipients"
+                                        value={completionAdminRecipients}
+                                        onChange={e => setCompletionAdminRecipients(e.target.value)}
+                                        placeholder="admin1@example.com, admin2@example.com"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Optional. Leave blank to notify all admin users with valid email addresses.
+                                    </p>
                                 </div>
                             </div>
                         )}

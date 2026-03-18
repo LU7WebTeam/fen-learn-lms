@@ -7,6 +7,7 @@ use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
 use App\Support\LearnerCourseActivityLogger;
+use App\Support\CourseCompletionNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -231,6 +232,8 @@ class LearnController extends Controller
                 ],
                 $course
             );
+
+            CourseCompletionNotifier::send($request->user(), $course, $enrollment);
         }
 
         return back()->with('success', 'Lesson marked complete.');
@@ -424,6 +427,8 @@ class LearnController extends Controller
                     ],
                     $course
                 );
+
+                CourseCompletionNotifier::send($request->user(), $course, $enrollment);
             }
         }
 
