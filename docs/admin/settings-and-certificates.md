@@ -112,6 +112,74 @@ The **Test Email** section at the bottom of the Email tab sends a plain connecti
 
 ---
 
+## Course Completion Notifications
+
+When a learner completes a course, automated notifications can be sent to both the learner and admin users. These notifications include optional certificate reminders.
+
+**Location:** Admin → Settings → Email tab → Course Completion section
+
+### Configuration
+
+The **Course Completion** section includes:
+
+| Setting | Description |
+|---|---|
+| **Notify learner on course completion** | Toggle to send a completion email to the learner |
+| **Notify admins on course completion** | Toggle to send a completion alert to admin users |
+| **Admin recipient emails** | Comma-separated list of email addresses to notify (optional; if blank, all admin users are notified) |
+| **Subject** | Customisable completion email subject line |
+| **Title** | Large heading inside the email body |
+| **Body** | Main message paragraph |
+| **Button text** | Label on the course link button |
+
+### Learner completion email
+
+When a learner completes a course (all required lessons finished or quiz passed, depending on course settings):
+
+1. If **Notify learner** is enabled, the learner receives an email
+2. The email includes the course title, completion timestamp, and a link to the course page
+3. If the course has certificates enabled, the email automatically appends a reminder to download the certificate from the course page
+4. The email uses the learner's name, course title, and platform name in the message
+
+### Admin completion alert
+
+When a learner completes a course:
+
+1. If **Notify admins** is enabled, admin users receive a completion alert
+2. If **Admin recipient emails** is configured, only those addresses receive the alert
+3. If **Admin recipient emails** is blank, all users with `super_admin` or `content_editor` role receive the alert
+4. The alert includes the learner's name and email, course title, and a link to the course admin dashboard
+
+### Placeholder tokens
+
+The course completion email body and subject support dynamic placeholders:
+
+| Token | Description |
+|---|---|
+| `{{platform_name}}` | The platform name from Settings |
+| `{{learner_name}}` | The learner's full name |
+| `{{course_title}}` | The title of the completed course |
+| `{{completed_at}}` | The completion date and time (formatted) |
+| `{{certificate_status}}` | Whether a certificate was issued ("Issued" or "Not issued") |
+
+### Sending a test
+
+The **Course Completion** section includes:
+
+1. A **Test Recipient Email** field — enter any address to receive a test notification
+2. A **Send Completion Test** button — sends a preview of the completion email to that address
+
+The test email uses realistic sample data (a learner named "Test Learner" completing a "Sample Course" with a certificate issued) and appends `[Test]` to the subject line.
+
+### How it works
+
+- Notifications are triggered both when a course is completed via lesson progression and when it is completed via quiz submission
+- The same learner completion email logic applies in both cases
+- If a course has certificates enabled, the learner is always reminded to download their certificate in the completion email
+- Admin notifications are sent in parallel with learner notifications but use a separate template
+
+---
+
 ## Custom Fonts
 
 Custom fonts uploaded via Settings are available for selection when designing certificate templates.

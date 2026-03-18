@@ -98,3 +98,24 @@ Duplication shortcuts speed up content creation when building similar courses or
 2. Ensure all required fields are filled in (title, slug, cover image, at least one published section with lessons).
 3. Change **Status** from `draft` to `published`.
 4. Save — the course is now visible in the public catalog and learners can enroll.
+
+---
+
+## Course Completion and Notifications
+
+When a learner completes a course (finishes all required lessons or passes a required quiz):
+
+- A **completion record** is created in the database with a timestamp
+- If certificates are enabled for that course, a **certificate is automatically generated** and the learner can download it from the course page
+- **Automated notifications** can be triggered to inform the learner and/or admins of the completion
+
+### Configuring completion notifications
+
+Notifications are configured globally in **Admin → Settings → Email tab → Course Completion section**:
+
+- Enable/disable learner notifications
+- Enable/disable admin notifications
+- Customise the notification email subject, title, body, and button text
+- Specify admin recipient email addresses (or leave blank to notify all admins)
+
+See the [Settings and Certificates](./settings-and-certificates.md#course-completion-notifications) guide for full configuration details.
