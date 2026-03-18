@@ -24,12 +24,14 @@ class Lesson extends Model
         'duration_minutes',
         'is_free_preview',
         'prerequisite_lesson_id',
+        'allow_seeking',
     ];
 
     protected function casts(): array
     {
         return [
             'is_free_preview' => 'boolean',
+            'allow_seeking' => 'boolean',
         ];
     }
 

@@ -168,6 +168,18 @@ function VideoEditor({ data, setData, errors, lang }) {
                 </div>
             )}
 
+            <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <Checkbox
+                    id="allow-seeking"
+                    checked={data.allow_seeking ?? false}
+                    onCheckedChange={(checked) => setData('allow_seeking', checked)}
+                />
+                <div className="flex-1">
+                    <Label htmlFor="allow-seeking" className="text-sm font-medium cursor-pointer">Allow learners to skip or seek forward</Label>
+                    <p className="text-xs text-muted-foreground mt-1">If unchecked, learners must watch the video sequentially without skipping ahead.</p>
+                </div>
+            </div>
+
             {lang === 'en' ? (
                 <Field label="Notes / Transcript (optional)" error={errors.content}>
                     <Textarea
@@ -734,6 +746,7 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
         title_ms:                lesson.title_ms ?? '',
         duration_minutes:        lesson.duration_minutes ?? 0,
         is_free_preview:         lesson.is_free_preview ?? false,
+        allow_seeking:           lesson.allow_seeking ?? false,
         prerequisite_lesson_id:  lesson.prerequisite_lesson_id ?? '',
         video_url:               lesson.video_url ?? '',
         video_file:              null,

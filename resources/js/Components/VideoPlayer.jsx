@@ -71,7 +71,7 @@ function loadYouTubeAPI(cb) {
     });
 }
 
-function YouTubePlayer({ videoId, onWatchComplete, captionsDefault }) {
+function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking = false }) {
     const divRef     = useRef(null);
     const playerRef  = useRef(null);
     const maxRef     = useRef(0);
@@ -116,7 +116,9 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault }) {
             if (!p?.getCurrentTime) return;
             const curr = p.getCurrentTime();
             const dur  = p.getDuration();
-            if (curr > maxRef.current + SEEK_TOLERANCE) {
+            
+            // Only enforce seek restriction if allowSeeking is false
+            if (!allowSeeking && curr > maxRef.current + SEEK_TOLERANCE) {
                 p.seekTo(maxRef.current, true);
             } else {
                 maxRef.current = Math.max(maxRef.current, curr);
@@ -135,7 +137,7 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault }) {
             clearInterval(timerRef.current);
             playerRef.current?.destroy?.();
         };
-    }, [videoId, captionsDefault]);
+    }, [videoId, captionsDefault, allowSeeking]);
 
     return (
         <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
@@ -161,7 +163,7 @@ function loadVimeoAPI(cb) {
     });
 }
 
-function VimeoPlayer({ videoId, onWatchComplete, captionsDefault }) {
+function VimeoPlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking = false }) {
     const divRef    = useRef(null);
     const playerRef = useRef(null);
     const maxRef    = useRef(0);
@@ -185,7 +187,8 @@ function VimeoPlayer({ videoId, onWatchComplete, captionsDefault }) {
             playerRef.current = p;
 
             p.on('timeupdate', ({ seconds, duration }) => {
-                if (seconds > maxRef.current + SEEK_TOLERANCE) {
+                // Only enforce seek restriction if allowSeeking is false
+                if (!allowSeeking && seconds > maxRef.current + SEEK_TOLERANCE) {
                     p.setCurrentTime(maxRef.current);
                 } else {
                     maxRef.current = Math.max(maxRef.current, seconds);
@@ -208,7 +211,7 @@ function VimeoPlayer({ videoId, onWatchComplete, captionsDefault }) {
             destroyed = true;
             playerRef.current?.destroy?.();
         };
-    }, [videoId, captionsDefault]);
+    }, [videoId, captionsDefault, allowSeeking]);
 
     return (
         <div className="overflow-hidden rounded-xl">
@@ -219,7 +222,7 @@ function VimeoPlayer({ videoId, onWatchComplete, captionsDefault }) {
 
 // ─── Native <video> ───────────────────────────────────────────────────────────
 
-function NativePlayer({ url, onWatchComplete }) {
+function NativePlayer({ url, onWatchComplete, allowSeeking = false }) {
     const videoRef = useRef(null);
     const maxRef   = useRef(0);
     const doneRef  = useRef(false);
@@ -230,7 +233,8 @@ function NativePlayer({ url, onWatchComplete }) {
         const curr = v.currentTime;
         const dur  = v.duration;
 
-        if (curr > maxRef.current + SEEK_TOLERANCE) {
+        // Only enforce seek restriction if allowSeeking is false
+        if (!allowSeeking && curr > maxRef.current + SEEK_TOLERANCE) {
             v.currentTime = maxRef.current;
         } else {
             maxRef.current = Math.max(maxRef.current, curr);
@@ -280,7 +284,7 @@ function WatchedBadge({ watched }) {
 
 // ─── Public export ────────────────────────────────────────────────────────────
 
-export default function VideoPlayer({ url, onWatchComplete, captionsDefault = false }) {
+export default function VideoPlayer({ url, onWatchComplete, captionsDefault = false, allowSeeking = false }) {
     const [watched, setWatched] = useState(false);
 
     function handleComplete() {
@@ -307,6 +311,7 @@ export default function VideoPlayer({ url, onWatchComplete, captionsDefault = fa
                     videoId={ytId}
                     onWatchComplete={handleComplete}
                     captionsDefault={captionsDefault}
+                    allowSeeking={allowSeeking}
                 />
             )}
             {vimeoId && (
@@ -314,9 +319,10 @@ export default function VideoPlayer({ url, onWatchComplete, captionsDefault = fa
                     videoId={vimeoId}
                     onWatchComplete={handleComplete}
                     captionsDefault={captionsDefault}
+                    allowSeeking={allowSeeking}
                 />
             )}
-            {!ytId && !vimeoId && <NativePlayer url={url} onWatchComplete={handleComplete} />}
+            {!ytId && !vimeoId && <NativePlayer url={url} onWatchComplete={handleComplete} allowSeeking={allowSeeking} />}
             {captionsDefault && (
                 <p className="text-xs text-muted-foreground">
                     Captions are set to open by default when the provider supports them.

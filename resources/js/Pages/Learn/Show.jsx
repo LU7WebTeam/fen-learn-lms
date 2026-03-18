@@ -714,6 +714,7 @@ export default function LearnShow({
                                             url={lesson.video_url}
                                             onWatchComplete={() => setVideoWatched(true)}
                                             captionsDefault={a11yMediaPreferences.captionsByDefault}
+                                            allowSeeking={lesson.allow_seeking}
                                         />
                                         {!a11yMediaPreferences.textFirstLearning && notesPanel}
                                     </div>

@@ -66,6 +66,7 @@ class LessonsController extends Controller
             'title_ms'                => 'nullable|string|max:255',
             'duration_minutes'        => 'nullable|integer|min:0',
             'is_free_preview'         => 'boolean',
+            'allow_seeking'           => 'boolean',
             'prerequisite_lesson_id'  => 'nullable|integer|exists:lessons,id',
         ];
 
