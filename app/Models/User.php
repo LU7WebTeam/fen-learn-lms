@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_code',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at'    => 'datetime',
             'profile_completed_at' => 'datetime',
             'suspended_at'         => 'datetime',
+            'two_factor_code_expires_at' => 'datetime',
             'birthdate'            => 'date',
             'password'             => 'hashed',
         ];

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -50,6 +51,31 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Verify credentials and return the user without logging in (for 2FA flow).
+     * 
+     * @throws \Illuminate\Validation\ValidationException
+     * @return \App\Models\User
+     */
+    public function verifyCredentialsFor2FA(): \App\Models\User
+    {
+        $this->ensureIsNotRateLimited();
+
+        $user = \App\Models\User::where('email', $this->input('email'))->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($this->input('password'), $user->password)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($this->throttleKey());
+        
+        return $user;
     }
 
     /**

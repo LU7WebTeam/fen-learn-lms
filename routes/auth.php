@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\TwoFactorVerificationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,16 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // Two-factor verification (after credentials verified but before session created)
+    Route::get('verify-code', [TwoFactorVerificationController::class, 'show'])
+        ->name('two-factor.verify');
+
+    Route::post('verify-code', [TwoFactorVerificationController::class, 'verify'])
+        ->name('two-factor.verify.post');
+
+    Route::post('verify-code/resend', [TwoFactorVerificationController::class, 'resend'])
+        ->name('two-factor.resend');
 });
 
 Route::middleware('auth')->group(function () {

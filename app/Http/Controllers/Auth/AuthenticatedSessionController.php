@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Support\CaptchaVerifier;
 use App\Support\SystemLogger;
+use App\Support\TwoFactorAuthenticator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,19 +34,24 @@ class AuthenticatedSessionController extends Controller
     {
         CaptchaVerifier::enforce($request, 'login');
 
-        $request->authenticate();
+        // Verify credentials without logging in (for 2FA)
+        $user = $request->verifyCredentialsFor2FA();
 
-        $user = $request->user();
+        // Generate and send 2FA code
+        TwoFactorAuthenticator::sendCode($user);
 
-        $request->session()->regenerate();
+        // Store user info in session for 2FA verification
+        $request->session()->put([
+            '2fa_user_id' => $user->id,
+            '2fa_email' => $user->email,
+            '2fa_remember' => $request->boolean('remember'),
+        ]);
 
-        SystemLogger::write('info', 'Learner login success', [
-            'auth_flow' => 'login',
+        SystemLogger::write('info', 'Learner 2FA code sent', [
+            'auth_flow' => '2fa_code_sent',
         ], $request);
 
-        $defaultRoute = $user?->isAdmin() ? 'admin.dashboard' : 'dashboard';
-
-        return redirect()->intended(route($defaultRoute, absolute: false));
+        return redirect()->route('two-factor.verify');
     }
 
     /**
