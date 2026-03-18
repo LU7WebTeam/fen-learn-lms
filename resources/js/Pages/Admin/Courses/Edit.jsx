@@ -491,6 +491,15 @@ function QuizAnalyticsPanel({ analytics }) {
     const perQuestion = analytics?.per_question ?? [];
     const hardestQuestions = analytics?.hardest_questions ?? [];
     const distribution = overview.score_distribution ?? { '0_39': 0, '40_59': 0, '60_79': 0, '80_100': 0 };
+    const [selectedQuizId, setSelectedQuizId] = useState('all');
+
+    const filteredPerQuestion = selectedQuizId === 'all'
+        ? perQuestion
+        : perQuestion.filter((item) => String(item.lesson_id) === selectedQuizId);
+
+    const filteredHardestQuestions = selectedQuizId === 'all'
+        ? hardestQuestions
+        : hardestQuestions.filter((item) => String(item.lesson_id) === selectedQuizId);
 
     const distributionRows = [
         { key: '0_39', label: '0-39%' },
@@ -600,12 +609,29 @@ function QuizAnalyticsPanel({ analytics }) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Per Question Analytics</CardTitle>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <CardTitle>Per Question Analytics</CardTitle>
+                        <div className="w-full sm:w-72">
+                            <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All quizzes" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All quizzes</SelectItem>
+                                    {perQuiz.map((quiz) => (
+                                        <SelectItem key={quiz.lesson_id} value={String(quiz.lesson_id)}>
+                                            {quiz.lesson_title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    {perQuestion.length === 0 ? (
+                    {filteredPerQuestion.length === 0 ? (
                         <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                            No question-level analytics yet.
+                            No question-level analytics for this selection yet.
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-md border">
@@ -624,7 +650,7 @@ function QuizAnalyticsPanel({ analytics }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {perQuestion.map((item) => (
+                                    {filteredPerQuestion.map((item) => (
                                         <tr key={`${item.lesson_id}-${item.question_index}`} className="border-t align-top">
                                             <td className="px-3 py-2 text-muted-foreground">{item.lesson_title}</td>
                                             <td className="px-3 py-2">{item.question_index}</td>
@@ -651,7 +677,7 @@ function QuizAnalyticsPanel({ analytics }) {
                     <CardTitle>Hardest Questions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {hardestQuestions.length === 0 ? (
+                    {filteredHardestQuestions.length === 0 ? (
                         <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
                             Not enough attempt data to rank hardest questions.
                         </div>
@@ -669,7 +695,7 @@ function QuizAnalyticsPanel({ analytics }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {hardestQuestions.map((item) => (
+                                    {filteredHardestQuestions.map((item) => (
                                         <tr key={`hard-${item.lesson_id}-${item.question_index}`} className="border-t align-top">
                                             <td className="px-3 py-2 text-muted-foreground">{item.lesson_title}</td>
                                             <td className="px-3 py-2">{item.question_index}</td>
