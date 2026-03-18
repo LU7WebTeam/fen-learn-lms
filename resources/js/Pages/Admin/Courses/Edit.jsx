@@ -18,7 +18,7 @@ import { useState, useEffect } from 'react';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical, Copy,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
-    Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate, ScrollText
+    Award, BookOpen, Settings2, BarChart3, Users, LayoutTemplate, ScrollText, X
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
@@ -949,6 +949,7 @@ function SectionCard({ section }) {
     const [expanded, setExpanded]               = useState(true);
     const [addingLesson, setAddingLesson]       = useState(false);
     const [renaming, setRenaming]               = useState(false);
+    const [renameSaving, setRenameSaving]       = useState(false);
     const [title, setTitle]                     = useState(section.title);
     const [titleMs, setTitleMs]                 = useState(section.title_ms ?? '');
     const [lessons, setLessons]                 = useState([...section.lessons].sort((a, b) => a.order - b.order));
@@ -958,6 +959,11 @@ function SectionCard({ section }) {
     useEffect(() => {
         setLessons([...section.lessons].sort((a, b) => a.order - b.order));
     }, [section.lessons]);
+
+    useEffect(() => {
+        setTitle(section.title);
+        setTitleMs(section.title_ms ?? '');
+    }, [section.title, section.title_ms]);
 
     function handleLessonDragStart(e, id) {
         e.dataTransfer.effectAllowed = 'move';
@@ -1012,9 +1018,30 @@ function SectionCard({ section }) {
 
     function handleRename(e) {
         e.preventDefault();
+        if (!title.trim()) return;
+
+        setRenameSaving(true);
         router.patch(route('admin.sections.update', section.id), { title, title_ms: titleMs }, {
-            onSuccess: () => setRenaming(false),
+            preserveScroll: true,
+            onSuccess: () => {
+                setRenaming(false);
+                setRenameSaving(false);
+            },
+            onError: () => setRenameSaving(false),
         });
+    }
+
+    function startRenaming() {
+        setTitle(section.title);
+        setTitleMs(section.title_ms ?? '');
+        setRenaming(true);
+    }
+
+    function cancelRenaming() {
+        setTitle(section.title);
+        setTitleMs(section.title_ms ?? '');
+        setRenaming(false);
+        setRenameSaving(false);
     }
 
     function handleDelete() {
@@ -1027,39 +1054,60 @@ function SectionCard({ section }) {
             <CardHeader className="py-3 px-4">
                 <div className="flex items-center gap-2">
                     <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab shrink-0" />
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        className="flex items-center gap-1 flex-1 text-left"
-                    >
-                        {expanded
-                            ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                            : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                    <div className="flex flex-1 items-start gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => setExpanded(!expanded)}
+                        >
+                            {expanded
+                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+
                         {renaming ? (
-                            <form onSubmit={handleRename} className="flex flex-col gap-1 flex-1" onClick={(e) => e.stopPropagation()}>
-                                <Input
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="h-7 text-sm"
-                                    autoFocus
-                                    placeholder="Section title (EN)"
-                                />
-                                <Input
-                                    value={titleMs}
-                                    onChange={(e) => setTitleMs(e.target.value)}
-                                    className="h-7 text-sm"
-                                    placeholder="Tajuk seksyen (BM, optional)"
-                                    onBlur={handleRename}
-                                />
+                            <form onSubmit={handleRename} className="flex flex-1 items-start gap-2" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex flex-1 flex-col gap-1">
+                                    <Input
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="h-8 text-sm"
+                                        autoFocus
+                                        placeholder="Section title (EN)"
+                                    />
+                                    <Input
+                                        value={titleMs}
+                                        onChange={(e) => setTitleMs(e.target.value)}
+                                        className="h-8 text-sm"
+                                        placeholder="Tajuk seksyen (BM, optional)"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1 pt-0.5 shrink-0">
+                                    <Button type="submit" size="icon" className="h-8 w-8" disabled={renameSaving || !title.trim()}>
+                                        {renameSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                    </Button>
+                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={cancelRenaming}>
+                                        <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
                             </form>
                         ) : (
-                            <span className="font-medium text-sm">{section.title}</span>
+                            <button
+                                type="button"
+                                onClick={() => setExpanded(!expanded)}
+                                className="flex-1 pt-1 text-left"
+                            >
+                                <span className="font-medium text-sm">{section.title}</span>
+                            </button>
                         )}
-                    </button>
+                    </div>
                     <div className="flex items-center gap-1 shrink-0">
                         <span className="text-xs text-muted-foreground">{lessons.length} lessons</span>
                         <Button
                             variant="ghost" size="icon" className="h-7 w-7"
-                            onClick={() => { setRenaming(!renaming); setTitle(section.title); }}
+                            onClick={renaming ? cancelRenaming : startRenaming}
                         >
                             <Pencil className="h-3.5 w-3.5" />
                         </Button>
