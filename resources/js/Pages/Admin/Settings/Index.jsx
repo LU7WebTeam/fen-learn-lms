@@ -998,6 +998,10 @@ function EmailTab({ settings, onSave, processing }) {
     const [completionNotifyLearner, setCompletionNotifyLearner] = useState(settings.course_completion_notify_learner === '1');
     const [completionNotifyAdmins, setCompletionNotifyAdmins] = useState(settings.course_completion_notify_admins === '1');
     const [completionAdminRecipients, setCompletionAdminRecipients] = useState(settings.course_completion_admin_recipients || '');
+    const [completionSubject, setCompletionSubject] = useState(settings.course_completion_email_subject || 'Course completed: {{course_title}}');
+    const [completionTitle, setCompletionTitle] = useState(settings.course_completion_email_title || 'You completed a course');
+    const [completionBody, setCompletionBody] = useState(settings.course_completion_email_body || 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.');
+    const [completionCta, setCompletionCta] = useState(settings.course_completion_email_cta || 'Open Course Page');
     const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
     const [activeSection, setActiveSection] = useState('smtp');
@@ -1028,6 +1032,10 @@ function EmailTab({ settings, onSave, processing }) {
             course_completion_notify_learner: completionNotifyLearner ? '1' : '0',
             course_completion_notify_admins: completionNotifyAdmins ? '1' : '0',
             course_completion_admin_recipients: completionAdminRecipients,
+            course_completion_email_subject: completionSubject,
+            course_completion_email_title: completionTitle,
+            course_completion_email_body: completionBody,
+            course_completion_email_cta: completionCta,
         });
     }
 
@@ -1383,6 +1391,35 @@ function EmailTab({ settings, onSave, processing }) {
                                     Configure who receives a notification when a learner completes a course. If a certificate is issued, the learner email reminds them to download it from the course page.
                                 </p>
 
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>Subject</Label>
+                                        <Input value={completionSubject} onChange={e => setCompletionSubject(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name", "learner_name", "course_title", "completed_at", "certificate_status"]} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Button text</Label>
+                                        <Input value={completionCta} onChange={e => setCompletionCta(e.target.value)} />
+                                        <PlaceholderChips tokens={["platform_name", "learner_name", "course_title", "completed_at", "certificate_status"]} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Title</Label>
+                                    <Input value={completionTitle} onChange={e => setCompletionTitle(e.target.value)} />
+                                    <PlaceholderChips tokens={["platform_name", "learner_name", "course_title", "completed_at", "certificate_status"]} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Body</Label>
+                                    <textarea
+                                        className="min-h-[120px] w-full rounded-md border bg-background px-3 py-2 text-sm"
+                                        value={completionBody}
+                                        onChange={e => setCompletionBody(e.target.value)}
+                                    />
+                                    <PlaceholderChips tokens={["platform_name", "learner_name", "course_title", "completed_at", "certificate_status"]} />
+                                </div>
+
                                 <SwitchRow
                                     label="Notify learner on course completion"
                                     description="Send a completion email to the learner who completed the course."
@@ -1408,6 +1445,22 @@ function EmailTab({ settings, onSave, processing }) {
                                     <p className="text-xs text-muted-foreground">
                                         Optional. Leave blank to notify all admin users with valid email addresses.
                                     </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Test Recipient Email</Label>
+                                    <Input
+                                        type="email"
+                                        value={testRecipient}
+                                        onChange={e => setTestRecipient(e.target.value)}
+                                        placeholder="you@example.com"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end">
+                                    <Button variant="outline" onClick={() => sendTemplateTestEmail('completion')} disabled={processing}>
+                                        Send Completion Test
+                                    </Button>
                                 </div>
                             </div>
                         )}

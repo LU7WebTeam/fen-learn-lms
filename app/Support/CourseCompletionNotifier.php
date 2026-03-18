@@ -29,11 +29,28 @@ class CourseCompletionNotifier
     {
         $branding = EmailBranding::data();
         $courseUrl = route('learn.index', ['course' => $course->slug]);
-
-        $bodyLines = [
-            "Congratulations on completing {$course->title} on {$branding['platformName']}.",
-            'Your learning progress has been recorded successfully.',
+        $tokens = [
+            'platform_name' => $branding['platformName'],
+            'learner_name' => $learner->name,
+            'course_title' => $course->title,
+            'completed_at' => $enrollment->completed_at?->format('M j, Y g:i A') ?? now()->format('M j, Y g:i A'),
+            'certificate_status' => $certificateAvailable ? 'Issued' : 'Not issued',
         ];
+
+        $body = EmailContent::get(
+            'course_completion_email_body',
+            'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.',
+            $tokens
+        );
+
+        $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
+        $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
+
+        if (empty($bodyLines)) {
+            $bodyLines = ["Congratulations on completing {$course->title} on {$branding['platformName']}." ];
+        }
+
+        $bodyLines[] = 'Your learning progress has been recorded successfully.';
 
         if ($certificateAvailable) {
             $bodyLines[] = 'Your certificate is ready. Please open the course page to view and download it.';
@@ -41,18 +58,18 @@ class CourseCompletionNotifier
 
         self::deliver(
             $learner->email,
-            "Course completed: {$course->title}",
+            EmailContent::get('course_completion_email_subject', 'Course completed: {{course_title}}', $tokens),
             [
                 ...$branding,
-                'title' => 'Course Completion',
-                'emailTitle' => 'You completed a course',
+                'title' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
+                'emailTitle' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
                 'greetingName' => $learner->name,
                 'bodyLines' => $bodyLines,
-                'emailCta' => $certificateAvailable ? 'Open Course Page' : 'Continue Learning',
+                'emailCta' => EmailContent::get('course_completion_email_cta', $certificateAvailable ? 'Open Course Page' : 'Continue Learning', $tokens),
                 'ctaUrl' => $courseUrl,
                 'courseTitle' => $course->title,
                 'learnerName' => $learner->name,
-                'completedAt' => $enrollment->completed_at?->format('M j, Y g:i A') ?? now()->format('M j, Y g:i A'),
+                'completedAt' => $tokens['completed_at'],
                 'certificateAvailable' => $certificateAvailable,
             ]
         );

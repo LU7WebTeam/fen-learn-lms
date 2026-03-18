@@ -49,6 +49,10 @@ class SettingsController extends Controller
         'reset_email_title'          => 'Reset your password',
         'reset_email_body'           => 'We received a request to reset your password for {{platform_name}}.',
         'reset_email_cta'            => 'Reset Password',
+        'course_completion_email_subject' => 'Course completed: {{course_title}}',
+        'course_completion_email_title'   => 'You completed a course',
+        'course_completion_email_body'    => 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.',
+        'course_completion_email_cta'     => 'Open Course Page',
         'course_completion_notify_learner' => '1',
         'course_completion_notify_admins'  => '0',
         'course_completion_admin_recipients' => '',
@@ -224,6 +228,10 @@ class SettingsController extends Controller
             'reset_email_title'          => 'nullable|string|max:150',
             'reset_email_body'           => 'nullable|string|max:1000',
             'reset_email_cta'            => 'nullable|string|max:60',
+            'course_completion_email_subject' => 'nullable|string|max:150',
+            'course_completion_email_title'   => 'nullable|string|max:150',
+            'course_completion_email_body'    => 'nullable|string|max:1000',
+            'course_completion_email_cta'     => 'nullable|string|max:60',
             'course_completion_notify_learner' => 'required|in:0,1',
             'course_completion_notify_admins'  => 'required|in:0,1',
             'course_completion_admin_recipients' => 'nullable|string|max:1000',
@@ -250,6 +258,10 @@ class SettingsController extends Controller
         Setting::set('reset_email_title', $request->input('reset_email_title', $this->defaults['reset_email_title']));
         Setting::set('reset_email_body', $request->input('reset_email_body', $this->defaults['reset_email_body']));
         Setting::set('reset_email_cta', $request->input('reset_email_cta', $this->defaults['reset_email_cta']));
+        Setting::set('course_completion_email_subject', $request->input('course_completion_email_subject', $this->defaults['course_completion_email_subject']));
+        Setting::set('course_completion_email_title', $request->input('course_completion_email_title', $this->defaults['course_completion_email_title']));
+        Setting::set('course_completion_email_body', $request->input('course_completion_email_body', $this->defaults['course_completion_email_body']));
+        Setting::set('course_completion_email_cta', $request->input('course_completion_email_cta', $this->defaults['course_completion_email_cta']));
         Setting::set('course_completion_notify_learner', $request->input('course_completion_notify_learner', $this->defaults['course_completion_notify_learner']));
         Setting::set('course_completion_notify_admins', $request->input('course_completion_notify_admins', $this->defaults['course_completion_notify_admins']));
         Setting::set('course_completion_admin_recipients', $request->input('course_completion_admin_recipients', $this->defaults['course_completion_admin_recipients']));
@@ -280,6 +292,10 @@ class SettingsController extends Controller
             'reset_email_title'        => ['platform_name'],
             'reset_email_body'         => ['platform_name'],
             'reset_email_cta'          => ['platform_name'],
+            'course_completion_email_subject' => ['platform_name', 'learner_name', 'course_title', 'completed_at', 'certificate_status'],
+            'course_completion_email_title'   => ['platform_name', 'learner_name', 'course_title', 'completed_at', 'certificate_status'],
+            'course_completion_email_body'    => ['platform_name', 'learner_name', 'course_title', 'completed_at', 'certificate_status'],
+            'course_completion_email_cta'     => ['platform_name', 'learner_name', 'course_title', 'completed_at', 'certificate_status'],
         ];
 
         $errors = [];
@@ -352,7 +368,7 @@ class SettingsController extends Controller
             return back()->with('error', 'Please provide a recipient email for test mail.');
         }
 
-        $supportedTypes = ['invitation', 'verification', 'reset'];
+        $supportedTypes = ['invitation', 'verification', 'reset', 'completion'];
         if (!in_array($type, $supportedTypes, true)) {
             return back()->with('error', 'Invalid email template type requested.');
         }
@@ -363,12 +379,17 @@ class SettingsController extends Controller
                 'platform_name' => $branding['platformName'],
                 'inviter_name' => $request->user()?->name ?? 'An administrator',
                 'role_label' => 'Content Editor',
+                'learner_name' => 'Test Learner',
+                'course_title' => 'Sample Course',
+                'completed_at' => now()->format('M j, Y g:i A'),
+                'certificate_status' => 'Issued',
             ];
 
             $testUrls = [
                 'invitation' => url('/invite/test-invitation-token'),
                 'verification' => url('/email/verify/test'),
                 'reset' => url('/reset-password/test-token?email='.urlencode($recipient)),
+                'completion' => url('/courses/sample-course'),
             ];
 
             if ($type === 'invitation') {
@@ -415,6 +436,30 @@ class SettingsController extends Controller
                     'actionText' => EmailContent::get('reset_email_cta', 'Reset Password', $tokens),
                     'bodyText' => EmailContent::get('reset_email_body', 'We received a request to reset your password for {{platform_name}}.', $tokens),
                     'expiresInMinutes' => 60,
+                ], function ($message) use ($recipient, $subject) {
+                    $message->to($recipient)->subject($subject.' [Test]');
+                });
+            }
+
+            if ($type === 'completion') {
+                $subject = EmailContent::get('course_completion_email_subject', 'Course completed: {{course_title}}', $tokens);
+                $body = EmailContent::get('course_completion_email_body', 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.', $tokens);
+                $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
+                $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
+                $bodyLines[] = 'Your certificate is ready. Please open the course page to view and download it.';
+
+                Mail::send('emails.course-completion', [
+                    ...$branding,
+                    'title' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
+                    'emailTitle' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
+                    'greetingName' => $tokens['learner_name'],
+                    'bodyLines' => $bodyLines,
+                    'emailCta' => EmailContent::get('course_completion_email_cta', 'Open Course Page', $tokens),
+                    'ctaUrl' => $testUrls['completion'],
+                    'courseTitle' => $tokens['course_title'],
+                    'learnerName' => $tokens['learner_name'],
+                    'completedAt' => $tokens['completed_at'],
+                    'certificateAvailable' => true,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
