@@ -286,7 +286,7 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
 
                     {/* ── SECURITY ── */}
                     <TabsContent value="security">
-                        <SecurityTab settings={settings} onSave={submitGroup} processing={processing} />
+                        <SecurityTab settings={settings} onSave={submitGroup} processing={processing} errors={errors} />
                     </TabsContent>
 
                     {/* ── ANALYTICS ── */}
@@ -304,7 +304,7 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
     );
 }
 
-function SecurityTab({ settings, onSave, processing }) {
+function SecurityTab({ settings, onSave, processing, errors = {} }) {
     const [provider, setProvider] = useState(settings.captcha_provider || 'none');
     const [enabledLogin, setEnabledLogin] = useState(settings.captcha_enabled_login === '1');
     const [enabledRegister, setEnabledRegister] = useState(settings.captcha_enabled_register === '1');
@@ -319,15 +319,19 @@ function SecurityTab({ settings, onSave, processing }) {
     const captchaEnabled = provider !== 'none';
 
     function save() {
+        const normalizedSiteKey = (siteKey || '').trim();
+        const normalizedSecretKey = (secretKey || '').trim();
+        const normalizedMinScore = (minScore || '').toString().trim() || '0.5';
+
         onSave('security', {
             captcha_provider: provider,
             captcha_enabled_login: enabledLogin ? '1' : '0',
             captcha_enabled_register: enabledRegister ? '1' : '0',
             captcha_enabled_forgot_password: enabledForgotPassword ? '1' : '0',
-            captcha_site_key: siteKey,
-            captcha_secret_key: secretKey,
+            captcha_site_key: normalizedSiteKey,
+            captcha_secret_key: normalizedSecretKey,
             clear_captcha_secret_key: clearSecret ? '1' : '0',
-            captcha_min_score: minScore,
+            captcha_min_score: normalizedMinScore,
         });
     }
 
@@ -354,6 +358,9 @@ function SecurityTab({ settings, onSave, processing }) {
                             <SelectItem value="recaptcha">Google reCAPTCHA v3</SelectItem>
                         </SelectContent>
                     </Select>
+                    {errors.captcha_provider && (
+                        <p className="text-xs text-red-600">{errors.captcha_provider}</p>
+                    )}
                 </div>
 
                 {captchaEnabled && (
@@ -367,6 +374,9 @@ function SecurityTab({ settings, onSave, processing }) {
                                     onChange={(e) => setSiteKey(e.target.value)}
                                     placeholder="Public site key"
                                 />
+                                {errors.captcha_site_key && (
+                                    <p className="text-xs text-red-600">{errors.captcha_site_key}</p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="captcha_secret_key">Secret Key</Label>
@@ -405,6 +415,9 @@ function SecurityTab({ settings, onSave, processing }) {
                                     />
                                     Clear stored secret key on save
                                 </label>
+                                {errors.captcha_secret_key && (
+                                    <p className="text-xs text-red-600">{errors.captcha_secret_key}</p>
+                                )}
                             </div>
                         </div>
 
@@ -421,6 +434,9 @@ function SecurityTab({ settings, onSave, processing }) {
                                     onChange={(e) => setMinScore(e.target.value)}
                                     className="w-40"
                                 />
+                                {errors.captcha_min_score && (
+                                    <p className="text-xs text-red-600">{errors.captcha_min_score}</p>
+                                )}
                             </div>
                         )}
                     </>

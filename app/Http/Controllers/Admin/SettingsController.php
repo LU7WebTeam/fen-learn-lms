@@ -539,12 +539,17 @@ class SettingsController extends Controller
             }
         }
 
+        $minScore = trim((string) ($validated['captcha_min_score'] ?? ''));
+        if ($minScore === '') {
+            $minScore = '0.5';
+        }
+
         Setting::set('captcha_provider', $provider);
         Setting::set('captcha_enabled_login', $validated['captcha_enabled_login']);
         Setting::set('captcha_enabled_register', $validated['captcha_enabled_register']);
         Setting::set('captcha_enabled_forgot_password', $validated['captcha_enabled_forgot_password']);
         Setting::set('captcha_site_key', $siteKey);
-        Setting::set('captcha_min_score', (string) ($validated['captcha_min_score'] ?? '0.5'));
+        Setting::set('captcha_min_score', $minScore);
 
         if ($clearSecret) {
             Setting::set('captcha_secret_key', '');
