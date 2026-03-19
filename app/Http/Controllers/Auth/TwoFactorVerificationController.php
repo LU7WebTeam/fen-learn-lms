@@ -86,8 +86,12 @@ class TwoFactorVerificationController extends Controller
             return redirect()->route('login');
         }
 
-        // Send a new code
-        TwoFactorAuthenticator::sendCode($user);
+        try {
+            // Send a new code
+            TwoFactorAuthenticator::sendCode($user);
+        } catch (\Throwable) {
+            return back()->with('error', 'Unable to resend verification code right now. Please try again later.');
+        }
 
         return back()->with('success', 'Verification code resent to your email.');
     }

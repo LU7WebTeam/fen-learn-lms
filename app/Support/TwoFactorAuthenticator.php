@@ -23,8 +23,18 @@ class TwoFactorAuthenticator
             'two_factor_code_expires_at' => now()->addMinutes(10),
         ]);
 
-        // Send the code via email
-        Mail::to($user->email)->send(new TwoFactorCodeMail($user, $code));
+        try {
+            // Send the code via email
+            Mail::to($user->email)->send(new TwoFactorCodeMail($user, $code));
+        } catch (\Throwable $e) {
+            SystemLogger::write('error', '2FA code send failed', [
+                'auth_flow' => '2fa_code_send_failed',
+                'user_id' => $user->id,
+                'reason' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException('Unable to send verification code email. Please check mail settings and try again.', 0, $e);
+        }
 
         // Log the event
         SystemLogger::write('info', '2FA code sent', [

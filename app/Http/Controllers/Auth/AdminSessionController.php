@@ -34,8 +34,14 @@ class AdminSessionController extends Controller
             ]);
         }
 
-        // Generate and send 2FA code
-        TwoFactorAuthenticator::sendCode($user);
+        try {
+            // Generate and send 2FA code
+            TwoFactorAuthenticator::sendCode($user);
+        } catch (\Throwable) {
+            return back()->withErrors([
+                'email' => 'Unable to send verification code email right now. Please try again later or contact support.',
+            ]);
+        }
 
         // Store user info in session for 2FA verification
         $request->session()->put([
