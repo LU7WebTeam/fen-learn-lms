@@ -5,8 +5,6 @@ namespace App\Support;
 use App\Mail\TwoFactorCodeMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class TwoFactorAuthenticator
 {
@@ -26,7 +24,7 @@ class TwoFactorAuthenticator
         ]);
 
         // Send the code via email
-        Mail::send(new TwoFactorCodeMail($user, $code));
+        Mail::to($user->email)->send(new TwoFactorCodeMail($user, $code));
 
         // Log the event
         SystemLogger::write('info', '2FA code sent', [
