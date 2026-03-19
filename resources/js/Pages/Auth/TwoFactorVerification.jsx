@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { BookOpen, Lock, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import InputError from '@/Components/InputError';
-import { useT } from '@/lib/i18n';
 
 export default function TwoFactorVerification({ email }) {
-    const t = useT();
+    const { props } = usePage();
+    const platform = props.platform ?? {};
+    const flash = props.flash ?? {};
     const [showSuccess, setShowSuccess] = useState(false);
     
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -36,7 +37,7 @@ export default function TwoFactorVerification({ email }) {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <Head title="Verify your login" />
+            <Head title={`Verify your login - ${platform.name || 'LMS'}`} />
 
             {/* Left panel — form */}
             <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-8">
@@ -45,16 +46,26 @@ export default function TwoFactorVerification({ email }) {
                     {/* Logo / branding */}
                     <div className="space-y-1">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                                <BookOpen className="h-5 w-5" />
-                            </div>
-                            <span className="font-bold text-xl text-gray-900">LMS</span>
+                            {platform.logo_url ? (
+                                <img src={platform.logo_url} alt={platform.name} className="h-9 w-auto" />
+                            ) : (
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                                    <BookOpen className="h-5 w-5" />
+                                </div>
+                            )}
+                            <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">Verify your login</h1>
                         <p className="text-sm text-gray-500">
                             We've sent a verification code to <strong>{email}</strong>
                         </p>
                     </div>
+
+                    {flash.success && (
+                        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+                            {flash.success}
+                        </div>
+                    )}
 
                     {Object.keys(errors).length > 0 && (
                         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
