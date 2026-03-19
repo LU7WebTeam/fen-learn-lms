@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomFont;
 use App\Models\Setting;
 use App\Support\ActivityLogger;
+use App\Support\CaptchaVerifier;
 use App\Support\SystemLogger;
 use App\Support\EmailBranding;
 use App\Support\EmailContent;
@@ -470,6 +471,47 @@ class SettingsController extends Controller
             report($e);
             return back()->with('error', 'Failed to send '.$type.' test email. Please verify SMTP settings and template content.');
         }
+    }
+
+    public function testCaptcha(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'captcha_provider' => 'required|in:none,turnstile,recaptcha',
+            'captcha_site_key' => 'nullable|string|max:255',
+            'captcha_secret_key' => 'nullable|string|max:255',
+            'clear_captcha_secret_key' => 'nullable|in:0,1',
+        ]);
+
+        $provider = (string) $validated['captcha_provider'];
+        $siteKey = trim((string) ($validated['captcha_site_key'] ?? ''));
+        $newSecret = trim((string) ($validated['captcha_secret_key'] ?? ''));
+        $clearSecret = ($validated['clear_captcha_secret_key'] ?? '0') === '1';
+        $storedSecret = (string) Setting::get('captcha_secret_key', '');
+        $secretToTest = $newSecret !== '' ? $newSecret : ($clearSecret ? '' : $storedSecret);
+
+        if ($provider === 'none') {
+            return back()->with('error', 'Select a captcha provider before testing configuration.');
+        }
+
+        if ($siteKey === '') {
+            return back()->withErrors([
+                'captcha_site_key' => 'Captcha site key is required when captcha is enabled.',
+            ]);
+        }
+
+        if ($secretToTest === '') {
+            return back()->withErrors([
+                'captcha_secret_key' => 'Captcha secret key is required to test configuration.',
+            ]);
+        }
+
+        $result = CaptchaVerifier::testConfiguration($provider, $secretToTest);
+
+        if ($result['ok']) {
+            return back()->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
     }
 
     private function saveCertificates(Request $request): void

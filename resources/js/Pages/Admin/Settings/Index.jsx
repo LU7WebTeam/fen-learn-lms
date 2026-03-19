@@ -314,6 +314,7 @@ function SecurityTab({ settings, onSave, processing, errors = {} }) {
     const [clearSecret, setClearSecret] = useState(false);
     const [showSecret, setShowSecret] = useState(false);
     const [minScore, setMinScore] = useState(settings.captcha_min_score || '0.5');
+    const [testingCaptcha, setTestingCaptcha] = useState(false);
 
     const hasSavedSecret = Boolean(settings.captcha_secret_key);
     const captchaEnabled = provider !== 'none';
@@ -332,6 +333,22 @@ function SecurityTab({ settings, onSave, processing, errors = {} }) {
             captcha_secret_key: normalizedSecretKey,
             clear_captcha_secret_key: clearSecret ? '1' : '0',
             captcha_min_score: normalizedMinScore,
+        });
+    }
+
+    function testConfiguration() {
+        const normalizedSiteKey = (siteKey || '').trim();
+        const normalizedSecretKey = (secretKey || '').trim();
+
+        setTestingCaptcha(true);
+        router.post(route('admin.settings.test-captcha'), {
+            captcha_provider: provider,
+            captcha_site_key: normalizedSiteKey,
+            captcha_secret_key: normalizedSecretKey,
+            clear_captcha_secret_key: clearSecret ? '1' : '0',
+        }, {
+            preserveScroll: true,
+            onFinish: () => setTestingCaptcha(false),
         });
     }
 
@@ -466,7 +483,15 @@ function SecurityTab({ settings, onSave, processing, errors = {} }) {
                     />
                 </div>
 
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={testConfiguration}
+                        disabled={processing || testingCaptcha}
+                    >
+                        {testingCaptcha ? 'Testing...' : 'Test Captcha Configuration'}
+                    </Button>
                     <Button onClick={save} disabled={processing}>Save Security Settings</Button>
                 </div>
             </CardContent>

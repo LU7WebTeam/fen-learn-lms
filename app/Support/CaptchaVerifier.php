@@ -9,6 +9,79 @@ use Illuminate\Validation\ValidationException;
 
 class CaptchaVerifier
 {
+    public static function testConfiguration(string $provider, string $secretKey): array
+    {
+        if (!in_array($provider, ['turnstile', 'recaptcha'], true)) {
+            return [
+                'ok' => false,
+                'message' => 'Unsupported captcha provider selected.',
+            ];
+        }
+
+        if (trim($secretKey) === '') {
+            return [
+                'ok' => false,
+                'message' => 'Captcha secret key is required for testing.',
+            ];
+        }
+
+        try {
+            $url = $provider === 'turnstile'
+                ? 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+                : 'https://www.google.com/recaptcha/api/siteverify';
+
+            $response = Http::asForm()
+                ->timeout(8)
+                ->post($url, [
+                    'secret' => $secretKey,
+                    // Intentionally fake token: we only validate provider connectivity + secret format.
+                    'response' => 'test-token',
+                ]);
+
+            if (!$response->ok()) {
+                return [
+                    'ok' => false,
+                    'message' => 'Captcha provider endpoint is unreachable or returned an invalid response.',
+                ];
+            }
+
+            $payload = $response->json() ?? [];
+            $success = (bool) data_get($payload, 'success', false);
+            $errorCodes = array_map('strtolower', data_get($payload, 'error-codes', []));
+
+            if ($success) {
+                return [
+                    'ok' => true,
+                    'message' => 'Captcha provider accepted the test verification request.',
+                ];
+            }
+
+            if (in_array('invalid-input-secret', $errorCodes, true) || in_array('missing-input-secret', $errorCodes, true)) {
+                return [
+                    'ok' => false,
+                    'message' => 'Captcha secret key is invalid for the selected provider.',
+                ];
+            }
+
+            if (in_array('invalid-input-response', $errorCodes, true) || in_array('missing-input-response', $errorCodes, true)) {
+                return [
+                    'ok' => true,
+                    'message' => 'Captcha configuration looks valid. Secret key was accepted by provider.',
+                ];
+            }
+
+            return [
+                'ok' => false,
+                'message' => 'Captcha provider rejected the test request. Please verify your configuration values.',
+            ];
+        } catch (\Throwable) {
+            return [
+                'ok' => false,
+                'message' => 'Failed to contact captcha provider. Check server network access and try again.',
+            ];
+        }
+    }
+
     public static function frontendConfig(): array
     {
         $provider = (string) Setting::get('captcha_provider', 'none');
