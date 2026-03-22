@@ -34,6 +34,13 @@ class AdminSessionController extends Controller
             ]);
         }
 
+        // Skip 2FA when disabled (e.g. local dev without SMTP)
+        if (!config('auth.two_factor_enabled')) {
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
         try {
             // Generate and send 2FA code
             TwoFactorAuthenticator::sendCode($user);

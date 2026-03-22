@@ -19,6 +19,12 @@ return [
     ],
 
     /*
+    | Two-factor authentication. Set TWO_FACTOR_ENABLED=false in .env to skip
+    | 2FA on local/development environments where SMTP is not configured.
+    */
+    'two_factor_enabled' => env('TWO_FACTOR_ENABLED', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
@@ -94,7 +100,7 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            'expire' => env('AUTH_PASSWORD_RESET_EXPIRE', 1440),
             'throttle' => 60,
         ],
     ],

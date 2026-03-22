@@ -51,6 +51,7 @@ import {
     ExternalLink,
     User,
     Clock,
+    KeyRound,
 } from 'lucide-react';
 
 const MALAYSIAN_STATES = [
@@ -598,7 +599,7 @@ function SuspendedBadge() {
     );
 }
 
-function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile }) {
+function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile, onResetPassword, isSuperAdmin }) {
     const isSuspended = !!user.suspended_at;
     return (
         <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
@@ -653,13 +654,19 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile 
                             Suspend
                         </Button>
                     )}
+                    {isSuperAdmin && (
+                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
+                            <KeyRound className="h-3.5 w-3.5" />
+                            Password
+                        </Button>
+                    )}
                 </div>
             </td>
         </tr>
     );
 }
 
-function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId }) {
+function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId, onResetPassword, isSuperAdmin }) {
     const isSelf = user.id === currentUserId;
     const isSuspended = !!user.suspended_at;
     return (
@@ -708,6 +715,12 @@ function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId })
                                 Suspend
                             </Button>
                         )
+                    )}
+                    {isSuperAdmin && !isSelf && (
+                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
+                            <KeyRound className="h-3.5 w-3.5" />
+                            Password
+                        </Button>
                     )}
                 </div>
             </td>
@@ -852,6 +865,112 @@ function InviteStaffDialog({ open, onClose }) {
     );
 }
 
+function ResetPasswordDialog({ user, open, onClose }) {
+    const [mode, setMode] = useState('manual');
+    const { data, setData, post, processing, errors, reset } = useForm({
+        new_password: '',
+        new_password_confirmation: '',
+    });
+
+    function handleClose() {
+        reset();
+        setMode('manual');
+        onClose();
+    }
+
+    function handleManualSubmit(e) {
+        e.preventDefault();
+        post(route('admin.users.reset-password', user.id), {
+            onSuccess: handleClose,
+        });
+    }
+
+    function handleSendLink() {
+        post(route('admin.users.send-reset-link', user.id), {
+            onSuccess: handleClose,
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <KeyRound className="h-4 w-4" /> Reset Password
+                    </DialogTitle>
+                    <DialogDescription>
+                        Reset the password for <strong>{user?.name}</strong>.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex rounded-lg border overflow-hidden text-sm font-medium">
+                    <button
+                        type="button"
+                        onClick={() => setMode('manual')}
+                        className={`flex-1 py-2 transition-colors ${mode === 'manual' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'}`}
+                    >
+                        Set Password
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setMode('link')}
+                        className={`flex-1 py-2 transition-colors ${mode === 'link' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'}`}
+                    >
+                        Send Reset Link
+                    </button>
+                </div>
+
+                {mode === 'manual' ? (
+                    <form onSubmit={handleManualSubmit} className="space-y-4 py-2">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium">New Password</label>
+                            <Input
+                                type="password"
+                                value={data.new_password}
+                                onChange={e => setData('new_password', e.target.value)}
+                                placeholder="Minimum 8 characters"
+                                autoComplete="new-password"
+                            />
+                            <InputError message={errors.new_password} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium">Confirm Password</label>
+                            <Input
+                                type="password"
+                                value={data.new_password_confirmation}
+                                onChange={e => setData('new_password_confirmation', e.target.value)}
+                                placeholder="Repeat new password"
+                                autoComplete="new-password"
+                            />
+                            <InputError message={errors.new_password_confirmation} />
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={processing}>Cancel</Button>
+                            <Button type="submit" disabled={processing} className="gap-1.5">
+                                <KeyRound className="h-3.5 w-3.5" />
+                                {processing ? 'Saving…' : 'Set Password'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                ) : (
+                    <div className="space-y-4 py-2">
+                        <p className="text-sm text-muted-foreground">
+                            A password reset link will be sent to <strong>{user?.email}</strong>. The link expires after 24 hours.
+                        </p>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={processing}>Cancel</Button>
+                            <Button onClick={handleSendLink} disabled={processing} className="gap-1.5">
+                                <Send className="h-3.5 w-3.5" />
+                                {processing ? 'Sending…' : 'Send Link'}
+                            </Button>
+                        </DialogFooter>
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function UsersIndex({ staff, students, counts, filters }) {
     const { auth } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
@@ -859,6 +978,8 @@ export default function UsersIndex({ staff, students, counts, filters }) {
     const [inviteOpen, setInviteOpen] = useState(false);
     const [suspendUser, setSuspendUser] = useState(null);
     const [profileUserId, setProfileUserId] = useState(null);
+    const [resetPasswordUser, setResetPasswordUser] = useState(null);
+    const isSuperAdmin = auth.user.role === 'super_admin';
 
     function handleUnsuspend(user) {
         if (!window.confirm(`Reinstate ${user.name}'s account?`)) return;
@@ -1013,6 +1134,8 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     onSuspend={setSuspendUser}
                                                     onUnsuspend={handleUnsuspend}
                                                     onViewProfile={setProfileUserId}
+                                                    onResetPassword={setResetPasswordUser}
+                                                    isSuperAdmin={isSuperAdmin}
                                                 />
                                             ))}
                                         </tbody>
@@ -1058,6 +1181,8 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     onSuspend={setSuspendUser}
                                                     onUnsuspend={handleUnsuspend}
                                                     currentUserId={auth.user.id}
+                                                    onResetPassword={setResetPasswordUser}
+                                                    isSuperAdmin={isSuperAdmin}
                                                 />
                                             ))}
                                         </tbody>
@@ -1102,6 +1227,12 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                 userId={profileUserId}
                 open={!!profileUserId}
                 onClose={() => setProfileUserId(null)}
+            />
+
+            <ResetPasswordDialog
+                user={resetPasswordUser}
+                open={!!resetPasswordUser}
+                onClose={() => setResetPasswordUser(null)}
             />
         </AdminLayout>
     );

@@ -108,6 +108,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // User profile editing
     Route::patch('/users/{user}/profile', [\App\Http\Controllers\Admin\UsersController::class, 'updateProfile'])->name('users.update-profile');
 
+    // Password reset by super admin
+    Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Admin\UsersController::class, 'resetPassword'])->name('users.reset-password');
+    Route::post('/users/{user}/send-reset-link', [\App\Http\Controllers\Admin\UsersController::class, 'sendPasswordResetLink'])->name('users.send-reset-link');
+
     // Sections (nested under a course)
     Route::post('/courses/{course}/sections', [AdminSectionsController::class, 'store'])->name('courses.sections.store');
     Route::patch('/courses/{course}/sections/reorder', [AdminSectionsController::class, 'reorder'])->name('courses.sections.reorder');

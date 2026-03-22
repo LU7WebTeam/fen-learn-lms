@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Support\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -201,5 +204,45 @@ class UsersController extends Controller
         ], 'updated');
 
         return back()->with('success', "{$user->name}'s profile has been updated.");
+    }
+
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->role !== 'super_admin') {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+            'remember_token' => Str::random(60),
+        ]);
+
+        ActivityLogger::record('Reset user password (manual)', $user, [
+            'title' => $user->name,
+        ], 'updated');
+
+        return back()->with('success', "Password for {$user->name} has been updated.");
+    }
+
+    public function sendPasswordResetLink(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->role !== 'super_admin') {
+            abort(403);
+        }
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            ActivityLogger::record('Sent password reset link', $user, [
+                'title' => $user->name,
+            ], 'updated');
+            return back()->with('success', "Password reset link sent to {$user->email}.");
+        }
+
+        return back()->with('error', 'Failed to send password reset link. Please try again.');
     }
 }

@@ -436,7 +436,7 @@ class SettingsController extends Controller
                     'actionUrl' => $testUrls['reset'],
                     'actionText' => EmailContent::get('reset_email_cta', 'Reset Password', $tokens),
                     'bodyText' => EmailContent::get('reset_email_body', 'We received a request to reset your password for {{platform_name}}.', $tokens),
-                    'expiresInMinutes' => 60,
+                    'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 1440),
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
