@@ -29,10 +29,14 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
     const [pageW, pageH] = PAGE_DIMS[size]?.[orientation] || [297, 210];
 
     const PX_PER_MM   = 3.7795;
+    const PX_PER_PT   = 96 / 72;
     const nativeW     = pageW * PX_PER_MM;
     const nativeH     = pageH * PX_PER_MM;
     const scale       = PREVIEW_W / nativeW;
     const previewH    = nativeH * scale;
+
+    const mmToPx = (mm) => mm * PX_PER_MM;
+    const ptToPx = (pt) => pt * PX_PER_PT;
 
     const bg       = template.background  || {};
     const branding = template.branding    || {};
@@ -47,6 +51,15 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
     const bottomBarPct  = showBottomBar ? 6.7  : 0;
     const accentPct     = showTopBar    ? 1.4  : 0;
     const accent2Pct    = showBottomBar ? 1.0  : 0;
+
+    const topBarMm = (topBarPct / 100) * pageH;
+    const bottomBarMm = (bottomBarPct / 100) * pageH;
+
+    const logoTextSizePx = ptToPx(topBarMm * 0.35);
+    const logoSubSizePx = ptToPx(topBarMm * 0.17);
+    const bottomLeftSizePx = ptToPx(bottomBarMm * 0.3);
+    const bottomCenterSizePx = ptToPx(bottomBarMm * 0.32);
+    const bottomRightSizePx = ptToPx(bottomBarMm * 0.27);
 
     const bgStyle = bg.type === 'image' && bg.image_url
         ? { backgroundImage: `url(${bg.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -109,11 +122,11 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
                                 display: 'flex', flexDirection: 'column',
                                 alignItems: 'center', justifyContent: 'center',
                             }}>
-                                <div style={{ color: '#fff', fontSize: nativeH * 0.038, fontWeight: 'bold', letterSpacing: 4 }}>
+                                <div style={{ color: '#fff', fontSize: logoTextSizePx, fontWeight: 'bold', letterSpacing: 4 }}>
                                     {branding.logo_text || platformName}
                                 </div>
                                 {branding.tagline && (
-                                    <div style={{ color: '#F0D9A8', fontSize: nativeH * 0.018, marginTop: 2 }}>
+                                    <div style={{ color: '#F0D9A8', fontSize: logoSubSizePx, marginTop: mmToPx(1) }}>
                                         {branding.tagline}
                                     </div>
                                 )}
@@ -135,15 +148,15 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
                             height: `${bottomBarPct}%`,
                             background: branding.bottom_bar_color || '#8B1A4A',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: `0 ${nativeW * 0.05}px`,
+                            padding: `${mmToPx(bottomBarMm * 0.3)}px ${mmToPx(pageW * 0.067)}px`,
                         }}>
-                            <span style={{ color: '#F0D9A8', fontSize: nativeH * 0.018 }}>
+                            <span style={{ color: '#F0D9A8', fontSize: bottomLeftSizePx }}>
                                 {dynamicValues.completion_date}
                             </span>
-                            <span style={{ color: '#fff', fontSize: nativeH * 0.018, fontWeight: 'bold' }}>
+                            <span style={{ color: '#fff', fontSize: bottomCenterSizePx, fontWeight: 'bold' }}>
                                 Certificate of Completion
                             </span>
-                            <span style={{ color: '#F0D9A8', fontSize: nativeH * 0.015 }}>
+                            <span style={{ color: '#F0D9A8', fontSize: bottomRightSizePx }}>
                                 ID: {dynamicValues.certificate_id}
                             </span>
                         </div>
@@ -155,7 +168,8 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
                     const text = getFieldText(field);
                     if (!text) return null;
                     const topPct    = field.y || 0;
-                    const fontSize  = (field.font_size || 12) * (nativeH / 210) * 0.85;
+                    // Match PDF behavior: template font sizes are stored in pt.
+                    const fontSize  = ptToPx(field.font_size || 12);
                     const textAlign = field.align || 'center';
                     let leftStyle   = {};
                     if (textAlign === 'left') {
