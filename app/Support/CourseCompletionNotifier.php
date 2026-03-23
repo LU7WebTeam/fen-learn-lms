@@ -96,7 +96,7 @@ class CourseCompletionNotifier
         }
 
         $branding = EmailBranding::data();
-        $adminUrl = route('admin.courses.edit', ['course' => $course->id, 'tab' => 'learner-profiles']);
+        $adminUrl = route('admin.courses.edit', ['course' => $course->slug, 'tab' => 'learner-profiles']);
         $completedAt = $enrollment->completed_at?->format('M j, Y g:i A') ?? now()->format('M j, Y g:i A');
 
         foreach ($recipients->unique() as $recipient) {

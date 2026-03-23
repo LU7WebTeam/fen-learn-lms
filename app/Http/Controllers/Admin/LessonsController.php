@@ -127,10 +127,10 @@ class LessonsController extends Controller
         $this->deleteStoredFile($lesson->video_url);
         $this->deleteStoredFile($lesson->pdf_url);
 
-        $courseId = $lesson->section->course_id;
+        $courseSlug = $lesson->section->course->slug;
         $lesson->delete();
 
-        return redirect()->route('admin.courses.edit', ['course' => $courseId, 'tab' => 'curriculum'])
+        return redirect()->route('admin.courses.edit', ['course' => $courseSlug, 'tab' => 'curriculum'])
             ->with('success', 'Lesson deleted.');
     }
 
@@ -169,7 +169,7 @@ class LessonsController extends Controller
             'source_lesson_id' => $lesson->id,
         ], 'created');
 
-        return redirect()->route('admin.courses.edit', ['course' => $section->course_id, 'tab' => 'curriculum'])
+        return redirect()->route('admin.courses.edit', ['course' => $section->course->slug, 'tab' => 'curriculum'])
             ->with('success', 'Lesson duplicated.');
     }
 

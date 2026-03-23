@@ -43,7 +43,7 @@ class DashboardController extends Controller
         $recentCourses = Course::with('creator:id,name')
             ->latest()
             ->limit(5)
-            ->get(['id', 'title', 'status', 'difficulty', 'created_by', 'created_at']);
+            ->get(['id', 'title', 'slug', 'status', 'difficulty', 'created_by', 'created_at']);
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => [

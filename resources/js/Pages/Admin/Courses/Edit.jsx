@@ -737,7 +737,7 @@ function CourseDetailsForm({ course }) {
 
     function handleSubmit(e) {
         e.preventDefault();
-        post(route('admin.courses.update', course.id), { forceFormData: true });
+        post(route('admin.courses.update', course.slug), { forceFormData: true });
     }
 
     return (
@@ -1180,7 +1180,7 @@ function AddSectionForm({ course, onDone }) {
 
     function handleSubmit(e) {
         e.preventDefault();
-        post(route('admin.courses.sections.store', course.id), {
+        post(route('admin.courses.sections.store', course.slug), {
             onSuccess: () => { reset(); onDone?.(); },
         });
     }
@@ -1222,7 +1222,7 @@ function CourseIntroductionForm({ course }) {
     function handleSave() {
         setSaving(true);
         router.patch(
-            route('admin.courses.introduction.update', course.id),
+            route('admin.courses.introduction.update', course.slug),
             { introduction: content, introduction_ms: contentMs },
             {
                 preserveScroll: true,
@@ -1342,7 +1342,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
 
         setReordering(true);
         router.patch(
-            route('admin.courses.sections.reorder', course.id),
+            route('admin.courses.sections.reorder', course.slug),
             { sections: newSections.map(s => s.id) },
             {
                 preserveScroll: true,

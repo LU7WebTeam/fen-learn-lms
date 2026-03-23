@@ -34,18 +34,18 @@ function CourseRow({ course }) {
     function handleDelete() {
         if (!window.confirm(`Delete "${course.title}"? This will remove all sections, lessons and enrollments.`)) return;
         setDeleting(true);
-        router.delete(route('admin.courses.destroy', course.id));
+        router.delete(route('admin.courses.destroy', course.slug));
     }
 
     function handleDuplicate() {
-        router.post(route('admin.courses.duplicate', course.id));
+        router.post(route('admin.courses.duplicate', course.slug));
     }
 
     return (
         <TableRow>
             <TableCell className="font-medium max-w-xs">
                 <Link
-                    href={route('admin.courses.edit', course.id)}
+                    href={route('admin.courses.edit', course.slug)}
                     className="hover:underline hover:text-primary"
                 >
                     <div className="truncate">{course.title}</div>
@@ -66,7 +66,7 @@ function CourseRow({ course }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                            <Link href={route('admin.courses.edit', course.id)}>
+                            <Link href={route('admin.courses.edit', course.slug)}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit / Build
                             </Link>

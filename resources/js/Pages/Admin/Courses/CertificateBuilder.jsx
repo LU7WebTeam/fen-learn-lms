@@ -351,7 +351,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
 
     function handleSubmit(e) {
         e.preventDefault();
-        patch(route('admin.courses.certificate.update', course.id));
+        patch(route('admin.courses.certificate.update', course.slug));
     }
 
     const reqType = tpl.requirements?.type || 'all_lessons';

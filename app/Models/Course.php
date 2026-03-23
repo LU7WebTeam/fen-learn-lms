@@ -100,6 +100,11 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function getTotalLessonsAttribute(): int
     {
         return $this->lessons()->count();

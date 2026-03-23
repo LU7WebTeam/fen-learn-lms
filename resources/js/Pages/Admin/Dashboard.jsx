@@ -115,7 +115,7 @@ export default function AdminDashboard({ stats, recentCourses, canViewSystemLogs
                     <CardContent>
                         {recentCourses.length === 0 ? (
                             <p className="py-8 text-center text-sm text-muted-foreground">
-                                No courses yet. <Link href="/admin/courses/create" className="underline">Create the first one.</Link>
+                                No courses yet. <Link href={route('admin.courses.create')} className="underline">Create the first one.</Link>
                             </p>
                         ) : (
                             <Table>
@@ -141,7 +141,7 @@ export default function AdminDashboard({ stats, recentCourses, canViewSystemLogs
                                             <TableCell>{course.creator?.name ?? '—'}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button asChild variant="ghost" size="sm">
-                                                    <Link href={`/admin/courses/${course.id}/edit`}>Edit</Link>
+                                                    <Link href={route('admin.courses.edit', course.slug)}>Edit</Link>
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

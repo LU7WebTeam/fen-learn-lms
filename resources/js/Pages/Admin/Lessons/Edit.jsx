@@ -772,7 +772,7 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
                             <Link href={route('admin.courses.index')} className="hover:underline">Courses</Link>
                             <span>/</span>
                             <Link
-                                href={route('admin.courses.edit', lesson.section.course_id)}
+                                href={route('admin.courses.edit', lesson.section.course.slug)}
                                 className="hover:underline"
                             >
                                 {lesson.section.course?.title ?? 'Edit Course'}
@@ -878,7 +878,7 @@ export default function EditLesson({ lesson, courseLessons = [], flash }) {
 
                 <div className="flex justify-between">
                     <Button type="button" variant="ghost" asChild>
-                        <Link href={route('admin.courses.edit', lesson.section.course_id)}>
+                        <Link href={route('admin.courses.edit', lesson.section.course.slug)}>
                             ← Back to curriculum
                         </Link>
                     </Button>
