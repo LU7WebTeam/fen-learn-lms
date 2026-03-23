@@ -38,7 +38,25 @@
             // Background styles
             $bgStyle = '';
             if (($bg['type'] ?? 'color') === 'image' && !empty($bg['image_url'])) {
-                $bgStyle = "background-image: url('{$bg['image_url']}'); background-size: cover; background-position: center;";
+                $bgImageUrl = $bg['image_url'];
+
+                // DomPDF needs resolvable absolute/file URLs. Convert app storage URLs to local file paths when possible.
+                if (str_starts_with($bgImageUrl, '/')) {
+                    $bgImageUrl = url($bgImageUrl);
+                } elseif (!preg_match('/^https?:\/\//i', $bgImageUrl) && !str_starts_with($bgImageUrl, 'file://')) {
+                    $bgImageUrl = url('/' . ltrim($bgImageUrl, '/'));
+                }
+
+                $parsedPath = parse_url($bgImageUrl, PHP_URL_PATH);
+                if (is_string($parsedPath) && str_starts_with($parsedPath, '/storage/')) {
+                    $relativeStoragePath = ltrim(substr($parsedPath, strlen('/storage/')), '/');
+                    $localFilePath = storage_path('app/public/' . $relativeStoragePath);
+                    if (file_exists($localFilePath)) {
+                        $bgImageUrl = 'file://' . str_replace('\\', '/', $localFilePath);
+                    }
+                }
+
+                $bgStyle = "background-image: url('{$bgImageUrl}'); background-size: cover; background-position: center;";
             } else {
                 $bgStyle = "background: " . ($bg['color'] ?? '#fdf8f4') . ";";
             }
