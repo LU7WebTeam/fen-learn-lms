@@ -80,7 +80,7 @@ export default function ResetPassword({ token, email }) {
                                 autoComplete="new-password"
                                 autoFocus
                                 className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-10 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
-                                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                                placeholder={"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}
                             />
                             <button
                                 type="button"
@@ -108,7 +108,7 @@ export default function ResetPassword({ token, email }) {
                                 onChange={e => setData('password_confirmation', e.target.value)}
                                 autoComplete="new-password"
                                 className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-10 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200"
-                                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                                placeholder={"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}
                             />
                             <button
                                 type="button"
