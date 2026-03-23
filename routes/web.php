@@ -23,13 +23,26 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    return Inertia::render('Landing/Wip2', [
+        'canLogin'       => Route::has('login'),
+        'canRegister'    => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion'     => PHP_VERSION,
+    ]);
+})->name('home');
+
+Route::get('/wip/landing', function () {
+    return Inertia::render('Landing/Wip');
+})->name('landing.wip');
+
+Route::get('/backup-landing', function () {
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
     ]);
-});
+})->name('landing.backup');
 
 // Public certificate verification + download (no auth required — UUID is the access key)
 Route::get('/certificate/{uuid}', [CertificateController::class, 'show'])->name('certificate.show');
