@@ -62,11 +62,7 @@
 
             function fieldCss($field, $pageW, $pageH) {
                 $topMm     = round(($field['y'] / 100) * $pageH, 2);
-                // Scale font size using the same formula as the preview: field.font_size * (nativeH / 210) * 0.85
-                // Where nativeH = pageH * 3.7795 (pixels per mm)
-                // Simplifying: fontSize_pt = field_font_size * pageH * 3.7795 / 210 * 0.85
-                $baseFontSize = $field['font_size'] ?? 12;
-                $fontSize  = round($baseFontSize * $pageH * 3.7795 / 210 * 0.85, 1);
+                $fontSize  = $field['font_size'] ?? 12;
                 $color     = $field['color']     ?? '#1e1e2e';
                 $align     = $field['align']     ?? 'center';
                 $bold      = ($field['bold']     ?? false) ? 'bold'   : 'normal';
