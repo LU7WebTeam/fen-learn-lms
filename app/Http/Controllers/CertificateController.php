@@ -41,7 +41,7 @@ class CertificateController extends Controller
     {
         $enrollment = Enrollment::where('certificate_uuid', $uuid)
             ->whereNotNull('completed_at')
-            ->with(['user:id,name', 'course:id,title,slug'])
+            ->with(['user:id,name', 'course:id,title,slug,certificate_template'])
             ->firstOrFail();
 
         $verifyUrl = config('app.url') . '/certificate/' . $enrollment->certificate_uuid;
