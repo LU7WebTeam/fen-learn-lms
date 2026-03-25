@@ -3,7 +3,7 @@ title: Users and Access
 category: Administration
 order: 30
 slug: users-and-access
-summary: Roles, user management, profile access, invitations, and suspension controls.
+summary: Roles, user management, course viewer access scope, password reset controls, invitations, and suspension.
 ---
 
 # Users and Access
@@ -14,15 +14,27 @@ This guide covers everything admins need to know about managing user accounts �
 
 ## Roles
 
-The platform has three roles, listed from least to most privileged:
+The platform has four roles, listed from least to most privileged:
 
 | Role | Description |
 |---|---|
 | `learner` | Default role. Can enroll in courses, track progress, and take quizzes. |
+| `course_viewer` | Admin-panel read-only role with access only to assigned courses. |
 | `content_editor` | Can create and manage courses, sections, and lessons. Cannot manage users. |
 | `super_admin` | Full access to all admin features including user management and platform settings. |
 
 > **Note:** Role changes take effect immediately. A user currently viewing an admin page who has their role downgraded will lose access on their next request.
+
+### Course Viewer scope
+
+`course_viewer` is a restricted staff role designed for audits, QA, and stakeholders who need visibility but not editing rights.
+
+- Can access the admin shell and assigned course pages.
+- Cannot create, duplicate, or delete courses.
+- Cannot modify course Introduction, Details, Curriculum, or Certificate settings.
+- Cannot access Users, Settings, Activity Logs, or Documentation sections.
+
+Course access is assigned per user from **Admin → Users** and stored as per-course permissions.
 
 ---
 
@@ -44,6 +56,16 @@ Use the search bar at the top to filter by name or email.
 1. Find the user in the list and open their profile.
 2. Select the new role from the **Role** dropdown.
 3. Click **Save** — the change is applied instantly and recorded in the Activity Log.
+
+> When changing a user away from `course_viewer`, their per-course viewer access assignments are removed automatically.
+
+### Managing Course Viewer course access
+
+1. In **Admin → Users**, open a user with role `course_viewer`.
+2. Select the allowed courses in the course access selector.
+3. Save to sync the assignments.
+
+Only users with role `course_viewer` can have managed per-course access.
 
 ### Editing a User's Profile
 
@@ -89,7 +111,7 @@ Suspension prevents a user from logging in without deleting their data or progre
 
 ## Staff Invitations
 
-Staff accounts (`content_editor`, `super_admin`) are created through a controlled invitation flow rather than self-registration, to keep the admin user base secure.
+Staff accounts (`course_viewer`, `content_editor`, `super_admin`) are created through a controlled invitation flow rather than self-registration, to keep the admin user base secure.
 
 ### Sending an invitation
 
@@ -107,7 +129,64 @@ The content of the invitation email (subject, title, body text, and button label
 
 ### Token expiry
 
-Invitation tokens expire after **48 hours**. If the link is not used in time, a new invitation must be sent. Expired tokens are automatically cleaned up.
+Invitation tokens expire after **7 days**. If the link is not used in time, a new invitation must be sent. Expired tokens are automatically cleaned up.
+
+---
+
+## Admin Password Reset Controls
+
+Super admins have two ways to reset staff or learner passwords from **Admin → Users**:
+
+- **Set a new password directly** (manual reset)
+- **Send password reset link** (email-based reset)
+
+### Permission rules
+
+- Only `super_admin` can use these actions.
+- The action is logged in Activity Logs with the acting admin and target user.
+
+### Manual reset
+
+Use this when support must set a password immediately.
+
+- Requires password confirmation in the form.
+- Minimum password length is 8 characters.
+- Existing remember sessions are invalidated by rotating the remember token.
+
+### Send reset link
+
+Use this when the user should choose their own new password.
+
+- Sends the standard password reset email flow to the user's email.
+- Returns a success/error flash message in admin UI.
+
+---
+
+## Authentication Security (2FA)
+
+The platform uses email-based 2FA during login for both learners and staff/admin accounts when enabled.
+
+### How the login flow works
+
+1. User enters email + password on login.
+2. Credentials are validated first (without creating a session).
+3. System sends a 6-digit verification code by email.
+4. User enters the code on the verification screen.
+5. If valid and unexpired, session is created and user is redirected.
+
+### 2FA behavior details
+
+- Verification code format: 6 digits.
+- Code validity window: 10 minutes.
+- Resend is available from the verification page.
+- Successful verification clears the stored code immediately.
+- Failed/expired verification shows an explicit error and does not log the user in.
+
+### Environment toggle
+
+Set `TWO_FACTOR_ENABLED=false` to disable 2FA (typically local development without SMTP).
+
+When disabled, login proceeds directly after credentials are validated.
 
 ---
 

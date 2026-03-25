@@ -18,7 +18,7 @@ This LMS is a full-stack learning management system built with Laravel 12, Inert
 |---|---|---|
 | **Guests / Public** | `/courses` | Browse the course catalog and read course previews without logging in. |
 | **Learners** | `/dashboard` | Enroll in courses, track progress, complete lessons and quizzes, earn certificates. |
-| **Admins** | `/admin/dashboard` | Manage all content, users, settings, and platform operations. |
+| **Admins** | `/admin/dashboard` | Manage content and operations based on role permissions (`course_viewer`, `content_editor`, `super_admin`). |
 
 ---
 
@@ -49,7 +49,13 @@ After logging in, learners land on their **My Learning** dashboard. From there t
 
 ## Admin Side
 
-The admin panel lives at `/admin` and is accessible only to users with the `super_admin` role.
+The admin panel lives at `/admin` and is accessible to staff roles with different permission levels.
+
+| Role | Access summary |
+|---|---|
+| `course_viewer` | Read-only access to permitted courses only. |
+| `content_editor` | Full course and lesson management. |
+| `super_admin` | Full platform access, including users, settings, logs, and security actions. |
 
 Core admin capabilities:
 
@@ -59,6 +65,11 @@ Core admin capabilities:
 - **Certificates** — configure per-course certificate templates and completion requirements
 - **Activity Logs** — review a full audit trail of admin actions
 - **Documentation** — this internal reference, loaded from `docs/admin/*.md`
+
+Authentication note:
+
+- Learner and admin login both use email-based 2FA verification codes when enabled.
+- Set `TWO_FACTOR_ENABLED=false` in environment config to disable 2FA for local/dev scenarios.
 
 ---
 

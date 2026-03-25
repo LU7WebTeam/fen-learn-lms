@@ -221,7 +221,7 @@ By default, a learner must complete **100%** of lessons to earn a certificate. T
 
 Certificates are publicly accessible by a unique UUID — no login required. This allows learners to share their certificate link with employers or institutions.
 
-- **View URL:** `/certificates/{uuid}`
-- **Download URL:** `/certificates/{uuid}/download` (generates a PDF)
+- **View URL:** `/certificate/{uuid}`
+- **Download URL:** `/certificate/{uuid}/download` (generates a PDF)
 
 > Certificates are only generated after the completion requirement is met. A learner who has not completed enough lessons will not have a certificate UUID.

@@ -38,7 +38,9 @@ A free, high-performance Learning Management System built for public access. Del
 - Learner profile popup with inline edit directly from the course dashboard or users table
 - User management — students and staff in a single tabbed view
 - Staff invitation system — email invite with role pre-assignment and 7-day expiry
+- Course Viewer role — read-only course access scoped to assigned courses
 - Account suspension with reason logging
+- Super-admin password reset controls — set new password directly or send reset link
 - Platform settings — branding, registration controls, SMTP, localization, maintenance mode
 - Certificate template builder per course (toggle on/off, custom layout)
 - SEO metadata per course — title, description, Open Graph image
@@ -49,10 +51,12 @@ A free, high-performance Learning Management System built for public access. Del
 | Role | Access |
 |---|---|
 | `learner` | Public catalog, enrolled courses, own profile |
+| `course_viewer` | Admin panel read-only view of assigned courses only |
 | `content_editor` | Admin panel — courses and lessons only |
 | `super_admin` | Full access including users, settings, invitations |
 
 - Separate login pages for learners (`/login`) and staff/admins (`/admin/login`)
+- Email-based 2FA verification code for learner and staff/admin login (configurable via `TWO_FACTOR_ENABLED`)
 - New learners must complete their profile before accessing any content
 - Maintenance mode — toggleable from settings, transparently bypasses admins
 
