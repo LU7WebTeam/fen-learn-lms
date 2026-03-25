@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
@@ -28,7 +28,7 @@ function StatusBadge({ status }) {
     );
 }
 
-function CourseRow({ course }) {
+function CourseRow({ course, canManageCourses }) {
     const [deleting, setDeleting] = useState(false);
 
     function handleDelete() {
@@ -68,22 +68,26 @@ function CourseRow({ course }) {
                         <DropdownMenuItem asChild>
                             <Link href={route('admin.courses.edit', course.slug)}>
                                 <Pencil className="mr-2 h-4 w-4" />
-                                Edit / Build
+                                {canManageCourses ? 'Edit / Build' : 'View'}
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDuplicate}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            onClick={handleDelete}
-                            disabled={deleting}
-                            className="text-destructive focus:text-destructive"
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                        </DropdownMenuItem>
+                        {canManageCourses && (
+                            <>
+                                <DropdownMenuItem onClick={handleDuplicate}>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={handleDelete}
+                                    disabled={deleting}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </TableCell>
@@ -92,6 +96,9 @@ function CourseRow({ course }) {
 }
 
 export default function CoursesIndex({ courses }) {
+    const { auth } = usePage().props;
+    const canManageCourses = ['super_admin', 'content_editor'].includes(auth?.user?.role);
+
     return (
         <AdminLayout title="Courses">
             <Head title="Courses — Admin" />
@@ -102,12 +109,14 @@ export default function CoursesIndex({ courses }) {
                         <h2 className="text-2xl font-bold tracking-tight">Courses</h2>
                         <p className="text-muted-foreground">Manage all courses on the platform.</p>
                     </div>
-                    <Button asChild>
-                        <Link href={route('admin.courses.create')}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            New Course
-                        </Link>
-                    </Button>
+                    {canManageCourses && (
+                        <Button asChild>
+                            <Link href={route('admin.courses.create')}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Course
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 <Card>
@@ -116,12 +125,14 @@ export default function CoursesIndex({ courses }) {
                             <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <BookOpen className="mb-4 h-12 w-12 text-muted-foreground" />
                                 <p className="mb-4 text-muted-foreground">No courses yet.</p>
-                                <Button asChild>
-                                    <Link href={route('admin.courses.create')}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Create the first course
-                                    </Link>
-                                </Button>
+                                {canManageCourses && (
+                                    <Button asChild>
+                                        <Link href={route('admin.courses.create')}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Create the first course
+                                        </Link>
+                                    </Button>
+                                )}
                             </div>
                         ) : (
                             <Table>
@@ -138,7 +149,7 @@ export default function CoursesIndex({ courses }) {
                                 </TableHeader>
                                 <TableBody>
                                     {courses.data.map((course) => (
-                                        <CourseRow key={course.id} course={course} />
+                                        <CourseRow key={course.id} course={course} canManageCourses={canManageCourses} />
                                     ))}
                                 </TableBody>
                             </Table>

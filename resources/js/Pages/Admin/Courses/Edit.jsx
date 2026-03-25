@@ -9,6 +9,14 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/Components/ui/dialog';
 import InputError from '@/Components/InputError';
 import ImageUpload from '@/Components/ImageUpload';
 import CertificateBuilder from './CertificateBuilder';
@@ -64,6 +72,24 @@ function Field({ label, error, children, hint }) {
             {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
             {error && <InputError message={error} />}
         </div>
+    );
+}
+
+function RestrictionNoticeDialog({ open, onClose }) {
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Read-only Access</DialogTitle>
+                    <DialogDescription>
+                        Your role is set to Course Viewer. You can view only permitted courses, but editing is disabled.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button onClick={onClose}>Understood</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -715,7 +741,7 @@ function QuizAnalyticsPanel({ analytics }) {
     );
 }
 
-function CourseDetailsForm({ course }) {
+function CourseDetailsForm({ course, readOnly = false }) {
     const [lang, setLang] = useState('en');
     const { data, setData, post, processing, errors, isDirty } = useForm({
         _method:           'patch',
@@ -737,6 +763,7 @@ function CourseDetailsForm({ course }) {
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (readOnly) return;
         post(route('admin.courses.update', course.slug), { forceFormData: true });
     }
 
@@ -750,6 +777,7 @@ function CourseDetailsForm({ course }) {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    <fieldset disabled={readOnly} className={readOnly ? 'opacity-70' : ''}>
                     {lang === 'en' ? (
                         <>
                             <div className="grid gap-5 sm:grid-cols-2">
@@ -868,17 +896,19 @@ function CourseDetailsForm({ course }) {
                                 : <><Check className="mr-2 h-4 w-4" />Save Details</>}
                         </Button>
                     </div>
+                    </fieldset>
                 </form>
             </CardContent>
         </Card>
     );
 }
 
-function AddLessonForm({ section, onDone }) {
+function AddLessonForm({ section, onDone, readOnly = false }) {
     const { data, setData, post, processing, reset } = useForm({ title: '', type: 'video' });
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (readOnly) return;
         post(route('admin.sections.lessons.store', section.id), {
             onSuccess: () => { reset(); onDone?.(); },
         });
@@ -892,9 +922,10 @@ function AddLessonForm({ section, onDone }) {
                 placeholder="Lesson title"
                 className="h-8 text-sm"
                 autoFocus
+                disabled={readOnly}
             />
-            <Select value={data.type} onValueChange={(v) => setData('type', v)}>
-                <SelectTrigger className="h-8 w-28 text-sm">
+            <Select value={data.type} onValueChange={(v) => setData('type', v)} disabled={readOnly}>
+                <SelectTrigger className="h-8 w-28 text-sm" disabled={readOnly}>
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -904,7 +935,7 @@ function AddLessonForm({ section, onDone }) {
                     <SelectItem value="pdf">PDF</SelectItem>
                 </SelectContent>
             </Select>
-            <Button type="submit" size="sm" disabled={processing || !data.title.trim()}>
+            <Button type="submit" size="sm" disabled={readOnly || processing || !data.title.trim()}>
                 {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Add'}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => onDone?.()}>
@@ -914,21 +945,22 @@ function AddLessonForm({ section, onDone }) {
     );
 }
 
-function LessonRow({ lesson, onDuplicate }) {
+function LessonRow({ lesson, onDuplicate, readOnly = false }) {
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
     function handleDelete() {
+        if (readOnly) return;
         if (!window.confirm(`Delete lesson "${lesson.title}"?`)) return;
         router.delete(route('admin.lessons.destroy', lesson.id));
     }
 
     return (
         <div className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 group">
-            <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab" />
+            <GripVertical className={`h-4 w-4 text-muted-foreground/40 ${readOnly ? '' : 'cursor-grab'}`} />
             <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="flex-1 text-sm truncate">{lesson.title}</span>
             <Badge variant="outline" className="text-xs capitalize shrink-0">{lesson.type}</Badge>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {!readOnly && <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button asChild variant="ghost" size="icon" className="h-7 w-7">
                     <Link href={route('admin.lessons.edit', lesson.id)}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -940,12 +972,12 @@ function LessonRow({ lesson, onDuplicate }) {
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={handleDelete}>
                     <Trash2 className="h-3.5 w-3.5" />
                 </Button>
-            </div>
+            </div>}
         </div>
     );
 }
 
-function SectionCard({ section }) {
+function SectionCard({ section, readOnly = false }) {
     const [expanded, setExpanded]               = useState(true);
     const [addingLesson, setAddingLesson]       = useState(false);
     const [renaming, setRenaming]               = useState(false);
@@ -966,12 +998,14 @@ function SectionCard({ section }) {
     }, [section.title, section.title_ms]);
 
     function handleLessonDragStart(e, id) {
+        if (readOnly) return;
         e.dataTransfer.effectAllowed = 'move';
         e.stopPropagation();
         setLessonDraggedId(id);
     }
 
     function handleLessonDragOver(e, id) {
+        if (readOnly) return;
         e.preventDefault();
         e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
@@ -980,6 +1014,7 @@ function SectionCard({ section }) {
     }
 
     function handleLessonDrop(e, targetId) {
+        if (readOnly) return;
         e.preventDefault();
         e.stopPropagation();
 
@@ -1018,6 +1053,7 @@ function SectionCard({ section }) {
 
     function handleRename(e) {
         e.preventDefault();
+        if (readOnly) return;
         if (!title.trim()) return;
 
         setRenameSaving(true);
@@ -1032,6 +1068,7 @@ function SectionCard({ section }) {
     }
 
     function startRenaming() {
+        if (readOnly) return;
         setTitle(section.title);
         setTitleMs(section.title_ms ?? '');
         setRenaming(true);
@@ -1045,6 +1082,7 @@ function SectionCard({ section }) {
     }
 
     function handleDelete() {
+        if (readOnly) return;
         if (!window.confirm(`Delete section "${section.title}" and all its lessons?`)) return;
         router.delete(route('admin.sections.destroy', section.id));
     }
@@ -1053,7 +1091,7 @@ function SectionCard({ section }) {
         <Card>
             <CardHeader className="py-3 px-4">
                 <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab shrink-0" />
+                    <GripVertical className={`h-4 w-4 text-muted-foreground/40 shrink-0 ${readOnly ? '' : 'cursor-grab'}`} />
                     <div className="flex flex-1 items-start gap-2">
                         <Button
                             type="button"
@@ -1105,25 +1143,25 @@ function SectionCard({ section }) {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                         <span className="text-xs text-muted-foreground">{lessons.length} lessons</span>
-                        <Button
+                        {!readOnly && <Button
                             variant="ghost" size="icon" className="h-7 w-7"
                             onClick={renaming ? cancelRenaming : startRenaming}
                         >
                             <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
+                        </Button>}
+                        {!readOnly && <Button
                             variant="ghost" size="icon" className="h-7 w-7"
                             onClick={() => router.post(route('admin.sections.duplicate', section.id))}
                             title="Duplicate section"
                         >
                             <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
+                        </Button>}
+                        {!readOnly && <Button
                             variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
                             onClick={handleDelete}
                         >
                             <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        </Button>}
                     </div>
                 </div>
             </CardHeader>
@@ -1151,6 +1189,7 @@ function SectionCard({ section }) {
                                     <LessonRow
                                         lesson={lesson}
                                         onDuplicate={() => router.post(route('admin.lessons.duplicate', lesson.id))}
+                                        readOnly={readOnly}
                                     />
                                 </div>
                             ))}
@@ -1158,9 +1197,9 @@ function SectionCard({ section }) {
                     )}
 
                     {addingLesson ? (
-                        <AddLessonForm section={section} onDone={() => setAddingLesson(false)} />
+                        <AddLessonForm section={section} onDone={() => setAddingLesson(false)} readOnly={readOnly} />
                     ) : (
-                        <Button
+                        !readOnly && <Button
                             variant="ghost" size="sm"
                             className="ml-6 text-muted-foreground hover:text-foreground"
                             onClick={() => setAddingLesson(true)}
@@ -1175,11 +1214,12 @@ function SectionCard({ section }) {
     );
 }
 
-function AddSectionForm({ course, onDone }) {
+function AddSectionForm({ course, onDone, readOnly = false }) {
     const { data, setData, post, processing, reset } = useForm({ title: '' });
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (readOnly) return;
         post(route('admin.courses.sections.store', course.slug), {
             onSuccess: () => { reset(); onDone?.(); },
         });
@@ -1192,8 +1232,9 @@ function AddSectionForm({ course, onDone }) {
                 onChange={(e) => setData('title', e.target.value)}
                 placeholder="Section title, e.g. Getting Started"
                 autoFocus
+                disabled={readOnly}
             />
-            <Button type="submit" disabled={processing || !data.title.trim()}>
+            <Button type="submit" disabled={readOnly || processing || !data.title.trim()}>
                 {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Add Section
             </Button>
@@ -1204,7 +1245,7 @@ function AddSectionForm({ course, onDone }) {
     );
 }
 
-function CourseIntroductionForm({ course }) {
+function CourseIntroductionForm({ course, readOnly = false }) {
     const [lang, setLang]       = useState('en');
     const [content,   setContent]   = useState(
         Array.isArray(course.introduction) && course.introduction.length > 0
@@ -1220,6 +1261,7 @@ function CourseIntroductionForm({ course }) {
     const [saved,  setSaved]  = useState(false);
 
     function handleSave() {
+        if (readOnly) return;
         setSaving(true);
         router.patch(
             route('admin.courses.introduction.update', course.slug),
@@ -1254,6 +1296,7 @@ function CourseIntroductionForm({ course }) {
                         key={`intro-en-${course.id}`}
                         initialContent={content}
                         onChange={setContent}
+                        readOnly={readOnly}
                     />
                 </div>
             ) : (
@@ -1262,6 +1305,7 @@ function CourseIntroductionForm({ course }) {
                         key={`intro-ms-${course.id}`}
                         initialContent={contentMs}
                         onChange={setContentMs}
+                        readOnly={readOnly}
                     />
                 </div>
             )}
@@ -1270,7 +1314,7 @@ function CourseIntroductionForm({ course }) {
                 <p className="text-xs text-muted-foreground">
                     Supported: headings, paragraphs, lists, images, videos, tables, dividers, and more.
                 </p>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || readOnly}>
                     {saved
                         ? <><Check className="mr-2 h-4 w-4" />Saved!</>
                         : saving
@@ -1283,13 +1327,15 @@ function CourseIntroductionForm({ course }) {
 }
 
 export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed, quizAnalytics }) {
-    const { url } = usePage();
+    const { url, auth } = usePage().props;
+    const isCourseViewer = auth?.user?.role === 'course_viewer';
     const [addingSection, setAddingSection] = useState(false);
     const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
     const [draggedId, setDraggedId] = useState(null);
     const [dragOverId, setDragOverId] = useState(null);
     const [reordering, setReordering] = useState(false);
     const [activeTab, setActiveTab] = useState(() => resolveInitialTab(course.id, url));
+    const [restrictionOpen, setRestrictionOpen] = useState(false);
 
     useEffect(() => {
         setSections([...course.sections].sort((a, b) => a.order - b.order));
@@ -1384,6 +1430,15 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                     </div>
                 )}
 
+                {isCourseViewer && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-center justify-between gap-3">
+                        <span>You are in view-only mode for this course.</span>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setRestrictionOpen(true)}>
+                            View access details
+                        </Button>
+                    </div>
+                )}
+
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="w-full justify-start">
@@ -1434,7 +1489,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
 
                     {/* ── Details tab ── */}
                     <TabsContent value="details" className="mt-6">
-                        <CourseDetailsForm course={course} />
+                        <CourseDetailsForm course={course} readOnly={isCourseViewer} />
                     </TabsContent>
 
                     {/* ── Curriculum tab ── */}
@@ -1448,7 +1503,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                         {sections.reduce((t, s) => t + s.lessons.length, 0)} lessons
                                     </p>
                                 </div>
-                                {!addingSection && (
+                                {!addingSection && !isCourseViewer && (
                                     <Button variant="outline" onClick={() => setAddingSection(true)}>
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add Section
@@ -1456,8 +1511,8 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 )}
                             </div>
 
-                            {addingSection && (
-                                <AddSectionForm course={course} onDone={() => setAddingSection(false)} />
+                            {addingSection && !isCourseViewer && (
+                                <AddSectionForm course={course} onDone={() => setAddingSection(false)} readOnly={isCourseViewer} />
                             )}
 
                             {sections.length === 0 && !addingSection ? (
@@ -1465,20 +1520,22 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                     <p className="mb-4 text-muted-foreground">
                                         No sections yet. Add the first section to start building your curriculum.
                                     </p>
-                                    <Button onClick={() => setAddingSection(true)}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add First Section
-                                    </Button>
+                                    {!isCourseViewer && (
+                                        <Button onClick={() => setAddingSection(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add First Section
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {sections.map((section) => (
                                         <div
                                             key={section.id}
-                                            draggable
-                                            onDragStart={(e) => handleDragStart(e, section.id)}
-                                            onDragOver={(e) => handleDragOver(e, section.id)}
-                                            onDrop={(e) => handleDrop(e, section.id)}
+                                            draggable={!isCourseViewer}
+                                            onDragStart={(e) => !isCourseViewer && handleDragStart(e, section.id)}
+                                            onDragOver={(e) => !isCourseViewer && handleDragOver(e, section.id)}
+                                            onDrop={(e) => !isCourseViewer && handleDrop(e, section.id)}
                                             onDragLeave={() => {
                                                 if (dragOverId === section.id) setDragOverId(null);
                                             }}
@@ -1488,7 +1545,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                                 dragOverId === section.id && draggedId !== section.id && 'border-t-2 border-primary pt-2',
                                             ].join(' ')}
                                         >
-                                            <SectionCard section={section} />
+                                            <SectionCard section={section} readOnly={isCourseViewer} />
                                         </div>
                                     ))}
                                 </div>
@@ -1503,6 +1560,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                             defaultTemplate={defaultTemplate}
                             sections={course.sections}
                             customFonts={customFonts}
+                            readOnly={isCourseViewer}
                         />
                     </TabsContent>
 
@@ -1533,10 +1591,12 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
 
                     {/* ── Introduction tab ── */}
                     <TabsContent value="introduction" className="mt-6">
-                        <CourseIntroductionForm course={course} />
+                        <CourseIntroductionForm course={course} readOnly={isCourseViewer} />
                     </TabsContent>
                 </Tabs>
             </div>
+
+            <RestrictionNoticeDialog open={restrictionOpen} onClose={() => setRestrictionOpen(false)} />
         </AdminLayout>
     );
 }

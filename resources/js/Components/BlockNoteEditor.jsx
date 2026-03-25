@@ -73,7 +73,7 @@ async function uploadImageToBN(file) {
     return json.url.startsWith('http') ? json.url : (window.location.origin + json.url);
 }
 
-export default function BlockNoteEditor({ initialContent, onChange }) {
+export default function BlockNoteEditor({ initialContent, onChange, readOnly = false }) {
     const normalizedInitialContent = normalizeBlockNoteInitialContent(initialContent);
 
     const editor = useCreateBlockNote({
@@ -86,35 +86,38 @@ export default function BlockNoteEditor({ initialContent, onChange }) {
         <div className="bn-editor-wrap" style={{ minHeight: '420px' }}>
             <BlockNoteView
                 editor={editor}
-                onChange={() => onChange?.(editor.document)}
+                onChange={() => !readOnly && onChange?.(editor.document)}
                 theme="light"
                 slashMenu={false}
+                editable={!readOnly}
             >
-                <SuggestionMenuController
-                    triggerCharacter="/"
-                    getItems={async (query) => {
-                        const defaults = getDefaultReactSlashMenuItems(editor);
-                        const embedItem = {
-                            title: 'Video Embed',
-                            subtext: 'Embed YouTube, Vimeo, or direct .mp4 URL',
-                            onItemClick: () => {
-                                const url = window.prompt('Paste video URL (YouTube, Vimeo, or direct .mp4):');
-                                if (!url) return;
-                                editor.insertBlocks(
-                                    [{ type: 'videoEmbed', props: { url } }],
-                                    editor.getTextCursorPosition().block,
-                                    'after'
-                                );
-                            },
-                            group: 'Media',
-                            icon: <span style={{ fontSize: 18 }}>🎬</span>,
-                        };
-                        const all = [...defaults, embedItem];
-                        return query
-                            ? all.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
-                            : all;
-                    }}
-                />
+                {!readOnly && (
+                    <SuggestionMenuController
+                        triggerCharacter="/"
+                        getItems={async (query) => {
+                            const defaults = getDefaultReactSlashMenuItems(editor);
+                            const embedItem = {
+                                title: 'Video Embed',
+                                subtext: 'Embed YouTube, Vimeo, or direct .mp4 URL',
+                                onItemClick: () => {
+                                    const url = window.prompt('Paste video URL (YouTube, Vimeo, or direct .mp4):');
+                                    if (!url) return;
+                                    editor.insertBlocks(
+                                        [{ type: 'videoEmbed', props: { url } }],
+                                        editor.getTextCursorPosition().block,
+                                        'after'
+                                    );
+                                },
+                                group: 'Media',
+                                icon: <span style={{ fontSize: 18 }}>🎬</span>,
+                            };
+                            const all = [...defaults, embedItem];
+                            return query
+                                ? all.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+                                : all;
+                        }}
+                    />
+                )}
             </BlockNoteView>
         </div>
     );

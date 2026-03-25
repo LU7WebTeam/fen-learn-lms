@@ -342,7 +342,7 @@ function FieldRow({ field, onChange }) {
 }
 
 // ─── Main exported builder ──────────────────────────────────────────────────
-export default function CertificateBuilder({ course, defaultTemplate, sections, customFonts = [] }) {
+export default function CertificateBuilder({ course, defaultTemplate, sections, customFonts = [], readOnly = false }) {
     const { platform } = usePage().props;
     const platformName = platform?.name || 'Free LMS';
     const existing = course.certificate_template;
@@ -365,6 +365,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (readOnly) return;
         patch(route('admin.courses.certificate.update', course.slug));
     }
 
@@ -377,6 +378,14 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
 
                 {/* ── Settings panel ─────────────────────────────────── */}
                 <div className="flex-1 min-w-0 space-y-2">
+
+                    {readOnly && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+                            View-only mode: certificate settings are disabled for your role.
+                        </div>
+                    )}
+
+                    <fieldset disabled={readOnly} className={readOnly ? 'opacity-70' : ''}>
 
                     {/* Save / Reset bar */}
                     <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-4 py-3">
@@ -826,6 +835,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
                         </AccordionItem>
 
                     </Accordion>
+                    </fieldset>
                 </div>
 
                 {/* ── Live Preview panel ─────────────────────────────── */}
