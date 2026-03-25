@@ -6,6 +6,7 @@ import { ShieldCheck, Eye, EyeOff, User, Lock } from 'lucide-react';
 const ROLE_LABELS = {
     super_admin:    'Super Admin',
     content_editor: 'Content Editor',
+    course_viewer:  'Course Viewer',
 };
 
 export default function AcceptInvitation({ token, email, role }) {

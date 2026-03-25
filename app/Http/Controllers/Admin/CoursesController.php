@@ -22,7 +22,12 @@ class CoursesController extends Controller
 {
     public function index(): Response
     {
+        $user = request()->user();
+
         $courses = Course::with('creator:id,name')
+            ->when($user?->isCourseViewer(), function ($q) use ($user) {
+                $q->whereIn('id', $user->permittedCourses()->select('courses.id'));
+            })
             ->withCount(['lessons', 'enrollments'])
             ->latest()
             ->paginate(20);
@@ -34,11 +39,15 @@ class CoursesController extends Controller
 
     public function create(): Response
     {
+        $this->authorizeCourseManagement(request());
+
         return Inertia::render('Admin/Courses/Create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $validated = $request->validate([
             'title'            => 'required|string|max:255',
             'title_ms'         => 'nullable|string|max:255',
@@ -84,6 +93,8 @@ class CoursesController extends Controller
 
     public function edit(Course $course): Response
     {
+        $this->authorizeCourseView(request(), $course);
+
         $course->load(['sections' => function ($q) {
             $q->orderBy('order')->with(['lessons' => function ($q2) {
                 $q2->orderBy('order')->select(['id', 'section_id', 'title', 'type', 'order']);
@@ -426,6 +437,8 @@ class CoursesController extends Controller
 
     public function updateIntroduction(Request $request, Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'introduction'    => 'nullable|array',
             'introduction_ms' => 'nullable|array',
@@ -446,6 +459,8 @@ class CoursesController extends Controller
 
     public function updateCertificate(Request $request, Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $validated = $request->validate([
             'certificate_template'                          => 'required|array',
             'certificate_template.enabled'                  => 'required|boolean',
@@ -479,6 +494,8 @@ class CoursesController extends Controller
 
     public function update(Request $request, Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $validated = $request->validate([
             'title'            => 'required|string|max:255',
             'title_ms'         => 'nullable|string|max:255',
@@ -524,6 +541,8 @@ class CoursesController extends Controller
 
     public function duplicate(Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         $base = $course->slug . '-copy';
         $slug = $base;
         $i    = 1;
@@ -561,6 +580,8 @@ class CoursesController extends Controller
 
     public function destroy(Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         ActivityLogger::record('Deleted course', $course, [
             'title' => $course->title,
             'slug' => $course->slug,
@@ -579,6 +600,20 @@ class CoursesController extends Controller
         if (str_contains($url, '/storage/')) {
             $path = preg_replace('#^.*/storage/#', '', $url);
             Storage::disk('public')->delete($path);
+        }
+    }
+
+    private function authorizeCourseManagement(Request $request): void
+    {
+        if (!$request->user()?->canManageCourses()) {
+            abort(403, 'Your role has view-only access to courses.');
+        }
+    }
+
+    private function authorizeCourseView(Request $request, Course $course): void
+    {
+        if (!$request->user()?->canViewCourse($course)) {
+            abort(403, 'You are not permitted to access this course.');
         }
     }
 }

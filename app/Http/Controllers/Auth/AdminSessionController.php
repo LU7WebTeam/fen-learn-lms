@@ -28,7 +28,7 @@ class AdminSessionController extends Controller
         $user = $request->verifyCredentialsFor2FA();
 
         // Check if user is admin
-        if (!in_array($user->role, ['super_admin', 'content_editor'])) {
+        if (!in_array($user->role, ['super_admin', 'content_editor', 'course_viewer'], true)) {
             return back()->withErrors([
                 'email' => 'This login is for administrators only. Please use the learner login.',
             ]);

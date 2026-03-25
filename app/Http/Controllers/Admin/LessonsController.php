@@ -16,6 +16,8 @@ class LessonsController extends Controller
 {
     public function store(Request $request, Section $section): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'title' => 'required|string|max:255',
             'type'  => 'required|in:video,text,quiz,pdf',
@@ -40,6 +42,9 @@ class LessonsController extends Controller
 
     public function edit(Lesson $lesson): Response
     {
+        $lesson->loadMissing('section.course');
+        $this->authorizeCourseView(request(), $lesson->section->course);
+
         $lesson->load('section.course.sections.lessons');
 
         $courseLessons = $lesson->section->course->sections
@@ -61,6 +66,8 @@ class LessonsController extends Controller
 
     public function update(Request $request, Lesson $lesson): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $rules = [
             'title'                   => 'required|string|max:255',
             'title_ms'                => 'nullable|string|max:255',
@@ -119,6 +126,8 @@ class LessonsController extends Controller
 
     public function destroy(Lesson $lesson): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         ActivityLogger::record('Deleted lesson', $lesson, [
             'title' => $lesson->title,
             'section_id' => $lesson->section_id,
@@ -136,6 +145,8 @@ class LessonsController extends Controller
 
     public function reorder(Request $request, Section $section): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'lessons'   => 'required|array',
             'lessons.*' => 'integer|exists:lessons,id',
@@ -155,6 +166,8 @@ class LessonsController extends Controller
 
     public function duplicate(Lesson $lesson): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         $section = $lesson->section;
         $order   = $section->lessons()->max('order') + 1;
 
@@ -179,6 +192,20 @@ class LessonsController extends Controller
         if (str_contains($url, '/storage/')) {
             $path = preg_replace('#^.*/storage/#', '', $url);
             Storage::disk('public')->delete($path);
+        }
+    }
+
+    private function authorizeCourseManagement(Request $request): void
+    {
+        if (!$request->user()?->canManageCourses()) {
+            abort(403, 'Your role has view-only access to courses.');
+        }
+    }
+
+    private function authorizeCourseView(Request $request, \App\Models\Course $course): void
+    {
+        if (!$request->user()?->canViewCourse($course)) {
+            abort(403, 'You are not permitted to access this course.');
         }
     }
 }

@@ -469,6 +469,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
 const ROLE_META = {
     super_admin:    { label: 'Super Admin',    color: 'bg-rose-100 text-rose-700 border-rose-200',   icon: Crown  },
     content_editor: { label: 'Content Editor', color: 'bg-violet-100 text-violet-700 border-violet-200', icon: Pencil },
+    course_viewer:  { label: 'Course Viewer',  color: 'bg-amber-100 text-amber-700 border-amber-200', icon: BookOpen },
     learner:        { label: 'Student',         color: 'bg-sky-100 text-sky-700 border-sky-200',       icon: GraduationCap },
 };
 
@@ -535,6 +536,12 @@ function ChangeRoleDialog({ user, open, onClose, currentUserId }) {
                                         Content Editor
                                     </span>
                                 </SelectItem>
+                                <SelectItem value="course_viewer">
+                                    <span className="flex items-center gap-2">
+                                        <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+                                        Course Viewer (read-only)
+                                    </span>
+                                </SelectItem>
                                 <SelectItem value="super_admin">
                                     <span className="flex items-center gap-2">
                                         <Crown className="h-3.5 w-3.5 text-rose-600" />
@@ -557,6 +564,112 @@ function ChangeRoleDialog({ user, open, onClose, currentUserId }) {
                         disabled={processing || role === user?.role || user?.id === currentUserId}
                     >
                         {processing ? 'Saving…' : 'Change Role'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function CourseAccessDialog({ user, availableCourses, open, onClose }) {
+    const [query, setQuery] = useState('');
+    const [selected, setSelected] = useState(new Set((user?.permitted_courses ?? []).map(c => c.id)));
+    const [processing, setProcessing] = useState(false);
+
+    useEffect(() => {
+        setQuery('');
+        setSelected(new Set((user?.permitted_courses ?? []).map(c => c.id)));
+    }, [user]);
+
+    const normalizedQuery = query.trim().toLowerCase();
+    const filteredCourses = (availableCourses ?? []).filter(course =>
+        !normalizedQuery
+            || course.title.toLowerCase().includes(normalizedQuery)
+            || course.slug.toLowerCase().includes(normalizedQuery)
+    );
+
+    function toggleCourse(courseId) {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(courseId)) {
+                next.delete(courseId);
+            } else {
+                next.add(courseId);
+            }
+            return next;
+        });
+    }
+
+    function handleSave() {
+        setProcessing(true);
+        router.patch(route('admin.users.update-course-access', user.id), {
+            course_ids: Array.from(selected),
+        }, {
+            onFinish: () => {
+                setProcessing(false);
+                onClose();
+            },
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Manage Course Access</DialogTitle>
+                    <DialogDescription>
+                        Select which courses <strong>{user?.name}</strong> can view in admin.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-3 py-1">
+                    <Input
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
+                        placeholder="Search courses by title or slug..."
+                    />
+
+                    <div className="max-h-[360px] overflow-y-auto rounded-lg border p-2">
+                        {filteredCourses.length === 0 ? (
+                            <p className="px-3 py-6 text-center text-sm text-muted-foreground">No courses found.</p>
+                        ) : (
+                            <div className="space-y-1">
+                                {filteredCourses.map(course => {
+                                    const checked = selected.has(course.id);
+                                    return (
+                                        <label
+                                            key={course.id}
+                                            className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted/40 cursor-pointer"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={() => toggleCourse(course.id)}
+                                                className="h-4 w-4"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">{course.title}</p>
+                                                <p className="text-xs text-muted-foreground truncate">/{course.slug}</p>
+                                            </div>
+                                            <Badge variant="outline" className="ml-auto text-[10px] uppercase">
+                                                {course.status}
+                                            </Badge>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                        {selected.size} course{selected.size === 1 ? '' : 's'} selected.
+                    </p>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose} disabled={processing}>Cancel</Button>
+                    <Button onClick={handleSave} disabled={processing}>
+                        {processing ? 'Saving…' : 'Save Access'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -666,7 +779,7 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile,
     );
 }
 
-function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId, onResetPassword, isSuperAdmin }) {
+function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, currentUserId, onResetPassword, isSuperAdmin }) {
     const isSelf = user.id === currentUserId;
     const isSuspended = !!user.suspended_at;
     return (
@@ -703,6 +816,12 @@ function StaffRow({ user, onChangeRole, onSuspend, onUnsuspend, currentUserId, o
                         <UserCog className="h-3.5 w-3.5" />
                         Role
                     </Button>
+                    {user.role === 'course_viewer' && !isSelf && (
+                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => onManageAccess(user)}>
+                            <BookOpen className="h-3.5 w-3.5" />
+                            Access ({user.permitted_courses_count || 0})
+                        </Button>
+                    )}
                     {!isSelf && (
                         isSuspended ? (
                             <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700" onClick={() => onUnsuspend(user)}>
@@ -839,6 +958,12 @@ function InviteStaffDialog({ open, onClose }) {
                                         Content Editor
                                     </span>
                                 </SelectItem>
+                                <SelectItem value="course_viewer">
+                                    <span className="flex items-center gap-2">
+                                        <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+                                        Course Viewer
+                                    </span>
+                                </SelectItem>
                                 <SelectItem value="super_admin">
                                     <span className="flex items-center gap-2">
                                         <Crown className="h-3.5 w-3.5 text-rose-600" />
@@ -971,7 +1096,7 @@ function ResetPasswordDialog({ user, open, onClose }) {
     );
 }
 
-export default function UsersIndex({ staff, students, counts, filters }) {
+export default function UsersIndex({ staff, students, counts, filters, availableCourses }) {
     const { auth } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [dialogUser, setDialogUser] = useState(null);
@@ -979,6 +1104,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
     const [suspendUser, setSuspendUser] = useState(null);
     const [profileUserId, setProfileUserId] = useState(null);
     const [resetPasswordUser, setResetPasswordUser] = useState(null);
+    const [accessUser, setAccessUser] = useState(null);
     const isSuperAdmin = auth.user.role === 'super_admin';
 
     function handleUnsuspend(user) {
@@ -1019,7 +1145,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight">Users</h2>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Manage students, content editors, and administrators.
+                            Manage students, content editors, course viewers, and administrators.
                         </p>
                     </div>
 
@@ -1048,7 +1174,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                     <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
                         <div className="rounded-lg bg-sky-100 p-2.5 dark:bg-sky-900/30">
                             <GraduationCap className="h-5 w-5 text-sky-600" />
@@ -1074,6 +1200,15 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                         <div>
                             <p className="text-2xl font-bold">{counts.super_admins.toLocaleString()}</p>
                             <p className="text-xs text-muted-foreground">Super Admins</p>
+                        </div>
+                    </div>
+                    <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
+                        <div className="rounded-lg bg-amber-100 p-2.5 dark:bg-amber-900/30">
+                            <BookOpen className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{counts.course_viewers.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">Course Viewers</p>
                         </div>
                     </div>
                     <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
@@ -1178,6 +1313,7 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                                                     key={user.id}
                                                     user={user}
                                                     onChangeRole={setDialogUser}
+                                                    onManageAccess={setAccessUser}
                                                     onSuspend={setSuspendUser}
                                                     onUnsuspend={handleUnsuspend}
                                                     currentUserId={auth.user.id}
@@ -1234,6 +1370,15 @@ export default function UsersIndex({ staff, students, counts, filters }) {
                 open={!!resetPasswordUser}
                 onClose={() => setResetPasswordUser(null)}
             />
+
+            {accessUser && (
+                <CourseAccessDialog
+                    user={accessUser}
+                    availableCourses={availableCourses}
+                    open={!!accessUser}
+                    onClose={() => setAccessUser(null)}
+                />
+            )}
         </AdminLayout>
     );
 }

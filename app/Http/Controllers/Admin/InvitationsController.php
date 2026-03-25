@@ -20,7 +20,7 @@ class InvitationsController extends Controller
     {
         $validated = $request->validate([
             'email' => 'required|email|unique:users,email',
-            'role'  => 'required|in:content_editor,super_admin',
+            'role'  => 'required|in:content_editor,super_admin,course_viewer',
         ]);
 
         StaffInvitation::where('email', $validated['email'])

@@ -16,10 +16,23 @@ class DashboardController extends Controller
     {
         $user = request()->user();
 
-        $totalUsers       = User::where('role', 'learner')->count();
-        $totalCourses     = Course::count();
-        $totalEnrollments = Enrollment::count();
-        $completedCount   = Enrollment::whereNotNull('completed_at')->count();
+        $courseScope = Course::query();
+        $enrollmentScope = Enrollment::query();
+
+        if ($user?->isCourseViewer()) {
+            $permittedCourseIds = $user->permittedCourses()->pluck('courses.id');
+            $courseScope->whereIn('id', $permittedCourseIds);
+            $enrollmentScope->whereIn('course_id', $permittedCourseIds);
+        }
+
+        $totalUsers       = $user?->isCourseViewer()
+            ? User::where('role', 'learner')
+                ->whereHas('enrollments', fn($q) => $q->whereIn('course_id', $user->permittedCourses()->select('courses.id')))
+                ->count()
+            : User::where('role', 'learner')->count();
+        $totalCourses     = (clone $courseScope)->count();
+        $totalEnrollments = (clone $enrollmentScope)->count();
+        $completedCount   = (clone $enrollmentScope)->whereNotNull('completed_at')->count();
         $completionRate   = $totalEnrollments > 0
             ? (int) round(($completedCount / $totalEnrollments) * 100)
             : 0;
@@ -41,6 +54,7 @@ class DashboardController extends Controller
         }
 
         $recentCourses = Course::with('creator:id,name')
+            ->when($user?->isCourseViewer(), fn($q) => $q->whereIn('id', $user->permittedCourses()->select('courses.id')))
             ->latest()
             ->limit(5)
             ->get(['id', 'title', 'slug', 'status', 'difficulty', 'created_by', 'created_at']);

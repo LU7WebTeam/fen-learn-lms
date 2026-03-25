@@ -87,7 +87,7 @@ Route::middleware(['auth', 'verified', 'profile.complete'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/docs/{slug?}', [AdminDocumentationController::class, 'index'])->name('docs.index');
     Route::get('/activity-logs', [AdminActivityLogsController::class, 'index'])->name('activity-logs.index');
@@ -107,6 +107,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     // Users
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update-role');
+    Route::patch('/users/{user}/course-access', [\App\Http\Controllers\Admin\UsersController::class, 'updateCourseAccess'])->name('users.update-course-access');
 
     // Staff invitations
     Route::post('/invitations', [AdminInvitationsController::class, 'store'])->name('invitations.store');

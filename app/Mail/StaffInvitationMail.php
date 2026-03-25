@@ -41,6 +41,7 @@ class StaffInvitationMail extends Mailable
         $roleLabels = [
             'content_editor' => 'Content Editor',
             'super_admin'    => 'Super Admin',
+            'course_viewer'  => 'Course Viewer',
         ];
 
         $branding = EmailBranding::data();

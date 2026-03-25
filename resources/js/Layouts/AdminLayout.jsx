@@ -143,12 +143,26 @@ function NavUser({ user }) {
 function AppSidebar() {
     const { url, props } = usePage();
     const isSuperAdmin = props.auth?.user?.role === 'super_admin';
+    const isCourseViewer = props.auth?.user?.role === 'course_viewer';
     const platformName = props.platform?.name || 'Free LMS';
     const platformLogoUrl = props.platform?.logo_url || null;
     const groupedNavigation = navGroups.map(group => ({
         ...group,
         items: [...group.items],
     }));
+
+    if (isCourseViewer) {
+        const learningGroup = groupedNavigation.find(group => group.label === 'Learning Management');
+        if (learningGroup) {
+            learningGroup.items = learningGroup.items.filter(item => item.href === '/admin/courses');
+        }
+
+        for (let i = groupedNavigation.length - 1; i >= 0; i--) {
+            if (groupedNavigation[i].label === 'Insights & Docs') {
+                groupedNavigation.splice(i, 1);
+            }
+        }
+    }
 
     if (isSuperAdmin) {
         const insightsGroup = groupedNavigation.find(group => group.label === 'Insights & Docs');
@@ -227,7 +241,7 @@ function AppSidebar() {
                     <SidebarGroupLabel>Workspace</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {navSettings.map(item => {
+                            {!isCourseViewer && navSettings.map(item => {
                                 const Icon = item.icon;
                                 return (
                                     <SidebarMenuItem key={item.href}>

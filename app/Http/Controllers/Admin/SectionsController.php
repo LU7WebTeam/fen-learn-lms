@@ -13,6 +13,8 @@ class SectionsController extends Controller
 {
     public function store(Request $request, Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'title'    => 'required|string|max:255',
             'title_ms' => 'nullable|string|max:255',
@@ -36,6 +38,8 @@ class SectionsController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'title'    => 'required|string|max:255',
             'title_ms' => 'nullable|string|max:255',
@@ -59,6 +63,8 @@ class SectionsController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         ActivityLogger::record('Deleted section', $section, [
             'title' => $section->title,
             'course_id' => $section->course_id,
@@ -72,6 +78,8 @@ class SectionsController extends Controller
 
     public function reorder(Request $request, Course $course): RedirectResponse
     {
+        $this->authorizeCourseManagement($request);
+
         $request->validate([
             'sections'   => 'required|array',
             'sections.*' => 'integer|exists:sections,id',
@@ -91,6 +99,8 @@ class SectionsController extends Controller
 
     public function duplicate(Section $section): RedirectResponse
     {
+        $this->authorizeCourseManagement(request());
+
         $order = $section->course->sections()->max('order') + 1;
 
         $newSection        = $section->replicate();
@@ -112,5 +122,12 @@ class SectionsController extends Controller
         ], 'created');
 
         return back()->with('success', 'Section duplicated.');
+    }
+
+    private function authorizeCourseManagement(Request $request): void
+    {
+        if (!$request->user()?->canManageCourses()) {
+            abort(403, 'Your role has view-only access to courses.');
+        }
     }
 }

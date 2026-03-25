@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\ActivityLogger;
@@ -19,6 +20,10 @@ class UsersController extends Controller
 {
     public function index(Request $request): Response
     {
+        if ($request->user()->role === 'course_viewer') {
+            abort(403, 'Your role does not have access to user management.');
+        }
+
         if ($request->user()->role === 'content_editor') {
             $canManage = Setting::get('editor_can_manage_users', '1');
             if ($canManage !== '1') {
@@ -28,11 +33,13 @@ class UsersController extends Controller
 
         $search = $request->input('search', '');
 
-        $staff = User::whereIn('role', ['super_admin', 'content_editor'])
+        $staff = User::whereIn('role', ['super_admin', 'content_editor', 'course_viewer'])
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'like', "%{$search}%")
                    ->orWhere('email', 'like', "%{$search}%");
             }))
+            ->with(['permittedCourses:id,title,slug'])
+            ->withCount('permittedCourses')
             ->withCount('enrollments')
             ->latest()
             ->paginate(20, ['*'], 'staff_page')
@@ -56,21 +63,31 @@ class UsersController extends Controller
             'students'      => User::where('role', 'learner')->count(),
             'editors'       => User::where('role', 'content_editor')->count(),
             'super_admins'  => User::where('role', 'super_admin')->count(),
+            'course_viewers'=> User::where('role', 'course_viewer')->count(),
             'suspended'     => User::whereNotNull('suspended_at')->count(),
         ];
+
+        $availableCourses = Course::query()
+            ->orderBy('title')
+            ->get(['id', 'title', 'slug', 'status']);
 
         return Inertia::render('Admin/Users/Index', [
             'staff'    => $staff,
             'students' => $students,
             'counts'   => $counts,
             'filters'  => ['search' => $search],
+            'availableCourses' => $availableCourses,
         ]);
     }
 
     public function updateRole(Request $request, User $user): RedirectResponse
     {
+        if ($request->user()->role === 'course_viewer') {
+            abort(403, 'Unauthorized.');
+        }
+
         $validated = $request->validate([
-            'role' => 'required|in:learner,content_editor,super_admin',
+            'role' => 'required|in:learner,content_editor,super_admin,course_viewer',
         ]);
 
         if ($request->user()->id === $user->id) {
@@ -80,10 +97,15 @@ class UsersController extends Controller
         $oldRole = $user->role;
         $user->update(['role' => $validated['role']]);
 
+        if ($validated['role'] !== 'course_viewer') {
+            $user->permittedCourses()->detach();
+        }
+
         $labels = [
             'learner'        => 'Student',
             'content_editor' => 'Content Editor',
             'super_admin'    => 'Super Admin',
+            'course_viewer'  => 'Course Viewer',
         ];
 
         ActivityLogger::record('Updated user role', $user, [
@@ -96,6 +118,43 @@ class UsersController extends Controller
             'success',
             "{$user->name} changed from {$labels[$oldRole]} to {$labels[$validated['role']]}."
         );
+    }
+
+    public function updateCourseAccess(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->role === 'course_viewer') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'course_ids' => 'nullable|array',
+            'course_ids.*' => 'integer|exists:courses,id',
+        ]);
+
+        if ($user->role !== 'course_viewer') {
+            return back()->with('error', 'Course access can only be managed for Course Viewer users.');
+        }
+
+        $courseIds = array_values(array_unique($validated['course_ids'] ?? []));
+
+        $syncData = [];
+        foreach ($courseIds as $courseId) {
+            $syncData[$courseId] = [
+                'access_level' => 'view',
+                'granted_by' => $request->user()->id,
+                'granted_at' => now(),
+            ];
+        }
+
+        $user->permittedCourses()->sync($syncData);
+
+        ActivityLogger::record('Updated course viewer access', $user, [
+            'title' => $user->name,
+            'course_ids' => $courseIds,
+            'assigned_count' => count($courseIds),
+        ], 'updated');
+
+        return back()->with('success', "Updated course access for {$user->name}.");
     }
 
     public function suspend(Request $request, User $user): RedirectResponse
