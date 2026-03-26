@@ -172,8 +172,14 @@ export default function Login({ status, canResetPassword }) {
             </div>
 
             {/* Right panel — illustration / info */}
-            <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gray-900">
-                <div className="flex items-center gap-3">
+            <div
+                className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-cover bg-center bg-no-repeat relative"
+                style={{ backgroundImage: "url('/images/login-register-bg.webp')" }}
+            >
+                {/* Dark overlay for text readability */}
+                <div className="absolute inset-0 bg-black/50" />
+
+                <div className="relative z-10 flex items-center gap-3">
                     {platform.logo_url ? (
                         <img src={platform.logo_url} alt={platform.name} className="h-8 w-auto brightness-0 invert" />
                     ) : (
@@ -184,16 +190,16 @@ export default function Login({ status, canResetPassword }) {
                     <span className="text-white font-semibold">{platform.name || 'LMS'}</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="relative z-10 space-y-4">
                     <h2 className="text-4xl font-bold text-white leading-tight">
                         Learn at your<br />own pace
                     </h2>
-                    <p className="text-gray-400 text-lg leading-relaxed max-w-sm">
+                    <p className="text-gray-300 text-lg leading-relaxed max-w-sm">
                         {platform.tagline || 'Access all your courses, track your progress, and earn certificates — all in one place.'}
                     </p>
                 </div>
 
-                <p className="text-xs text-gray-700">
+                <p className="relative z-10 text-xs text-gray-400">
                     &copy; {new Date().getFullYear()} {platform.name || 'LMS'}. All rights reserved.
                 </p>
             </div>

@@ -29,8 +29,14 @@ export default function AdminLogin({ status, canResetPassword }) {
             <Head title="Admin Login" />
 
             {/* Left panel — branding */}
-            <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-zinc-900 border-r border-zinc-800">
-                <div className="flex items-center gap-3">
+            <div
+                className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-cover bg-center bg-no-repeat relative"
+                style={{ backgroundImage: "url('/images/admin-login-bg.webp')" }}
+            >
+                {/* Dark overlay for text readability */}
+                <div className="absolute inset-0 bg-black/60" />
+
+                <div className="relative z-10 flex items-center gap-3">
                     {platform.logo_url ? (
                         <img src={platform.logo_url} alt={platform.name} className="h-8 w-auto" />
                     ) : (
@@ -41,7 +47,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                     <span className="text-white font-semibold text-lg">{platform.name || 'LMS Admin'}</span>
                 </div>
 
-                <div className="space-y-4">
+                <div className="relative z-10 space-y-4">
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-300">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         Admin Portal
@@ -49,12 +55,12 @@ export default function AdminLogin({ status, canResetPassword }) {
                     <h2 className="text-4xl font-bold text-white leading-tight">
                         Manage your<br />learning platform
                     </h2>
-                    <p className="text-zinc-400 text-lg leading-relaxed max-w-sm">
+                    <p className="text-zinc-300 text-lg leading-relaxed max-w-sm">
                         Access the admin dashboard to manage courses, learners, and platform settings.
                     </p>
                 </div>
 
-                <p className="text-xs text-zinc-600">
+                <p className="relative z-10 text-xs text-zinc-400">
                     &copy; {new Date().getFullYear()} {platform.name || 'LMS'}. Admin access only.
                 </p>
             </div>
