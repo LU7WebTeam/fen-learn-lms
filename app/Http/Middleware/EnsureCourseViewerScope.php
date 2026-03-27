@@ -23,6 +23,9 @@ class EnsureCourseViewerScope
             'admin.courses.index',
             'admin.courses.edit',
             'admin.lessons.edit',
+            'admin.analytics.index',
+            'admin.analytics.data',
+            'admin.analytics.export',
         ], true);
 
         if (!$allowed) {
