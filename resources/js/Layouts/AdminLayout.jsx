@@ -7,6 +7,7 @@ import {
     ScrollText,
     BookText,
     GraduationCap,
+    BarChart2,
     Sun,
     Moon,
     LogOut,
@@ -65,6 +66,7 @@ const navGroups = [
     {
         label: 'Insights & Docs',
         items: [
+            { label: 'Analytics', href: '/admin/analytics', icon: BarChart2 },
             { label: 'Activity Logs', href: '/admin/activity-logs', icon: ScrollText },
             { label: 'Documentation', href: '/admin/docs', icon: BookText },
         ],
@@ -157,17 +159,17 @@ function AppSidebar() {
             learningGroup.items = learningGroup.items.filter(item => item.href === '/admin/courses');
         }
 
-        for (let i = groupedNavigation.length - 1; i >= 0; i--) {
-            if (groupedNavigation[i].label === 'Insights & Docs') {
-                groupedNavigation.splice(i, 1);
-            }
+        // Course viewers keep Analytics but not Activity Logs, Docs, or System Logs
+        const insightsGroup = groupedNavigation.find(group => group.label === 'Insights & Docs');
+        if (insightsGroup) {
+            insightsGroup.items = insightsGroup.items.filter(item => item.href === '/admin/analytics');
         }
     }
 
     if (isSuperAdmin) {
         const insightsGroup = groupedNavigation.find(group => group.label === 'Insights & Docs');
         if (insightsGroup) {
-            insightsGroup.items.splice(1, 0, { label: 'System Logs', href: '/admin/system-logs', icon: ScrollText });
+            insightsGroup.items.splice(2, 0, { label: 'System Logs', href: '/admin/system-logs', icon: ScrollText });
         }
     }
 

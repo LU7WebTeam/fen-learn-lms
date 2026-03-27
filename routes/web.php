@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DocumentationController as AdminDocumentationCont
 use App\Http\Controllers\Admin\LessonsController as AdminLessonsController;
 use App\Http\Controllers\Admin\SectionsController as AdminSectionsController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\SystemLogsController as AdminSystemLogsController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseController;
@@ -89,6 +90,9 @@ Route::middleware(['auth', 'verified', 'profile.complete'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/data', [AdminAnalyticsController::class, 'data'])->name('analytics.data');
+    Route::get('/analytics/export', [AdminAnalyticsController::class, 'export'])->name('analytics.export');
     Route::get('/docs/{slug?}', [AdminDocumentationController::class, 'index'])->name('docs.index');
     Route::get('/activity-logs', [AdminActivityLogsController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/controls', [AdminActivityLogsController::class, 'controls'])->name('activity-logs.controls');
