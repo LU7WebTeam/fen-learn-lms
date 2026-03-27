@@ -35,6 +35,14 @@ class AnalyticsController extends Controller
             : $courses->first();
 
         $selectedCourseId = $selectedCourse?->id;
+        $selectedCourseDetails = $selectedCourseId
+            ? Course::query()
+                ->where('id', $selectedCourseId)
+                ->with(['sections' => function ($q) {
+                    $q->orderBy('order')->with(['lessons' => fn($lq) => $lq->orderBy('order')->select(['id', 'section_id', 'title', 'type'])]);
+                }])
+                ->first()
+            : null;
 
         $dateTo   = $request->input('date_to',   now()->toDateString());
         $dateFrom = $request->input('date_from', now()->subDays(29)->toDateString());
@@ -50,16 +58,27 @@ class AnalyticsController extends Controller
             'age_group'  => $request->input('age_group',  ''),
         ];
 
-        $analytics = $selectedCourse
-            ? $this->buildAnalytics($selectedCourse, $filters)
+        $analytics = $selectedCourseDetails
+            ? array_merge($this->buildAnalytics($selectedCourseDetails, $filters), [
+                'learners' => $this->buildLearnersForDashboard($selectedCourseDetails, $filters),
+            ])
             : null;
 
         return Inertia::render('Admin/Analytics/Index', [
             'courses'        => $courses,
-            'selectedCourse' => $selectedCourse ? [
-                'id'    => $selectedCourse->id,
-                'title' => $selectedCourse->title,
-                'slug'  => $selectedCourse->slug,
+            'selectedCourse' => $selectedCourseDetails ? [
+                'id'       => $selectedCourseDetails->id,
+                'title'    => $selectedCourseDetails->title,
+                'slug'     => $selectedCourseDetails->slug,
+                'sections' => $selectedCourseDetails->sections->map(fn($section) => [
+                    'id'      => $section->id,
+                    'title'   => $section->title,
+                    'lessons' => $section->lessons->map(fn($lesson) => [
+                        'id'    => $lesson->id,
+                        'title' => $lesson->title,
+                        'type'  => $lesson->type,
+                    ])->values(),
+                ])->values(),
             ] : null,
             'analytics' => $analytics,
             'filters'   => $filters,
@@ -570,6 +589,62 @@ class AnalyticsController extends Controller
                         'quizzes_passed_count' => (int) ($quizStats?->passed_count ?? 0),
                         'avg_quiz_score_percent' => (float) ($quizAvgByEnrollment[$enrollment->id] ?? 0),
                     ],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function buildLearnersForDashboard(Course $course, array $filters): array
+    {
+        $dateFrom = Carbon::parse($filters['date_from'])->startOfDay();
+        $dateTo = Carbon::parse($filters['date_to'])->endOfDay();
+
+        $totalLessons = $course->lessons()->count();
+        $enrollmentIds = $this->baseEnrollmentQuery($course, $filters)
+            ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo])
+            ->pluck('enrollments.id');
+
+        if ($enrollmentIds->isEmpty()) {
+            return [];
+        }
+
+        return Enrollment::query()
+            ->whereIn('id', $enrollmentIds)
+            ->with([
+                'user:id,name,email,avatar,gender,race,state,birthdate,occupation,organization',
+                'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')
+                    ->select('enrollment_id', 'lesson_id', 'completed_at'),
+            ])
+            ->latest('enrolled_at')
+            ->get()
+            ->map(function (Enrollment $enrollment) use ($totalLessons) {
+                $completedCount = $enrollment->lessonProgress->count();
+
+                return [
+                    'id'                   => $enrollment->id,
+                    'user_id'              => $enrollment->user?->id,
+                    'user_name'            => $enrollment->user?->name,
+                    'user_email'           => $enrollment->user?->email,
+                    'user_avatar'          => $enrollment->user?->avatar,
+                    'user_gender'          => $enrollment->user?->gender,
+                    'user_race'            => $enrollment->user?->race,
+                    'user_state'           => $enrollment->user?->state,
+                    'user_birthdate'       => $enrollment->user?->birthdate?->format('M j, Y'),
+                    'user_birthdate_raw'   => $enrollment->user?->birthdate?->format('Y-m-d'),
+                    'user_occupation'      => $enrollment->user?->occupation,
+                    'user_organization'    => $enrollment->user?->organization,
+                    'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),
+                    'enrolled_at_raw'      => $enrollment->enrolled_at?->toDateString(),
+                    'completed_at'         => $enrollment->completed_at?->format('M j, Y'),
+                    'completed_at_raw'     => $enrollment->completed_at?->toDateString(),
+                    'progress'             => $totalLessons > 0
+                        ? (int) round(($completedCount / $totalLessons) * 100) : 0,
+                    'certificate_uuid'     => $enrollment->certificate_uuid,
+                    'completed_lesson_ids' => $enrollment->lessonProgress->pluck('lesson_id')->all(),
+                    'last_activity'        => $enrollment->lessonProgress->max('completed_at')
+                        ? Carbon::parse($enrollment->lessonProgress->max('completed_at'))->format('M j, Y')
+                        : null,
                 ];
             })
             ->values()

@@ -1,10 +1,20 @@
-import { useState, useCallback } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import { Input } from '@/Components/ui/input';
+import { Progress } from '@/Components/ui/progress';
 import { Separator } from '@/Components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/Components/ui/dialog';
+import InputError from '@/Components/InputError';
 import {
     Select,
     SelectContent,
@@ -24,6 +34,22 @@ import {
     ChevronDown,
     ChevronUp,
     Download,
+    Search,
+    ExternalLink,
+    CheckCircle2,
+    Clock,
+    Mail,
+    CalendarDays,
+    Activity,
+    MapPin,
+    Briefcase,
+    Building2,
+    User,
+    Pencil,
+    X,
+    Save,
+    Video,
+    FileText,
 } from 'lucide-react';
 import {
     LineChart,
@@ -79,6 +105,8 @@ const AGE_GROUPS = [
     { value: '45_54',    label: '45–54' },
     { value: '55_plus',  label: '55+' },
 ];
+
+const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
 
 // Chart colour palette (matches Tailwind indigo/teal/violet/amber/rose)
 const CHART_COLORS = {
@@ -524,6 +552,440 @@ function ActiveFilterBadges({ filters, onRemove }) {
     );
 }
 
+function Avatar({ name, src, size = 'md' }) {
+    const initials = name
+        ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : '?';
+    const sizeClass = size === 'lg' ? 'h-14 w-14 text-lg' : 'h-8 w-8 text-xs';
+
+    return (
+        <div className={`${sizeClass} rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center font-semibold text-indigo-700 shrink-0`}>
+            {src
+                ? <img src={src} alt={name} className="h-full w-full object-cover" />
+                : <span>{initials}</span>
+            }
+        </div>
+    );
+}
+
+function LearnerProfileDialog({ learner, course, open, onClose }) {
+    const [editing, setEditing] = useState(false);
+
+    const { data, setData, patch, processing, errors, reset } = useForm({
+        name:         '',
+        email:        '',
+        gender:       '',
+        race:         '',
+        state:        '',
+        birthdate:    '',
+        occupation:   '',
+        organization: '',
+    });
+
+    useEffect(() => {
+        if (learner) {
+            reset();
+            setData({
+                name:         learner.user_name          ?? '',
+                email:        learner.user_email         ?? '',
+                gender:       learner.user_gender        ?? '',
+                race:         learner.user_race          ?? '',
+                state:        learner.user_state         ?? '',
+                birthdate:    learner.user_birthdate_raw ?? '',
+                occupation:   learner.user_occupation    ?? '',
+                organization: learner.user_organization  ?? '',
+            });
+            setEditing(false);
+        }
+    }, [learner?.user_id]);
+
+    if (!learner) return null;
+
+    const completedSet = new Set(learner.completed_lesson_ids ?? []);
+    const totalLessons = course?.sections?.reduce((sum, sec) => sum + (sec.lessons?.length ?? 0), 0) ?? 0;
+    const completedCount = completedSet.size;
+    const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : learner.progress;
+
+    const occupationLabel = OCCUPATIONS.find(o => o.value === learner.user_occupation)?.label ?? learner.user_occupation;
+    const raceLabel = RACES.find(r => r.value === learner.user_race)?.label ?? learner.user_race;
+
+    function restoreForm() {
+        reset();
+        setData({
+            name:         learner.user_name          ?? '',
+            email:        learner.user_email         ?? '',
+            gender:       learner.user_gender        ?? '',
+            race:         learner.user_race          ?? '',
+            state:        learner.user_state         ?? '',
+            birthdate:    learner.user_birthdate_raw ?? '',
+            occupation:   learner.user_occupation    ?? '',
+            organization: learner.user_organization  ?? '',
+        });
+        setEditing(false);
+    }
+
+    function handleSave(e) {
+        e.preventDefault();
+        patch(route('admin.users.update-profile', learner.user_id), {
+            onSuccess: () => setEditing(false),
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { restoreForm(); onClose(); } }}>
+            <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <div className="flex items-center justify-between">
+                        <DialogTitle>{editing ? 'Edit Profile' : 'Learner Profile'}</DialogTitle>
+                        {!editing && (
+                            <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setEditing(true)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit
+                            </Button>
+                        )}
+                    </div>
+                    <DialogDescription className="sr-only">
+                        {editing ? 'Edit' : 'View'} profile for {learner.user_name}.
+                    </DialogDescription>
+                </DialogHeader>
+
+                {editing ? (
+                    <form onSubmit={handleSave} className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1 py-1">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Full Name <span className="text-red-500">*</span></label>
+                                <Input value={data.name} onChange={e => setData('name', e.target.value)} />
+                                <InputError message={errors.name} />
+                            </div>
+                            <div className="col-span-2 space-y-1">
+                                <label className="text-xs font-medium">Email Address <span className="text-red-500">*</span></label>
+                                <Input type="email" value={data.email} onChange={e => setData('email', e.target.value)} />
+                                <InputError message={errors.email} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Gender</label>
+                            <div className="flex gap-2">
+                                {[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => setData('gender', data.gender === opt.value ? '' : opt.value)}
+                                        className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+                                            data.gender === opt.value
+                                                ? 'border-primary bg-primary/5 text-primary'
+                                                : 'border-input bg-background text-muted-foreground hover:border-primary/50'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <InputError message={errors.gender} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">Race / Ethnicity</label>
+                                <Select value={data.race} onValueChange={v => setData('race', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {RACES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.race} />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium">State</label>
+                                <Select value={data.state} onValueChange={v => setData('state', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                    <SelectContent>
+                                        {MALAYSIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.state} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Date of Birth</label>
+                            <Input
+                                type="date"
+                                value={data.birthdate}
+                                onChange={e => setData('birthdate', e.target.value)}
+                                max={new Date().toISOString().split('T')[0]}
+                            />
+                            <InputError message={errors.birthdate} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Occupation</label>
+                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                                <SelectContent>
+                                    {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.occupation} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium">Organization / Institution</label>
+                            <Input
+                                value={data.organization}
+                                onChange={e => setData('organization', e.target.value)}
+                                placeholder="e.g. Universiti Malaya, Petronas…"
+                            />
+                            <InputError message={errors.organization} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">
+                            <Button type="submit" className="flex-1 gap-1.5" disabled={processing}>
+                                <Save className="h-4 w-4" />
+                                {processing ? 'Saving…' : 'Save Changes'}
+                            </Button>
+                            <Button type="button" variant="outline" onClick={restoreForm} disabled={processing}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </form>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-4 py-2">
+                            <Avatar name={learner.user_name} src={learner.user_avatar} size="lg" />
+                            <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-base truncate">{learner.user_name}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
+                                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                                    {learner.user_email}
+                                </p>
+                            </div>
+                            {learner.completed_at ? (
+                                <Badge className="bg-green-100 text-green-700 border-green-200 shrink-0">Completed</Badge>
+                            ) : (
+                                <Badge variant="secondary" className="shrink-0">In Progress</Badge>
+                            )}
+                        </div>
+
+                        <Separator />
+
+                        <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{progress}%</p>
+                                <p className="text-xs text-muted-foreground">Progress</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{completedCount}</p>
+                                <p className="text-xs text-muted-foreground">Lessons done</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/40 py-2.5 px-2">
+                                <p className="text-lg font-bold">{totalLessons}</p>
+                                <p className="text-xs text-muted-foreground">Total lessons</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Overall progress</span>
+                                <span>{completedCount} / {totalLessons} lessons</span>
+                            </div>
+                            <Progress value={progress} className="h-2" />
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                Enrolled {learner.enrolled_at}
+                            </span>
+                            {learner.last_activity && (
+                                <span className="flex items-center gap-1.5">
+                                    <Activity className="h-3.5 w-3.5" />
+                                    Last active {learner.last_activity}
+                                </span>
+                            )}
+                            {learner.completed_at && (
+                                <span className="flex items-center gap-1.5 text-green-600">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Completed {learner.completed_at}
+                                </span>
+                            )}
+                            {learner.certificate_uuid && (
+                                <Link
+                                    href={`/certificate/${learner.certificate_uuid}`}
+                                    target="_blank"
+                                    className="flex items-center gap-1.5 text-[#8B1A4A] hover:underline"
+                                >
+                                    <Award className="h-3.5 w-3.5" />
+                                    View certificate
+                                    <ExternalLink className="h-3 w-3" />
+                                </Link>
+                            )}
+                        </div>
+
+                        <Separator />
+
+                        {(occupationLabel || learner.user_organization || learner.user_state ||
+                          learner.user_birthdate || learner.user_gender || raceLabel) && (
+                            <>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+                                    {learner.user_gender && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Gender</p>
+                                                <p className="font-medium capitalize">{learner.user_gender}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {raceLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
+                                                <p className="font-medium">{raceLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {learner.user_birthdate && (
+                                        <div className="flex items-start gap-2">
+                                            <CalendarDays className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Date of Birth</p>
+                                                <p className="font-medium">{learner.user_birthdate}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {learner.user_state && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">State</p>
+                                                <p className="font-medium">{learner.user_state}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {occupationLabel && (
+                                        <div className="flex items-start gap-2">
+                                            <Briefcase className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Occupation</p>
+                                                <p className="font-medium">{occupationLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {learner.user_organization && (
+                                        <div className="flex items-start gap-2">
+                                            <Building2 className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Organization</p>
+                                                <p className="font-medium">{learner.user_organization}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <Separator />
+                            </>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
+                            {course?.sections?.map(section => (
+                                <div key={section.id}>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 sticky top-0 bg-background py-1">
+                                        {section.title}
+                                    </p>
+                                    <div className="space-y-1">
+                                        {section.lessons?.map(lesson => {
+                                            const Icon = LESSON_ICONS[lesson.type] ?? FileText;
+                                            const done = completedSet.has(lesson.id);
+                                            return (
+                                                <div
+                                                    key={lesson.id}
+                                                    className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors ${
+                                                        done
+                                                            ? 'bg-green-50 text-green-800'
+                                                            : 'bg-muted/30 text-muted-foreground'
+                                                    }`}
+                                                >
+                                                    {done
+                                                        ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                                        : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                                                    }
+                                                    <Icon className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                                    <span className={`flex-1 truncate ${done ? 'font-medium' : ''}`}>
+                                                        {lesson.title}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function LearnerRow({ learner, onViewProfile }) {
+    return (
+        <tr className="border-b transition-colors hover:bg-muted/30">
+            <td className="px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                    <Avatar name={learner.user_name} src={learner.user_avatar} />
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => onViewProfile(learner)}
+                            className="text-sm font-medium hover:underline hover:text-primary text-left"
+                        >
+                            {learner.user_name}
+                        </button>
+                        <p className="text-xs text-muted-foreground">{learner.user_email}</p>
+                    </div>
+                </div>
+            </td>
+            <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{learner.enrolled_at}</td>
+            <td className="px-4 py-3">
+                <div className="flex items-center gap-2 min-w-[100px]">
+                    <Progress value={learner.progress} className="h-1.5 flex-1" />
+                    <span className="text-xs text-muted-foreground w-8 text-right">{learner.progress}%</span>
+                </div>
+            </td>
+            <td className="px-4 py-3">
+                {learner.completed_at ? (
+                    <div className="flex items-center gap-1.5 text-green-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span className="text-xs">{learner.completed_at}</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span className="text-xs">In progress</span>
+                    </div>
+                )}
+            </td>
+            <td className="px-4 py-3">
+                {learner.certificate_uuid ? (
+                    <Link
+                        href={`/certificate/${learner.certificate_uuid}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-xs text-[#8B1A4A] hover:underline"
+                    >
+                        <Award className="h-3 w-3" />
+                        View
+                        <ExternalLink className="h-3 w-3" />
+                    </Link>
+                ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                )}
+            </td>
+        </tr>
+    );
+}
+
 function ucfirst(str) {
     return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 }
@@ -544,6 +1006,63 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
         occupation: serverFilters?.occupation ?? '',
         age_group:  serverFilters?.age_group  ?? '',
     });
+    const [search, setSearch] = useState('');
+    const [sortKey, setSortKey] = useState('enrolled_at_raw');
+    const [sortDir, setSortDir] = useState('desc');
+    const [learnerStatusFilter, setLearnerStatusFilter] = useState('all');
+    const [profileLearner, setProfileLearner] = useState(null);
+
+    const learners = analytics?.learners ?? [];
+
+    const completedCount = useMemo(
+        () => learners.filter(l => !!l.completed_at).length,
+        [learners],
+    );
+
+    const inProgressCount = useMemo(
+        () => learners.filter(l => !l.completed_at).length,
+        [learners],
+    );
+
+    const filteredLearners = useMemo(() => {
+        let list = learners;
+
+        if (learnerStatusFilter === 'completed') list = list.filter(l => !!l.completed_at);
+        if (learnerStatusFilter === 'in_progress') list = list.filter(l => !l.completed_at);
+
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            list = list.filter(l =>
+                (l.user_name ?? '').toLowerCase().includes(q) ||
+                (l.user_email ?? '').toLowerCase().includes(q),
+            );
+        }
+
+        list = [...list].sort((a, b) => {
+            const av = a[sortKey] ?? '';
+            const bv = b[sortKey] ?? '';
+
+            if (typeof av === 'number' && typeof bv === 'number') {
+                return sortDir === 'asc' ? av - bv : bv - av;
+            }
+
+            return sortDir === 'asc'
+                ? String(av).localeCompare(String(bv))
+                : String(bv).localeCompare(String(av));
+        });
+
+        return list;
+    }, [learners, learnerStatusFilter, search, sortKey, sortDir]);
+
+    function toggleSort(key) {
+        if (sortKey === key) {
+            setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+            return;
+        }
+
+        setSortKey(key);
+        setSortDir('asc');
+    }
 
     const handleFilterChange = useCallback((key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
@@ -596,6 +1115,13 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
         const url = `${route('admin.analytics.export')}${qs ? `?${qs}` : ''}`;
         window.location.href = url;
     }, [filters]);
+
+    function SortIcon({ col }) {
+        if (sortKey !== col) return null;
+        return sortDir === 'asc'
+            ? <ChevronUp className="h-3.5 w-3.5 inline ml-0.5" />
+            : <ChevronDown className="h-3.5 w-3.5 inline ml-0.5" />;
+    }
 
     const summary = analytics?.summary;
     const hasDemographicData = (arr) => arr?.some(d => d.count > 0);
@@ -787,6 +1313,122 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                                 </Card>
                             </div>
                         </div>
+
+                        <Card className="border-0 shadow-sm">
+                            <CardHeader className="pb-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <Users className="h-4 w-4 text-muted-foreground" />
+                                        Enrolled Learners
+                                    </CardTitle>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex rounded-md border text-xs overflow-hidden">
+                                            {[
+                                                { key: 'all', label: `All (${learners.length})` },
+                                                { key: 'in_progress', label: `In Progress (${inProgressCount})` },
+                                                { key: 'completed', label: `Completed (${completedCount})` },
+                                            ].map(({ key, label }) => (
+                                                <button
+                                                    key={key}
+                                                    type="button"
+                                                    onClick={() => setLearnerStatusFilter(key)}
+                                                    className={`px-2.5 py-1.5 transition-colors ${
+                                                        learnerStatusFilter === key
+                                                            ? 'bg-foreground text-background'
+                                                            : 'hover:bg-muted'
+                                                    }`}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="relative">
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                            <Input
+                                                value={search}
+                                                onChange={e => setSearch(e.target.value)}
+                                                placeholder="Search learners…"
+                                                className="pl-8 h-8 w-52 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {learners.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+                                        <Users className="h-10 w-10 text-muted-foreground mb-3" />
+                                        <p className="text-muted-foreground">No learners match the selected filters.</p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Try widening the date range or removing profile filters.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="border-b bg-muted/30">
+                                                    <th
+                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                                                        onClick={() => toggleSort('user_name')}
+                                                    >
+                                                        Learner <SortIcon col="user_name" />
+                                                    </th>
+                                                    <th
+                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground whitespace-nowrap"
+                                                        onClick={() => toggleSort('enrolled_at_raw')}
+                                                    >
+                                                        Enrolled <SortIcon col="enrolled_at_raw" />
+                                                    </th>
+                                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
+                                                        Progress
+                                                    </th>
+                                                    <th
+                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                                                        onClick={() => toggleSort('completed_at_raw')}
+                                                    >
+                                                        Status <SortIcon col="completed_at_raw" />
+                                                    </th>
+                                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                                                        Certificate
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredLearners.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                                                            No learners match your search.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    filteredLearners.map(learner => (
+                                                        <LearnerRow
+                                                            key={learner.id}
+                                                            learner={learner}
+                                                            onViewProfile={setProfileLearner}
+                                                        />
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                        {filteredLearners.length > 0 && (
+                                            <div className="px-4 py-2.5 text-xs text-muted-foreground border-t bg-muted/20">
+                                                Showing {filteredLearners.length} of {learners.length} learner{learners.length !== 1 ? 's' : ''}.
+                                                {' '}Click a name to view profile and lesson-level progress.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <LearnerProfileDialog
+                            learner={profileLearner}
+                            course={selectedCourse}
+                            open={!!profileLearner}
+                            onClose={() => setProfileLearner(null)}
+                        />
                     </>
                 )}
             </div>
