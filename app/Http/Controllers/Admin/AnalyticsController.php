@@ -29,7 +29,12 @@ class AnalyticsController extends Controller
             ->orderBy('title')
             ->get(['id', 'title', 'slug', 'status', 'difficulty', 'enrollments_count']);
 
-        $selectedCourseId = $request->integer('course_id') ?: optional($courses->first())->id;
+        $requestedCourseId = $request->integer('course_id');
+        $selectedCourse = $requestedCourseId
+            ? $courses->firstWhere('id', $requestedCourseId)
+            : $courses->first();
+
+        $selectedCourseId = $selectedCourse?->id;
 
         $dateTo   = $request->input('date_to',   now()->toDateString());
         $dateFrom = $request->input('date_from', now()->subDays(29)->toDateString());
@@ -44,10 +49,6 @@ class AnalyticsController extends Controller
             'occupation' => $request->input('occupation', ''),
             'age_group'  => $request->input('age_group',  ''),
         ];
-
-        $selectedCourse = $selectedCourseId
-            ? Course::find($selectedCourseId)
-            : null;
 
         $analytics = $selectedCourse
             ? $this->buildAnalytics($selectedCourse, $filters)
