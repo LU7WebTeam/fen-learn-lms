@@ -55,6 +55,7 @@ class AnalyticsController extends Controller
             'race'       => $this->normalizeFilterValues($request->input('race', [])),
             'state'      => $this->normalizeFilterValues($request->input('state', [])),
             'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'organization' => $this->normalizeFilterValues($request->input('organization', [])),
             'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
 
@@ -459,7 +460,8 @@ class AnalyticsController extends Controller
             ->when($filters['gender'] ?? [], fn($q, $values) => $q->whereIn('users.gender', $values))
             ->when($filters['race'] ?? [], fn($q, $values) => $q->whereIn('users.race', $values))
             ->when($filters['state'] ?? [], fn($q, $values) => $q->whereIn('users.state', $values))
-            ->when($filters['occupation'] ?? [], fn($q, $values) => $q->whereIn('users.occupation', $values));
+            ->when($filters['occupation'] ?? [], fn($q, $values) => $q->whereIn('users.occupation', $values))
+            ->when($filters['organization'] ?? [], fn($q, $values) => $q->whereIn('users.organization', $values));
 
         if (!empty($filters['age_group'])) {
             $this->applyAgeGroupFilters($query, $filters['age_group']);
@@ -506,6 +508,7 @@ class AnalyticsController extends Controller
             'race'       => $this->normalizeFilterValues($request->input('race', [])),
             'state'      => $this->normalizeFilterValues($request->input('state', [])),
             'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'organization' => $this->normalizeFilterValues($request->input('organization', [])),
             'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
     }

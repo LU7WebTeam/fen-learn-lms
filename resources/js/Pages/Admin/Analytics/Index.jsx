@@ -364,7 +364,7 @@ function QuizStatsChart({ data }) {
 
 // ─── Filter bar ───────────────────────────────────────────────────────────────
 
-function FilterBar({ courses, filters, onFiltersChange, onApply, onReset, onExport }) {
+function FilterBar({ courses, filters, organizationOptions, onFiltersChange, onApply, onReset, onExport }) {
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -503,6 +503,19 @@ function FilterBar({ courses, filters, onFiltersChange, onApply, onReset, onExpo
                             />
                         </div>
 
+                        {/* Organization */}
+                        <div className="min-w-[220px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Organization</label>
+                            <SearchableSelect
+                                multiple
+                                options={organizationOptions}
+                                values={filters.organization}
+                                onValuesChange={values => onFiltersChange('organization', values)}
+                                placeholder="All organizations"
+                                searchPlaceholder="Search organizations..."
+                            />
+                        </div>
+
                         {/* Age group */}
                         <div className="min-w-[140px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Age Group</label>
@@ -530,6 +543,7 @@ function ActiveFilterBadges({ filters, onRemove }) {
         ...(filters.race ?? []).map(value => ({ key: 'race', value, label: `Race: ${RACES.find(r => r.value === value)?.label ?? value}` })),
         ...(filters.state ?? []).map(value => ({ key: 'state', value, label: `State: ${value}` })),
         ...(filters.occupation ?? []).map(value => ({ key: 'occupation', value, label: `Occupation: ${OCCUPATIONS.find(o => o.value === value)?.label ?? value}` })),
+        ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organization: ${value}` })),
         ...(filters.age_group ?? []).map(value => ({ key: 'age_group', value, label: `Age: ${AGE_GROUPS.find(g => g.value === value)?.label ?? value}` })),
     ];
 
@@ -1094,8 +1108,10 @@ function buildAnalyticsQueryString(filters) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AnalyticsIndex({ courses, selectedCourse, analytics, filters: serverFilters }) {
+    const { profileOptions } = usePage().props;
     const today = new Date().toISOString().split('T')[0];
     const thirtyDaysAgo = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const configuredOrganizationOptions = profileOptions?.organizationOptions ?? [];
 
     const [filters, setFilters] = useState({
         course_id:  serverFilters?.course_id  ?? courses[0]?.id ?? null,
@@ -1105,6 +1121,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
         race:       serverFilters?.race       ?? [],
         state:      serverFilters?.state      ?? [],
         occupation: serverFilters?.occupation ?? [],
+        organization: serverFilters?.organization ?? [],
         age_group:  serverFilters?.age_group  ?? [],
     });
     const [search, setSearch] = useState('');
@@ -1114,6 +1131,22 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     const [profileLearner, setProfileLearner] = useState(null);
 
     const learners = analytics?.learners ?? [];
+
+    const organizationFilterOptions = useMemo(() => {
+        const options = new Set(
+            [
+                ...configuredOrganizationOptions,
+                ...learners.map(learner => learner.user_organization),
+                ...(filters.organization ?? []),
+            ]
+                .map(value => (value ?? '').trim())
+                .filter(Boolean),
+        );
+
+        return [...options]
+            .sort((left, right) => left.localeCompare(right))
+            .map(value => ({ value, label: value }));
+    }, [configuredOrganizationOptions, learners, filters.organization]);
 
     const completedCount = useMemo(
         () => learners.filter(l => !!l.completed_at).length,
@@ -1186,6 +1219,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
             race:       [],
             state:      [],
             occupation: [],
+            organization: [],
             age_group:  [],
         };
         setFilters(reset);
@@ -1244,6 +1278,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                 <FilterBar
                     courses={courses}
                     filters={filters}
+                    organizationOptions={organizationFilterOptions}
                     onFiltersChange={handleFilterChange}
                     onApply={handleApply}
                     onReset={handleReset}
