@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 class Setting extends Model
 {
@@ -14,8 +15,21 @@ class Setting extends Model
         'captcha_secret_key',
     ];
 
+    private static function tableExists(): bool
+    {
+        try {
+            return Schema::hasTable((new static)->getTable());
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     public static function get(string $key, mixed $default = null): mixed
     {
+        if (!self::tableExists()) {
+            return $default;
+        }
+
         $setting = static::where('key', $key)->first();
         if (!$setting) {
             return $default;
@@ -37,6 +51,10 @@ class Setting extends Model
 
     public static function set(string $key, mixed $value): void
     {
+        if (!self::tableExists()) {
+            return;
+        }
+
         if (in_array($key, self::ENCRYPTED_KEYS, true)) {
             $value = filled($value)
                 ? Crypt::encryptString((string) $value)
@@ -48,6 +66,10 @@ class Setting extends Model
 
     public static function allAsArray(): array
     {
+        if (!self::tableExists()) {
+            return [];
+        }
+
         return static::pluck('value', 'key')->toArray();
     }
 }
