@@ -30,6 +30,7 @@ class SettingsController extends Controller
         'default_role'               => 'learner',
         'require_email_verification' => '0',
         'default_locale'             => 'en',
+        'profile_organization_options' => '',
         'mail_driver'                => 'smtp',
         'mail_host'                  => '',
         'mail_port'                  => '587',
@@ -117,6 +118,7 @@ class SettingsController extends Controller
             'branding'     => $this->saveBranding($request),
             'access'       => $this->saveAccess($request),
             'localization' => $this->saveLocalization($request),
+            'profile'      => $this->saveProfile($request),
             'email'        => $this->saveEmail($request),
             'certificates' => $this->saveCertificates($request),
             'maintenance'  => $this->saveMaintenance($request),
@@ -204,6 +206,15 @@ class SettingsController extends Controller
         ]);
 
         Setting::set('default_locale', $request->input('default_locale'));
+    }
+
+    private function saveProfile(Request $request): void
+    {
+        $request->validate([
+            'profile_organization_options' => 'nullable|string|max:10000',
+        ]);
+
+        Setting::set('profile_organization_options', $request->input('profile_organization_options', ''));
     }
 
     private function saveEmail(Request $request): void

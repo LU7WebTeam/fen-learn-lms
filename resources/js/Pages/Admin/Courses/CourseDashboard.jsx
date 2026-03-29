@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Progress } from '@/Components/ui/progress';
 import { Input } from '@/Components/ui/input';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { Button } from '@/Components/ui/button';
 import { Separator } from '@/Components/ui/separator';
 import {
@@ -27,6 +28,11 @@ import {
     CheckCircle2, Clock, BarChart3, Mail, CalendarDays, Activity,
     MapPin, Briefcase, Building2, User, Pencil, X, Save,
 } from 'lucide-react';
+import {
+    ORGANIZATION_OTHER_VALUE,
+    splitOrganizationValue,
+    usesOrganizationList,
+} from '@/lib/profileOrganizations';
 
 const MALAYSIAN_STATES = [
     'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak',
@@ -96,6 +102,9 @@ function Avatar({ name, src, size = 'md' }) {
 
 // ─── Student profile dialog ────────────────────────────────────────────────────
 function StudentProfileDialog({ student, course, open, onClose }) {
+    const { profileOptions } = usePage().props;
+    const organizationOptions = profileOptions?.organizationOptions ?? [];
+    const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
     const [editing, setEditing] = useState(false);
 
     const { data, setData, patch, processing, errors, reset } = useForm({
@@ -107,10 +116,18 @@ function StudentProfileDialog({ student, course, open, onClose }) {
         birthdate:    '',
         occupation:   '',
         organization: '',
+        organization_other: '',
     });
 
     useEffect(() => {
         if (student) {
+            const organizationState = splitOrganizationValue(
+                student.user_occupation ?? '',
+                student.user_organization ?? '',
+                organizationOptions,
+                organizationSelectOccupations,
+            );
+
             reset();
             setData({
                 name:         student.user_name          ?? '',
@@ -120,11 +137,14 @@ function StudentProfileDialog({ student, course, open, onClose }) {
                 state:        student.user_state         ?? '',
                 birthdate:    student.user_birthdate_raw ?? '',
                 occupation:   student.user_occupation    ?? '',
-                organization: student.user_organization  ?? '',
+                organization: organizationState.organization,
+                organization_other: organizationState.organization_other,
             });
             setEditing(false);
         }
     }, [student?.user_id]);
+
+    const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
 
     if (!student) return null;
 
@@ -143,6 +163,13 @@ function StudentProfileDialog({ student, course, open, onClose }) {
         ?? student.user_race;
 
     function restoreForm() {
+        const organizationState = splitOrganizationValue(
+            student.user_occupation ?? '',
+            student.user_organization ?? '',
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
         reset();
         setData({
             name:         student.user_name          ?? '',
@@ -152,9 +179,30 @@ function StudentProfileDialog({ student, course, open, onClose }) {
             state:        student.user_state         ?? '',
             birthdate:    student.user_birthdate_raw ?? '',
             occupation:   student.user_occupation    ?? '',
-            organization: student.user_organization  ?? '',
+            organization: organizationState.organization,
+            organization_other: organizationState.organization_other,
         });
         setEditing(false);
+    }
+
+    function handleOccupationChange(value) {
+        const currentOrganizationValue = usesOrganizationDropdown
+            ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+            : data.organization;
+
+        const nextOrganizationState = splitOrganizationValue(
+            value,
+            currentOrganizationValue,
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
+        setData(prev => ({
+            ...prev,
+            occupation: value,
+            organization: nextOrganizationState.organization,
+            organization_other: nextOrganizationState.organization_other,
+        }));
     }
 
     function handleSave(e) {
@@ -259,7 +307,7 @@ function StudentProfileDialog({ student, course, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Occupation</label>
-                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                            <Select value={data.occupation} onValueChange={handleOccupationChange}>
                                 <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
                                 <SelectContent>
                                     {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -270,12 +318,35 @@ function StudentProfileDialog({ student, course, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
-                            <Input
-                                value={data.organization}
-                                onChange={e => setData('organization', e.target.value)}
-                                placeholder="e.g. Universiti Malaya, Petronas…"
-                            />
-                            <InputError message={errors.organization} />
+                            {usesOrganizationDropdown ? (
+                                <div className="space-y-3">
+                                    <SearchableSelect
+                                        options={[
+                                            ...organizationOptions,
+                                            { value: ORGANIZATION_OTHER_VALUE, label: 'Other' },
+                                        ]}
+                                        value={data.organization}
+                                        onChange={v => setData('organization', v)}
+                                        placeholder="Select organization"
+                                        searchPlaceholder="Search organizations..."
+                                    />
+
+                                    {data.organization === ORGANIZATION_OTHER_VALUE && (
+                                        <Input
+                                            value={data.organization_other}
+                                            onChange={e => setData('organization_other', e.target.value)}
+                                            placeholder="Enter organization / institution"
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Input
+                                    value={data.organization}
+                                    onChange={e => setData('organization', e.target.value)}
+                                    placeholder="e.g. Universiti Malaya, Petronas…"
+                                />
+                            )}
+                            <InputError message={errors.organization || errors.organization_other} />
                         </div>
 
                         <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">

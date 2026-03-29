@@ -35,6 +35,7 @@ import {
     ShieldCheck,
     Lock,
     Unlock,
+    Building2,
 } from 'lucide-react';
 
 function SuccessBanner({ message }) {
@@ -218,6 +219,9 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                         <TabsTrigger value="localization" className="gap-1.5">
                             <Globe className="h-3.5 w-3.5" />Localization
                         </TabsTrigger>
+                        <TabsTrigger value="profile" className="gap-1.5">
+                            <Building2 className="h-3.5 w-3.5" />Profiles
+                        </TabsTrigger>
                         <TabsTrigger value="email" className="gap-1.5">
                             <Mail className="h-3.5 w-3.5" />Email / SMTP
                         </TabsTrigger>
@@ -257,6 +261,11 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                     {/* ── LOCALIZATION ── */}
                     <TabsContent value="localization">
                         <LocalizationTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
+
+                    {/* ── PROFILE OPTIONS ── */}
+                    <TabsContent value="profile">
+                        <ProfileTab settings={settings} onSave={submitGroup} processing={processing} />
                     </TabsContent>
 
                     {/* ── EMAIL / SMTP ── */}
@@ -1006,6 +1015,52 @@ function LocalizationTab({ settings, onSave, processing }) {
 
                 <div className="flex justify-end pt-2">
                     <Button onClick={save} disabled={processing}>Save Localization</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function ProfileTab({ settings, onSave, processing }) {
+    const [organizationOptions, setOrganizationOptions] = useState(settings.profile_organization_options || '');
+
+    function save() {
+        onSave('profile', {
+            profile_organization_options: organizationOptions,
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" /> Learner Profile Options
+                </CardTitle>
+                <CardDescription>
+                    Manage the organization or institution dropdown shown when learners choose Student or Academic / Educator as their occupation.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="profile-organization-options">Organization / Institution List</Label>
+                    <textarea
+                        id="profile-organization-options"
+                        value={organizationOptions}
+                        onChange={(e) => setOrganizationOptions(e.target.value)}
+                        rows={10}
+                        className="flex min-h-[220px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder={['Universiti Malaya', 'Universiti Kebangsaan Malaysia', 'Ministry of Education', 'SMK Seri Bintang'].join('\n')}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Enter one organization per line. Learners can still choose Other and type a custom organization not listed here.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        This dropdown is shown only when occupation is Student or Academic / Educator.
+                    </p>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save Profile Options</Button>
                 </div>
             </CardContent>
         </Card>

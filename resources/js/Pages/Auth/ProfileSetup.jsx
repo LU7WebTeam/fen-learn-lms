@@ -11,7 +11,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/Components/ui/select';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { useT } from '@/lib/i18n';
+import {
+    ORGANIZATION_OTHER_VALUE,
+    splitOrganizationValue,
+    usesOrganizationList,
+} from '@/lib/profileOrganizations';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -78,8 +84,16 @@ function FormField({ label, required, error, children, hint }) {
 }
 
 export default function ProfileSetup({ user }) {
-    const { platform } = usePage().props;
+    const { platform, profileOptions } = usePage().props;
     const t = useT();
+    const organizationOptions = profileOptions?.organizationOptions ?? [];
+    const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
+    const initialOrganizationState = splitOrganizationValue(
+        user?.occupation ?? '',
+        user?.organization ?? '',
+        organizationOptions,
+        organizationSelectOccupations,
+    );
 
     const { data, setData, post, processing, errors } = useForm({
         name:         user?.name ?? '',
@@ -88,8 +102,31 @@ export default function ProfileSetup({ user }) {
         state:        user?.state ?? '',
         birthdate:    user?.birthdate ?? '',
         occupation:   user?.occupation ?? '',
-        organization: user?.organization ?? '',
+        organization: initialOrganizationState.organization,
+        organization_other: initialOrganizationState.organization_other,
     });
+
+    const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+
+    function handleOccupationChange(value) {
+        const currentOrganizationValue = usesOrganizationDropdown
+            ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+            : data.organization;
+
+        const nextOrganizationState = splitOrganizationValue(
+            value,
+            currentOrganizationValue,
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
+        setData(prev => ({
+            ...prev,
+            occupation: value,
+            organization: nextOrganizationState.organization,
+            organization_other: nextOrganizationState.organization_other,
+        }));
+    }
 
     function submit(e) {
         e.preventDefault();
@@ -226,7 +263,7 @@ export default function ProfileSetup({ user }) {
 
                             {/* Occupation */}
                             <FormField label="Occupation" required error={errors.occupation}>
-                                <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                                <Select value={data.occupation} onValueChange={handleOccupationChange}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select occupation" />
                                     </SelectTrigger>
@@ -243,14 +280,39 @@ export default function ProfileSetup({ user }) {
                             {/* Organization */}
                             <FormField
                                 label="Organization / Institution"
-                                error={errors.organization}
-                                hint="Optional — your school, company, or institution name."
+                                error={errors.organization || errors.organization_other}
+                                hint={usesOrganizationDropdown
+                                    ? 'Select your organization from the list, or choose Other to type a custom one.'
+                                    : 'Optional — your school, company, or institution name.'}
                             >
-                                <Input
-                                    value={data.organization}
-                                    onChange={e => setData('organization', e.target.value)}
-                                    placeholder="e.g. Universiti Malaya, Petronas, etc."
-                                />
+                                {usesOrganizationDropdown ? (
+                                    <div className="space-y-3">
+                                        <SearchableSelect
+                                            options={[
+                                                ...organizationOptions,
+                                                { value: ORGANIZATION_OTHER_VALUE, label: 'Other' },
+                                            ]}
+                                            value={data.organization}
+                                            onChange={v => setData('organization', v)}
+                                            placeholder="Select organization"
+                                            searchPlaceholder="Search organizations..."
+                                        />
+
+                                        {data.organization === ORGANIZATION_OTHER_VALUE && (
+                                            <Input
+                                                value={data.organization_other}
+                                                onChange={e => setData('organization_other', e.target.value)}
+                                                placeholder="Enter your organization / institution"
+                                            />
+                                        )}
+                                    </div>
+                                ) : (
+                                    <Input
+                                        value={data.organization}
+                                        onChange={e => setData('organization', e.target.value)}
+                                        placeholder="e.g. Universiti Malaya, Petronas, etc."
+                                    />
+                                )}
                             </FormField>
 
                             <div className="pt-2">

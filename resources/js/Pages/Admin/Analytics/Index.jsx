@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
@@ -15,6 +15,7 @@ import {
     DialogTitle,
 } from '@/Components/ui/dialog';
 import InputError from '@/Components/InputError';
+import SearchableSelect from '@/Components/SearchableSelect';
 import {
     Select,
     SelectContent,
@@ -66,6 +67,11 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
+import {
+    ORGANIZATION_OTHER_VALUE,
+    splitOrganizationValue,
+    usesOrganizationList,
+} from '@/lib/profileOrganizations';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -104,6 +110,11 @@ const AGE_GROUPS = [
     { value: '35_44',    label: '35–44' },
     { value: '45_54',    label: '45–54' },
     { value: '55_plus',  label: '55+' },
+];
+
+const GENDER_OPTIONS = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
 ];
 
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle };
@@ -442,77 +453,67 @@ function FilterBar({ courses, filters, onFiltersChange, onApply, onReset, onExpo
                         {/* Gender */}
                         <div className="min-w-[130px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Gender</label>
-                            <Select
-                                value={filters.gender || '__all__'}
-                                onValueChange={v => onFiltersChange('gender', v === '__all__' ? '' : v)}
-                            >
-                                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__all__">All Genders</SelectItem>
-                                    <SelectItem value="male">Male</SelectItem>
-                                    <SelectItem value="female">Female</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                multiple
+                                options={GENDER_OPTIONS}
+                                values={filters.gender}
+                                onValuesChange={values => onFiltersChange('gender', values)}
+                                placeholder="All genders"
+                                searchPlaceholder="Search genders..."
+                                contentClassName="w-[220px]"
+                            />
                         </div>
 
                         {/* Race */}
                         <div className="min-w-[160px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Race / Ethnicity</label>
-                            <Select
-                                value={filters.race || '__all__'}
-                                onValueChange={v => onFiltersChange('race', v === '__all__' ? '' : v)}
-                            >
-                                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__all__">All</SelectItem>
-                                    {RACES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                multiple
+                                options={RACES}
+                                values={filters.race}
+                                onValuesChange={values => onFiltersChange('race', values)}
+                                placeholder="All races"
+                                searchPlaceholder="Search races..."
+                            />
                         </div>
 
                         {/* State */}
                         <div className="min-w-[200px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">State</label>
-                            <Select
-                                value={filters.state || '__all__'}
-                                onValueChange={v => onFiltersChange('state', v === '__all__' ? '' : v)}
-                            >
-                                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__all__">All States</SelectItem>
-                                    {MALAYSIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                multiple
+                                options={MALAYSIAN_STATES}
+                                values={filters.state}
+                                onValuesChange={values => onFiltersChange('state', values)}
+                                placeholder="All states"
+                                searchPlaceholder="Search states..."
+                            />
                         </div>
 
                         {/* Occupation */}
                         <div className="min-w-[180px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Occupation</label>
-                            <Select
-                                value={filters.occupation || '__all__'}
-                                onValueChange={v => onFiltersChange('occupation', v === '__all__' ? '' : v)}
-                            >
-                                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__all__">All Occupations</SelectItem>
-                                    {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                multiple
+                                options={OCCUPATIONS}
+                                values={filters.occupation}
+                                onValuesChange={values => onFiltersChange('occupation', values)}
+                                placeholder="All occupations"
+                                searchPlaceholder="Search occupations..."
+                            />
                         </div>
 
                         {/* Age group */}
                         <div className="min-w-[140px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Age Group</label>
-                            <Select
-                                value={filters.age_group || '__all__'}
-                                onValueChange={v => onFiltersChange('age_group', v === '__all__' ? '' : v)}
-                            >
-                                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="__all__">All Ages</SelectItem>
-                                    {AGE_GROUPS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                multiple
+                                options={AGE_GROUPS}
+                                values={filters.age_group}
+                                onValuesChange={values => onFiltersChange('age_group', values)}
+                                placeholder="All ages"
+                                searchPlaceholder="Search age groups..."
+                            />
                         </div>
                     </div>
                 </>
@@ -525,12 +526,12 @@ function FilterBar({ courses, filters, onFiltersChange, onApply, onReset, onExpo
 
 function ActiveFilterBadges({ filters, onRemove }) {
     const profileFilters = [
-        { key: 'gender',     label: filters.gender     ? `Gender: ${ucfirst(filters.gender)}` : null },
-        { key: 'race',       label: filters.race       ? `Race: ${RACES.find(r => r.value === filters.race)?.label ?? filters.race}` : null },
-        { key: 'state',      label: filters.state      ? `State: ${filters.state}` : null },
-        { key: 'occupation', label: filters.occupation ? `Occupation: ${OCCUPATIONS.find(o => o.value === filters.occupation)?.label ?? filters.occupation}` : null },
-        { key: 'age_group',  label: filters.age_group  ? `Age: ${AGE_GROUPS.find(g => g.value === filters.age_group)?.label ?? filters.age_group}` : null },
-    ].filter(f => f.label);
+        ...(filters.gender ?? []).map(value => ({ key: 'gender', value, label: `Gender: ${ucfirst(value)}` })),
+        ...(filters.race ?? []).map(value => ({ key: 'race', value, label: `Race: ${RACES.find(r => r.value === value)?.label ?? value}` })),
+        ...(filters.state ?? []).map(value => ({ key: 'state', value, label: `State: ${value}` })),
+        ...(filters.occupation ?? []).map(value => ({ key: 'occupation', value, label: `Occupation: ${OCCUPATIONS.find(o => o.value === value)?.label ?? value}` })),
+        ...(filters.age_group ?? []).map(value => ({ key: 'age_group', value, label: `Age: ${AGE_GROUPS.find(g => g.value === value)?.label ?? value}` })),
+    ];
 
     if (!profileFilters.length) return null;
 
@@ -539,10 +540,10 @@ function ActiveFilterBadges({ filters, onRemove }) {
             <span className="text-xs text-muted-foreground">Active filters:</span>
             {profileFilters.map(f => (
                 <Badge
-                    key={f.key}
+                    key={`${f.key}-${f.value}`}
                     variant="secondary"
                     className="gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive text-xs"
-                    onClick={() => onRemove(f.key)}
+                    onClick={() => onRemove(f.key, f.value)}
                 >
                     {f.label}
                     <span className="ml-0.5">×</span>
@@ -569,6 +570,9 @@ function Avatar({ name, src, size = 'md' }) {
 }
 
 function LearnerProfileDialog({ learner, course, open, onClose }) {
+    const { profileOptions } = usePage().props;
+    const organizationOptions = profileOptions?.organizationOptions ?? [];
+    const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
     const [editing, setEditing] = useState(false);
 
     const { data, setData, patch, processing, errors, reset } = useForm({
@@ -580,10 +584,18 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
         birthdate:    '',
         occupation:   '',
         organization: '',
+        organization_other: '',
     });
 
     useEffect(() => {
         if (learner) {
+            const organizationState = splitOrganizationValue(
+                learner.user_occupation ?? '',
+                learner.user_organization ?? '',
+                organizationOptions,
+                organizationSelectOccupations,
+            );
+
             reset();
             setData({
                 name:         learner.user_name          ?? '',
@@ -593,11 +605,14 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
                 state:        learner.user_state         ?? '',
                 birthdate:    learner.user_birthdate_raw ?? '',
                 occupation:   learner.user_occupation    ?? '',
-                organization: learner.user_organization  ?? '',
+                organization: organizationState.organization,
+                organization_other: organizationState.organization_other,
             });
             setEditing(false);
         }
     }, [learner?.user_id]);
+
+    const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
 
     if (!learner) return null;
 
@@ -610,6 +625,13 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
     const raceLabel = RACES.find(r => r.value === learner.user_race)?.label ?? learner.user_race;
 
     function restoreForm() {
+        const organizationState = splitOrganizationValue(
+            learner.user_occupation ?? '',
+            learner.user_organization ?? '',
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
         reset();
         setData({
             name:         learner.user_name          ?? '',
@@ -619,9 +641,30 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
             state:        learner.user_state         ?? '',
             birthdate:    learner.user_birthdate_raw ?? '',
             occupation:   learner.user_occupation    ?? '',
-            organization: learner.user_organization  ?? '',
+            organization: organizationState.organization,
+            organization_other: organizationState.organization_other,
         });
         setEditing(false);
+    }
+
+    function handleOccupationChange(value) {
+        const currentOrganizationValue = usesOrganizationDropdown
+            ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+            : data.organization;
+
+        const nextOrganizationState = splitOrganizationValue(
+            value,
+            currentOrganizationValue,
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
+        setData(prev => ({
+            ...prev,
+            occupation: value,
+            organization: nextOrganizationState.organization,
+            organization_other: nextOrganizationState.organization_other,
+        }));
     }
 
     function handleSave(e) {
@@ -721,7 +764,7 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Occupation</label>
-                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                            <Select value={data.occupation} onValueChange={handleOccupationChange}>
                                 <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
                                 <SelectContent>
                                     {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -732,12 +775,35 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
-                            <Input
-                                value={data.organization}
-                                onChange={e => setData('organization', e.target.value)}
-                                placeholder="e.g. Universiti Malaya, Petronas…"
-                            />
-                            <InputError message={errors.organization} />
+                            {usesOrganizationDropdown ? (
+                                <div className="space-y-3">
+                                    <SearchableSelect
+                                        options={[
+                                            ...organizationOptions,
+                                            { value: ORGANIZATION_OTHER_VALUE, label: 'Other' },
+                                        ]}
+                                        value={data.organization}
+                                        onChange={v => setData('organization', v)}
+                                        placeholder="Select organization"
+                                        searchPlaceholder="Search organizations..."
+                                    />
+
+                                    {data.organization === ORGANIZATION_OTHER_VALUE && (
+                                        <Input
+                                            value={data.organization_other}
+                                            onChange={e => setData('organization_other', e.target.value)}
+                                            placeholder="Enter organization / institution"
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Input
+                                    value={data.organization}
+                                    onChange={e => setData('organization', e.target.value)}
+                                    placeholder="e.g. Universiti Malaya, Petronas…"
+                                />
+                            )}
+                            <InputError message={errors.organization || errors.organization_other} />
                         </div>
 
                         <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">
@@ -990,6 +1056,41 @@ function ucfirst(str) {
     return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 }
 
+function buildAnalyticsParams(filters) {
+    const params = {};
+
+    Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            if (value.length > 0) {
+                params[key] = value;
+            }
+
+            return;
+        }
+
+        if (value !== '' && value !== null && value !== undefined) {
+            params[key] = value;
+        }
+    });
+
+    return params;
+}
+
+function buildAnalyticsQueryString(filters) {
+    const params = new URLSearchParams();
+
+    Object.entries(buildAnalyticsParams(filters)).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+            value.forEach(item => params.append(`${key}[]`, item));
+            return;
+        }
+
+        params.append(key, value);
+    });
+
+    return params.toString();
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AnalyticsIndex({ courses, selectedCourse, analytics, filters: serverFilters }) {
@@ -1000,11 +1101,11 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
         course_id:  serverFilters?.course_id  ?? courses[0]?.id ?? null,
         date_from:  serverFilters?.date_from  ?? thirtyDaysAgo,
         date_to:    serverFilters?.date_to    ?? today,
-        gender:     serverFilters?.gender     ?? '',
-        race:       serverFilters?.race       ?? '',
-        state:      serverFilters?.state      ?? '',
-        occupation: serverFilters?.occupation ?? '',
-        age_group:  serverFilters?.age_group  ?? '',
+        gender:     serverFilters?.gender     ?? [],
+        race:       serverFilters?.race       ?? [],
+        state:      serverFilters?.state      ?? [],
+        occupation: serverFilters?.occupation ?? [],
+        age_group:  serverFilters?.age_group  ?? [],
     });
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState('enrolled_at_raw');
@@ -1069,10 +1170,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     }, []);
 
     const handleApply = useCallback(() => {
-        const params = {};
-        Object.entries(filters).forEach(([k, v]) => {
-            if (v !== '' && v !== null && v !== undefined) params[k] = v;
-        });
+        const params = buildAnalyticsParams(filters);
         router.get(route('admin.analytics.index'), params, {
             preserveState: true,
             replace: true,
@@ -1084,34 +1182,29 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
             course_id:  filters.course_id,
             date_from:  thirtyDaysAgo,
             date_to:    today,
-            gender:     '',
-            race:       '',
-            state:      '',
-            occupation: '',
-            age_group:  '',
+            gender:     [],
+            race:       [],
+            state:      [],
+            occupation: [],
+            age_group:  [],
         };
         setFilters(reset);
-        const params = { course_id: reset.course_id, date_from: reset.date_from, date_to: reset.date_to };
+        const params = buildAnalyticsParams(reset);
         router.get(route('admin.analytics.index'), params, { preserveState: true, replace: true });
     }, [filters.course_id]);
 
-    const handleRemoveFilter = useCallback((key) => {
-        const updated = { ...filters, [key]: '' };
+    const handleRemoveFilter = useCallback((key, value) => {
+        const updated = {
+            ...filters,
+            [key]: (filters[key] ?? []).filter(item => item !== value),
+        };
         setFilters(updated);
-        const params = {};
-        Object.entries(updated).forEach(([k, v]) => {
-            if (v !== '' && v !== null && v !== undefined) params[k] = v;
-        });
+        const params = buildAnalyticsParams(updated);
         router.get(route('admin.analytics.index'), params, { preserveState: true, replace: true });
     }, [filters]);
 
     const handleExport = useCallback(() => {
-        const params = {};
-        Object.entries(filters).forEach(([k, v]) => {
-            if (v !== '' && v !== null && v !== undefined) params[k] = v;
-        });
-
-        const qs = new URLSearchParams(params).toString();
+        const qs = buildAnalyticsQueryString(filters);
         const url = `${route('admin.analytics.export')}${qs ? `?${qs}` : ''}`;
         window.location.href = url;
     }, [filters]);

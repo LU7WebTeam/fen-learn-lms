@@ -4,6 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { Progress } from '@/Components/ui/progress';
 import { Separator } from '@/Components/ui/separator';
@@ -53,6 +54,11 @@ import {
     Clock,
     KeyRound,
 } from 'lucide-react';
+import {
+    ORGANIZATION_OTHER_VALUE,
+    splitOrganizationValue,
+    usesOrganizationList,
+} from '@/lib/profileOrganizations';
 
 const MALAYSIAN_STATES = [
     'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak',
@@ -97,6 +103,9 @@ function UserAvatar({ name, src, size = 'md' }) {
 
 // ─── Learner profile dialog ───────────────────────────────────────────────────
 function LearnerProfileDialog({ userId, open, onClose }) {
+    const { profileOptions } = usePage().props;
+    const organizationOptions = profileOptions?.organizationOptions ?? [];
+    const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [editing, setEditing] = useState(false);
@@ -110,6 +119,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
         birthdate:    '',
         occupation:   '',
         organization: '',
+        organization_other: '',
     });
 
     useEffect(() => {
@@ -119,6 +129,13 @@ function LearnerProfileDialog({ userId, open, onClose }) {
         fetch(route('admin.users.show', userId), { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(data => {
+                const organizationState = splitOrganizationValue(
+                    data.occupation ?? '',
+                    data.organization ?? '',
+                    organizationOptions,
+                    organizationSelectOccupations,
+                );
+
                 setProfile(data);
                 setData({
                     name:         data.name         ?? '',
@@ -128,14 +145,44 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                     state:        data.state        ?? '',
                     birthdate:    data.birthdate_raw ?? '',
                     occupation:   data.occupation   ?? '',
-                    organization: data.organization ?? '',
+                    organization: organizationState.organization,
+                    organization_other: organizationState.organization_other,
                 });
             })
             .finally(() => setLoading(false));
     }, [open, userId]);
 
+    const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+
+    function handleOccupationChange(value) {
+        const currentOrganizationValue = usesOrganizationDropdown
+            ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+            : data.organization;
+
+        const nextOrganizationState = splitOrganizationValue(
+            value,
+            currentOrganizationValue,
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
+        setData(prev => ({
+            ...prev,
+            occupation: value,
+            organization: nextOrganizationState.organization,
+            organization_other: nextOrganizationState.organization_other,
+        }));
+    }
+
     function restoreForm() {
         if (!profile) return;
+        const organizationState = splitOrganizationValue(
+            profile.occupation ?? '',
+            profile.organization ?? '',
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
         reset();
         setData({
             name:         profile.name         ?? '',
@@ -145,7 +192,8 @@ function LearnerProfileDialog({ userId, open, onClose }) {
             state:        profile.state        ?? '',
             birthdate:    profile.birthdate_raw ?? '',
             occupation:   profile.occupation   ?? '',
-            organization: profile.organization ?? '',
+            organization: organizationState.organization,
+            organization_other: organizationState.organization_other,
         });
         setEditing(false);
     }
@@ -162,7 +210,9 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                     race:         data.race,
                     state:        data.state,
                     occupation:   data.occupation,
-                    organization: data.organization,
+                    organization: usesOrganizationDropdown
+                        ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+                        : data.organization,
                 }));
                 setEditing(false);
             },
@@ -268,7 +318,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Occupation</label>
-                            <Select value={data.occupation} onValueChange={v => setData('occupation', v)}>
+                            <Select value={data.occupation} onValueChange={handleOccupationChange}>
                                 <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
                                 <SelectContent>
                                     {OCCUPATIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
@@ -279,12 +329,35 @@ function LearnerProfileDialog({ userId, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
-                            <Input
-                                value={data.organization}
-                                onChange={e => setData('organization', e.target.value)}
-                                placeholder="e.g. Universiti Malaya, Petronas…"
-                            />
-                            <InputError message={errors.organization} />
+                            {usesOrganizationDropdown ? (
+                                <div className="space-y-3">
+                                    <SearchableSelect
+                                        options={[
+                                            ...organizationOptions,
+                                            { value: ORGANIZATION_OTHER_VALUE, label: 'Other' },
+                                        ]}
+                                        value={data.organization}
+                                        onChange={v => setData('organization', v)}
+                                        placeholder="Select organization"
+                                        searchPlaceholder="Search organizations..."
+                                    />
+
+                                    {data.organization === ORGANIZATION_OTHER_VALUE && (
+                                        <Input
+                                            value={data.organization_other}
+                                            onChange={e => setData('organization_other', e.target.value)}
+                                            placeholder="Enter organization / institution"
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Input
+                                    value={data.organization}
+                                    onChange={e => setData('organization', e.target.value)}
+                                    placeholder="e.g. Universiti Malaya, Petronas…"
+                                />
+                            )}
+                            <InputError message={errors.organization || errors.organization_other} />
                         </div>
 
                         <div className="flex gap-2 pt-2 sticky bottom-0 bg-background pb-1">

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Setting;
 use App\Support\CaptchaVerifier;
+use App\Support\ProfileOrganizationOptions;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -74,6 +75,11 @@ class HandleInertiaRequests extends Middleware
             'integrations' => [
                 'captcha' => $captchaConfig,
                 'analytics' => $analyticsConfig,
+            ],
+            'profileOptions' => [
+                'organizationOptions' => ProfileOrganizationOptions::options(),
+                'organizationSelectOccupations' => ProfileOrganizationOptions::selectOccupations(),
+                'organizationOtherValue' => ProfileOrganizationOptions::OTHER_VALUE,
             ],
         ];
     }

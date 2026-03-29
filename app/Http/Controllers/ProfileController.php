@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Support\ProfileOrganizationOptions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,8 +26,9 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
+        $validated = ProfileOrganizationOptions::normalize($request->validated());
 
-        $user->fill($request->only(
+        $user->fill(collect($validated)->only([
             'name',
             'email',
             'gender',
@@ -35,7 +37,7 @@ class ProfileController extends Controller
             'birthdate',
             'occupation',
             'organization',
-        ));
+        ])->all());
 
         if ($request->user()->isDirty('email')) {
             $user->email_verified_at = null;

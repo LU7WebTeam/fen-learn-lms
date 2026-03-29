@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ProfileOrganizationOptions;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,9 +26,8 @@ class ProfileUpdateRequest extends FormRequest
             'state'       => ['required', 'string', 'max:100'],
             'birthdate'   => ['required', 'date', 'before:today'],
             'occupation'  => ['required', 'string', 'max:100'],
-            'organization'=> ['nullable', 'string', 'max:255'],
             'avatar_file' => ['nullable', 'file', 'image', 'max:2048'],
             'avatar_clear'=> ['nullable', 'boolean'],
-        ];
+        ] + ProfileOrganizationOptions::rules($this);
     }
 }

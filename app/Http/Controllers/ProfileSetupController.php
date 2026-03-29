@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ProfileOrganizationOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,8 +40,9 @@ class ProfileSetupController extends Controller
             'state'        => 'required|string|max:100',
             'birthdate'    => 'required|date|before:today',
             'occupation'   => 'required|string|max:100',
-            'organization' => 'nullable|string|max:255',
-        ]);
+        ] + ProfileOrganizationOptions::rules($request));
+
+        $validated = ProfileOrganizationOptions::normalize($validated);
 
         $request->user()->update([
             'name'                 => $validated['name'],
@@ -49,7 +51,7 @@ class ProfileSetupController extends Controller
             'state'                => $validated['state'],
             'birthdate'            => $validated['birthdate'],
             'occupation'           => $validated['occupation'],
-            'organization'         => $validated['organization'] ?? null,
+            'organization'         => $validated['organization'],
             'profile_completed_at' => now(),
         ]);
 

@@ -51,11 +51,11 @@ class AnalyticsController extends Controller
             'course_id'  => $selectedCourseId,
             'date_from'  => $dateFrom,
             'date_to'    => $dateTo,
-            'gender'     => $request->input('gender',     ''),
-            'race'       => $request->input('race',       ''),
-            'state'      => $request->input('state',      ''),
-            'occupation' => $request->input('occupation', ''),
-            'age_group'  => $request->input('age_group',  ''),
+            'gender'     => $this->normalizeFilterValues($request->input('gender', [])),
+            'race'       => $this->normalizeFilterValues($request->input('race', [])),
+            'state'      => $this->normalizeFilterValues($request->input('state', [])),
+            'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
 
         $analytics = $selectedCourseDetails
@@ -130,7 +130,7 @@ class AnalyticsController extends Controller
 
             fputcsv($handle, ['applied_filters']);
             foreach ($filters as $key => $value) {
-                fputcsv($handle, [$key, (string) $value]);
+                fputcsv($handle, [$key, is_array($value) ? implode(', ', $value) : (string) $value]);
             }
             fputcsv($handle, []);
 
@@ -239,11 +239,7 @@ class AnalyticsController extends Controller
             ->where('course_id', $course->id)
             ->join('users', 'users.id', '=', 'enrollments.user_id')
             ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo])
-            ->when($filters['gender'],     fn($q) => $q->where('users.gender',     $filters['gender']))
-            ->when($filters['race'],       fn($q) => $q->where('users.race',       $filters['race']))
-            ->when($filters['state'],      fn($q) => $q->where('users.state',      $filters['state']))
-            ->when($filters['occupation'], fn($q) => $q->where('users.occupation', $filters['occupation']))
-            ->when($filters['age_group'],  fn($q, $ag) => $this->applyAgeFilter($q, $ag))
+            ->tap(fn($query) => $this->applyDemographicFilters($query, $filters))
             ->selectRaw('DATE(enrollments.enrolled_at) as date, COUNT(*) as count')
             ->groupByRaw('DATE(enrollments.enrolled_at)')
             ->orderBy('date')
@@ -256,11 +252,7 @@ class AnalyticsController extends Controller
             ->join('users', 'users.id', '=', 'enrollments.user_id')
             ->whereNotNull('enrollments.completed_at')
             ->whereBetween('enrollments.completed_at', [$dateFrom, $dateTo])
-            ->when($filters['gender'],     fn($q) => $q->where('users.gender',     $filters['gender']))
-            ->when($filters['race'],       fn($q) => $q->where('users.race',       $filters['race']))
-            ->when($filters['state'],      fn($q) => $q->where('users.state',      $filters['state']))
-            ->when($filters['occupation'], fn($q) => $q->where('users.occupation', $filters['occupation']))
-            ->when($filters['age_group'],  fn($q, $ag) => $this->applyAgeFilter($q, $ag))
+            ->tap(fn($query) => $this->applyDemographicFilters($query, $filters))
             ->selectRaw('DATE(enrollments.completed_at) as date, COUNT(*) as count')
             ->groupByRaw('DATE(enrollments.completed_at)')
             ->orderBy('date')
@@ -344,11 +336,7 @@ class AnalyticsController extends Controller
         $demographicBase = Enrollment::query()
             ->where('enrollments.course_id', $course->id)
             ->join('users', 'users.id', '=', 'enrollments.user_id')
-            ->when($filters['gender'],     fn($q) => $q->where('users.gender',     $filters['gender']))
-            ->when($filters['race'],       fn($q) => $q->where('users.race',       $filters['race']))
-            ->when($filters['state'],      fn($q) => $q->where('users.state',      $filters['state']))
-            ->when($filters['occupation'], fn($q) => $q->where('users.occupation', $filters['occupation']))
-            ->when($filters['age_group'],  fn($q, $ag) => $this->applyAgeFilter($q, $ag));
+            ->tap(fn($query) => $this->applyDemographicFilters($query, $filters));
 
         $byGender = (clone $demographicBase)
             ->selectRaw('COALESCE(NULLIF(users.gender, ""), "unknown") as label, COUNT(*) as count')
@@ -444,6 +432,42 @@ class AnalyticsController extends Controller
         };
     }
 
+    private function applyAgeGroupFilters($query, array $ageGroups)
+    {
+        if ($ageGroups === []) {
+            return $query;
+        }
+
+        return $query->where(function ($nested) use ($ageGroups) {
+            foreach ($ageGroups as $ageGroup) {
+                match ($ageGroup) {
+                    'under_18' => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) < 18'),
+                    '18_24'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 18 AND 24'),
+                    '25_34'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 25 AND 34'),
+                    '35_44'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 35 AND 44'),
+                    '45_54'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 45 AND 54'),
+                    '55_plus'  => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) >= 55'),
+                    default    => null,
+                };
+            }
+        });
+    }
+
+    private function applyDemographicFilters($query, array $filters)
+    {
+        $query
+            ->when($filters['gender'] ?? [], fn($q, $values) => $q->whereIn('users.gender', $values))
+            ->when($filters['race'] ?? [], fn($q, $values) => $q->whereIn('users.race', $values))
+            ->when($filters['state'] ?? [], fn($q, $values) => $q->whereIn('users.state', $values))
+            ->when($filters['occupation'] ?? [], fn($q, $values) => $q->whereIn('users.occupation', $values));
+
+        if (!empty($filters['age_group'])) {
+            $this->applyAgeGroupFilters($query, $filters['age_group']);
+        }
+
+        return $query;
+    }
+
     private function formatRace(string $value): string
     {
         return match ($value) {
@@ -478,12 +502,23 @@ class AnalyticsController extends Controller
             'course_id'  => $courseId,
             'date_from'  => $request->input('date_from', now()->subDays(29)->toDateString()),
             'date_to'    => $request->input('date_to', now()->toDateString()),
-            'gender'     => $request->input('gender', ''),
-            'race'       => $request->input('race', ''),
-            'state'      => $request->input('state', ''),
-            'occupation' => $request->input('occupation', ''),
-            'age_group'  => $request->input('age_group', ''),
+            'gender'     => $this->normalizeFilterValues($request->input('gender', [])),
+            'race'       => $this->normalizeFilterValues($request->input('race', [])),
+            'state'      => $this->normalizeFilterValues($request->input('state', [])),
+            'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
+    }
+
+    private function normalizeFilterValues(mixed $values): array
+    {
+        $items = is_array($values) ? $values : [$values];
+
+        return collect($items)
+            ->map(fn($value) => trim((string) $value))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function resolveCourseForUser(Request $request): ?Course
@@ -510,11 +545,7 @@ class AnalyticsController extends Controller
             ->where('course_id', $course->id)
             ->join('users', 'users.id', '=', 'enrollments.user_id')
             ->select('enrollments.*')
-            ->when($filters['gender'], fn($q) => $q->where('users.gender', $filters['gender']))
-            ->when($filters['race'], fn($q) => $q->where('users.race', $filters['race']))
-            ->when($filters['state'], fn($q) => $q->where('users.state', $filters['state']))
-            ->when($filters['occupation'], fn($q) => $q->where('users.occupation', $filters['occupation']))
-            ->when($filters['age_group'], fn($q, $ag) => $this->applyAgeFilter($q, $ag));
+            ->tap(fn($query) => $this->applyDemographicFilters($query, $filters));
     }
 
     private function buildLearnersForExport(Course $course, array $filters): array

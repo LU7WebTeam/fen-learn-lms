@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\ActivityLogger;
+use App\Support\ProfileOrganizationOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -250,8 +251,9 @@ class UsersController extends Controller
             'state'        => 'nullable|string|max:100',
             'birthdate'    => 'nullable|date',
             'occupation'   => 'nullable|string|max:100',
-            'organization' => 'nullable|string|max:255',
-        ]);
+        ] + ProfileOrganizationOptions::rules($request));
+
+        $validated = ProfileOrganizationOptions::normalize($validated);
 
         $before = $user->only(array_keys($validated));
 

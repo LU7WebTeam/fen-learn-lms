@@ -3,10 +3,16 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Camera, X } from 'lucide-react';
 import { useT } from '@/lib/i18n';
+import {
+    ORGANIZATION_OTHER_VALUE,
+    splitOrganizationValue,
+    usesOrganizationList,
+} from '@/lib/profileOrganizations';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -53,10 +59,19 @@ export default function UpdateProfileInformation({
     status,
     className = '',
 }) {
-    const user = usePage().props.auth.user;
+    const page = usePage().props;
+    const user = page.auth.user;
+    const organizationOptions = page.profileOptions?.organizationOptions ?? [];
+    const organizationSelectOccupations = page.profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
     const avatarInput = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(user.avatar || null);
     const t = useT();
+    const initialOrganizationState = splitOrganizationValue(
+        user.occupation ?? '',
+        user.organization ?? '',
+        organizationOptions,
+        organizationSelectOccupations,
+    );
 
     const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         _method:      'patch',
@@ -67,10 +82,33 @@ export default function UpdateProfileInformation({
         state:        user.state ?? '',
         birthdate:    user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : '',
         occupation:   user.occupation ?? '',
-        organization: user.organization ?? '',
+        organization: initialOrganizationState.organization,
+        organization_other: initialOrganizationState.organization_other,
         avatar_file:  null,
         avatar_clear: false,
     });
+
+    const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+
+    function handleOccupationChange(value) {
+        const currentOrganizationValue = usesOrganizationDropdown
+            ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
+            : data.organization;
+
+        const nextOrganizationState = splitOrganizationValue(
+            value,
+            currentOrganizationValue,
+            organizationOptions,
+            organizationSelectOccupations,
+        );
+
+        setData(prev => ({
+            ...prev,
+            occupation: value,
+            organization: nextOrganizationState.organization,
+            organization_other: nextOrganizationState.organization_other,
+        }));
+    }
 
     function handleAvatarChange(e) {
         const file = e.target.files[0];
@@ -254,7 +292,7 @@ export default function UpdateProfileInformation({
                             id="occupation"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.occupation}
-                            onChange={(e) => setData('occupation', e.target.value)}
+                            onChange={(e) => handleOccupationChange(e.target.value)}
                         >
                             <option value="">{t('profile.info.select_occupation')}</option>
                             {OCCUPATIONS.map((occupation) => (
@@ -266,14 +304,40 @@ export default function UpdateProfileInformation({
 
                     <div>
                         <InputLabel htmlFor="organization" value={t('profile.info.organization')} />
-                        <TextInput
-                            id="organization"
-                            className="mt-1 block w-full"
-                            value={data.organization}
-                            onChange={(e) => setData('organization', e.target.value)}
-                            autoComplete="organization"
-                        />
-                        <InputError className="mt-2" message={errors.organization} />
+                        {usesOrganizationDropdown ? (
+                            <div className="mt-1 space-y-3">
+                                <SearchableSelect
+                                    options={[
+                                        ...organizationOptions,
+                                        { value: ORGANIZATION_OTHER_VALUE, label: t('profile.info.organization_other') },
+                                    ]}
+                                    value={data.organization}
+                                    onChange={(nextValue) => setData('organization', nextValue)}
+                                    placeholder={t('profile.info.select_organization')}
+                                    searchPlaceholder={t('profile.info.select_organization')}
+                                    className="mt-0"
+                                />
+
+                                {data.organization === ORGANIZATION_OTHER_VALUE && (
+                                    <TextInput
+                                        id="organization_other"
+                                        className="block w-full"
+                                        value={data.organization_other}
+                                        onChange={(e) => setData('organization_other', e.target.value)}
+                                        autoComplete="organization"
+                                    />
+                                )}
+                            </div>
+                        ) : (
+                            <TextInput
+                                id="organization"
+                                className="mt-1 block w-full"
+                                value={data.organization}
+                                onChange={(e) => setData('organization', e.target.value)}
+                                autoComplete="organization"
+                            />
+                        )}
+                        <InputError className="mt-2" message={errors.organization || errors.organization_other} />
                     </div>
                 </div>
 
