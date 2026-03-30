@@ -1,5 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import CertificatePreview from '@/Components/CertificatePreview';
 import ImageUploadWithUrl from '@/Components/ImageUploadWithUrl';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
@@ -14,58 +15,13 @@ import {
     Type, Image as ImageIcon, Palette, Settings2, Users, BookOpen, Percent
 } from 'lucide-react';
 
-// ─── Page size map (mm) ────────────────────────────────────────────────────────
-const PAGE_DIMS = {
-    a4:     { landscape: [297, 210], portrait: [210, 297] },
-    letter: { landscape: [279.4, 215.9], portrait: [215.9, 279.4] },
-};
-
 // ─── Live Preview ──────────────────────────────────────────────────────────────
 const PREVIEW_W = 520; // px target width
 
+// CertPreview is a thin wrapper so the builder can pass sample data via dynamicValues.
 function CertPreview({ template, courseTitle, customFonts = [], platformName = 'Free LMS' }) {
-    const size        = template.size        || 'a4';
-    const orientation = template.orientation || 'landscape';
-    const [pageW, pageH] = PAGE_DIMS[size]?.[orientation] || [297, 210];
-
-    const PX_PER_MM   = 3.7795;
-    const PX_PER_PT   = 96 / 72;
-    const nativeW     = pageW * PX_PER_MM;
-    const nativeH     = pageH * PX_PER_MM;
-    const scale       = PREVIEW_W / nativeW;
-    const previewH    = nativeH * scale;
-
-    const mmToPx = (mm) => mm * PX_PER_MM;
-    const ptToPx = (pt) => pt * PX_PER_PT;
-
-    const bg       = template.background  || {};
-    const branding = template.branding    || {};
-    const fields   = template.fields      || [];
-    const signatory = template.signatory  || {};
-    const selectedCustomFont = customFonts.find(f => Number(f.id) === Number(template.custom_font_id));
-    const previewFontFamily = selectedCustomFont?.family || template.font_family || 'DejaVu Sans';
-
-    const showTopBar    = branding.show_top_bar    ?? true;
-    const showBottomBar = branding.show_bottom_bar ?? true;
-    const topBarPct     = showTopBar    ? 8.5  : 0;
-    const bottomBarPct  = showBottomBar ? 6.7  : 0;
-    const accentPct     = showTopBar    ? 1.4  : 0;
-    const accent2Pct    = showBottomBar ? 1.0  : 0;
-
-    const topBarMm = (topBarPct / 100) * pageH;
-    const bottomBarMm = (bottomBarPct / 100) * pageH;
-
-    const logoTextSizePx = ptToPx(topBarMm * 0.35);
-    const logoSubSizePx = ptToPx(topBarMm * 0.17);
-    const bottomLeftSizePx = ptToPx(bottomBarMm * 0.3);
-    const bottomCenterSizePx = ptToPx(bottomBarMm * 0.32);
-    const bottomRightSizePx = ptToPx(bottomBarMm * 0.27);
-
-    const bgStyle = bg.type === 'image' && bg.image_url
-        ? { backgroundImage: `url(${bg.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-        : { background: bg.color || '#fdf8f4' };
-
-    const dynamicValues = {
+    const signatory = template?.signatory || {};
+    const sampleDynamic = {
         recipient_name:  'Jane Smith',
         course_title:    courseTitle || 'Sample Course Title',
         completion_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
@@ -73,128 +29,15 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
         signatory_name:  signatory.name  || '',
         signatory_title: signatory.title || '',
     };
-
-    function getFieldText(field) {
-        if (field.type === 'dynamic') return dynamicValues[field.id] || '';
-        return field.text || '';
-    }
-
     return (
-        <div
-            style={{ width: PREVIEW_W, height: previewH, position: 'relative', overflow: 'hidden', flexShrink: 0 }}
-            className="rounded-md shadow-lg border"
-        >
-            {selectedCustomFont?.regular_url && (
-                <style>{`
-                    @font-face {
-                        font-family: '${previewFontFamily}';
-                        src: url('${selectedCustomFont.regular_url}') format('truetype');
-                        font-weight: normal;
-                        font-style: normal;
-                    }
-                `}</style>
-            )}
-            <div
-                style={{
-                    width: nativeW, height: nativeH,
-                    transform: `scale(${scale})`, transformOrigin: 'top left',
-                    position: 'relative', ...bgStyle,
-                    fontFamily: `'${previewFontFamily}', 'DejaVu Sans', sans-serif`,
-                }}
-            >
-                {/* Top bar */}
-                {showTopBar && (
-                    <>
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, right: 0,
-                            height: `${topBarPct}%`,
-                            background: branding.top_bar_color || '#8B1A4A',
-                        }} />
-                        <div style={{
-                            position: 'absolute', top: `${topBarPct}%`, left: 0, right: 0,
-                            height: `${accentPct}%`,
-                            background: branding.accent_color || '#C8A96E',
-                        }} />
-                        {(branding.show_logo ?? true) && (
-                            <div style={{
-                                position: 'absolute', top: 0, left: 0, right: 0,
-                                height: `${topBarPct}%`,
-                                display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center',
-                            }}>
-                                <div style={{ color: '#fff', fontSize: logoTextSizePx, fontWeight: 'bold', letterSpacing: 4 }}>
-                                    {branding.logo_text || platformName}
-                                </div>
-                                {branding.tagline && (
-                                    <div style={{ color: '#F0D9A8', fontSize: logoSubSizePx, marginTop: mmToPx(1) }}>
-                                        {branding.tagline}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* Bottom bar */}
-                {showBottomBar && (
-                    <>
-                        <div style={{
-                            position: 'absolute', bottom: `${bottomBarPct}%`, left: 0, right: 0,
-                            height: `${accent2Pct}%`,
-                            background: branding.accent_color || '#C8A96E',
-                        }} />
-                        <div style={{
-                            position: 'absolute', bottom: 0, left: 0, right: 0,
-                            height: `${bottomBarPct}%`,
-                            background: branding.bottom_bar_color || '#8B1A4A',
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: `${mmToPx(bottomBarMm * 0.3)}px ${mmToPx(pageW * 0.067)}px`,
-                        }}>
-                            <span style={{ color: '#F0D9A8', fontSize: bottomLeftSizePx }}>
-                                {dynamicValues.completion_date}
-                            </span>
-                            <span style={{ color: '#fff', fontSize: bottomCenterSizePx, fontWeight: 'bold' }}>
-                                Certificate of Completion
-                            </span>
-                            <span style={{ color: '#F0D9A8', fontSize: bottomRightSizePx }}>
-                                ID: {dynamicValues.certificate_id}
-                            </span>
-                        </div>
-                    </>
-                )}
-
-                {/* Content fields */}
-                {fields.filter(f => f.visible).map(field => {
-                    const text = getFieldText(field);
-                    if (!text) return null;
-                    const topPct    = field.y || 0;
-                    // Match PDF behaviour: template font sizes are stored in pt.
-                    const fontSize  = ptToPx(field.font_size || 12);
-                    const textAlign = field.align || 'center';
-                    let leftStyle   = {};
-                    if (textAlign === 'left') {
-                        leftStyle = { paddingLeft: `${field.x || 0}%`, textAlign: 'left' };
-                    } else if (textAlign === 'right') {
-                        leftStyle = { paddingRight: `${100 - (field.x || 0)}%`, textAlign: 'right' };
-                    }
-                    return (
-                        <div key={field.id} style={{
-                            position: 'absolute',
-                            top: `${topPct}%`,
-                            left: 0, right: 0,
-                            fontSize,
-                            color: field.color || '#1e1e2e',
-                            fontWeight: field.bold   ? 'bold'   : 'normal',
-                            fontStyle:  field.italic ? 'italic' : 'normal',
-                            textAlign,
-                            lineHeight: 1,
-                            ...leftStyle,
-                        }}>
-                            {text}
-                        </div>
-                    );
-                })}
-            </div>
+        <div className="rounded-md shadow-lg border overflow-hidden">
+            <CertificatePreview
+                template={template}
+                dynamicValues={sampleDynamic}
+                customFonts={customFonts}
+                platformName={platformName}
+                width={PREVIEW_W}
+            />
         </div>
     );
 }

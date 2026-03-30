@@ -18,8 +18,30 @@ class CertificateController extends Controller
     {
         $enrollment = Enrollment::where('certificate_uuid', $uuid)
             ->whereNotNull('completed_at')
-            ->with(['user:id,name', 'course:id,title,slug,category'])
+            ->with(['user:id,name', 'course:id,title,slug,category,certificate_template'])
             ->firstOrFail();
+
+        $template = $enrollment->course->certificate_template
+            ?? \App\Models\Course::defaultCertificateTemplate();
+
+        // Fill signatory fields so the preview matches what the PDF shows
+        $signatory = $template['signatory'] ?? [];
+        $template['fields'] = collect($template['fields'] ?? [])
+            ->map(function ($field) use ($signatory) {
+                if ($field['id'] === 'signatory_name' && empty($field['text'])) {
+                    $field['text'] = $signatory['name'] ?? '';
+                }
+                if ($field['id'] === 'signatory_title' && empty($field['text'])) {
+                    $field['text'] = $signatory['title'] ?? '';
+                }
+                return $field;
+            })->all();
+
+        $customFont = null;
+        $customFontId = $template['custom_font_id'] ?? null;
+        if ($customFontId) {
+            $customFont = CustomFont::query()->where('is_active', true)->find($customFontId);
+        }
 
         return Inertia::render('Certificate/Show', [
             'certificate' => [
@@ -31,6 +53,14 @@ class CertificateController extends Controller
                 'completed_at' => $enrollment->completed_at->format('F j, Y'),
                 'download_url' => route('certificate.download', $enrollment->certificate_uuid),
             ],
+            'template'    => $template,
+            'customFont'  => $customFont ? [
+                'id'          => $customFont->id,
+                'family'      => $customFont->family,
+                'regular_url' => $customFont->regular_path
+                    ? asset('storage/' . $customFont->regular_path)
+                    : null,
+            ] : null,
         ]);
     }
 
