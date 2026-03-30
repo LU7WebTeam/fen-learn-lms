@@ -76,7 +76,6 @@ export default function UpdateProfileInformation({
     const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         _method:      'patch',
         name:         user.name,
-        email:        user.email,
         gender:       user.gender ?? '',
         race:         user.race ?? '',
         state:        user.state ?? '',
@@ -213,12 +212,12 @@ export default function UpdateProfileInformation({
                         id="email"
                         type="email"
                         className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
+                        value={user.email}
+                        disabled
+                        readOnly
                         autoComplete="username"
                     />
-                    <InputError className="mt-2" message={errors.email} />
+                    <p className="mt-2 text-sm text-gray-500">{t('profile.info.email_locked')}</p>
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2">

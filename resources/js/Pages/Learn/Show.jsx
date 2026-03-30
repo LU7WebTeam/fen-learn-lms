@@ -122,9 +122,29 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 
     const showResult = !!result;
     const lastAttempt = allAttempts.length > 0 ? allAttempts[allAttempts.length - 1] : null;
+    const answeredCount = questions.filter((question, index) => (
+        question.multi_answer
+            ? Array.isArray(data.answers[index]) && data.answers[index].length > 0
+            : data.answers[index] !== undefined && data.answers[index] !== null
+    )).length;
+    const answeredProgress = questions.length > 0
+        ? Math.round((answeredCount / questions.length) * 100)
+        : 0;
 
     return (
         <div className="space-y-6">
+            {!showResult && (
+                <div className="rounded-lg border bg-card px-4 py-3">
+                    <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                        <span className="font-medium">{t('learn.quiz.title')}</span>
+                        <span className="text-muted-foreground">
+                            {t('learn.quiz.answered', { n: answeredCount, total: questions.length })}
+                        </span>
+                    </div>
+                    <Progress value={answeredProgress} className="h-2" />
+                </div>
+            )}
+
             {/* Attempt counter */}
             {maxAttempts > 0 && !showResult && (
                 <div className={cn(
@@ -182,36 +202,6 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 )}>
                     <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
                     {lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`}
-                </div>
-            )}
-
-            {/* Result panel (shown after submission) */}
-            {showResult && (
-                <div className={cn(
-                    'rounded-xl border p-6 text-center',
-                    result.passed
-                        ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800'
-                        : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
-                )}>
-                    <p className={cn('text-3xl font-bold mb-1', result.passed ? 'text-green-700' : 'text-red-700')}>
-                        {result.score} / {result.max_score}
-                    </p>
-                    <p className={cn('text-sm font-medium mb-1', result.passed ? 'text-green-600' : 'text-red-600')}>
-                        {result.percentage}%
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                        {result.passed
-                            ? t('learn.quiz.passed')
-                            : t('learn.quiz.failed', { n: result.passing_score })}
-                    </p>
-                    {!result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
-                        <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
-                            {t('learn.quiz.try_again')}
-                        </Button>
-                    )}
-                    {!result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
-                        <p className="mt-3 text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
-                    )}
                 </div>
             )}
 
@@ -359,12 +349,38 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 >
                     {processing
                         ? t('learn.quiz.submitting')
-                        : `${t('learn.quiz.submit')} (${t('learn.quiz.answered', { n: questions.filter((q, i) =>
-                            q.multi_answer
-                                ? Array.isArray(data.answers[i]) && data.answers[i].length > 0
-                                : data.answers[i] !== undefined && data.answers[i] !== null
-                        ).length, total: questions.length })})`}
+                        : `${t('learn.quiz.submit')} (${t('learn.quiz.answered', { n: answeredCount, total: questions.length })})`}
                 </Button>
+            )}
+
+            {/* Result panel (shown after submission) */}
+            {showResult && (
+                <div className={cn(
+                    'rounded-xl border p-6 text-center',
+                    result.passed
+                        ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800'
+                        : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
+                )}>
+                    <p className={cn('mb-1 text-3xl font-bold', result.passed ? 'text-green-700' : 'text-red-700')}>
+                        {result.score} / {result.max_score}
+                    </p>
+                    <p className={cn('mb-1 text-sm font-medium', result.passed ? 'text-green-600' : 'text-red-600')}>
+                        {result.percentage}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        {result.passed
+                            ? t('learn.quiz.passed')
+                            : t('learn.quiz.failed', { n: result.passing_score })}
+                    </p>
+                    {!result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
+                        <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
+                            {t('learn.quiz.try_again')}
+                        </Button>
+                    )}
+                    {!result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
+                        <p className="mt-3 text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
+                    )}
+                </div>
             )}
         </div>
     );
@@ -424,19 +440,17 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                             const isCurrent = l.id === lesson.id;
                             const isDone    = completedIds.includes(l.id);
                             const isLocked  = lockedIds.includes(l.id);
-                            return (
-                                <Link
-                                    key={l.id}
-                                    href={route('learn.lesson', [course.slug, l.id])}
-                                    className={cn(
-                                        'flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                                        isCurrent
-                                            ? 'bg-primary/10 font-medium text-primary'
-                                            : isLocked
-                                                ? 'text-muted-foreground/60 hover:bg-muted'
-                                                : 'text-foreground hover:bg-muted'
-                                    )}
-                                >
+                            const itemClassName = cn(
+                                'flex items-center gap-3 px-4 py-2 text-sm transition-colors',
+                                isCurrent
+                                    ? 'bg-primary/10 font-medium text-primary'
+                                    : isLocked
+                                        ? 'cursor-not-allowed text-muted-foreground/60'
+                                        : 'text-foreground hover:bg-muted'
+                            );
+
+                            const content = (
+                                <>
                                     <span className="shrink-0">
                                         {isDone
                                             ? <Check className="h-4 w-4 text-green-500" />
@@ -448,6 +462,29 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                                     {l.duration_minutes > 0 && (
                                         <span className="shrink-0 text-xs text-muted-foreground">{l.duration_minutes}m</span>
                                     )}
+                                </>
+                            );
+
+                            if (isLocked) {
+                                return (
+                                    <div
+                                        key={l.id}
+                                        aria-disabled="true"
+                                        className={itemClassName}
+                                        title={t('learn.lesson.locked_message')}
+                                    >
+                                        {content}
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <Link
+                                    key={l.id}
+                                    href={route('learn.lesson', [course.slug, l.id])}
+                                    className={itemClassName}
+                                >
+                                    {content}
                                 </Link>
                             );
                         })}
@@ -523,6 +560,7 @@ export default function LearnShow({
         .flatMap(s => s.lessons)
         .filter(l => l.prerequisite_lesson_id && !effectiveCompletedIds.includes(l.prerequisite_lesson_id))
         .map(l => l.id);
+    const nextLessonLocked = nextLesson ? lockedIds.includes(nextLesson.id) : false;
 
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
 
@@ -563,7 +601,7 @@ export default function LearnShow({
                 handleComplete();
             }
 
-            if (event.key.toLowerCase() === 'n' && nextLesson) {
+            if (event.key.toLowerCase() === 'n' && nextLesson && !nextLessonLocked) {
                 event.preventDefault();
                 router.get(route('learn.lesson', [course.slug, nextLesson.id]));
             }
@@ -576,7 +614,7 @@ export default function LearnShow({
 
         window.addEventListener('keydown', handleShortcuts);
         return () => window.removeEventListener('keydown', handleShortcuts);
-    }, [canComplete, completed, course.slug, handleComplete, lesson.type, nextLesson, prevLesson]);
+    }, [canComplete, completed, course.slug, handleComplete, lesson.type, nextLesson, nextLessonLocked, prevLesson]);
 
     return (
         <>
@@ -821,7 +859,11 @@ export default function LearnShow({
 
                                     {/* Next / Course complete */}
                                     {nextLesson ? (
-                                        <Button onClick={() => router.get(route('learn.lesson', [course.slug, nextLesson.id]))}>
+                                        <Button
+                                            disabled={nextLessonLocked}
+                                            onClick={() => !nextLessonLocked && router.get(route('learn.lesson', [course.slug, nextLesson.id]))}
+                                            title={nextLessonLocked ? t('learn.lesson.locked_message') : undefined}
+                                        >
                                             {t('learn.lesson.next_lesson')}
                                             <ChevronRight className="ml-1 h-4 w-4" />
                                         </Button>

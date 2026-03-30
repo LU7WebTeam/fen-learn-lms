@@ -39,11 +39,9 @@ class RegisteredUserController extends Controller
         try {
             $allowed        = Setting::get('allow_registration', '1');
             $defaultRole    = Setting::get('default_role', 'learner');
-            $requireVerify  = Setting::get('require_email_verification', '0');
         } catch (\Throwable) {
             $allowed       = '1';
             $defaultRole   = 'learner';
-            $requireVerify = '0';
         }
 
         if ($allowed !== '1') {
@@ -68,11 +66,7 @@ class RegisteredUserController extends Controller
             'role'     => $role,
         ]);
 
-        if ($requireVerify === '1') {
-            event(new Registered($user));
-        } else {
-            $user->markEmailAsVerified();
-        }
+        event(new Registered($user));
 
         Auth::login($user);
 

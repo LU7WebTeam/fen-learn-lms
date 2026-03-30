@@ -81,7 +81,7 @@ export default function AccessibilityHelper() {
 
     return (
         <>
-            <div className="fixed bottom-4 right-4 z-[100]">
+            <div className="fixed bottom-24 right-4 z-[100]">
                 <Button
                     type="button"
                     onClick={() => setOpen(prev => !prev)}
@@ -94,7 +94,7 @@ export default function AccessibilityHelper() {
             </div>
 
             {open && (
-                <div className="fixed bottom-20 right-4 z-[100] w-[320px] rounded-xl border bg-card p-4 shadow-2xl">
+                <div className="fixed bottom-40 right-4 z-[100] w-[320px] rounded-xl border bg-card p-4 shadow-2xl">
                     <div className="mb-4 flex items-start justify-between gap-2">
                         <div>
                             <h3 className="text-sm font-semibold">Accessibility Helper</h3>

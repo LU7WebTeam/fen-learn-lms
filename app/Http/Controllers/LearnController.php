@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
@@ -42,6 +43,7 @@ class LearnController extends Controller
     public function show(Request $request, Course $course, Lesson $lesson): Response|RedirectResponse
     {
         abort_if($course->status !== 'published', 404);
+        $this->ensureLessonBelongsToCourse($course, $lesson);
 
         $enrollment = $request->user()->enrollments()
             ->where('course_id', $course->id)
@@ -50,6 +52,10 @@ class LearnController extends Controller
         if (!$enrollment) {
             return redirect()->route('courses.show', $course->slug)
                 ->with('info', 'Enroll in this course to access lessons.');
+        }
+
+        if ($lockedRedirect = $this->redirectIfLockedByPrerequisite($enrollment, $course, $lesson)) {
+            return $lockedRedirect;
         }
 
         // Full curriculum for the sidebar
@@ -75,17 +81,6 @@ class LearnController extends Controller
         $next     = ($idx !== false && $idx < $allLessons->count() - 1) ? $allLessons[$idx + 1] : null;
 
         $isCompleted = in_array($lesson->id, $completedIds);
-
-        // Prerequisite check
-        $isLocked          = false;
-        $prerequisiteLesson = null;
-        if ($lesson->prerequisite_lesson_id) {
-            $isLocked = !in_array($lesson->prerequisite_lesson_id, $completedIds);
-            if ($isLocked) {
-                $prereq = \App\Models\Lesson::find($lesson->prerequisite_lesson_id);
-                $prerequisiteLesson = $prereq ? ['id' => $prereq->id, 'title' => $prereq->title] : null;
-            }
-        }
 
         // For quiz lessons: strip correct answers + load all attempts
         $lessonData  = $lesson->toArray();
@@ -141,8 +136,8 @@ class LearnController extends Controller
             ],
             'completedIds'       => $completedIds,
             'isCompleted'        => $isCompleted,
-            'isLocked'           => $isLocked,
-            'prerequisiteLesson' => $prerequisiteLesson,
+            'isLocked'           => false,
+            'prerequisiteLesson' => null,
             'nextLesson'         => $next ? ['id' => $next->id, 'title' => $next->title, 'title_ms' => $next->title_ms] : null,
             'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title, 'title_ms' => $prev->title_ms] : null,
             'lastAttempt'        => $lastAttempt,
@@ -152,9 +147,15 @@ class LearnController extends Controller
 
     public function complete(Request $request, Course $course, Lesson $lesson): RedirectResponse
     {
+        $this->ensureLessonBelongsToCourse($course, $lesson);
+
         $enrollment = $request->user()->enrollments()
             ->where('course_id', $course->id)
             ->firstOrFail();
+
+        if ($lockedRedirect = $this->redirectIfLockedByPrerequisite($enrollment, $course, $lesson)) {
+            return $lockedRedirect;
+        }
 
         $alreadyCompletedLesson = LessonProgress::query()
             ->where('user_id', $request->user()->id)
@@ -242,10 +243,15 @@ class LearnController extends Controller
     public function submitQuiz(Request $request, Course $course, Lesson $lesson): RedirectResponse
     {
         abort_unless($lesson->type === 'quiz', 422);
+        $this->ensureLessonBelongsToCourse($course, $lesson);
 
         $enrollment = $request->user()->enrollments()
             ->where('course_id', $course->id)
             ->firstOrFail();
+
+        if ($lockedRedirect = $this->redirectIfLockedByPrerequisite($enrollment, $course, $lesson)) {
+            return $lockedRedirect;
+        }
 
         $request->validate([
             'answers'   => 'required|array',
@@ -440,5 +446,46 @@ class LearnController extends Controller
             'passing_score' => $passingScore,
             'results'       => $results,
         ]);
+    }
+
+    private function ensureLessonBelongsToCourse(Course $course, Lesson $lesson): void
+    {
+        abort_unless(
+            $lesson->section()->where('course_id', $course->id)->exists(),
+            404
+        );
+    }
+
+    private function redirectIfLockedByPrerequisite(Enrollment $enrollment, Course $course, Lesson $lesson): ?RedirectResponse
+    {
+        $prerequisiteLesson = $this->getIncompletePrerequisiteLesson($enrollment, $lesson);
+
+        if (!$prerequisiteLesson) {
+            return null;
+        }
+
+        return redirect()
+            ->route('learn.lesson', [$course->slug, $prerequisiteLesson->id])
+            ->with('error', 'Complete the prerequisite lesson before accessing that lesson.');
+    }
+
+    private function getIncompletePrerequisiteLesson(Enrollment $enrollment, Lesson $lesson): ?Lesson
+    {
+        if (!$lesson->prerequisite_lesson_id) {
+            return null;
+        }
+
+        $hasCompletedPrerequisite = $enrollment->lessonProgress()
+            ->where('lesson_id', $lesson->prerequisite_lesson_id)
+            ->whereNotNull('completed_at')
+            ->exists();
+
+        if ($hasCompletedPrerequisite) {
+            return null;
+        }
+
+        return Lesson::query()
+            ->select(['id', 'title', 'title_ms'])
+            ->find($lesson->prerequisite_lesson_id);
     }
 }

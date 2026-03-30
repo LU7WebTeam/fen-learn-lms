@@ -13,14 +13,6 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name'        => ['required', 'string', 'max:255'],
-            'email'       => [
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
-            ],
             'gender'      => ['required', 'in:male,female'],
             'race'        => ['required', 'in:malay,chinese,indian,other_bumiputera,other'],
             'state'       => ['required', 'string', 'max:100'],
@@ -28,6 +20,7 @@ class ProfileUpdateRequest extends FormRequest
             'occupation'  => ['required', 'string', 'max:100'],
             'avatar_file' => ['nullable', 'file', 'image', 'max:2048'],
             'avatar_clear'=> ['nullable', 'boolean'],
+            'email'       => ['prohibited'],
         ] + ProfileOrganizationOptions::rules($this);
     }
 }

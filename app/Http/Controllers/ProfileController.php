@@ -26,11 +26,10 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $validated = ProfileOrganizationOptions::normalize($request->validated());
+        $validated = ProfileOrganizationOptions::normalize($request->safe()->except('email'));
 
         $user->fill(collect($validated)->only([
             'name',
-            'email',
             'gender',
             'race',
             'state',
@@ -38,10 +37,6 @@ class ProfileController extends Controller
             'occupation',
             'organization',
         ])->all());
-
-        if ($request->user()->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
 
         if ($request->hasFile('avatar_file')) {
             if ($user->avatar && str_contains($user->avatar, '/storage/')) {
