@@ -562,7 +562,7 @@ function AnalyticsTab({ settings, onSave, processing }) {
 
                 <SwitchRow
                     label="Debug Mode"
-                    description="Enable debug-friendly analytics behavior for troubleshooting setups."
+                    description="Enable debug-friendly analytics behaviour for troubleshooting setups."
                     checked={debugMode}
                     onChange={setDebugMode}
                 />

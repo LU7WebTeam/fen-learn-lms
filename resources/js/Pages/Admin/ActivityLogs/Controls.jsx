@@ -67,7 +67,7 @@ export default function ActivityLogControls({ capabilities, logSettings }) {
                                     <ShieldAlert className="h-5 w-5 text-primary" />
                                     <CardTitle>Log Policies</CardTitle>
                                 </div>
-                                <CardDescription>Configure retention, archive, alerting, and redaction behavior.</CardDescription>
+                                <CardDescription>Configure retention, archive, alerting, and redaction behaviour.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={savePolicies} className="space-y-4">

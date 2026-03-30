@@ -168,7 +168,7 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
                     const text = getFieldText(field);
                     if (!text) return null;
                     const topPct    = field.y || 0;
-                    // Match PDF behavior: template font sizes are stored in pt.
+                    // Match PDF behaviour: template font sizes are stored in pt.
                     const fontSize  = ptToPx(field.font_size || 12);
                     const textAlign = field.align || 'center';
                     let leftStyle   = {};
