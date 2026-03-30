@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\TwoFactorCodeMail;
 use App\Models\User;
+use App\Support\UserHomeRoute;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -79,7 +80,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route(UserHomeRoute::nameFor($user->fresh()), absolute: false));
     }
 
     public function test_users_can_logout(): void
