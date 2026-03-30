@@ -329,6 +329,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
+                                <label className="text-xs font-medium">Organisation / Institution</label>
                             {usesOrganizationDropdown ? (
                                 <div className="space-y-3">
                                     <SearchableSelect
@@ -339,6 +340,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                                         value={data.organization}
                                         onChange={v => setData('organization', v)}
                                         placeholder="Select organization"
+                                            placeholder="Select organisation"
                                         searchPlaceholder="Search organizations..."
                                     />
 

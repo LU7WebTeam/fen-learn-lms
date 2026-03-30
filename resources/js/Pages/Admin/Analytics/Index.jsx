@@ -506,6 +506,7 @@ function FilterBar({ courses, filters, organizationOptions, onFiltersChange, onA
                         {/* Organization */}
                         <div className="min-w-[220px]">
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Organization</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Organisation</label>
                             <SearchableSelect
                                 multiple
                                 options={organizationOptions}
@@ -544,6 +545,7 @@ function ActiveFilterBadges({ filters, onRemove }) {
         ...(filters.state ?? []).map(value => ({ key: 'state', value, label: `State: ${value}` })),
         ...(filters.occupation ?? []).map(value => ({ key: 'occupation', value, label: `Occupation: ${OCCUPATIONS.find(o => o.value === value)?.label ?? value}` })),
         ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organization: ${value}` })),
+                        ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organisation: ${value}` })),
         ...(filters.age_group ?? []).map(value => ({ key: 'age_group', value, label: `Age: ${AGE_GROUPS.find(g => g.value === value)?.label ?? value}` })),
     ];
 
@@ -789,6 +791,7 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
 
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
+                                <label className="text-xs font-medium">Organisation / Institution</label>
                             {usesOrganizationDropdown ? (
                                 <div className="space-y-3">
                                     <SearchableSelect
@@ -799,6 +802,7 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
                                         value={data.organization}
                                         onChange={v => setData('organization', v)}
                                         placeholder="Select organization"
+                                            placeholder="Select organisation"
                                         searchPlaceholder="Search organizations..."
                                     />
 
