@@ -80,6 +80,29 @@ class StaffInvitationMail extends Mailable
                         'platform_name' => $branding['platformName'],
                     ],
                 ),
+                'emailTitleBM' => EmailContent::get(
+                    'invitation_email_title_bm',
+                    'Anda dijemput untuk bergabung dengan pasukan',
+                    [
+                        'platform_name' => $branding['platformName'],
+                    ],
+                ),
+                'emailBodyBM'  => EmailContent::get(
+                    'invitation_email_body_bm',
+                    '{{inviter_name}} telah menjemput anda untuk bergabung dengan {{platform_name}} sebagai {{role_label}}.',
+                    [
+                        'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
+                        'platform_name' => $branding['platformName'],
+                        'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
+                    ],
+                ),
+                'emailCtaBM'   => EmailContent::get(
+                    'invitation_email_cta_bm',
+                    'Terima Jemputan',
+                    [
+                        'platform_name' => $branding['platformName'],
+                    ],
+                ),
             ],
         );
     }

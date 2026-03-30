@@ -53,15 +53,26 @@ class AppServiceProvider extends ServiceProvider
             );
             $cta = EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens);
 
+            $titleBM = EmailContent::get('verification_email_title_bm', 'Sahkan alamat email anda', $tokens);
+            $bodyBM = EmailContent::get(
+                'verification_email_body_bm',
+                'Sila sahkan alamat email anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+                $tokens,
+            );
+            $ctaBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
+
             return (new MailMessage)
                 ->subject($subject)
                 ->view('emails.auth-verify-email', [
                     ...$branding,
                     'title' => $title,
+                    'titleBM' => $titleBM,
                     'email' => $notifiable->email,
                     'actionUrl' => $url,
                     'actionText' => $cta,
+                    'actionTextBM' => $ctaBM,
                     'bodyText' => $body,
+                    'bodyTextBM' => $bodyBM,
                     'expiresInMinutes' => (int) config('auth.verification.expire', 60),
                 ]);
         });
@@ -81,6 +92,14 @@ class AppServiceProvider extends ServiceProvider
             );
             $cta = EmailContent::get('reset_email_cta', 'Reset Password', $tokens);
 
+            $titleBM = EmailContent::get('reset_email_title_bm', 'Tetapkan semula kata laluan anda', $tokens);
+            $bodyBM = EmailContent::get(
+                'reset_email_body_bm',
+                'Kami menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
+                $tokens,
+            );
+            $ctaBM = EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens);
+
             $resetUrl = url(route('password.reset', [
                 'token' => $token,
                 'email' => $notifiable->getEmailForPasswordReset(),
@@ -91,10 +110,13 @@ class AppServiceProvider extends ServiceProvider
                 ->view('emails.auth-reset-password', [
                     ...$branding,
                     'title' => $title,
+                    'titleBM' => $titleBM,
                     'email' => $notifiable->email,
                     'actionUrl' => $resetUrl,
                     'actionText' => $cta,
+                    'actionTextBM' => $ctaBM,
                     'bodyText' => $body,
+                    'bodyTextBM' => $bodyBM,
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
                 ]);
         });

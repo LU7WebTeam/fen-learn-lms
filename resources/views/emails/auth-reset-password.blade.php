@@ -5,11 +5,21 @@
     'theme' => $theme,
 ])
     <h2>{{ $title }}</h2>
+    @if (!empty($titleBM))
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $titleBM }}</p>
+    @endif
+    
     <p>Hello,</p>
     <p>{!! nl2br(e($bodyText)) !!}</p>
+    @if (!empty($bodyTextBM))
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($bodyTextBM)) !!}</p>
+    @endif
 
     <div class="button-wrap">
         <a href="{{ $actionUrl }}" class="button">{{ $actionText }}</a>
+        @if (!empty($actionTextBM))
+            <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $actionTextBM }}</p>
+        @endif
     </div>
 
     <p style="font-size:13px;color:{{ $theme['mutedText'] }};">If the button does not work, copy and paste this URL into your browser:</p>

@@ -43,18 +43,44 @@ class SettingsController extends Controller
         'invitation_email_title'     => "You're invited to join the team",
         'invitation_email_body'      => '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.',
         'invitation_email_cta'       => 'Accept Invitation',
+        'invitation_email_subject_bm'   => "Anda telah dijemput untuk menyertai {{platform_name}}",
+        'invitation_email_title_bm'     => "Anda dijemput untuk menyertai pasukan",
+        'invitation_email_body_bm'      => '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.',
+        'invitation_email_cta_bm'       => 'Terima Undangan',
         'verification_email_subject' => 'Verify your email address',
         'verification_email_title'   => 'Verify your email address',
         'verification_email_body'    => 'Please confirm your email address for {{platform_name}} by clicking the button below.',
         'verification_email_cta'     => 'Verify Email Address',
+        'verification_email_subject_bm' => 'Sahkan alamat e-mel anda',
+        'verification_email_title_bm'   => 'Sahkan alamat e-mel anda',
+        'verification_email_body_bm'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+        'verification_email_cta_bm'     => 'Sahkan Alamat E-mel',
         'reset_email_subject'        => 'Reset your password',
         'reset_email_title'          => 'Reset your password',
         'reset_email_body'           => 'We received a request to reset your password for {{platform_name}}.',
         'reset_email_cta'            => 'Reset Password',
+        'reset_email_subject_bm'        => 'Tetapkan semula kata laluan anda',
+        'reset_email_title_bm'          => 'Tetapkan semula kata laluan anda',
+        'reset_email_body_bm'           => 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
+        'reset_email_cta_bm'            => 'Tetapkan Semula Kata Laluan',
         'course_completion_email_subject' => 'Course completed: {{course_title}}',
         'course_completion_email_title'   => 'You completed a course',
         'course_completion_email_body'    => 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.',
         'course_completion_email_cta'     => 'Open Course Page',
+        'course_completion_email_subject_bm' => 'Kursus selesai: {{course_title}}',
+        'course_completion_email_title_bm'   => 'Anda telah menyelesaikan sebuah kursus',
+        'course_completion_email_body_bm'    => 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.',
+        'course_completion_email_cta_bm'     => 'Buka Halaman Kursus',
+        'two_factor_email_subject'   => 'Your login verification code',
+        'two_factor_email_title'     => 'Login Verification Code',
+        'two_factor_email_body'      => 'You\'ve requested to log in to your account. To complete your login, please use the verification code below:',
+        'two_factor_email_expiry'    => 'This code will expire in 10 minutes.',
+        'two_factor_email_security_note' => 'If you didn\'t request this code, please ignore this email and ensure your account is secure.',
+        'two_factor_email_subject_bm'   => 'Kod pengesahan log masuk anda',
+        'two_factor_email_title_bm'     => 'Kod Pengesahan Log Masuk',
+        'two_factor_email_body_bm'      => 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:',
+        'two_factor_email_expiry_bm'    => 'Kod ini akan tamat tempoh dalam 10 minit.',
+        'two_factor_email_security_note_bm' => 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.',
         'course_completion_notify_learner' => '1',
         'course_completion_notify_admins'  => '0',
         'course_completion_admin_recipients' => '',
@@ -232,18 +258,44 @@ class SettingsController extends Controller
             'invitation_email_title'     => 'nullable|string|max:150',
             'invitation_email_body'      => 'nullable|string|max:1000',
             'invitation_email_cta'       => 'nullable|string|max:60',
+            'invitation_email_subject_bm'   => 'nullable|string|max:150',
+            'invitation_email_title_bm'     => 'nullable|string|max:150',
+            'invitation_email_body_bm'      => 'nullable|string|max:1000',
+            'invitation_email_cta_bm'       => 'nullable|string|max:60',
             'verification_email_subject' => 'nullable|string|max:150',
             'verification_email_title'   => 'nullable|string|max:150',
             'verification_email_body'    => 'nullable|string|max:1000',
             'verification_email_cta'     => 'nullable|string|max:60',
+            'verification_email_subject_bm' => 'nullable|string|max:150',
+            'verification_email_title_bm'   => 'nullable|string|max:150',
+            'verification_email_body_bm'    => 'nullable|string|max:1000',
+            'verification_email_cta_bm'     => 'nullable|string|max:60',
             'reset_email_subject'        => 'nullable|string|max:150',
             'reset_email_title'          => 'nullable|string|max:150',
             'reset_email_body'           => 'nullable|string|max:1000',
             'reset_email_cta'            => 'nullable|string|max:60',
+            'reset_email_subject_bm'        => 'nullable|string|max:150',
+            'reset_email_title_bm'          => 'nullable|string|max:150',
+            'reset_email_body_bm'           => 'nullable|string|max:1000',
+            'reset_email_cta_bm'            => 'nullable|string|max:60',
             'course_completion_email_subject' => 'nullable|string|max:150',
             'course_completion_email_title'   => 'nullable|string|max:150',
             'course_completion_email_body'    => 'nullable|string|max:1000',
             'course_completion_email_cta'     => 'nullable|string|max:60',
+            'course_completion_email_subject_bm' => 'nullable|string|max:150',
+            'course_completion_email_title_bm'   => 'nullable|string|max:150',
+            'course_completion_email_body_bm'    => 'nullable|string|max:1000',
+            'course_completion_email_cta_bm'     => 'nullable|string|max:60',
+            'two_factor_email_subject'   => 'nullable|string|max:150',
+            'two_factor_email_title'     => 'nullable|string|max:150',
+            'two_factor_email_body'      => 'nullable|string|max:1000',
+            'two_factor_email_expiry'    => 'nullable|string|max:150',
+            'two_factor_email_security_note' => 'nullable|string|max:1000',
+            'two_factor_email_subject_bm'   => 'nullable|string|max:150',
+            'two_factor_email_title_bm'     => 'nullable|string|max:150',
+            'two_factor_email_body_bm'      => 'nullable|string|max:1000',
+            'two_factor_email_expiry_bm'    => 'nullable|string|max:150',
+            'two_factor_email_security_note_bm' => 'nullable|string|max:1000',
             'course_completion_notify_learner' => 'required|in:0,1',
             'course_completion_notify_admins'  => 'required|in:0,1',
             'course_completion_admin_recipients' => 'nullable|string|max:1000',
@@ -262,18 +314,44 @@ class SettingsController extends Controller
         Setting::set('invitation_email_title', $request->input('invitation_email_title', $this->defaults['invitation_email_title']));
         Setting::set('invitation_email_body', $request->input('invitation_email_body', $this->defaults['invitation_email_body']));
         Setting::set('invitation_email_cta', $request->input('invitation_email_cta', $this->defaults['invitation_email_cta']));
+        Setting::set('invitation_email_subject_bm', $request->input('invitation_email_subject_bm', $this->defaults['invitation_email_subject_bm']));
+        Setting::set('invitation_email_title_bm', $request->input('invitation_email_title_bm', $this->defaults['invitation_email_title_bm']));
+        Setting::set('invitation_email_body_bm', $request->input('invitation_email_body_bm', $this->defaults['invitation_email_body_bm']));
+        Setting::set('invitation_email_cta_bm', $request->input('invitation_email_cta_bm', $this->defaults['invitation_email_cta_bm']));
         Setting::set('verification_email_subject', $request->input('verification_email_subject', $this->defaults['verification_email_subject']));
         Setting::set('verification_email_title', $request->input('verification_email_title', $this->defaults['verification_email_title']));
         Setting::set('verification_email_body', $request->input('verification_email_body', $this->defaults['verification_email_body']));
         Setting::set('verification_email_cta', $request->input('verification_email_cta', $this->defaults['verification_email_cta']));
+        Setting::set('verification_email_subject_bm', $request->input('verification_email_subject_bm', $this->defaults['verification_email_subject_bm']));
+        Setting::set('verification_email_title_bm', $request->input('verification_email_title_bm', $this->defaults['verification_email_title_bm']));
+        Setting::set('verification_email_body_bm', $request->input('verification_email_body_bm', $this->defaults['verification_email_body_bm']));
+        Setting::set('verification_email_cta_bm', $request->input('verification_email_cta_bm', $this->defaults['verification_email_cta_bm']));
         Setting::set('reset_email_subject', $request->input('reset_email_subject', $this->defaults['reset_email_subject']));
         Setting::set('reset_email_title', $request->input('reset_email_title', $this->defaults['reset_email_title']));
         Setting::set('reset_email_body', $request->input('reset_email_body', $this->defaults['reset_email_body']));
         Setting::set('reset_email_cta', $request->input('reset_email_cta', $this->defaults['reset_email_cta']));
+        Setting::set('reset_email_subject_bm', $request->input('reset_email_subject_bm', $this->defaults['reset_email_subject_bm']));
+        Setting::set('reset_email_title_bm', $request->input('reset_email_title_bm', $this->defaults['reset_email_title_bm']));
+        Setting::set('reset_email_body_bm', $request->input('reset_email_body_bm', $this->defaults['reset_email_body_bm']));
+        Setting::set('reset_email_cta_bm', $request->input('reset_email_cta_bm', $this->defaults['reset_email_cta_bm']));
         Setting::set('course_completion_email_subject', $request->input('course_completion_email_subject', $this->defaults['course_completion_email_subject']));
         Setting::set('course_completion_email_title', $request->input('course_completion_email_title', $this->defaults['course_completion_email_title']));
         Setting::set('course_completion_email_body', $request->input('course_completion_email_body', $this->defaults['course_completion_email_body']));
         Setting::set('course_completion_email_cta', $request->input('course_completion_email_cta', $this->defaults['course_completion_email_cta']));
+        Setting::set('course_completion_email_subject_bm', $request->input('course_completion_email_subject_bm', $this->defaults['course_completion_email_subject_bm']));
+        Setting::set('course_completion_email_title_bm', $request->input('course_completion_email_title_bm', $this->defaults['course_completion_email_title_bm']));
+        Setting::set('course_completion_email_body_bm', $request->input('course_completion_email_body_bm', $this->defaults['course_completion_email_body_bm']));
+        Setting::set('course_completion_email_cta_bm', $request->input('course_completion_email_cta_bm', $this->defaults['course_completion_email_cta_bm']));
+        Setting::set('two_factor_email_subject', $request->input('two_factor_email_subject', $this->defaults['two_factor_email_subject']));
+        Setting::set('two_factor_email_title', $request->input('two_factor_email_title', $this->defaults['two_factor_email_title']));
+        Setting::set('two_factor_email_body', $request->input('two_factor_email_body', $this->defaults['two_factor_email_body']));
+        Setting::set('two_factor_email_expiry', $request->input('two_factor_email_expiry', $this->defaults['two_factor_email_expiry']));
+        Setting::set('two_factor_email_security_note', $request->input('two_factor_email_security_note', $this->defaults['two_factor_email_security_note']));
+        Setting::set('two_factor_email_subject_bm', $request->input('two_factor_email_subject_bm', $this->defaults['two_factor_email_subject_bm']));
+        Setting::set('two_factor_email_title_bm', $request->input('two_factor_email_title_bm', $this->defaults['two_factor_email_title_bm']));
+        Setting::set('two_factor_email_body_bm', $request->input('two_factor_email_body_bm', $this->defaults['two_factor_email_body_bm']));
+        Setting::set('two_factor_email_expiry_bm', $request->input('two_factor_email_expiry_bm', $this->defaults['two_factor_email_expiry_bm']));
+        Setting::set('two_factor_email_security_note_bm', $request->input('two_factor_email_security_note_bm', $this->defaults['two_factor_email_security_note_bm']));
         Setting::set('course_completion_notify_learner', $request->input('course_completion_notify_learner', $this->defaults['course_completion_notify_learner']));
         Setting::set('course_completion_notify_admins', $request->input('course_completion_notify_admins', $this->defaults['course_completion_notify_admins']));
         Setting::set('course_completion_admin_recipients', $request->input('course_completion_admin_recipients', $this->defaults['course_completion_admin_recipients']));
