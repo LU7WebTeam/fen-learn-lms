@@ -211,7 +211,7 @@ class SettingsController extends Controller
     private function saveProfile(Request $request): void
     {
         $request->validate([
-            'profile_organization_options' => 'nullable|string|max:10000',
+            'profile_organization_options' => 'nullable|string|max:50000',
         ]);
 
         Setting::set('profile_organization_options', $request->input('profile_organization_options', ''));
