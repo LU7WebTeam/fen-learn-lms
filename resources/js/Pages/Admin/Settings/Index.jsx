@@ -1756,7 +1756,7 @@ function RoleAccessTab({ settings, onSave, processing }) {
                     </div>
                     <div className="divide-y rounded-lg border px-4">
                         <PermissionRow
-                            label="Browse course catalog"
+                            label="Browse course catalogue"
                             description="View public courses and course details."
                             state="always"
                         />
@@ -1778,7 +1778,7 @@ function RoleAccessTab({ settings, onSave, processing }) {
                     </div>
                     <SwitchRow
                         label="Allow learners to enroll in courses"
-                        description="When off, learners can browse the catalog but cannot enroll."
+                        description="When off, learners can browse the catalogue but cannot enroll."
                         checked={learnerCanEnroll}
                         onChange={setLearnerCanEnroll}
                     />

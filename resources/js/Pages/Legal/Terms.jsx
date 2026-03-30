@@ -29,7 +29,7 @@ export default function Terms() {
                             {name}
                         </Link>
                         <nav className="flex items-center gap-4 text-sm">
-                            <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Catalog</Link>
+                            <Link href="/courses" className="text-muted-foreground hover:text-foreground transition-colors">Catalogue</Link>
                             <Link href={route('login')} className="text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
                             <ThemeToggleButton />
                         </nav>
