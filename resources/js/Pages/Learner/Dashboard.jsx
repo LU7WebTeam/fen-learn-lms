@@ -168,6 +168,7 @@ function ContinueLearning({ inProgress }) {
 function CourseCard({ enrollment, completed = false }) {
     const { course, progress, last_lesson_id, certificate_uuid } = enrollment;
     const t = useT();
+    const isCompleted = completed || Boolean(enrollment?.is_completed);
 
     return (
         <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
@@ -196,7 +197,7 @@ function CourseCard({ enrollment, completed = false }) {
             </CardHeader>
 
             <CardContent className="flex-1 pb-2">
-                {!completed && (
+                {!isCompleted && (
                     <div className="space-y-1">
                         <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{t('dashboard.card.progress')}</span>
@@ -205,7 +206,7 @@ function CourseCard({ enrollment, completed = false }) {
                         <Progress value={progress} className="h-2" />
                     </div>
                 )}
-                {completed && (
+                {isCompleted && (
                     <div className="flex items-center gap-2 text-sm text-green-600">
                         <Award className="h-4 w-4" />
                         <span className="font-medium">{t('dashboard.card.completed')}</span>
@@ -214,7 +215,7 @@ function CourseCard({ enrollment, completed = false }) {
             </CardContent>
 
             <CardFooter className="gap-2">
-                {!completed && (
+                {!isCompleted && (
                     <Button asChild size="sm" className="flex-1">
                         <Link href={last_lesson_id
                             ? `/learn/${course.slug}/lesson/${last_lesson_id}`
@@ -225,7 +226,7 @@ function CourseCard({ enrollment, completed = false }) {
                         </Link>
                     </Button>
                 )}
-                {completed && certificate_uuid && (
+                {isCompleted && certificate_uuid && (
                     <Button asChild variant="outline" size="sm" className="flex-1 border-[#8B1A4A] text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white">
                         <Link href={`/certificate/${certificate_uuid}`}>
                             <Award className="mr-1 h-3.5 w-3.5" />
@@ -233,10 +234,10 @@ function CourseCard({ enrollment, completed = false }) {
                         </Link>
                     </Button>
                 )}
-                {completed && (
+                {isCompleted && (
                     <Button asChild variant="ghost" size="sm" className="flex-1">
                         <Link href={`/learn/${course.slug}`}>
-                            {t('dashboard.card.review')}
+                            {t('dashboard.card.view_course')}
                         </Link>
                     </Button>
                 )}
