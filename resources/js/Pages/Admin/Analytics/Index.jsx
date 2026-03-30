@@ -506,8 +506,7 @@ function FilterBar({ courses, filters, organizationOptions, onFiltersChange, onA
 
                         {/* Organization */}
                         <div className="min-w-[220px]">
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Organization</label>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">Organisation</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Organisation</label>
                             <SearchableSelect
                                 multiple
                                 options={organizationOptions}
@@ -545,8 +544,7 @@ function ActiveFilterBadges({ filters, onRemove }) {
         ...(filters.race ?? []).map(value => ({ key: 'race', value, label: `Race: ${RACES.find(r => r.value === value)?.label ?? value}` })),
         ...(filters.state ?? []).map(value => ({ key: 'state', value, label: `State: ${value}` })),
         ...(filters.occupation ?? []).map(value => ({ key: 'occupation', value, label: `Occupation: ${OCCUPATIONS.find(o => o.value === value)?.label ?? value}` })),
-        ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organization: ${value}` })),
-                        ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organisation: ${value}` })),
+        ...(filters.organization ?? []).map(value => ({ key: 'organization', value, label: `Organisation: ${value}` })),
         ...(filters.age_group ?? []).map(value => ({ key: 'age_group', value, label: `Age: ${AGE_GROUPS.find(g => g.value === value)?.label ?? value}` })),
     ];
 
@@ -1204,7 +1202,14 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     }
 
     const handleFilterChange = useCallback((key, value) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
+        setFilters(prev => {
+            const updated = { ...prev, [key]: value };
+            if (key === 'course_id') {
+                const params = buildAnalyticsParams(updated);
+                router.get(route('admin.analytics.index'), params, { preserveState: true, replace: true });
+            }
+            return updated;
+        });
     }, []);
 
     const handleApply = useCallback(() => {
@@ -1277,6 +1282,21 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     ];
 
     const hasDemographicData = (arr) => arr?.some(d => d.count > 0);
+
+    useEffect(() => {
+        // Reset quiz selector after top-level filter changes to avoid stale sub-filtering.
+        setSelectedQuizId('all');
+    }, [
+        filters.course_id,
+        filters.date_from,
+        filters.date_to,
+        filters.gender,
+        filters.race,
+        filters.state,
+        filters.occupation,
+        filters.organization,
+        filters.age_group,
+    ]);
 
     return (
         <AdminLayout title="Course Analytics">
@@ -1376,10 +1396,10 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                         {/* ── Moved analytics tabs ── */}
                         <Tabs defaultValue="demo" className="space-y-4">
                             <TabsList className="w-full justify-start overflow-x-auto">
-                                <TabsTrigger value="demo">Demo</TabsTrigger>
-                                <TabsTrigger value="profiles">Profiles</TabsTrigger>
-                                <TabsTrigger value="lesson">Lesson</TabsTrigger>
-                                <TabsTrigger value="quiz">Quiz</TabsTrigger>
+                                <TabsTrigger value="demo">Demographics</TabsTrigger>
+                                <TabsTrigger value="profiles">Learners</TabsTrigger>
+                                <TabsTrigger value="lesson">Lesson Completion</TabsTrigger>
+                                <TabsTrigger value="quiz">Quizzes</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="demo" className="space-y-4">
