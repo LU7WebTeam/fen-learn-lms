@@ -288,9 +288,6 @@ export default function Wip2() {
                         <Link href={route('privacy')} className="hover:text-white transition">{t('landing.footer.privacy')}</Link>
                         <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
                         <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('landing.footer.browse_courses')}</Link>
-                        {!auth?.user && (
-                            <Link href={route('login')} className="hover:text-white transition font-medium">{t('landing.footer.admin_login')}</Link>
-                        )}
                     </div>
                 </div>
             </footer>

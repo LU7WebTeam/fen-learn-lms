@@ -239,7 +239,7 @@ export default function WipLanding() {
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Featured Course Spotlight</p>
                             <h2 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">FEN PROAKTIF 2.0</h2>
                             <p className="mt-4 text-sm leading-relaxed text-slate-700 sm:text-base">
-                                FEN PROAKTIF 2.0 is an online financial education programme designed to help young Malaysians to build the money skills they need for the digital age and the first few years of working life.
+                                FEN PROAKTIF 2.0 is an online financial education programme designed to help young Malaysians build the financial management skills they need for the digital age and the first few years of working life.
                             </p>
 
                             <blockquote className="mt-5 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-slate-700">
@@ -254,7 +254,7 @@ export default function WipLanding() {
 
                             <div className="mt-6">
                                 <Link href={route('courses.index')} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-blue-500 hover:to-indigo-500">
-                                    View Course / Register and Enroll
+                                    View Course / Register and Enrol
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                             </div>

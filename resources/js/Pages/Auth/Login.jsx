@@ -161,12 +161,6 @@ export default function Login({ status, canResetPassword }) {
                                 {t('auth.login.register')}
                             </Link>
                         </p>
-                        <p>
-                            {t('auth.login.are_you_admin')}{' '}
-                            <Link href={route('admin.login')} className="font-medium text-gray-800 hover:text-gray-900">
-                                {t('auth.login.admin_login')}
-                            </Link>
-                        </p>
                     </div>
                 </div>
             </div>

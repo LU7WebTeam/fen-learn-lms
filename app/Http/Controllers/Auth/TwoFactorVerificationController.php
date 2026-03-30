@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Support\TwoFactorAuthenticator;
+use App\Support\UserHomeRoute;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +65,7 @@ class TwoFactorVerificationController extends Controller
         // Clear 2FA session data
         session()->forget(['2fa_user_id', '2fa_email', '2fa_remember']);
 
-        $defaultRoute = $user->isAdmin() ? 'admin.dashboard' : 'dashboard';
+        $defaultRoute = UserHomeRoute::nameFor($user);
 
         return redirect()->intended(route($defaultRoute, absolute: false));
     }

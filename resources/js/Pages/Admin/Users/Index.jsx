@@ -339,8 +339,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                                         ]}
                                         value={data.organization}
                                         onChange={v => setData('organization', v)}
-                                        placeholder="Select organization"
-                                            placeholder="Select organisation"
+                                        placeholder="Select organisation"
                                         searchPlaceholder="Search organizations..."
                                     />
 

@@ -132,7 +132,7 @@ export default function AcceptInvitation({ token, email, role }) {
 
                 <p className="text-center text-xs text-zinc-600 mt-6">
                     Already have an account?{' '}
-                    <a href={route('admin.login')} className="text-zinc-400 hover:text-white transition-colors">
+                    <a href={route('login')} className="text-zinc-400 hover:text-white transition-colors">
                         Sign in
                     </a>
                 </p>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\ProfileOrganizationOptions;
+use App\Support\UserHomeRoute;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class ProfileSetupController extends Controller
         $user = $request->user();
 
         if ($user->profile_completed_at) {
-            return redirect()->route('dashboard');
+            return redirect()->route(UserHomeRoute::nameFor($user));
         }
 
         return Inertia::render('Auth/ProfileSetup', [
@@ -55,6 +56,6 @@ class ProfileSetupController extends Controller
             'profile_completed_at' => now(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Welcome! Your profile has been set up.');
+        return redirect()->route(UserHomeRoute::nameFor($request->user()))->with('success', 'Welcome! Your profile has been set up.');
     }
 }

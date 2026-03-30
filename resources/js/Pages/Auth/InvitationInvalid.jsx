@@ -22,10 +22,10 @@ export default function InvitationInvalid() {
                     </p>
                 </div>
                 <Link
-                    href={route('admin.login')}
+                    href={route('login')}
                     className="inline-block rounded-lg bg-zinc-800 px-6 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 transition-colors"
                 >
-                    Go to admin login
+                    Go to login
                 </Link>
             </div>
         </div>

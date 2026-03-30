@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Support\CaptchaVerifier;
 use App\Support\SystemLogger;
 use App\Support\TwoFactorAuthenticator;
+use App\Support\UserHomeRoute;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +42,8 @@ class AuthenticatedSessionController extends Controller
         if (!config('auth.two_factor_enabled')) {
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+
+            return redirect()->intended(route(UserHomeRoute::nameFor($user), absolute: false));
         }
 
         try {

@@ -19,6 +19,7 @@ export default function Register() {
         email:                '',
         password:             '',
         password_confirmation: '',
+        agree_terms: false,
         captcha_token: '',
     });
 
@@ -167,6 +168,31 @@ export default function Register() {
                                 </button>
                             </div>
                             <InputError message={errors.password_confirmation} />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="flex items-start gap-2 text-sm text-gray-700" htmlFor="agree_terms">
+                                <input
+                                    id="agree_terms"
+                                    type="checkbox"
+                                    checked={Boolean(data.agree_terms)}
+                                    onChange={e => setData('agree_terms', e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-300"
+                                    required
+                                />
+                                <span>
+                                    {t('auth.register.agree_prefix')}{' '}
+                                    <Link href={route('terms')} className="font-medium text-gray-800 hover:text-gray-900 underline underline-offset-2">
+                                        {t('auth.register.terms')}
+                                    </Link>{' '}
+                                    {t('auth.register.and')}{' '}
+                                    <Link href={route('privacy')} className="font-medium text-gray-800 hover:text-gray-900 underline underline-offset-2">
+                                        {t('auth.register.privacy')}
+                                    </Link>
+                                    .
+                                </span>
+                            </label>
+                            <InputError message={errors.agree_terms} />
                         </div>
 
                         <button

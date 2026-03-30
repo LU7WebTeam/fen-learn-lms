@@ -39,24 +39,24 @@ const MALAYSIAN_STATES = [
 ];
 
 const OCCUPATIONS = [
-    { value: 'student',            label: 'Student' },
-    { value: 'government',         label: 'Government Employee' },
-    { value: 'private',            label: 'Private Sector Employee' },
-    { value: 'self_employed',      label: 'Self-employed / Entrepreneur' },
-    { value: 'professional',       label: 'Professional (Doctor, Lawyer, etc.)' },
-    { value: 'academic',           label: 'Academic / Educator' },
-    { value: 'homemaker',          label: 'Homemaker' },
-    { value: 'retired',            label: 'Retired' },
-    { value: 'unemployed',         label: 'Unemployed' },
-    { value: 'other',              label: 'Other' },
+    { value: 'student' },
+    { value: 'government' },
+    { value: 'private' },
+    { value: 'self_employed' },
+    { value: 'professional' },
+    { value: 'academic' },
+    { value: 'homemaker' },
+    { value: 'retired' },
+    { value: 'unemployed' },
+    { value: 'other' },
 ];
 
 const RACES = [
-    { value: 'malay',            label: 'Malay' },
-    { value: 'chinese',          label: 'Chinese' },
-    { value: 'indian',           label: 'Indian' },
-    { value: 'other_bumiputera', label: 'Other Bumiputera' },
-    { value: 'other',            label: 'Other' },
+    { value: 'malay' },
+    { value: 'chinese' },
+    { value: 'indian' },
+    { value: 'other_bumiputera' },
+    { value: 'other' },
 ];
 
 function FieldError({ message }) {
@@ -137,7 +137,7 @@ export default function ProfileSetup({ user }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col">
-            <Head title="Complete Your Profile" />
+            <Head title={t('profile_setup.title')} />
 
             {/* Top bar */}
             <header className="border-b bg-background/80 backdrop-blur px-6 py-3 flex items-center gap-2">
@@ -181,21 +181,21 @@ export default function ProfileSetup({ user }) {
                         <form onSubmit={submit} className="space-y-6">
 
                             {/* Full name */}
-                            <FormField label="Full Name" required error={errors.name}>
+                            <FormField label={t('profile.info.name')} required error={errors.name}>
                                 <Input
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
-                                    placeholder="Your full name"
+                                    placeholder={t('profile.info.name')}
                                     autoFocus
                                 />
                             </FormField>
 
                             {/* Gender */}
-                            <FormField label="Gender" required error={errors.gender}>
+                            <FormField label={t('profile.info.gender')} required error={errors.gender}>
                                 <div className="flex gap-3">
                                     {[
-                                        { value: 'male',   label: 'Male' },
-                                        { value: 'female', label: 'Female' },
+                                        { value: 'male', label: t('profile.info.male') },
+                                        { value: 'female', label: t('profile.info.female') },
                                     ].map(opt => (
                                         <button
                                             key={opt.value}
@@ -215,25 +215,25 @@ export default function ProfileSetup({ user }) {
 
                             {/* Race + State side by side */}
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <FormField label="Race / Ethnicity" required error={errors.race}>
+                                <FormField label={t('profile.info.race')} required error={errors.race}>
                                     <Select value={data.race} onValueChange={v => setData('race', v)}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select race" />
+                                            <SelectValue placeholder={t('profile.info.select_race')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {RACES.map(r => (
                                                 <SelectItem key={r.value} value={r.value}>
-                                                    {r.label}
+                                                    {t(`profile.info.race.${r.value}`)}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </FormField>
 
-                                <FormField label="State" required error={errors.state}>
+                                <FormField label={t('profile.info.state')} required error={errors.state}>
                                     <Select value={data.state} onValueChange={v => setData('state', v)}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select state" />
+                                            <SelectValue placeholder={t('profile.info.select_state')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {MALAYSIAN_STATES.map(s => (
@@ -248,10 +248,10 @@ export default function ProfileSetup({ user }) {
 
                             {/* Birthdate */}
                             <FormField
-                                label="Date of Birth"
+                                label={t('profile.info.birthdate')}
                                 required
                                 error={errors.birthdate}
-                                hint="Used to calculate your age group for analytics. Not publicly visible."
+                                hint={t('profile_setup.birthdate_hint')}
                             >
                                 <Input
                                     type="date"
@@ -262,15 +262,15 @@ export default function ProfileSetup({ user }) {
                             </FormField>
 
                             {/* Occupation */}
-                            <FormField label="Occupation" required error={errors.occupation}>
+                            <FormField label={t('profile.info.occupation')} required error={errors.occupation}>
                                 <Select value={data.occupation} onValueChange={handleOccupationChange}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select occupation" />
+                                        <SelectValue placeholder={t('profile.info.select_occupation')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {OCCUPATIONS.map(o => (
                                             <SelectItem key={o.value} value={o.value}>
-                                                {o.label}
+                                                {t(`profile.info.occupation.${o.value}`)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -279,30 +279,30 @@ export default function ProfileSetup({ user }) {
 
                             {/* Organization */}
                             <FormField
-                                label="Organization / Institution"
+                                label={t('profile.info.organization')}
                                 error={errors.organization || errors.organization_other}
                                 hint={usesOrganizationDropdown
-                                    ? 'Select your organization from the list, or choose Other to type a custom one.'
-                                    : 'Optional — your school, company, or institution name.'}
+                                    ? t('profile_setup.organization_hint_select')
+                                    : t('profile_setup.organization_hint_optional')}
                             >
                                 {usesOrganizationDropdown ? (
                                     <div className="space-y-3">
                                         <SearchableSelect
                                             options={[
                                                 ...organizationOptions,
-                                                { value: ORGANIZATION_OTHER_VALUE, label: 'Other' },
+                                                { value: ORGANIZATION_OTHER_VALUE, label: t('profile.info.organization_other') },
                                             ]}
                                             value={data.organization}
                                             onChange={v => setData('organization', v)}
-                                            placeholder="Select organization"
-                                            searchPlaceholder="Search organizations..."
+                                            placeholder={t('profile.info.select_organization')}
+                                            searchPlaceholder={t('profile_setup.organization_search')}
                                         />
 
                                         {data.organization === ORGANIZATION_OTHER_VALUE && (
                                             <Input
                                                 value={data.organization_other}
                                                 onChange={e => setData('organization_other', e.target.value)}
-                                                placeholder="Enter your organization / institution"
+                                                placeholder={t('profile_setup.organization_other_placeholder')}
                                             />
                                         )}
                                     </div>
@@ -310,7 +310,7 @@ export default function ProfileSetup({ user }) {
                                     <Input
                                         value={data.organization}
                                         onChange={e => setData('organization', e.target.value)}
-                                        placeholder="e.g. Universiti Malaya, Petronas, etc."
+                                        placeholder={t('profile_setup.organization_example_placeholder')}
                                     />
                                 )}
                             </FormField>
@@ -329,7 +329,7 @@ export default function ProfileSetup({ user }) {
                     </div>
 
                     <p className="mt-4 text-center text-xs text-muted-foreground">
-                        You can update these details later from your profile settings.
+                        {t('profile_setup.update_later')}
                     </p>
                 </div>
             </main>

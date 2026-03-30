@@ -801,8 +801,7 @@ function LearnerProfileDialog({ learner, course, open, onClose }) {
                                         ]}
                                         value={data.organization}
                                         onChange={v => setData('organization', v)}
-                                        placeholder="Select organization"
-                                            placeholder="Select organisation"
+                                        placeholder="Select organisation"
                                         searchPlaceholder="Search organizations..."
                                     />
 
@@ -1306,8 +1305,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                             <MetricCard
                                 icon={Users}
-                                label="Total Enrollments"
-                                    label="Total Enrolments"
+                                label="Total Enrolments"
                                 value={summary.total_enrollments.toLocaleString()}
                                 highlight
                             />

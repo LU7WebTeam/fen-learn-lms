@@ -207,7 +207,7 @@ function ProaktifSection() {
                         </Heading>
 
                         <p className="mt-5 text-lg leading-relaxed text-slate-700">
-                            FEN PROAKTIF 2.0 is an online financial education programme designed to help young Malaysians to build the money skills they need for the digital age and the first few years of working life. Achieving financial stability is not just about earning more, it is about being in control of what you have.
+                            FEN PROAKTIF 2.0 is an online financial education programme designed to help young Malaysians build the financial management skills they need for the digital age and the first few years of working life. Achieving financial stability is not just about earning more, it is about being in control of what you have.
                         </p>
 
                         <p className="mt-6 text-lg leading-relaxed text-slate-700">

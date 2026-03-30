@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Support\CaptchaVerifier;
 use App\Support\SystemLogger;
+use App\Support\UserHomeRoute;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class RegisteredUserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'agree_terms' => ['accepted'],
         ]);
 
         $role = in_array($defaultRole, ['learner', 'content_editor']) ? $defaultRole : 'learner';
@@ -80,6 +82,6 @@ class RegisteredUserController extends Controller
             'registered_role' => $user->role,
         ], $request);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route(UserHomeRoute::nameFor($user), absolute: false));
     }
 }
