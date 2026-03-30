@@ -180,7 +180,7 @@ export default function WipLanding() {
                                 Kickstart Your Financial Management Journey with FEN E-Learning Platform
                             </h1>
                             <p className="mt-4 text-base leading-relaxed text-slate-700 sm:text-lg">
-                                Secure and flexible e learning platform to help you feel more confident to manage your finances.
+                                Secure and flexible e-learning platform to help you feel more confident to manage your finances.
                             </p>
                             <p className="mt-4 text-sm leading-relaxed text-slate-600 sm:text-base">
                                 FEN E-Learning Platform is brought to you by the Financial Education Network (FEN), an inter-agency platform comprising institutions and agencies committed to improving the financial literacy of Malaysians.
