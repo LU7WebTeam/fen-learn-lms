@@ -56,7 +56,12 @@ const schema = BlockNoteSchema.create({
 
 export default function BlockNoteRenderer({ content }) {
     const initialContent = normalizeBlockNoteInitialContent(content);
+    const contentKey = JSON.stringify(initialContent);
 
+    return <BlockNoteRendererInner key={contentKey} initialContent={initialContent} />;
+}
+
+function BlockNoteRendererInner({ initialContent }) {
     const editor = useCreateBlockNote({
         schema,
         initialContent,
