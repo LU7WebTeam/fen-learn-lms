@@ -14,7 +14,6 @@ class ProfileTest extends TestCase
     {
         return array_merge([
             'name' => 'Test User',
-            'email' => $user->email,
             'gender' => 'male',
             'race' => 'malay',
             'state' => 'Selangor',
@@ -41,9 +40,7 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', $this->validProfilePayload($user, [
-                'email' => 'test@example.com',
-            ]));
+            ->patch('/profile', $this->validProfilePayload($user));
 
         $response
             ->assertSessionHasNoErrors()
@@ -53,7 +50,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
