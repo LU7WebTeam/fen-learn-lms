@@ -644,7 +644,6 @@ export default function CourseDashboard({ analytics, students, lessonStats, cour
     const [search, setSearch]               = useState('');
     const [sortKey, setSortKey]             = useState('enrolled_at');
     const [sortDir, setSortDir]             = useState('desc');
-    const [showLessons, setShowLessons]     = useState(false);
     const [studentFilter, setStudentFilter] = useState('all');
     const [profileStudent, setProfileStudent] = useState(null);
 
@@ -696,8 +695,6 @@ export default function CourseDashboard({ analytics, students, lessonStats, cour
             ? <ChevronUp className="h-3.5 w-3.5 inline ml-0.5" />
             : <ChevronDown className="h-3.5 w-3.5 inline ml-0.5" />;
     }
-
-    const maxRate = Math.max(...(lessonStats.map(l => l.completion_rate) || [0]), 0);
 
     return (
         <div className="space-y-6">
@@ -888,52 +885,6 @@ export default function CourseDashboard({ analytics, students, lessonStats, cour
                     )}
                 </CardContent>
             </Card>
-
-            {/* ── Lesson completion breakdown ── */}
-            {lessonStats.length > 0 && (
-                <Card className="border-0 shadow-sm">
-                    <CardHeader className="pb-3">
-                        <button
-                            type="button"
-                            className="flex items-center justify-between w-full text-left"
-                            onClick={() => setShowLessons(l => !l)}
-                        >
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                                Lesson Completion Rates
-                            </CardTitle>
-                            {showLessons
-                                ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                        </button>
-                    </CardHeader>
-
-                    {showLessons && (
-                        <CardContent className="p-0">
-                            <p className="px-4 pb-3 text-xs text-muted-foreground">
-                                Percentage of enrolled students who have completed each lesson.
-                                Low rates may indicate difficult or unclear content.
-                            </p>
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b bg-muted/30">
-                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Lesson</th>
-                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground min-w-[160px]">Completion</th>
-                                            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Students</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {lessonStats.map(lesson => (
-                                            <LessonProgressRow key={lesson.id} lesson={lesson} maxRate={maxRate} />
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    )}
-                </Card>
-            )}
 
             {/* ── Student profile dialog ── */}
             <StudentProfileDialog

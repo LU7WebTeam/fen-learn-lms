@@ -7,6 +7,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Input } from '@/Components/ui/input';
 import { Progress } from '@/Components/ui/progress';
 import { Separator } from '@/Components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import {
     Dialog,
     DialogContent,
@@ -1130,6 +1131,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState('enrolled_at_raw');
     const [sortDir, setSortDir] = useState('desc');
+    const [selectedQuizId, setSelectedQuizId] = useState('all');
     const [learnerStatusFilter, setLearnerStatusFilter] = useState('all');
     const [profileLearner, setProfileLearner] = useState(null);
 
@@ -1254,6 +1256,26 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
     }
 
     const summary = analytics?.summary;
+    const quizAnalytics = analytics?.quizAnalytics;
+    const quizOverview = quizAnalytics?.overview;
+    const quizPerQuiz = quizAnalytics?.per_quiz ?? [];
+    const quizPerQuestion = quizAnalytics?.per_question ?? [];
+    const hardestQuestions = quizAnalytics?.hardest_questions ?? [];
+    const scoreDistribution = quizOverview?.score_distribution ?? { '0_39': 0, '40_59': 0, '60_79': 0, '80_100': 0 };
+    const filteredPerQuestion = selectedQuizId === 'all'
+        ? quizPerQuestion
+        : quizPerQuestion.filter((item) => String(item.lesson_id) === selectedQuizId);
+    const filteredHardestQuestions = selectedQuizId === 'all'
+        ? hardestQuestions
+        : hardestQuestions.filter((item) => String(item.lesson_id) === selectedQuizId);
+
+    const distributionRows = [
+        { key: '0_39', label: '0-39%' },
+        { key: '40_59', label: '40-59%' },
+        { key: '60_79', label: '60-79%' },
+        { key: '80_100', label: '80-100%' },
+    ];
+
     const hasDemographicData = (arr) => arr?.some(d => d.count > 0);
 
     return (
@@ -1351,208 +1373,447 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                             </CardContent>
                         </Card>
 
-                        {/* ── Lesson funnel + Quiz stats ── */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            <Card className="border shadow-sm">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-base font-semibold">Lesson Completion Funnel</CardTitle>
-                                    <p className="text-xs text-muted-foreground">
-                                        % of enrolled learners who completed each lesson
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="overflow-y-auto max-h-[420px]">
-                                    <LessonFunnelChart data={analytics.lessonFunnel} />
-                                </CardContent>
-                            </Card>
+                        {/* ── Moved analytics tabs ── */}
+                        <Tabs defaultValue="demo" className="space-y-4">
+                            <TabsList className="w-full justify-start overflow-x-auto">
+                                <TabsTrigger value="demo">Demo</TabsTrigger>
+                                <TabsTrigger value="profiles">Profiles</TabsTrigger>
+                                <TabsTrigger value="lesson">Lesson</TabsTrigger>
+                                <TabsTrigger value="quiz">Quiz</TabsTrigger>
+                            </TabsList>
 
-                            <Card className="border shadow-sm">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-base font-semibold">Quiz Performance</CardTitle>
-                                    <p className="text-xs text-muted-foreground">
-                                        Pass rate and average score per quiz lesson
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="overflow-y-auto max-h-[420px]">
-                                    <QuizStatsChart data={analytics.quizStats} />
-                                </CardContent>
-                            </Card>
-                        </div>
+                            <TabsContent value="demo" className="space-y-4">
+                                <div>
+                                    <SectionTitle>Learner Demographics</SectionTitle>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-                        {/* ── Demographics ── */}
-                        <div>
-                            <SectionTitle>Learner Demographics</SectionTitle>
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                        {/* By Race (pie) */}
+                                        <Card className="border shadow-sm">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-semibold">By Race / Ethnicity</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {hasDemographicData(analytics.demographics.by_race)
+                                                    ? <DemographicPieChart data={analytics.demographics.by_race} />
+                                                    : <EmptyChart />}
+                                            </CardContent>
+                                        </Card>
 
-                                {/* By Race (pie) */}
-                                <Card className="border shadow-sm">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-semibold">By Race / Ethnicity</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {hasDemographicData(analytics.demographics.by_race)
-                                            ? <DemographicPieChart data={analytics.demographics.by_race} />
-                                            : <EmptyChart />}
-                                    </CardContent>
-                                </Card>
+                                        {/* By Gender (pie) */}
+                                        <Card className="border shadow-sm">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-semibold">By Gender</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {hasDemographicData(analytics.demographics.by_gender)
+                                                    ? <DemographicPieChart data={analytics.demographics.by_gender} />
+                                                    : <EmptyChart />}
+                                            </CardContent>
+                                        </Card>
 
-                                {/* By Gender (pie) */}
-                                <Card className="border shadow-sm">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-semibold">By Gender</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {hasDemographicData(analytics.demographics.by_gender)
-                                            ? <DemographicPieChart data={analytics.demographics.by_gender} />
-                                            : <EmptyChart />}
-                                    </CardContent>
-                                </Card>
+                                        {/* By Age Group (bar) */}
+                                        <Card className="border shadow-sm">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-semibold">By Age Group</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {hasDemographicData(analytics.demographics.by_age_group)
+                                                    ? <DemographicBarChart data={analytics.demographics.by_age_group} color={CHART_COLORS.accent} />
+                                                    : <EmptyChart />}
+                                            </CardContent>
+                                        </Card>
 
-                                {/* By Age Group (bar) */}
-                                <Card className="border shadow-sm">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-semibold">By Age Group</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {hasDemographicData(analytics.demographics.by_age_group)
-                                            ? <DemographicBarChart data={analytics.demographics.by_age_group} color={CHART_COLORS.accent} />
-                                            : <EmptyChart />}
-                                    </CardContent>
-                                </Card>
+                                        {/* By State (horizontal bar) */}
+                                        <Card className="border shadow-sm md:col-span-2 xl:col-span-2">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-semibold">By State</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="overflow-y-auto max-h-[320px]">
+                                                {hasDemographicData(analytics.demographics.by_state)
+                                                    ? <DemographicBarChart data={analytics.demographics.by_state} color={CHART_COLORS.primary} />
+                                                    : <EmptyChart />}
+                                            </CardContent>
+                                        </Card>
 
-                                {/* By State (horizontal bar) */}
-                                <Card className="border shadow-sm md:col-span-2 xl:col-span-2">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-semibold">By State</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="overflow-y-auto max-h-[320px]">
-                                        {hasDemographicData(analytics.demographics.by_state)
-                                            ? <DemographicBarChart data={analytics.demographics.by_state} color={CHART_COLORS.primary} />
-                                            : <EmptyChart />}
-                                    </CardContent>
-                                </Card>
-
-                                {/* By Occupation (horizontal bar) */}
-                                <Card className="border shadow-sm">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-semibold">By Occupation</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="overflow-y-auto max-h-[320px]">
-                                        {hasDemographicData(analytics.demographics.by_occupation)
-                                            ? <DemographicBarChart data={analytics.demographics.by_occupation} color={CHART_COLORS.secondary} />
-                                            : <EmptyChart />}
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-
-                        <Card className="border-0 shadow-sm">
-                            <CardHeader className="pb-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <Users className="h-4 w-4 text-muted-foreground" />
-                                        Enrolled Learners
-                                    </CardTitle>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <div className="flex rounded-md border text-xs overflow-hidden">
-                                            {[
-                                                { key: 'all', label: `All (${learners.length})` },
-                                                { key: 'in_progress', label: `In Progress (${inProgressCount})` },
-                                                { key: 'completed', label: `Completed (${completedCount})` },
-                                            ].map(({ key, label }) => (
-                                                <button
-                                                    key={key}
-                                                    type="button"
-                                                    onClick={() => setLearnerStatusFilter(key)}
-                                                    className={`px-2.5 py-1.5 transition-colors ${
-                                                        learnerStatusFilter === key
-                                                            ? 'bg-foreground text-background'
-                                                            : 'hover:bg-muted'
-                                                    }`}
-                                                >
-                                                    {label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="relative">
-                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                            <Input
-                                                value={search}
-                                                onChange={e => setSearch(e.target.value)}
-                                                placeholder="Search learners…"
-                                                className="pl-8 h-8 w-52 text-sm"
-                                            />
-                                        </div>
+                                        {/* By Occupation (horizontal bar) */}
+                                        <Card className="border shadow-sm">
+                                            <CardHeader className="pb-2">
+                                                <CardTitle className="text-sm font-semibold">By Occupation</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="overflow-y-auto max-h-[320px]">
+                                                {hasDemographicData(analytics.demographics.by_occupation)
+                                                    ? <DemographicBarChart data={analytics.demographics.by_occupation} color={CHART_COLORS.secondary} />
+                                                    : <EmptyChart />}
+                                            </CardContent>
+                                        </Card>
                                     </div>
                                 </div>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {learners.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-                                        <Users className="h-10 w-10 text-muted-foreground mb-3" />
-                                        <p className="text-muted-foreground">No learners match the selected filters.</p>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Try widening the date range or removing profile filters.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b bg-muted/30">
-                                                    <th
-                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
-                                                        onClick={() => toggleSort('user_name')}
-                                                    >
-                                                        Learner <SortIcon col="user_name" />
-                                                    </th>
-                                                    <th
-                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground whitespace-nowrap"
-                                                        onClick={() => toggleSort('enrolled_at_raw')}
-                                                    >
-                                                        Enrolled <SortIcon col="enrolled_at_raw" />
-                                                    </th>
-                                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
-                                                        Progress
-                                                    </th>
-                                                    <th
-                                                        className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
-                                                        onClick={() => toggleSort('completed_at_raw')}
-                                                    >
-                                                        Status <SortIcon col="completed_at_raw" />
-                                                    </th>
-                                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                                                        Certificate
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filteredLearners.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                                                            No learners match your search.
-                                                        </td>
-                                                    </tr>
-                                                ) : (
-                                                    filteredLearners.map(learner => (
-                                                        <LearnerRow
-                                                            key={learner.id}
-                                                            learner={learner}
-                                                            onViewProfile={setProfileLearner}
-                                                        />
-                                                    ))
+                            </TabsContent>
+
+                            <TabsContent value="profiles" className="space-y-4">
+                                <Card className="border-0 shadow-sm">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                            <CardTitle className="text-base flex items-center gap-2">
+                                                <Users className="h-4 w-4 text-muted-foreground" />
+                                                Enrolled Learners
+                                            </CardTitle>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <div className="flex rounded-md border text-xs overflow-hidden">
+                                                    {[
+                                                        { key: 'all', label: `All (${learners.length})` },
+                                                        { key: 'in_progress', label: `In Progress (${inProgressCount})` },
+                                                        { key: 'completed', label: `Completed (${completedCount})` },
+                                                    ].map(({ key, label }) => (
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            onClick={() => setLearnerStatusFilter(key)}
+                                                            className={`px-2.5 py-1.5 transition-colors ${
+                                                                learnerStatusFilter === key
+                                                                    ? 'bg-foreground text-background'
+                                                                    : 'hover:bg-muted'
+                                                            }`}
+                                                        >
+                                                            {label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="relative">
+                                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                                    <Input
+                                                        value={search}
+                                                        onChange={e => setSearch(e.target.value)}
+                                                        placeholder="Search learners..."
+                                                        className="pl-8 h-8 w-52 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        {learners.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+                                                <Users className="h-10 w-10 text-muted-foreground mb-3" />
+                                                <p className="text-muted-foreground">No learners match the selected filters.</p>
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    Try widening the date range or removing profile filters.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b bg-muted/30">
+                                                            <th
+                                                                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                                                                onClick={() => toggleSort('user_name')}
+                                                            >
+                                                                Learner <SortIcon col="user_name" />
+                                                            </th>
+                                                            <th
+                                                                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground whitespace-nowrap"
+                                                                onClick={() => toggleSort('enrolled_at_raw')}
+                                                            >
+                                                                Enrolled <SortIcon col="enrolled_at_raw" />
+                                                            </th>
+                                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
+                                                                Progress
+                                                            </th>
+                                                            <th
+                                                                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                                                                onClick={() => toggleSort('completed_at_raw')}
+                                                            >
+                                                                Status <SortIcon col="completed_at_raw" />
+                                                            </th>
+                                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                                                                Certificate
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredLearners.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                                                                    No learners match your search.
+                                                                </td>
+                                                            </tr>
+                                                        ) : (
+                                                            filteredLearners.map(learner => (
+                                                                <LearnerRow
+                                                                    key={learner.id}
+                                                                    learner={learner}
+                                                                    onViewProfile={setProfileLearner}
+                                                                />
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                                {filteredLearners.length > 0 && (
+                                                    <div className="px-4 py-2.5 text-xs text-muted-foreground border-t bg-muted/20">
+                                                        Showing {filteredLearners.length} of {learners.length} learner{learners.length !== 1 ? 's' : ''}.
+                                                        {' '}Click a name to view profile and lesson-level progress.
+                                                    </div>
                                                 )}
-                                            </tbody>
-                                        </table>
-                                        {filteredLearners.length > 0 && (
-                                            <div className="px-4 py-2.5 text-xs text-muted-foreground border-t bg-muted/20">
-                                                Showing {filteredLearners.length} of {learners.length} learner{learners.length !== 1 ? 's' : ''}.
-                                                {' '}Click a name to view profile and lesson-level progress.
                                             </div>
                                         )}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="lesson" className="space-y-4">
+                                <Card className="border shadow-sm">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-base font-semibold">Lesson Completion Rates</CardTitle>
+                                        <p className="text-xs text-muted-foreground">
+                                            Percentage of enrolled learners who completed each lesson
+                                        </p>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="overflow-y-auto max-h-[420px]">
+                                            <LessonFunnelChart data={analytics.lessonFunnel} />
+                                        </div>
+
+                                        {analytics.lessonFunnel?.length > 0 && (
+                                            <div className="overflow-x-auto border rounded-md">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="border-b bg-muted/30">
+                                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Lesson</th>
+                                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Completed</th>
+                                                            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {analytics.lessonFunnel.map((lesson) => (
+                                                            <tr key={lesson.lesson_id} className="border-b last:border-0">
+                                                                <td className="px-4 py-2.5 text-sm">{lesson.title}</td>
+                                                                <td className="px-4 py-2.5 text-sm text-muted-foreground">{lesson.completed_count}</td>
+                                                                <td className="px-4 py-2.5 text-sm font-medium">{lesson.completion_rate}%</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="quiz" className="space-y-4">
+                                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                                    <MetricCard
+                                        icon={BookOpen}
+                                        label="Quiz Count"
+                                        value={(quizOverview?.quiz_count ?? 0).toLocaleString()}
+                                    />
+                                    <MetricCard
+                                        icon={HelpCircle}
+                                        label="Total Attempts"
+                                        value={(quizOverview?.attempts ?? 0).toLocaleString()}
+                                        highlight
+                                    />
+                                    <MetricCard
+                                        icon={CheckCircle2}
+                                        label="Pass Rate"
+                                        value={`${quizOverview?.pass_rate ?? 0}%`}
+                                        sub={`${quizOverview?.passed ?? 0} passed`}
+                                    />
+                                    <MetricCard
+                                        icon={RotateCcw}
+                                        label="First Attempt Pass"
+                                        value={`${quizOverview?.first_attempt_pass_rate ?? 0}%`}
+                                        sub={`${quizOverview?.first_passed ?? 0} passed first try`}
+                                    />
+                                    <MetricCard
+                                        icon={Award}
+                                        label="Average Marks"
+                                        value={`${quizOverview?.avg_score_pct ?? 0}%`}
+                                    />
+                                    <MetricCard
+                                        icon={TrendingUp}
+                                        label="Median Marks"
+                                        value={`${quizOverview?.median_score_pct ?? 0}%`}
+                                    />
+                                </div>
+
+                                <Card className="border shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle>Score Distribution</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        {distributionRows.map((bucket) => {
+                                            const count = scoreDistribution[bucket.key] ?? 0;
+                                            const pct = (quizOverview?.attempts ?? 0) > 0
+                                                ? Math.round((count / quizOverview.attempts) * 100)
+                                                : 0;
+
+                                            return (
+                                                <div key={bucket.key} className="space-y-1">
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <span>{bucket.label}</span>
+                                                        <span className="text-muted-foreground">{count} ({pct}%)</span>
+                                                    </div>
+                                                    <div className="h-2 rounded bg-muted">
+                                                        <div className="h-2 rounded bg-primary" style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle>Per Quiz Analytics</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {quizPerQuiz.length === 0 ? (
+                                            <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                                                No quiz attempts yet for this course.
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto rounded-md border">
+                                                <table className="w-full min-w-[760px] text-sm">
+                                                    <thead className="bg-muted/40 text-left">
+                                                        <tr>
+                                                            <th className="px-3 py-2 font-medium">Quiz</th>
+                                                            <th className="px-3 py-2 font-medium">Section</th>
+                                                            <th className="px-3 py-2 font-medium">Attempts</th>
+                                                            <th className="px-3 py-2 font-medium">Passed</th>
+                                                            <th className="px-3 py-2 font-medium">Failed</th>
+                                                            <th className="px-3 py-2 font-medium">Pass Rate</th>
+                                                            <th className="px-3 py-2 font-medium">1st Attempt Pass</th>
+                                                            <th className="px-3 py-2 font-medium">Avg Marks</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {quizPerQuiz.map((item) => (
+                                                            <tr key={item.lesson_id} className="border-t">
+                                                                <td className="px-3 py-2 font-medium">{item.lesson_title}</td>
+                                                                <td className="px-3 py-2 text-muted-foreground">{item.section_title || '-'}</td>
+                                                                <td className="px-3 py-2">{item.attempts}</td>
+                                                                <td className="px-3 py-2 text-green-700 dark:text-green-400">{item.passed}</td>
+                                                                <td className="px-3 py-2 text-red-700 dark:text-red-400">{item.failed}</td>
+                                                                <td className="px-3 py-2">{item.pass_rate}%</td>
+                                                                <td className="px-3 py-2">{item.first_attempt_pass_rate}%</td>
+                                                                <td className="px-3 py-2">{item.avg_score_pct}%</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <CardTitle>Per Question Analytics</CardTitle>
+                                            <div className="w-full sm:w-72">
+                                                <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="All quizzes" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">All quizzes</SelectItem>
+                                                        {quizPerQuiz.map((quiz) => (
+                                                            <SelectItem key={quiz.lesson_id} value={String(quiz.lesson_id)}>
+                                                                {quiz.lesson_title}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {filteredPerQuestion.length === 0 ? (
+                                            <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                                                No question-level analytics for this selection yet.
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto rounded-md border">
+                                                <table className="w-full min-w-[980px] text-sm">
+                                                    <thead className="bg-muted/40 text-left">
+                                                        <tr>
+                                                            <th className="px-3 py-2 font-medium">Quiz</th>
+                                                            <th className="px-3 py-2 font-medium">Q#</th>
+                                                            <th className="px-3 py-2 font-medium">Question</th>
+                                                            <th className="px-3 py-2 font-medium">Answered</th>
+                                                            <th className="px-3 py-2 font-medium">Correct</th>
+                                                            <th className="px-3 py-2 font-medium">Incorrect</th>
+                                                            <th className="px-3 py-2 font-medium">Skipped</th>
+                                                            <th className="px-3 py-2 font-medium">Accuracy</th>
+                                                            <th className="px-3 py-2 font-medium">Skip Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredPerQuestion.map((item) => (
+                                                            <tr key={`${item.lesson_id}-${item.question_index}`} className="border-t align-top">
+                                                                <td className="px-3 py-2 text-muted-foreground">{item.lesson_title}</td>
+                                                                <td className="px-3 py-2">{item.question_index}</td>
+                                                                <td className="px-3 py-2 max-w-[360px]">
+                                                                    <p className="line-clamp-2">{item.question_text}</p>
+                                                                </td>
+                                                                <td className="px-3 py-2">{item.answered_count}</td>
+                                                                <td className="px-3 py-2 text-green-700 dark:text-green-400">{item.correct_count}</td>
+                                                                <td className="px-3 py-2 text-red-700 dark:text-red-400">{item.incorrect_count}</td>
+                                                                <td className="px-3 py-2">{item.skip_count}</td>
+                                                                <td className="px-3 py-2 font-medium">{item.accuracy_pct}%</td>
+                                                                <td className="px-3 py-2">{item.skip_rate_pct}%</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle>Hardest Questions</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {filteredHardestQuestions.length === 0 ? (
+                                            <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                                                Not enough attempt data to rank hardest questions.
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto rounded-md border">
+                                                <table className="w-full min-w-[920px] text-sm">
+                                                    <thead className="bg-muted/40 text-left">
+                                                        <tr>
+                                                            <th className="px-3 py-2 font-medium">Quiz</th>
+                                                            <th className="px-3 py-2 font-medium">Q#</th>
+                                                            <th className="px-3 py-2 font-medium">Question</th>
+                                                            <th className="px-3 py-2 font-medium">Accuracy</th>
+                                                            <th className="px-3 py-2 font-medium">Skip Rate</th>
+                                                            <th className="px-3 py-2 font-medium">Attempts</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredHardestQuestions.map((item) => (
+                                                            <tr key={`hard-${item.lesson_id}-${item.question_index}`} className="border-t align-top">
+                                                                <td className="px-3 py-2 text-muted-foreground">{item.lesson_title}</td>
+                                                                <td className="px-3 py-2">{item.question_index}</td>
+                                                                <td className="px-3 py-2 max-w-[360px]"><p className="line-clamp-2">{item.question_text}</p></td>
+                                                                <td className="px-3 py-2 font-medium">{item.accuracy_pct}%</td>
+                                                                <td className="px-3 py-2">{item.skip_rate_pct}%</td>
+                                                                <td className="px-3 py-2">{item.total_attempts}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                        </Tabs>
 
                         <LearnerProfileDialog
                             learner={profileLearner}

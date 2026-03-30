@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 
 const STATUS_VARIANTS = { draft: 'secondary', review: 'outline', published: 'default' };
-const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity', 'learner-profiles', 'quiz-analytics'];
+const COURSE_EDIT_TABS = ['dashboard', 'introduction', 'details', 'curriculum', 'certificate', 'learner-activity'];
 
 function resolveInitialTab(courseId, pageUrl) {
     const fallback = 'dashboard';
@@ -1326,7 +1326,7 @@ function CourseIntroductionForm({ course, readOnly = false }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed, quizAnalytics }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed }) {
     const { url, auth } = usePage().props;
     const isCourseViewer = auth?.user?.role === 'course_viewer';
     const [addingSection, setAddingSection] = useState(false);
@@ -1479,12 +1479,6 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                         <TabsTrigger value="learner-activity" className="gap-2">
                             <ScrollText className="h-4 w-4" />Learner Activity
                         </TabsTrigger>
-                        <TabsTrigger value="learner-profiles" className="gap-2">
-                            <Users className="h-4 w-4" />Learner Profiles
-                        </TabsTrigger>
-                        <TabsTrigger value="quiz-analytics" className="gap-2">
-                            <BarChart3 className="h-4 w-4" />Quiz Analytics
-                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── Details tab ── */}
@@ -1577,16 +1571,6 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                     {/* ── Learner activity tab ── */}
                     <TabsContent value="learner-activity" className="mt-6">
                         <LearnerActivityPanel activities={learnerActivityFeed ?? []} students={students ?? []} />
-                    </TabsContent>
-
-                    {/* ── Learner profiles tab ── */}
-                    <TabsContent value="learner-profiles" className="mt-6">
-                        <LearnerProfilesPanel students={students ?? []} />
-                    </TabsContent>
-
-                    {/* ── Quiz analytics tab ── */}
-                    <TabsContent value="quiz-analytics" className="mt-6">
-                        <QuizAnalyticsPanel analytics={quizAnalytics} />
                     </TabsContent>
 
                     {/* ── Introduction tab ── */}

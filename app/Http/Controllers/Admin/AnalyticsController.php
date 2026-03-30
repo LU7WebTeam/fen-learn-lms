@@ -209,6 +209,9 @@ class AnalyticsController extends Controller
 
         // Base enrollment query (scoped to demographic filters)
         $enrollmentBase = $this->baseEnrollmentQuery($course, $filters);
+        // Date-scoped enrollment query used by tab datasets (Demo/Lesson/Quiz)
+        $enrollmentBaseInRange = (clone $enrollmentBase)
+            ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo]);
 
         $totalEnrollments = (clone $enrollmentBase)->count();
         $totalCompletions = (clone $enrollmentBase)->whereNotNull('enrollments.completed_at')->count();
@@ -274,14 +277,17 @@ class AnalyticsController extends Controller
             $current->addDay();
         }
 
-        // ── Lesson funnel ─────────────────────────────────────────────────────
+        // ── Lesson funnel (date-scoped) ──────────────────────────────────────
+
+        $totalEnrollmentsInRange = (clone $enrollmentBaseInRange)->count();
+        $enrollmentIdsInRange = (clone $enrollmentBaseInRange)->pluck('enrollments.id');
 
         $lessonFunnel = $course->sections()
             ->orderBy('order')
-            ->with(['lessons' => function ($q) use ($enrollmentIds) {
+            ->with(['lessons' => function ($q) use ($enrollmentIdsInRange) {
                 $q->orderBy('order')
-                  ->withCount(['progress as completed_count' => function ($q2) use ($enrollmentIds) {
-                      $q2->whereIn('enrollment_id', $enrollmentIds)
+                  ->withCount(['progress as completed_count' => function ($q2) use ($enrollmentIdsInRange) {
+                      $q2->whereIn('enrollment_id', $enrollmentIdsInRange)
                          ->whereNotNull('completed_at');
                   }]);
             }])
@@ -292,8 +298,8 @@ class AnalyticsController extends Controller
                 'type'            => $lesson->type,
                 'section'         => $section->title,
                 'completed_count' => $lesson->completed_count,
-                'completion_rate' => $totalEnrollments > 0
-                    ? round(($lesson->completed_count / $totalEnrollments) * 100, 1) : 0,
+                'completion_rate' => $totalEnrollmentsInRange > 0
+                    ? round(($lesson->completed_count / $totalEnrollmentsInRange) * 100, 1) : 0,
             ]))
             ->values()
             ->all();
@@ -304,13 +310,13 @@ class AnalyticsController extends Controller
             ->where('type', 'quiz')
             ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
             ->with('section:id,title')
-            ->get(['id', 'section_id', 'title']);
+            ->get(['id', 'section_id', 'title', 'content']);
 
         $quizLessonIds = $quizLessons->pluck('id');
 
         $allQuizAttempts = $quizLessonIds->isNotEmpty()
             ? QuizAttempt::whereIn('lesson_id', $quizLessonIds)
-                ->whereIn('enrollment_id', $enrollmentIds)
+                ->whereIn('enrollment_id', $enrollmentIdsInRange)
                 ->get(['lesson_id', 'user_id', 'attempt_number', 'score', 'max_score', 'passed'])
             : collect();
 
@@ -332,11 +338,203 @@ class AnalyticsController extends Controller
             ];
         })->values()->all();
 
-        // ── Demographics ──────────────────────────────────────────────────────
+        $totalAttempts = $allQuizAttempts->count();
+        $passedAttempts = $allQuizAttempts->where('passed', true)->count();
+        $failedAttempts = $totalAttempts - $passedAttempts;
+        $avgPercentage = $totalAttempts > 0
+            ? round($allQuizAttempts->avg(function ($attempt) {
+                return $attempt->max_score > 0
+                    ? (($attempt->score / $attempt->max_score) * 100)
+                    : 0;
+            }), 1)
+            : 0;
+
+        $attemptPercentages = $allQuizAttempts
+            ->map(function ($attempt) {
+                return $attempt->max_score > 0
+                    ? (($attempt->score / $attempt->max_score) * 100)
+                    : 0;
+            })
+            ->sort()
+            ->values();
+
+        $medianPercentage = 0;
+        if ($attemptPercentages->isNotEmpty()) {
+            $count = $attemptPercentages->count();
+            $mid = intdiv($count, 2);
+
+            $medianPercentage = $count % 2 === 0
+                ? round((($attemptPercentages[$mid - 1] + $attemptPercentages[$mid]) / 2), 1)
+                : round($attemptPercentages[$mid], 1);
+        }
+
+        $scoreDistribution = [
+            '0_39' => 0,
+            '40_59' => 0,
+            '60_79' => 0,
+            '80_100' => 0,
+        ];
+
+        foreach ($attemptPercentages as $pct) {
+            if ($pct < 40) {
+                $scoreDistribution['0_39']++;
+            } elseif ($pct < 60) {
+                $scoreDistribution['40_59']++;
+            } elseif ($pct < 80) {
+                $scoreDistribution['60_79']++;
+            } else {
+                $scoreDistribution['80_100']++;
+            }
+        }
+
+        $firstAttempts = $allQuizAttempts->where('attempt_number', 1)->values();
+        $firstAttemptCount = $firstAttempts->count();
+        $firstAttemptPassed = $firstAttempts->where('passed', true)->count();
+
+        $perQuiz = $quizLessons->map(function ($lesson) use ($allQuizAttempts) {
+            $attempts = $allQuizAttempts->where('lesson_id', $lesson->id)->values();
+            $attemptCount = $attempts->count();
+            $passedCount = $attempts->where('passed', true)->count();
+            $failedCount = $attemptCount - $passedCount;
+            $firstAttempts = $attempts->where('attempt_number', 1)->values();
+            $firstAttemptCount = $firstAttempts->count();
+            $firstAttemptPassed = $firstAttempts->where('passed', true)->count();
+            $avgPct = $attemptCount > 0
+                ? round($attempts->avg(function ($attempt) {
+                    return $attempt->max_score > 0
+                        ? (($attempt->score / $attempt->max_score) * 100)
+                        : 0;
+                }), 1)
+                : 0;
+
+            return [
+                'lesson_id' => $lesson->id,
+                'lesson_title' => $lesson->title,
+                'section_title' => $lesson->section?->title,
+                'attempts' => $attemptCount,
+                'passed' => $passedCount,
+                'failed' => $failedCount,
+                'pass_rate' => $attemptCount > 0 ? round(($passedCount / $attemptCount) * 100, 1) : 0,
+                'first_attempt_pass_rate' => $firstAttemptCount > 0 ? round(($firstAttemptPassed / $firstAttemptCount) * 100, 1) : 0,
+                'avg_score_pct' => $avgPct,
+            ];
+        })->values();
+
+        $perQuestion = $quizLessons->flatMap(function ($lesson) use ($allQuizAttempts) {
+            $content = is_array($lesson->content)
+                ? $lesson->content
+                : (json_decode($lesson->content ?? '{}', true) ?: []);
+            $questions = $content['questions'] ?? [];
+            $attempts = $allQuizAttempts->where('lesson_id', $lesson->id)->values();
+
+            return collect($questions)->map(function ($question, $index) use ($lesson, $attempts) {
+                $isMulti = !empty($question['multi_answer']);
+                $options = is_array($question['options'] ?? null) ? $question['options'] : [];
+
+                $correctValues = $isMulti
+                    ? array_values(array_map('intval', (array) ($question['correct'] ?? [])))
+                    : [(int) (is_array($question['correct'] ?? null) ? ($question['correct'][0] ?? -1) : ($question['correct'] ?? -1))];
+
+                sort($correctValues);
+
+                $answeredCount = 0;
+                $correctCount = 0;
+                $optionCounts = collect($options)->mapWithKeys(fn($_, $optIdx) => [$optIdx => 0])->all();
+                $attemptsCount = $attempts->count();
+
+                foreach ($attempts as $attempt) {
+                    $answers = is_array($attempt->answers) ? $attempt->answers : [];
+                    $selectedRaw = $answers[$index] ?? null;
+
+                    if ($isMulti) {
+                        $selected = is_array($selectedRaw) ? array_values(array_map('intval', $selectedRaw)) : [];
+                        foreach ($selected as $sel) {
+                            if (array_key_exists($sel, $optionCounts)) {
+                                $optionCounts[$sel]++;
+                            }
+                        }
+
+                        if (count($selected) > 0) {
+                            $answeredCount++;
+                            sort($selected);
+                            if ($selected === $correctValues) {
+                                $correctCount++;
+                            }
+                        }
+                    } else {
+                        $selected = is_array($selectedRaw) ? null : (is_null($selectedRaw) ? null : (int) $selectedRaw);
+                        if (!is_null($selected)) {
+                            $answeredCount++;
+                            if (array_key_exists($selected, $optionCounts)) {
+                                $optionCounts[$selected]++;
+                            }
+                            if ($selected === ($correctValues[0] ?? -1)) {
+                                $correctCount++;
+                            }
+                        }
+                    }
+                }
+
+                return [
+                    'lesson_id' => $lesson->id,
+                    'lesson_title' => $lesson->title,
+                    'question_index' => $index + 1,
+                    'question_text' => $question['text'] ?? 'Untitled question',
+                    'question_type' => $question['type'] ?? 'text',
+                    'is_multi_answer' => $isMulti,
+                    'answered_count' => $answeredCount,
+                    'correct_count' => $correctCount,
+                    'incorrect_count' => max(0, $answeredCount - $correctCount),
+                    'skip_count' => max(0, $attemptsCount - $answeredCount),
+                    'skip_rate_pct' => $attemptsCount > 0 ? round(((max(0, $attemptsCount - $answeredCount) / $attemptsCount) * 100), 1) : 0,
+                    'total_attempts' => $attemptsCount,
+                    'accuracy_pct' => $answeredCount > 0 ? round(($correctCount / $answeredCount) * 100, 1) : 0,
+                    'option_counts' => $optionCounts,
+                    'options' => $options,
+                ];
+            });
+        })->values();
+
+        $hardestQuestions = $perQuestion
+            ->filter(fn($q) => ($q['total_attempts'] ?? 0) > 0)
+            ->sort(function ($a, $b) {
+                if ($a['accuracy_pct'] !== $b['accuracy_pct']) {
+                    return $a['accuracy_pct'] <=> $b['accuracy_pct'];
+                }
+                if ($a['skip_rate_pct'] !== $b['skip_rate_pct']) {
+                    return $b['skip_rate_pct'] <=> $a['skip_rate_pct'];
+                }
+                return $b['total_attempts'] <=> $a['total_attempts'];
+            })
+            ->take(10)
+            ->values();
+
+        $quizAnalytics = [
+            'overview' => [
+                'quiz_count' => $quizLessons->count(),
+                'attempts' => $totalAttempts,
+                'passed' => $passedAttempts,
+                'failed' => $failedAttempts,
+                'pass_rate' => $totalAttempts > 0 ? round(($passedAttempts / $totalAttempts) * 100, 1) : 0,
+                'first_attempts' => $firstAttemptCount,
+                'first_passed' => $firstAttemptPassed,
+                'first_attempt_pass_rate' => $firstAttemptCount > 0 ? round(($firstAttemptPassed / $firstAttemptCount) * 100, 1) : 0,
+                'avg_score_pct' => $avgPercentage,
+                'median_score_pct' => $medianPercentage,
+                'score_distribution' => $scoreDistribution,
+                'unique_learners' => $allQuizAttempts->pluck('user_id')->unique()->count(),
+            ],
+            'per_quiz' => $perQuiz,
+            'per_question' => $perQuestion,
+            'hardest_questions' => $hardestQuestions,
+        ];
+
+        // ── Demographics (date-scoped) ───────────────────────────────────────
 
         $demographicBase = Enrollment::query()
             ->where('enrollments.course_id', $course->id)
             ->join('users', 'users.id', '=', 'enrollments.user_id')
+            ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo])
             ->tap(fn($query) => $this->applyDemographicFilters($query, $filters));
 
         $byGender = (clone $demographicBase)
@@ -408,6 +606,7 @@ class AnalyticsController extends Controller
             'trend'       => $trend,
             'lessonFunnel' => $lessonFunnel,
             'quizStats'    => $quizStats,
+            'quizAnalytics' => $quizAnalytics,
             'demographics' => [
                 'by_gender'     => $byGender,
                 'by_race'       => $byRace,
