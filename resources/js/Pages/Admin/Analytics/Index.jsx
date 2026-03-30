@@ -208,7 +208,7 @@ function TrendChart({ data }) {
                 <Line
                     type="monotone"
                     dataKey="enrollments"
-                    name="Enrollments"
+                        name="Enrolments"
                     stroke={CHART_COLORS.primary}
                     strokeWidth={2}
                     dot={false}
@@ -1307,6 +1307,7 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                             <MetricCard
                                 icon={Users}
                                 label="Total Enrollments"
+                                    label="Total Enrolments"
                                 value={summary.total_enrollments.toLocaleString()}
                                 highlight
                             />
@@ -1342,9 +1343,9 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
                         {/* ── Enrollment & completion trend ── */}
                         <Card className="border shadow-sm">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-semibold">Enrollment &amp; Completion Over Time</CardTitle>
+                                <CardTitle className="text-base font-semibold">Enrolment &amp; Completion Over Time</CardTitle>
                                 <p className="text-xs text-muted-foreground">
-                                    New enrollments and course completions within the selected date range
+                                    New enrolments and course completions within the selected date range
                                 </p>
                             </CardHeader>
                             <CardContent>

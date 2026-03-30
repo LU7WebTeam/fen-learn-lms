@@ -219,7 +219,7 @@ function ProaktifSection() {
                                 type="button"
                                 className="inline-flex items-center gap-2 rounded-xl border border-dashed border-sky-500 bg-sky-100 px-5 py-3 text-sm font-semibold text-sky-800 transition-colors hover:bg-sky-200"
                             >
-                                Enroll to Proaktif 2.0 (Placeholder)
+                                Enrol to Proaktif 2.0 (Placeholder)
                                 <ArrowRight className="h-4 w-4" />
                             </button>
                         </div>

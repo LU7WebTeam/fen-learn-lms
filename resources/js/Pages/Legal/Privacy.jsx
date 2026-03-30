@@ -58,7 +58,7 @@ export default function Privacy() {
                         <ul className="list-disc pl-5 space-y-1">
                             <li><strong>Account information:</strong> full name, email address, login credentials</li>
                             <li><strong>Profile details:</strong> onboarding details that you choose to provide</li>
-                            <li><strong>Learning records:</strong> enrollments, lesson progress, quiz attempts, results, and certificates</li>
+                            <li><strong>Learning records:</strong> enrolments, lesson progress, quiz attempts, results, and certificates</li>
                             <li><strong>Technical data:</strong> browser type, IP address, device and session activity logs</li>
                             <li><strong>Support communications:</strong> messages submitted through our support or contact channels</li>
                         </ul>

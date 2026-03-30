@@ -54,7 +54,7 @@ export default function AdminDashboard({ stats, recentCourses, canViewSystemLogs
                         icon={BookOpen}
                     />
                     <StatCard
-                        title="Total Enrollments"
+                        title="Total Enrolments"
                         value={stats.totalEnrollments.toLocaleString()}
                         description="Active learning records"
                         icon={TrendingUp}
