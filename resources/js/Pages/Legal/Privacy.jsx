@@ -111,7 +111,7 @@ export default function Privacy() {
                     <Section title="8. Security Measures">
                         <p>
                             We apply reasonable administrative, technical, and organizational safeguards to protect
-                            personal data from unauthorized access, alteration, or loss. No online system can be guaranteed
+                            personal data from unauthorised access, alteration, or loss. No online system can be guaranteed
                             as 100% secure, but we continuously improve our controls.
                         </p>
                     </Section>

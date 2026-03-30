@@ -543,7 +543,7 @@ class ActivityLogsController extends Controller
         $user = $request->user();
 
         if (! $user) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'Unauthorised.');
         }
 
         if ($user->isSuperAdmin()) {

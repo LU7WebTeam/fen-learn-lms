@@ -84,7 +84,7 @@ class UsersController extends Controller
     public function updateRole(Request $request, User $user): RedirectResponse
     {
         if ($request->user()->role === 'course_viewer') {
-            abort(403, 'Unauthorized.');
+            abort(403, 'Unauthorised.');
         }
 
         $validated = $request->validate([
@@ -124,7 +124,7 @@ class UsersController extends Controller
     public function updateCourseAccess(Request $request, User $user): RedirectResponse
     {
         if ($request->user()->role === 'course_viewer') {
-            abort(403, 'Unauthorized.');
+            abort(403, 'Unauthorised.');
         }
 
         $validated = $request->validate([

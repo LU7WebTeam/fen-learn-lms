@@ -66,7 +66,7 @@ export default function Terms() {
                         <p>You may not:</p>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>use the Platform for unlawful, fraudulent, or abusive activity</li>
-                            <li>attempt unauthorized access, probing, or disruption of systems</li>
+                            <li>attempt unauthorised access, probing, or disruption of systems</li>
                             <li>copy, redistribute, or resell learning materials without permission</li>
                             <li>upload content that is harmful, infringing, or violates others' rights</li>
                         </ul>

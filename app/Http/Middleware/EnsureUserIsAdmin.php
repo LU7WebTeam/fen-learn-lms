@@ -15,7 +15,7 @@ class EnsureUserIsAdmin
         }
 
         if (!$request->user()->isAdmin()) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'Unauthorised.');
         }
 
         return $next($request);
