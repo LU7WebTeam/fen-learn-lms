@@ -20,19 +20,17 @@ return [
 
     'driver' => env('SESSION_DRIVER', 'database'),
 
+
     /*
     |--------------------------------------------------------------------------
     | Session Lifetime
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the number of minutes that you wish the session
-    | to be allowed to remain idle before it expires. If you want them
-    | to expire immediately when the browser is closed then you may
-    | indicate that via the expire_on_close configuration option.
-    |
+    | The session will remain valid for 14 days (20160 minutes) when 'remember me' is checked.
+    | If you want sessions to expire immediately when the browser is closed, set expire_on_close to true.
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 20160),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
