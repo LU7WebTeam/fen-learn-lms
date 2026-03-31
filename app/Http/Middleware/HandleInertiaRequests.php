@@ -23,6 +23,7 @@ class HandleInertiaRequests extends Middleware
             $platformName    = Setting::get('platform_name', 'Free LMS');
             $platformTagline = Setting::get('platform_tagline', '');
             $logoPath        = Setting::get('logo_path');
+            $logoDarkPath    = Setting::get('logo_dark_path');
             $faviconPath     = Setting::get('favicon_path');
             $captchaConfig   = CaptchaVerifier::frontendConfig();
             $analyticsConfig = [
@@ -35,6 +36,7 @@ class HandleInertiaRequests extends Middleware
             $platformName    = 'Free LMS';
             $platformTagline = '';
             $logoPath        = null;
+            $logoDarkPath    = null;
             $faviconPath     = null;
             $captchaConfig   = [
                 'provider' => 'none',
@@ -70,6 +72,7 @@ class HandleInertiaRequests extends Middleware
                 'name'        => $platformName,
                 'tagline'     => $platformTagline,
                 'logo_url'    => $logoPath ? asset('storage/' . $logoPath) : null,
+                'logo_dark_url' => $logoDarkPath ? asset('storage/' . $logoDarkPath) : null,
                 'favicon_url' => $faviconPath ? asset('storage/' . $faviconPath) : null,
             ],
             'integrations' => [

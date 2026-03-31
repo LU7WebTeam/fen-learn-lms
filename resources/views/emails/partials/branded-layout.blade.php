@@ -9,6 +9,7 @@
         .wrapper { max-width: 560px; margin: 0 auto; background: {{ $theme['surface'] }}; border-radius: 12px; overflow: hidden; border: 1px solid {{ $theme['border'] }}; }
         .header { background: linear-gradient(135deg, {{ $theme['primary'] }}, {{ $theme['secondary'] }}); padding: 24px 32px; text-align: center; }
         .logo { display: block; max-height: 48px; margin: 0 auto 10px; }
+        .logo-dark { display: none; }
         .header h1 { color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
         .body { padding: 32px; }
         h2 { margin: 0 0 12px; font-size: 22px; font-weight: 700; color: {{ $theme['text'] }}; }
@@ -21,13 +22,21 @@
         .footer { border-top: 1px solid {{ $theme['border'] }}; padding: 20px 32px; text-align: center; }
         .footer p { margin: 0; font-size: 12px; color: {{ $theme['mutedText'] }}; }
         .url-fallback { word-break: break-all; color: {{ $theme['secondary'] }}; font-size: 13px; }
+
+        @media (prefers-color-scheme: dark) {
+            .logo-light.has-dark { display: none !important; }
+            .logo-dark.has-dark { display: block !important; }
+        }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="header">
             @if($logoUrl)
-                <img src="{{ $logoUrl }}" alt="{{ $platformName }} logo" class="logo" />
+                <img src="{{ $logoUrl }}" alt="{{ $platformName }} logo" class="logo logo-light {{ !empty($logoDarkUrl) ? 'has-dark' : '' }}" />
+            @endif
+            @if(!empty($logoDarkUrl))
+                <img src="{{ $logoDarkUrl }}" alt="{{ $platformName }} logo" class="logo logo-dark has-dark" />
             @endif
             <h1>{{ $platformName }}</h1>
         </div>

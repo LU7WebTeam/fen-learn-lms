@@ -148,6 +148,7 @@ function AppSidebar() {
     const isCourseViewer = props.auth?.user?.role === 'course_viewer';
     const platformName = props.platform?.name || 'Free LMS';
     const platformLogoUrl = props.platform?.logo_url || null;
+    const platformLogoDarkUrl = props.platform?.logo_dark_url || null;
     const groupedNavigation = navGroups.map(group => ({
         ...group,
         items: [...group.items],
@@ -190,8 +191,15 @@ function AppSidebar() {
                                         <img
                                             src={platformLogoUrl}
                                             alt={platformName}
-                                            className="h-8 w-8 object-contain"
+                                            className={`h-8 w-8 object-contain ${platformLogoDarkUrl ? 'dark:hidden' : ''}`}
                                         />
+                                        {platformLogoDarkUrl && (
+                                            <img
+                                                src={platformLogoDarkUrl}
+                                                alt={platformName}
+                                                className="hidden h-8 w-8 object-contain dark:block"
+                                            />
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">

@@ -7,6 +7,7 @@ import { useState } from 'react';
 export default function AdminLogin({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const [showPass, setShowPass] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -38,7 +39,7 @@ export default function AdminLogin({ status, canResetPassword }) {
 
                 <div className="relative z-10 flex items-center gap-3">
                     {platform.logo_url ? (
-                        <img src={platform.logo_url} alt={platform.name} className="h-8 w-auto" />
+                        <img src={platformDarkLogoUrl || platform.logo_url} alt={platform.name} className="h-8 w-auto" />
                     ) : (
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
                             <ShieldCheck className="h-4 w-4 text-white" />
@@ -72,7 +73,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                     {/* Mobile logo */}
                     <div className="flex lg:hidden items-center gap-3 justify-center">
                         {platform.logo_url ? (
-                            <img src={platform.logo_url} alt={platform.name} className="h-8 w-auto" />
+                            <img src={platformDarkLogoUrl || platform.logo_url} alt={platform.name} className="h-8 w-auto" />
                         ) : (
                             <ShieldCheck className="h-6 w-6 text-white" />
                         )}

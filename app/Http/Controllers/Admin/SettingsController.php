@@ -25,6 +25,9 @@ class SettingsController extends Controller
         'platform_tagline'           => 'Learn anything, anywhere.',
         'contact_email'              => '',
         'logo_path'                  => null,
+        'logo_dark_path'             => null,
+        'email_logo_path'            => null,
+        'email_logo_dark_path'       => null,
         'favicon_path'               => null,
         'allow_registration'         => '1',
         'default_role'               => 'learner',
@@ -178,6 +181,9 @@ class SettingsController extends Controller
             'platform_tagline' => 'nullable|string|max:200',
             'contact_email'    => 'nullable|email|max:200',
             'logo'             => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'logo_dark'        => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'email_logo'       => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'email_logo_dark'  => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
             'favicon'          => 'nullable|image|mimes:png,ico,jpg,jpeg|max:512',
         ]);
 
@@ -192,6 +198,27 @@ class SettingsController extends Controller
             Setting::set('logo_path', $path);
         }
 
+        if ($request->hasFile('logo_dark')) {
+            $old = Setting::get('logo_dark_path');
+            if ($old) Storage::disk('public')->delete($old);
+            $path = $request->file('logo_dark')->store('branding', 'public');
+            Setting::set('logo_dark_path', $path);
+        }
+
+        if ($request->hasFile('email_logo')) {
+            $old = Setting::get('email_logo_path');
+            if ($old) Storage::disk('public')->delete($old);
+            $path = $request->file('email_logo')->store('branding', 'public');
+            Setting::set('email_logo_path', $path);
+        }
+
+        if ($request->hasFile('email_logo_dark')) {
+            $old = Setting::get('email_logo_dark_path');
+            if ($old) Storage::disk('public')->delete($old);
+            $path = $request->file('email_logo_dark')->store('branding', 'public');
+            Setting::set('email_logo_dark_path', $path);
+        }
+
         if ($request->hasFile('favicon')) {
             $old = Setting::get('favicon_path');
             if ($old) Storage::disk('public')->delete($old);
@@ -203,6 +230,24 @@ class SettingsController extends Controller
             $old = Setting::get('logo_path');
             if ($old) Storage::disk('public')->delete($old);
             Setting::set('logo_path', null);
+        }
+
+        if ($request->input('clear_logo_dark') === '1') {
+            $old = Setting::get('logo_dark_path');
+            if ($old) Storage::disk('public')->delete($old);
+            Setting::set('logo_dark_path', null);
+        }
+
+        if ($request->input('clear_email_logo') === '1') {
+            $old = Setting::get('email_logo_path');
+            if ($old) Storage::disk('public')->delete($old);
+            Setting::set('email_logo_path', null);
+        }
+
+        if ($request->input('clear_email_logo_dark') === '1') {
+            $old = Setting::get('email_logo_dark_path');
+            if ($old) Storage::disk('public')->delete($old);
+            Setting::set('email_logo_dark_path', null);
         }
 
         if ($request->input('clear_favicon') === '1') {

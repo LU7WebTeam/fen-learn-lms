@@ -12,6 +12,7 @@ const ROLE_LABELS = {
 export default function AcceptInvitation({ token, email, role }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const [showPass, setShowPass] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -33,7 +34,7 @@ export default function AcceptInvitation({ token, email, role }) {
             <div className="w-full max-w-md">
                 <div className="mb-8 text-center space-y-3">
                     {platform.logo_url ? (
-                        <img src={platform.logo_url} alt={platform.name} className="h-10 w-auto mx-auto" />
+                        <img src={platformDarkLogoUrl || platform.logo_url} alt={platform.name} className="h-10 w-auto mx-auto" />
                     ) : (
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 mx-auto">
                             <ShieldCheck className="h-6 w-6 text-white" />

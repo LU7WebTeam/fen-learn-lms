@@ -821,12 +821,24 @@ function BrandingTab({ settings, onSave, processing }) {
     const [tagline, setTagline] = useState(settings.platform_tagline || '');
     const [contactEmail, setContactEmail] = useState(settings.contact_email || '');
     const [logoFile, setLogoFile] = useState(null);
+    const [logoDarkFile, setLogoDarkFile] = useState(null);
+    const [emailLogoFile, setEmailLogoFile] = useState(null);
+    const [emailLogoDarkFile, setEmailLogoDarkFile] = useState(null);
     const [faviconFile, setFaviconFile] = useState(null);
     const [clearLogo, setClearLogo] = useState(false);
+    const [clearLogoDark, setClearLogoDark] = useState(false);
+    const [clearEmailLogo, setClearEmailLogo] = useState(false);
+    const [clearEmailLogoDark, setClearEmailLogoDark] = useState(false);
     const [clearFavicon, setClearFavicon] = useState(false);
 
     function handleLogoChange(file) { setLogoFile(file); setClearLogo(false); }
     function handleLogoClear() { setLogoFile(null); setClearLogo(true); }
+    function handleLogoDarkChange(file) { setLogoDarkFile(file); setClearLogoDark(false); }
+    function handleLogoDarkClear() { setLogoDarkFile(null); setClearLogoDark(true); }
+    function handleEmailLogoChange(file) { setEmailLogoFile(file); setClearEmailLogo(false); }
+    function handleEmailLogoClear() { setEmailLogoFile(null); setClearEmailLogo(true); }
+    function handleEmailLogoDarkChange(file) { setEmailLogoDarkFile(file); setClearEmailLogoDark(false); }
+    function handleEmailLogoDarkClear() { setEmailLogoDarkFile(null); setClearEmailLogoDark(true); }
     function handleFaviconChange(file) { setFaviconFile(file); setClearFavicon(false); }
     function handleFaviconClear() { setFaviconFile(null); setClearFavicon(true); }
 
@@ -838,10 +850,16 @@ function BrandingTab({ settings, onSave, processing }) {
                 platform_tagline: tagline,
                 contact_email: contactEmail,
                 clear_logo: clearLogo ? '1' : undefined,
+                clear_logo_dark: clearLogoDark ? '1' : undefined,
+                clear_email_logo: clearEmailLogo ? '1' : undefined,
+                clear_email_logo_dark: clearEmailLogoDark ? '1' : undefined,
                 clear_favicon: clearFavicon ? '1' : undefined,
             },
             {
                 logo: logoFile,
+                logo_dark: logoDarkFile,
+                email_logo: emailLogoFile,
+                email_logo_dark: emailLogoDarkFile,
                 favicon: faviconFile,
             }
         );
@@ -897,6 +915,35 @@ function BrandingTab({ settings, onSave, processing }) {
                     currentUrl={settings.logo_path ? `/storage/${settings.logo_path}` : null}
                     onFileChange={handleLogoChange}
                     onClear={handleLogoClear}
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                />
+
+                <ImageUploadField
+                    label="Dark Mode Logo"
+                    description="Used on dark backgrounds when available."
+                    currentUrl={settings.logo_dark_path ? `/storage/${settings.logo_dark_path}` : null}
+                    onFileChange={handleLogoDarkChange}
+                    onClear={handleLogoDarkClear}
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                />
+
+                <Separator />
+
+                <ImageUploadField
+                    label="Email Header Logo"
+                    description="Optional override for email header in light mode. Falls back to Logo."
+                    currentUrl={settings.email_logo_path ? `/storage/${settings.email_logo_path}` : null}
+                    onFileChange={handleEmailLogoChange}
+                    onClear={handleEmailLogoClear}
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                />
+
+                <ImageUploadField
+                    label="Email Header Dark Logo"
+                    description="Optional dark-mode variant for email header. Falls back to Dark Mode Logo."
+                    currentUrl={settings.email_logo_dark_path ? `/storage/${settings.email_logo_dark_path}` : null}
+                    onFileChange={handleEmailLogoDarkChange}
+                    onClear={handleEmailLogoDarkClear}
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 />
 

@@ -8,6 +8,7 @@ import { useT } from '@/lib/i18n';
 export default function Login({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
@@ -175,7 +176,11 @@ export default function Login({ status, canResetPassword }) {
 
                 <div className="relative z-10 flex items-center gap-3">
                     {platform.logo_url ? (
-                        <img src={platform.logo_url} alt={platform.name} className="h-8 w-auto brightness-0 invert" />
+                        <img
+                            src={platformDarkLogoUrl || platform.logo_url}
+                            alt={platform.name}
+                            className={`h-8 w-auto ${platformDarkLogoUrl ? '' : 'brightness-0 invert'}`}
+                        />
                     ) : (
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
                             <BookOpen className="h-4 w-4 text-white" />
