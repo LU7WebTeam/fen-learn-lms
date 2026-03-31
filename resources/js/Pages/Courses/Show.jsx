@@ -11,7 +11,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { BookOpen, Play, Award, Clock, ChevronRight, Video, FileText, HelpCircle, Check, Lock } from 'lucide-react';
-import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
+import { lazy, Suspense } from 'react';
+const BlockNoteRenderer = lazy(() => import('@/Components/BlockNoteRenderer'));
 
 const DIFFICULTY_COLORS = { beginner: 'secondary', intermediate: 'default', advanced: 'destructive' };
 
@@ -207,7 +208,9 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             {Array.isArray(courseIntro) && courseIntro.length > 0 && (
                                 <div>
                                     <h2 className="mb-4 text-xl font-semibold">{t('courses.show.about_course')}</h2>
-                                    <BlockNoteRenderer content={courseIntro} />
+                                    <Suspense fallback={<div className="h-20 animate-pulse rounded bg-muted" />}>
+                                        <BlockNoteRenderer content={courseIntro} />
+                                    </Suspense>
                                 </div>
                             )}
 
@@ -292,7 +295,9 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                 <Separator className="my-8" />
                                 <div>
                                     <h2 className="mb-4 text-xl font-semibold">{t('courses.show.about_course')}</h2>
-                                    <BlockNoteRenderer content={courseIntro} />
+                                    <Suspense fallback={<div className="h-20 animate-pulse rounded bg-muted" />}>
+                                        <BlockNoteRenderer content={courseIntro} />
+                                    </Suspense>
                                 </div>
                             </>
                         )}
