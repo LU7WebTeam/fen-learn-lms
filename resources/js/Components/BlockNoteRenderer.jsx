@@ -73,8 +73,8 @@ function BlockNoteRendererInner({ initialContent }) {
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-        // Patch: Insert spaces before/after inline marks if needed
-        const markTags = ['STRONG', 'EM', 'U', 'MARK'];
+        // Patch: Insert spaces before/after inline marks and links if needed
+        const markTags = ['STRONG', 'EM', 'U', 'MARK', 'A'];
         const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, null);
         let node;
         while ((node = walker.nextNode())) {
