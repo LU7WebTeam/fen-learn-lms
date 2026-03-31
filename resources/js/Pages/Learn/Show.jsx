@@ -92,7 +92,9 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     }
 
     const questions    = quizData.questions;
-    const passingScore = quizData.passing_score ?? 70;
+    // If passing_score is null, undefined, 0, or not a number, treat as informational quiz (no passing mark)
+    const hasPassingScore = typeof quizData.passing_score === 'number' && quizData.passing_score > 0;
+    const passingScore = hasPassingScore ? quizData.passing_score : null;
     const maxAttempts  = quizData.max_attempts  ?? 0;
     const attemptsDone = allAttempts.length;
     const attemptsLeft = maxAttempts > 0 ? maxAttempts - attemptsDone : Infinity;
@@ -142,6 +144,18 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                         </span>
                     </div>
                     <Progress value={answeredProgress} className="h-2" />
+                    {/* Show passing score if set */}
+                    {hasPassingScore && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                            {t('learn.quiz.passing_score', { n: passingScore })}
+                        </div>
+                    )}
+                    {/* Show informational quiz label if no passing score */}
+                    {!hasPassingScore && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                            {t('learn.quiz.info_only')}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -174,16 +188,20 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                 <div className="flex items-center gap-4">
                                     <div className="hidden sm:block w-24 h-1.5 rounded-full bg-muted overflow-hidden">
                                         <div
-                                            className={cn('h-full rounded-full', a.passed ? 'bg-green-500' : 'bg-amber-400')}
+                                            className={cn('h-full rounded-full', hasPassingScore ? (a.passed ? 'bg-green-500' : 'bg-amber-400') : 'bg-blue-400')}
                                             style={{ width: `${a.percentage}%` }}
                                         />
                                     </div>
-                                    <span className={cn('font-medium tabular-nums', a.passed ? 'text-green-600' : 'text-amber-600')}>
+                                    <span className={cn('font-medium tabular-nums', hasPassingScore ? (a.passed ? 'text-green-600' : 'text-amber-600') : 'text-blue-600')}>
                                         {a.percentage}%
                                     </span>
-                                    {a.passed
-                                        ? <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                                        : <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.need_pct', { n: passingScore })}</span>}
+                                    {hasPassingScore ? (
+                                        a.passed
+                                            ? <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                                            : <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.need_pct', { n: passingScore })}</span>
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.info_only_short')}</span>
+                                    )}
                                     <span className="hidden md:block text-xs text-muted-foreground shrink-0">{a.created_at}</span>
                                 </div>
                             </div>
@@ -196,12 +214,14 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             {!showResult && !allAttempts.length && lastAttempt && (
                 <div className={cn(
                     'rounded-lg border px-4 py-3 text-sm',
-                    lastAttempt.passed
-                        ? 'border-green-200 bg-green-50 text-green-700'
-                        : 'border-amber-200 bg-amber-50 text-amber-700'
+                    hasPassingScore
+                        ? (lastAttempt.passed ? 'border-green-200 bg-green-50 text-green-700' : 'border-amber-200 bg-amber-50 text-amber-700')
+                        : 'border-blue-200 bg-blue-50 text-blue-700'
                 )}>
                     <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
-                    {lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`}
+                    {hasPassingScore
+                        ? (lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`)
+                        : ` — ${t('learn.quiz.info_only_short')}`}
                 </div>
             )}
 
@@ -357,27 +377,28 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             {showResult && (
                 <div className={cn(
                     'rounded-xl border p-6 text-center',
-                    result.passed
-                        ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800'
-                        : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
+                    hasPassingScore
+                        ? (result.passed ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800' : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800')
+                        : 'border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800'
                 )}>
-                    <p className={cn('mb-1 text-3xl font-bold', result.passed ? 'text-green-700' : 'text-red-700')}>
+                    <p className={cn('mb-1 text-3xl font-bold', hasPassingScore ? (result.passed ? 'text-green-700' : 'text-red-700') : 'text-blue-700')}>
                         {result.score} / {result.max_score}
                     </p>
-                    <p className={cn('mb-1 text-sm font-medium', result.passed ? 'text-green-600' : 'text-red-600')}>
+                    <p className={cn('mb-1 text-sm font-medium', hasPassingScore ? (result.passed ? 'text-green-600' : 'text-red-600') : 'text-blue-600')}>
                         {result.percentage}%
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        {result.passed
-                            ? t('learn.quiz.passed')
-                            : t('learn.quiz.failed', { n: result.passing_score })}
+                        {hasPassingScore
+                            ? (result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score }))
+                            : t('learn.quiz.info_only_result')}
                     </p>
-                    {!result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
+                    {/* Only show retry for failed attempts if passing score is set */}
+                    {hasPassingScore && !result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
                         <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
                             {t('learn.quiz.try_again')}
                         </Button>
                     )}
-                    {!result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
+                    {hasPassingScore && !result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
                         <p className="mt-3 text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
                     )}
                 </div>

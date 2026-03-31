@@ -170,6 +170,10 @@
   "learn.quiz.attempts_remaining_s": "{left} attempt remaining of {total} allowed",
   "learn.quiz.attempts_remaining_p": "{left} attempts remaining of {total} allowed",
 
+  "learn.quiz.info_only": "Informational quiz: No passing mark, just for practice or feedback.",
+  "learn.quiz.info_only_short": "No passing mark",
+  "learn.quiz.info_only_result": "This quiz is for practice or feedback only. Your score is shown above.",
+
   "learn.shortcuts.title": "Keyboard shortcuts",
   "learn.shortcuts.description": "Use these shortcuts to move faster through the lesson page.",
   "learn.shortcuts.open_dialog": "Open this shortcuts dialog",
@@ -343,8 +347,7 @@
   "common.close": "Close",
   "common.yes": "Yes",
   "common.no": "No",
-  "common.all_rights_reserved": "All rights reserved."
-,
+  "common.all_rights_reserved": "All rights reserved.",
   "terms.title": "Terms & Conditions - {name}",
   "terms.heading": "Terms & Conditions",
   "terms.last_updated": "Last updated: {updatedOn}",
