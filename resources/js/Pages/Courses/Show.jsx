@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { tl } from '@/lib/locale';
+import { tl } from '@/lib/i18n';
 import { useT } from '@/lib/i18n';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { Badge } from '@/Components/ui/badge';

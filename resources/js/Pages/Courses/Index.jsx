@@ -7,8 +7,7 @@ import { Button } from '@/Components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Progress } from '@/Components/ui/progress';
 import { BookOpen, Play, GraduationCap, Clock } from 'lucide-react';
-import { tl } from '@/lib/locale';
-import { useT } from '@/lib/i18n';
+import { tl, useT } from '@/lib/i18n';
 import LangSwitcher from '@/Components/LangSwitcher';
 
 const DIFFICULTY_COLORS = {

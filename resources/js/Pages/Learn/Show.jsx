@@ -6,7 +6,7 @@ import BlockNoteRenderer from '@/Components/BlockNoteRenderer';
 import VideoPlayer from '@/Components/VideoPlayer';
 import UserMenu from '@/Components/UserMenu';
 import LangSwitcher from '@/Components/LangSwitcher';
-import { tl } from '@/lib/locale';
+import { tl } from '@/lib/i18n';
 import { useT } from '@/lib/i18n';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
