@@ -47,11 +47,6 @@ function renderActivityResult(item) {
 }
 
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
-    const { locale } = usePage().props;
-    const t = useT();
-    const Icon = LESSON_ICONS[lesson.type] ?? FileText;
-    const canOpen = enrolled || lesson.is_free_preview;
-
     return (
         <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${canOpen ? 'hover:bg-muted' : ''}`}>
             {completed
@@ -118,29 +113,16 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 {/* Hero */}
                 <div className="mb-8 grid gap-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                            <Badge variant={DIFFICULTY_COLORS[course.difficulty] || 'secondary'} className="capitalize">
-                                {course.difficulty}
-                            </Badge>
-                            {course.category && <Badge variant="outline">{course.category}</Badge>}
-                        </div>
-
                         <h1 className="text-3xl font-bold tracking-tight leading-tight">{courseTitle}</h1>
-
                         {courseDescription && (
                             <p className="text-muted-foreground leading-relaxed">{courseDescription}</p>
                         )}
-
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1.5">
                                 <BookOpen className="h-4 w-4" />
                                 {totalLessons} lessons
                             </span>
-                            {course.creator && (
-                                <span>By {course.creator.name}</span>
-                            )}
                         </div>
-
                         {enrolled && (
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-sm">
@@ -202,7 +184,6 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             <TabsTrigger value="main">{t('courses.show.tab_main')}</TabsTrigger>
                             <TabsTrigger value="activity">{t('courses.show.tab_activity')}</TabsTrigger>
                         </TabsList>
-
                         <TabsContent value="main" className="space-y-8">
                             {/* Introduction (BlockNote rich content) */}
                             {Array.isArray(courseIntro) && courseIntro.length > 0 && (
