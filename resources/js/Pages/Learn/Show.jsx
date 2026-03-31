@@ -736,9 +736,10 @@ export default function LearnShow({
                             {/* ── Video ── */}
                             {lesson.type === 'video' && !isLocked && (() => {
                                 const notes = tl(lesson, 'content', locale);
+                                const t = useT();
                                 const notesPanel = notes && (
                                     <div>
-                                        <h2 className="mb-3 text-base font-semibold">Transcript & Notes</h2>
+                                        <h2 className="mb-3 text-base font-semibold">{t('learn.lesson.transcript_notes')}</h2>
                                         <div className="prose prose-sm dark:prose-invert max-w-none">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown>
                                         </div>
