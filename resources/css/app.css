@@ -158,3 +158,11 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* BlockNote whitespace fix for inline marks */
+.bn-renderer-wrap strong,
+.bn-renderer-wrap em,
+.bn-renderer-wrap u,
+.bn-renderer-wrap mark {
+  white-space: pre-wrap;
+}

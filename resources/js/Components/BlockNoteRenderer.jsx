@@ -61,14 +61,40 @@ export default function BlockNoteRenderer({ content }) {
     return <BlockNoteRendererInner key={contentKey} initialContent={initialContent} />;
 }
 
+import { useEffect, useRef } from 'react';
+
 function BlockNoteRendererInner({ initialContent }) {
     const editor = useCreateBlockNote({
         schema,
         initialContent,
     });
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        // Patch: Insert spaces before/after inline marks if needed
+        const markTags = ['STRONG', 'EM', 'U', 'MARK'];
+        const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, null);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (markTags.includes(node.tagName)) {
+                // Check previous sibling
+                const prev = node.previousSibling;
+                if (prev && prev.nodeType === Node.TEXT_NODE && !prev.textContent.endsWith(' ')) {
+                    prev.textContent += ' ';
+                }
+                // Check next sibling
+                const next = node.nextSibling;
+                if (next && next.nodeType === Node.TEXT_NODE && !next.textContent.startsWith(' ')) {
+                    next.textContent = ' ' + next.textContent;
+                }
+            }
+        }
+    }, [initialContent]);
 
     return (
-        <div className="bn-renderer-wrap">
+        <div className="bn-renderer-wrap" ref={containerRef}>
             <BlockNoteView editor={editor} editable={false} theme="light" />
         </div>
     );

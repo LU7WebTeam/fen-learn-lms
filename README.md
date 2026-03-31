@@ -191,3 +191,9 @@ database/
 ## License
 
 MIT — free to use, modify, and distribute.
+
+---
+
+## ⚠️ BlockNote Whitespace Patch
+
+This project includes a DOM patch in `BlockNoteRenderer.jsx` to fix a BlockNote bug where bold, italic, underline, or mark text would run together with adjacent words (spaces would disappear). The patch inserts spaces before/after inline marks if needed after rendering. If you update BlockNote or change the renderer, review this patch for compatibility.
