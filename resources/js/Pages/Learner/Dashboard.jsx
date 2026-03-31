@@ -130,7 +130,7 @@ function ContinueLearning({ inProgress }) {
         <Card className="mb-8 overflow-hidden border-primary/30">
             <div className="flex flex-col sm:flex-row">
                 {course.cover_image ? (
-                    <img src={course.cover_image} alt={course.title} className="h-36 w-full object-cover sm:h-auto sm:w-48 sm:shrink-0" />
+                    <img src={course.cover_image} alt={course.title} className="w-full h-auto object-contain sm:w-48 sm:shrink-0" />
                 ) : (
                     <div className="flex h-36 w-full items-center justify-center bg-muted sm:h-auto sm:w-48 sm:shrink-0">
                         <BookOpen className="h-10 w-10 text-muted-foreground" />
@@ -176,7 +176,7 @@ function CourseCard({ enrollment, completed = false }) {
                 <img
                     src={course.cover_image}
                     alt={course.title}
-                    className="h-40 w-full object-cover"
+                    className="w-full h-auto object-contain"
                 />
             ) : (
                 <div className="flex h-40 w-full items-center justify-center bg-muted">
