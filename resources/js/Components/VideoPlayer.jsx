@@ -267,7 +267,10 @@ function NativePlayer({ url, onWatchComplete, allowSeeking = false }) {
 
 // ─── Progress overlay ────────────────────────────────────────────────────────
 
+import { useT } from '@/lib/i18n';
+
 function WatchedBadge({ watched }) {
+    const t = useT();
     return (
         <div className={cn(
             'mt-3 flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm transition-colors',
@@ -277,8 +280,8 @@ function WatchedBadge({ watched }) {
         )}>
             <Eye className="h-4 w-4 shrink-0" />
             {watched
-                ? 'Video watched — you can now mark this lesson as complete.'
-                : 'Watch the video through to the end to unlock completion.'}
+                ? t('video.watched')
+                : t('video.watch_to_unlock')}
         </div>
     );
 }
