@@ -47,6 +47,10 @@ function renderActivityResult(item) {
 }
 
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
+    const { locale } = usePage().props;
+    const t = useT();
+    const Icon = LESSON_ICONS[lesson.type] ?? FileText;
+    const canOpen = enrolled || lesson.is_free_preview;
     return (
         <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${canOpen ? 'hover:bg-muted' : ''}`}>
             {completed
