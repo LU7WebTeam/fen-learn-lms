@@ -185,15 +185,7 @@ function CourseCard({ enrollment, completed = false }) {
             )}
 
             <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="line-clamp-2 text-base">{course.title}</CardTitle>
-                    <Badge variant={difficultyColors[course.difficulty] || 'secondary'} className="shrink-0 capitalize">
-                        {course.difficulty}
-                    </Badge>
-                </div>
-                {course.category && (
-                    <CardDescription>{course.category}</CardDescription>
-                )}
+                <CardTitle className="line-clamp-2 text-base">{course.title}</CardTitle>
             </CardHeader>
 
             <CardContent className="flex-1 pb-2">
@@ -214,9 +206,9 @@ function CourseCard({ enrollment, completed = false }) {
                 )}
             </CardContent>
 
-            <CardFooter className="gap-2">
+            <CardFooter className="flex flex-col gap-2 items-stretch">
                 {!isCompleted && (
-                    <Button asChild size="sm" className="flex-1">
+                    <Button asChild size="sm" className="w-full">
                         <Link href={last_lesson_id
                             ? `/learn/${course.slug}/lesson/${last_lesson_id}`
                             : `/learn/${course.slug}`}
@@ -227,7 +219,7 @@ function CourseCard({ enrollment, completed = false }) {
                     </Button>
                 )}
                 {isCompleted && certificate_uuid && (
-                    <Button asChild variant="outline" size="sm" className="flex-1 border-[#8B1A4A] text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white">
+                    <Button asChild variant="outline" size="sm" className="w-full border-[#8B1A4A] text-[#8B1A4A] hover:bg-[#8B1A4A] hover:text-white">
                         <Link href={`/certificate/${certificate_uuid}`}>
                             <Award className="mr-1 h-3.5 w-3.5" />
                             {t('dashboard.card.view_certificate')}
@@ -235,7 +227,7 @@ function CourseCard({ enrollment, completed = false }) {
                     </Button>
                 )}
                 {isCompleted && (
-                    <Button asChild variant="ghost" size="sm" className="flex-1">
+                    <Button asChild variant="ghost" size="sm" className="w-full">
                         <Link href={`/learn/${course.slug}`}>
                             {t('dashboard.card.view_course')}
                         </Link>
