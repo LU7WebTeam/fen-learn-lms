@@ -155,7 +155,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                     <div className="lg:col-span-1">
                         <div className="sticky top-6 rounded-xl border bg-card p-5 shadow-sm space-y-4">
                             {course.cover_image ? (
-                                <img src={course.cover_image} alt={course.title} className="w-full rounded-lg object-cover aspect-video" />
+                                <img src={course.cover_image} alt={course.title} className="w-full rounded-lg object-contain" />
                             ) : (
                                 <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-muted">
                                     <BookOpen className="h-10 w-10 text-muted-foreground" />
