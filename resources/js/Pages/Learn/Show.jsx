@@ -134,7 +134,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     return (
         <div className="space-y-6">
             {!showResult && (
-                <div className="rounded-lg border bg-card px-4 py-3">
+                <div className="sticky top-0 z-20 rounded-lg border bg-card px-4 py-3 shadow-sm">
                     <div className="mb-2 flex items-center justify-between gap-3 text-sm">
                         <span className="font-medium">{t('learn.quiz.title')}</span>
                         <span className="text-muted-foreground">
