@@ -88,13 +88,16 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking
                 videoId,
                 host: 'https://www.youtube-nocookie.com',
                 playerVars: {
-                    rel:           0, // no related videos at end
-                    modestbranding:1, // removes YouTube logo from control bar
-                    iv_load_policy:3, // no annotation cards
-                    showinfo:      0, // no title overlay (legacy, still respected)
-                    color:        'white',
+                    rel: 0, // no related videos at end
+                    modestbranding: 1, // removes YouTube logo from control bar
+                    iv_load_policy: 3, // no annotation cards
+                    showinfo: 0, // no title overlay (legacy, still respected)
+                    color: 'white',
                     cc_load_policy: captionsDefault ? 1 : 0,
-                    cc_lang_pref:  'en',
+                    cc_lang_pref: 'en',
+                    disablekb: 1, // disables keyboard controls (prevents some sharing shortcuts)
+                    fs: 0, // disables fullscreen button
+                    controls: 1, // show minimal controls
                 },
                 events: {
                     onStateChange(e) {
@@ -141,8 +144,6 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking
 
     return (
         <div className="relative aspect-video overflow-hidden rounded-xl bg-black">
-            {/* Covers the YouTube title bar / logo that appears at the top on hover */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-11 bg-black" />
             <div ref={divRef} className="h-full w-full" />
         </div>
     );

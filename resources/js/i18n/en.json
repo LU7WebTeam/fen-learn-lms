@@ -1,4 +1,6 @@
 {
+  "courses.show.passed": "Passed",
+  "courses.show.failed": "Failed",
   "nav.my_learning": "My Learning",
   "nav.catalog": "Catalogue",
   "nav.profile": "Profile",
@@ -219,7 +221,7 @@
   "profile.info.change_photo": "Change photo",
   "profile.info.remove_photo": "Remove photo",
   "profile.info.photo_hint": "JPG, PNG or GIF \u00b7 max 2 MB",
-  "profile.info.name": "Name",
+  "profile.info.full_name": "Full Name",
   "profile.info.email": "Email",
   "profile.info.email_locked": "Only an admin can change your email address.",
   "profile.info.gender": "Gender",
