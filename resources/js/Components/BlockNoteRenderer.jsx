@@ -8,11 +8,13 @@ function toEmbedUrl(url) {
     if (!url) return '';
     try {
         const u = new URL(url);
+        // YouTube embed params
+        const ytParams = 'controls=1&modestbranding=1&rel=0&showinfo=0';
         if ((u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com') && u.searchParams.get('v')) {
-            return `https://www.youtube.com/embed/${u.searchParams.get('v')}`;
+            return `https://www.youtube.com/embed/${u.searchParams.get('v')}?${ytParams}`;
         }
         if (u.hostname === 'youtu.be') {
-            return `https://www.youtube.com/embed${u.pathname}`;
+            return `https://www.youtube.com/embed${u.pathname}?${ytParams}`;
         }
         if (u.hostname.includes('vimeo.com')) {
             const id = u.pathname.split('/').filter(Boolean).pop();
