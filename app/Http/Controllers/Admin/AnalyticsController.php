@@ -117,7 +117,7 @@ class AnalyticsController extends Controller
             now()->format('Ymd-His')
         );
 
-        return response()->streamDownload(function () use ($course, $filters, $analytics, $learners) {
+        return response()->streamDownload(function () use ($course, $filters, $analytics, $learners, $quizLessons) {
             $handle = fopen('php://output', 'w');
 
             // UTF-8 BOM to improve Excel compatibility on Windows.
