@@ -13,3 +13,20 @@ export function tl(record, field, locale) {
     }
     return record[field] ?? '';
 }
+
+export const KUALA_LUMPUR_TIMEZONE = 'Asia/Kuala_Lumpur';
+
+export function formatKualaLumpurDate(value, locale = 'en-GB', options = {}) {
+    if (!value) return '';
+
+    const date = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat(locale, {
+        timeZone: KUALA_LUMPUR_TIMEZONE,
+        ...options,
+    }).format(date);
+}

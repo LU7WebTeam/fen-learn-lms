@@ -83,8 +83,6 @@ export default function UpdateProfileInformation({
         occupation:   user.occupation ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
-        avatar_file:  null,
-        avatar_clear: false,
     });
 
     const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
@@ -127,7 +125,6 @@ export default function UpdateProfileInformation({
         post(route('profile.update'), { forceFormData: true });
     };
 
-    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
     return (
         <section className={className}>
@@ -139,67 +136,17 @@ export default function UpdateProfileInformation({
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
-                {/* Avatar */}
+
+                {/* Full Name (read-only) */}
                 <div>
-                    <InputLabel value="Profile Picture" />
-                    <div className="mt-2 flex items-center gap-4">
-                        <div className="relative group">
-                            <div className="h-20 w-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-500">
-                                {previewUrl
-                                    ? <img src={previewUrl} alt="Avatar" className="h-full w-full object-cover" />
-                                    : <span>{initials}</span>
-                                }
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => avatarInput.current?.click()}
-                                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Camera className="h-5 w-5 text-white" />
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <button
-                                type="button"
-                                onClick={() => avatarInput.current?.click()}
-                                className="text-sm font-medium text-gray-700 hover:text-gray-900 underline underline-offset-2"
-                            >
-                                {t('profile.info.change_photo')}
-                            </button>
-                            {previewUrl && (
-                                <button
-                                    type="button"
-                                    onClick={handleAvatarClear}
-                                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
-                                >
-                                    <X className="h-3 w-3" /> {t('profile.info.remove_photo')}
-                                </button>
-                            )}
-                            <p className="text-xs text-gray-400">{t('profile.info.photo_hint')}</p>
-                        </div>
-
-                        <input
-                            ref={avatarInput}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleAvatarChange}
-                        />
-                    </div>
-                    <InputError className="mt-2" message={errors.avatar_file} />
-                </div>
-
-                {/* Name */}
-                <div>
-                    <InputLabel htmlFor="name" value={t('profile.info.name')} />
+                    <InputLabel htmlFor="name" value={t('profile.info.full_name') || 'Full Name'} />
                     <TextInput
                         id="name"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full bg-gray-100 cursor-not-allowed"
                         value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        readOnly
+                        disabled
                         required
-                        isFocused
                         autoComplete="name"
                     />
                     <InputError className="mt-2" message={errors.name} />

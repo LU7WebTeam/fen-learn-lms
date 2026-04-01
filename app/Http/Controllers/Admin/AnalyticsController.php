@@ -108,7 +108,8 @@ class AnalyticsController extends Controller
         $filters = $this->collectFilters($request, $course->id);
 
         $analytics = $this->buildAnalytics($course, $filters);
-        $learners = $this->buildLearnersForExport($course, $filters);
+        $quizLessons = $this->getQuizLessonsForCourse($course);
+        $learners = $this->buildLearnersForExport($course, $filters, $quizLessons);
 
         $filename = sprintf(
             'course-analytics-%s-%s.csv',
@@ -163,10 +164,12 @@ class AnalyticsController extends Controller
                 'quiz_attempts_count',
                 'quizzes_passed_count',
                 'avg_quiz_score_percent',
+                ...$quizLessons->map(fn (array $lesson) => 'quiz_mark: '.$lesson['export_label'])->all(),
             ]);
 
             foreach ($learners as $learner) {
                 $achievements = $learner['achievements'] ?? [];
+                $quizMarks = collect($achievements['quiz_marks'] ?? []);
 
                 fputcsv($handle, [
                     $learner['enrollment_id'] ?? '',
@@ -189,6 +192,11 @@ class AnalyticsController extends Controller
                     $achievements['quiz_attempts_count'] ?? 0,
                     $achievements['quizzes_passed_count'] ?? 0,
                     $achievements['avg_quiz_score_percent'] ?? 0,
+                    ...$quizLessons->map(function (array $lesson) use ($quizMarks) {
+                        $quizMark = $quizMarks->get($lesson['id']);
+
+                        return $quizMark['display'] ?? '';
+                    })->all(),
                 ]);
             }
 
@@ -750,12 +758,13 @@ class AnalyticsController extends Controller
             ->tap(fn($query) => $this->applyDemographicFilters($query, $filters));
     }
 
-    private function buildLearnersForExport(Course $course, array $filters): array
+    private function buildLearnersForExport(Course $course, array $filters, $quizLessons = null): array
     {
         $dateFrom = Carbon::parse($filters['date_from'])->startOfDay();
         $dateTo = Carbon::parse($filters['date_to'])->endOfDay();
 
         $totalLessons = $course->lessons()->count();
+        $quizLessons ??= $this->getQuizLessonsForCourse($course);
         $enrollmentIds = $this->baseEnrollmentQuery($course, $filters)
             ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo])
             ->pluck('enrollments.id');
@@ -786,12 +795,14 @@ class AnalyticsController extends Controller
                 return round($attempts->avg(fn($a) => $a->max_score > 0 ? ($a->score / $a->max_score * 100) : 0), 1);
             });
 
+        $quizMarksByEnrollment = $this->buildQuizMarksByEnrollment($enrollmentIds, $quizLessons);
+
         return Enrollment::query()
             ->whereIn('id', $enrollmentIds)
             ->with('user:id,name,email,gender,race,state,birthdate,occupation,organization')
             ->orderByDesc('enrolled_at')
             ->get()
-            ->map(function (Enrollment $enrollment) use ($progressByEnrollment, $quizByEnrollment, $quizAvgByEnrollment, $totalLessons) {
+            ->map(function (Enrollment $enrollment) use ($progressByEnrollment, $quizByEnrollment, $quizAvgByEnrollment, $quizMarksByEnrollment, $totalLessons) {
                 $completedLessons = (int) ($progressByEnrollment[$enrollment->id] ?? 0);
                 $progressPercent = $totalLessons > 0
                     ? round(($completedLessons / $totalLessons) * 100, 1)
@@ -821,6 +832,7 @@ class AnalyticsController extends Controller
                         'quiz_attempts_count' => (int) ($quizStats?->attempts_count ?? 0),
                         'quizzes_passed_count' => (int) ($quizStats?->passed_count ?? 0),
                         'avg_quiz_score_percent' => (float) ($quizAvgByEnrollment[$enrollment->id] ?? 0),
+                        'quiz_marks' => $quizMarksByEnrollment[$enrollment->id] ?? [],
                     ],
                 ];
             })
@@ -834,6 +846,7 @@ class AnalyticsController extends Controller
         $dateTo = Carbon::parse($filters['date_to'])->endOfDay();
 
         $totalLessons = $course->lessons()->count();
+        $quizLessons = $this->getQuizLessonsForCourse($course);
         $enrollmentIds = $this->baseEnrollmentQuery($course, $filters)
             ->whereBetween('enrollments.enrolled_at', [$dateFrom, $dateTo])
             ->pluck('enrollments.id');
@@ -841,6 +854,8 @@ class AnalyticsController extends Controller
         if ($enrollmentIds->isEmpty()) {
             return [];
         }
+
+        $quizMarksByEnrollment = $this->buildQuizMarksByEnrollment($enrollmentIds, $quizLessons);
 
         return Enrollment::query()
             ->whereIn('id', $enrollmentIds)
@@ -851,7 +866,7 @@ class AnalyticsController extends Controller
             ])
             ->latest('enrolled_at')
             ->get()
-            ->map(function (Enrollment $enrollment) use ($totalLessons) {
+            ->map(function (Enrollment $enrollment) use ($quizMarksByEnrollment, $totalLessons) {
                 $completedCount = $enrollment->lessonProgress->count();
 
                 return [
@@ -874,6 +889,7 @@ class AnalyticsController extends Controller
                     'progress'             => $totalLessons > 0
                         ? (int) round(($completedCount / $totalLessons) * 100) : 0,
                     'certificate_uuid'     => $enrollment->certificate_uuid,
+                    'quiz_marks'           => array_values($quizMarksByEnrollment[$enrollment->id] ?? []),
                     'completed_lesson_ids' => $enrollment->lessonProgress->pluck('lesson_id')->all(),
                     'last_activity'        => $enrollment->lessonProgress->max('completed_at')
                         ? Carbon::parse($enrollment->lessonProgress->max('completed_at'))->format('M j, Y')
@@ -881,6 +897,72 @@ class AnalyticsController extends Controller
                 ];
             })
             ->values()
+            ->all();
+    }
+
+    private function getQuizLessonsForCourse(Course $course)
+    {
+        return $course->sections()
+            ->orderBy('order')
+            ->with(['lessons' => fn($query) => $query
+                ->where('type', 'quiz')
+                ->orderBy('order')
+                ->select(['id', 'section_id', 'title']),
+            ])
+            ->get(['id', 'title'])
+            ->flatMap(fn($section) => $section->lessons->map(fn($lesson) => [
+                'id' => $lesson->id,
+                'title' => $lesson->title,
+                'section_title' => $section->title,
+                'export_label' => $section->title
+                    ? $section->title.' / '.$lesson->title
+                    : $lesson->title,
+            ]))
+            ->values();
+    }
+
+    private function buildQuizMarksByEnrollment($enrollmentIds, $quizLessons): array
+    {
+        $quizLessonIds = collect($quizLessons)->pluck('id');
+
+        if ($quizLessonIds->isEmpty()) {
+            return [];
+        }
+
+        $quizLessonsById = collect($quizLessons)->keyBy('id');
+
+        return QuizAttempt::query()
+            ->whereIn('enrollment_id', $enrollmentIds)
+            ->whereIn('lesson_id', $quizLessonIds)
+            ->orderByDesc('attempt_number')
+            ->orderByDesc('id')
+            ->get(['enrollment_id', 'lesson_id', 'attempt_number', 'score', 'max_score', 'passed'])
+            ->groupBy('enrollment_id')
+            ->map(function ($attempts) use ($quizLessonsById) {
+                return $attempts
+                    ->groupBy('lesson_id')
+                    ->map(function ($lessonAttempts, $lessonId) use ($quizLessonsById) {
+                        $attempt = $lessonAttempts->first();
+                        $lesson = $quizLessonsById->get($lessonId, []);
+                        $percentage = $attempt->max_score > 0
+                            ? (int) round(($attempt->score / $attempt->max_score) * 100)
+                            : 0;
+
+                        return [
+                            'lesson_id' => (int) $attempt->lesson_id,
+                            'lesson_title' => $lesson['title'] ?? null,
+                            'section_title' => $lesson['section_title'] ?? null,
+                            'label' => $lesson['export_label'] ?? ($lesson['title'] ?? null),
+                            'attempt_number' => (int) $attempt->attempt_number,
+                            'score' => (int) $attempt->score,
+                            'max_score' => (int) $attempt->max_score,
+                            'percentage' => $percentage,
+                            'passed' => (bool) $attempt->passed,
+                            'display' => sprintf('%d/%d (%d%%)', (int) $attempt->score, (int) $attempt->max_score, $percentage),
+                        ];
+                    })
+                    ->all();
+            })
             ->all();
     }
 }

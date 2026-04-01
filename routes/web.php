@@ -112,6 +112,7 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update-role');
     Route::patch('/users/{user}/course-access', [\App\Http\Controllers\Admin\UsersController::class, 'updateCourseAccess'])->name('users.update-course-access');
+    Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UsersController::class, 'destroy'])->name('users.destroy');
 
     // Staff invitations
     Route::post('/invitations', [AdminInvitationsController::class, 'store'])->name('invitations.store');

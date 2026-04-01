@@ -53,12 +53,15 @@ import {
     User,
     Clock,
     KeyRound,
+    Trash2,
+    TriangleAlert,
 } from 'lucide-react';
 import {
     ORGANIZATION_OTHER_VALUE,
     splitOrganizationValue,
     usesOrganizationList,
 } from '@/lib/profileOrganizations';
+import { formatKualaLumpurDate } from '@/lib/locale';
 
 const MALAYSIAN_STATES = [
     'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan','Pahang','Perak',
@@ -786,7 +789,7 @@ function SuspendedBadge() {
     );
 }
 
-function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile, onResetPassword, isSuperAdmin }) {
+function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile, onResetPassword, onDelete, isSuperAdmin }) {
     const isSuspended = !!user.suspended_at;
     return (
         <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
@@ -806,7 +809,7 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile,
                 </div>
             </td>
             <td className="px-3 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {formatKualaLumpurDate(user.created_at, 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </td>
             <td className="px-3 py-3">
                 <div className="flex items-center gap-1.5 text-sm">
@@ -842,10 +845,16 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile,
                         </Button>
                     )}
                     {isSuperAdmin && (
-                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
-                            <KeyRound className="h-3.5 w-3.5" />
-                            Password
-                        </Button>
+                        <>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
+                                <KeyRound className="h-3.5 w-3.5" />
+                                Password
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive" onClick={() => onDelete(user)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Delete
+                            </Button>
+                        </>
                     )}
                 </div>
             </td>
@@ -853,7 +862,7 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile,
     );
 }
 
-function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, currentUserId, onResetPassword, isSuperAdmin }) {
+function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, currentUserId, onResetPassword, onDelete, isSuperAdmin }) {
     const isSelf = user.id === currentUserId;
     const isSuspended = !!user.suspended_at;
     return (
@@ -876,7 +885,7 @@ function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, 
                 <RoleBadge role={user.role} />
             </td>
             <td className="px-3 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {formatKualaLumpurDate(user.created_at, 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </td>
             <td className="py-3 pl-3 pr-4 text-right">
                 <div className="flex items-center justify-end gap-1">
@@ -910,14 +919,59 @@ function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, 
                         )
                     )}
                     {isSuperAdmin && !isSelf && (
-                        <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
-                            <KeyRound className="h-3.5 w-3.5" />
-                            Password
-                        </Button>
+                        <>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-amber-600 hover:text-amber-700" onClick={() => onResetPassword(user)}>
+                                <KeyRound className="h-3.5 w-3.5" />
+                                Password
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive" onClick={() => onDelete(user)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Delete
+                            </Button>
+                        </>
                     )}
                 </div>
             </td>
         </tr>
+    );
+}
+
+function DeleteUserDialog({ user, open, onClose }) {
+    const { delete: destroy, processing } = useForm({});
+
+    function handleDelete() {
+        destroy(route('admin.users.destroy', user.id), {
+            preserveScroll: true,
+            onSuccess: onClose,
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !processing) onClose(); }}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-destructive">
+                        <TriangleAlert className="h-4 w-4" /> Delete User
+                    </DialogTitle>
+                    <DialogDescription>
+                        This will permanently delete <strong>{user?.name}</strong> and remove their related records where applicable.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-muted-foreground">
+                    <p><strong>Name:</strong> {user?.name}</p>
+                    <p><strong>Email:</strong> {user?.email}</p>
+                    <p className="mt-2">This action cannot be undone.</p>
+                </div>
+
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={onClose} disabled={processing}>Cancel</Button>
+                    <Button type="button" variant="destructive" onClick={handleDelete} disabled={processing}>
+                        {processing ? 'Deleting…' : 'Delete User'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -1179,6 +1233,7 @@ export default function UsersIndex({ staff, students, counts, filters, available
     const [profileUserId, setProfileUserId] = useState(null);
     const [resetPasswordUser, setResetPasswordUser] = useState(null);
     const [accessUser, setAccessUser] = useState(null);
+    const [deleteUser, setDeleteUser] = useState(null);
     const isSuperAdmin = auth.user.role === 'super_admin';
 
     function handleUnsuspend(user) {
@@ -1344,6 +1399,7 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                                     onUnsuspend={handleUnsuspend}
                                                     onViewProfile={setProfileUserId}
                                                     onResetPassword={setResetPasswordUser}
+                                                    onDelete={setDeleteUser}
                                                     isSuperAdmin={isSuperAdmin}
                                                 />
                                             ))}
@@ -1392,6 +1448,7 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                                     onUnsuspend={handleUnsuspend}
                                                     currentUserId={auth.user.id}
                                                     onResetPassword={setResetPasswordUser}
+                                                    onDelete={setDeleteUser}
                                                     isSuperAdmin={isSuperAdmin}
                                                 />
                                             ))}
@@ -1451,6 +1508,14 @@ export default function UsersIndex({ staff, students, counts, filters, available
                     availableCourses={availableCourses}
                     open={!!accessUser}
                     onClose={() => setAccessUser(null)}
+                />
+            )}
+
+            {deleteUser && (
+                <DeleteUserDialog
+                    user={deleteUser}
+                    open={!!deleteUser}
+                    onClose={() => setDeleteUser(null)}
                 />
             )}
         </AdminLayout>

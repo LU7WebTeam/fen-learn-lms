@@ -433,11 +433,15 @@ function QuizEditor({ data, setData, errors, lang }) {
     try { parsed = JSON.parse(rawContent); } catch {}
 
     const questions    = parsed.questions    ?? [];
-    const passingScore = parsed.passing_score ?? 70;
+    // Allow passing_score to be 0 (informational quiz)
+    const passingScore = typeof parsed.passing_score === 'number' ? parsed.passing_score : 70;
     const maxAttempts  = parsed.max_attempts  ?? 0;
 
     function save(qs = questions, ps = passingScore, ma = maxAttempts) {
-        setData('content', JSON.stringify({ questions: qs, passing_score: ps, max_attempts: ma }));
+        // If ps is blank, null, or NaN, treat as informational (no passing mark)
+        let passing_score = ps;
+        if (ps === '' || ps === null || isNaN(ps)) passing_score = 0;
+        setData('content', JSON.stringify({ questions: qs, passing_score, max_attempts: ma }));
     }
 
     function addQuestion() {
@@ -447,6 +451,48 @@ function QuizEditor({ data, setData, errors, lang }) {
     function updateQuestion(idx, field, value) {
         const qs = questions.map((q, i) => i === idx ? { ...q, [field]: value } : q);
         save(qs);
+    }
+
+    function updateOption(qIdx, oIdx, value) {
+        const qs = questions.map((q, i) => {
+            if (i !== qIdx) return q;
+            const opts = [...(q.options ?? [])];
+            opts[oIdx] = value;
+            return { ...q, options: opts };
+        });
+        save(qs);
+    }
+
+    function addOption(qIdx) {
+        const qs = questions.map((q, i) => {
+            if (i !== qIdx) return q;
+            return { ...q, options: [...(q.options ?? []), q.type === 'image_choice' ? { image_url: '', label: '' } : ''] };
+        });
+        save(qs);
+    }
+
+    function removeOption(qIdx, oIdx) {
+        const qs = questions.map((q, i) => {
+            if (i !== qIdx) return q;
+            const opts = [...(q.options ?? [])];
+            opts.splice(oIdx, 1);
+            return { ...q, options: opts };
+        });
+        save(qs);
+    }
+
+    function removeQuestion(qIdx) {
+        const qs = questions.filter((_, i) => i !== qIdx);
+        save(qs);
+    }
+
+    function toggleCorrectAnswer(qIdx, oIdx) {
+        const q = questions[qIdx];
+        if (!q.multi_answer) return;
+        let correct = Array.isArray(q.correct) ? [...q.correct] : [];
+        if (correct.includes(oIdx)) correct = correct.filter(i => i !== oIdx);
+        else correct.push(oIdx);
+        updateQuestion(qIdx, 'correct', correct);
     }
 
     function toggleQuestionType(qIdx, newType) {
@@ -467,89 +513,33 @@ function QuizEditor({ data, setData, errors, lang }) {
         save(qs);
     }
 
-    function updateOption(qIdx, oIdx, value) {
-        const qs = questions.map((q, i) => {
-            if (i !== qIdx) return q;
-            const options = q.options.map((o, j) => j === oIdx ? value : o);
-            return { ...q, options };
-        });
-        save(qs);
-    }
-
-    function addOption(qIdx) {
-        const q = questions[qIdx];
-        const isImg = q.type === 'image_choice';
-        const newOpt = isImg ? { image_url: '', label: '' } : '';
-        const qs = questions.map((item, i) => i === qIdx ? { ...item, options: [...item.options, newOpt] } : item);
-        save(qs);
-    }
-
-    function removeOption(qIdx, oIdx) {
-        const qs = questions.map((q, i) => {
-            if (i !== qIdx) return q;
-            const options = q.options.filter((_, j) => j !== oIdx);
-            let correct;
-            if (Array.isArray(q.correct)) {
-                correct = q.correct.filter(ci => ci !== oIdx).map(ci => ci > oIdx ? ci - 1 : ci);
-                if (correct.length === 0) correct = [0];
-            } else {
-                correct = q.correct >= options.length ? 0 : (q.correct > oIdx ? q.correct - 1 : q.correct);
-            }
-            return { ...q, options, correct };
-        });
-        save(qs);
-    }
-
-    function toggleMultiAnswer(qIdx) {
-        const q = questions[qIdx];
-        const nowMulti = !q.multi_answer;
-        let correct;
-        if (nowMulti) {
-            correct = typeof q.correct === 'number' ? [q.correct] : (Array.isArray(q.correct) ? q.correct : [0]);
-        } else {
-            correct = Array.isArray(q.correct) ? (q.correct[0] ?? 0) : (typeof q.correct === 'number' ? q.correct : 0);
-        }
-        const qs = questions.map((item, i) => i === qIdx ? { ...item, multi_answer: nowMulti, correct } : item);
-        save(qs);
-    }
-
-    function toggleCorrectAnswer(qIdx, oIdx) {
-        const q = questions[qIdx];
-        const current = Array.isArray(q.correct) ? q.correct : [typeof q.correct === 'number' ? q.correct : 0];
-        const updated = current.includes(oIdx)
-            ? current.filter(ci => ci !== oIdx)
-            : [...current, oIdx].sort((a, b) => a - b);
-        const qs = questions.map((item, i) => i === qIdx ? { ...item, correct: updated.length > 0 ? updated : [0] } : item);
-        save(qs);
-    }
-
-    function removeQuestion(idx) {
-        save(questions.filter((_, i) => i !== idx));
-    }
-
     return (
         <div className="space-y-6">
             {errors.content && <InputError message={errors.content} />}
-
             <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">Passing score</p>
-                        <p className="text-xs text-muted-foreground">Min % required to pass</p>
+                        <p className="text-xs text-muted-foreground">Min % required to pass. Leave blank or 0 for informational quiz (no passing mark).</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                         <Input
                             type="number"
-                            min={1}
+                            min={0}
                             max={100}
-                            value={passingScore}
-                            onChange={(e) => save(undefined, Math.min(100, Math.max(1, parseInt(e.target.value) || 70)))}
+                            value={passingScore === 0 ? '' : passingScore}
+                            placeholder="0 = info only"
+                            onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
+                                if (isNaN(val) || val < 0) save(undefined, 0);
+                                else if (val > 100) save(undefined, 100);
+                                else save(undefined, val);
+                            }}
                             className="w-20 text-center"
                         />
                         <span className="text-sm text-muted-foreground">%</span>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-4 rounded-lg border bg-muted/30 px-4 py-3">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">Allowed attempts</p>
@@ -571,7 +561,6 @@ function QuizEditor({ data, setData, errors, lang }) {
                     </div>
                 </div>
             </div>
-
             {questions.length === 0 ? (
                 <div className="rounded-xl border border-dashed py-12 text-center">
                     <p className="mb-4 text-sm text-muted-foreground">No questions yet.</p>
@@ -583,45 +572,13 @@ function QuizEditor({ data, setData, errors, lang }) {
             ) : (
                 <div className="space-y-4">
                     {questions.map((q, qIdx) => (
-                        <Card key={q.id ?? qIdx}>
-                            <CardHeader className="flex flex-row items-start justify-between pb-2">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <CardTitle className="text-sm font-medium">Question {qIdx + 1}</CardTitle>
-                                    <div className="flex rounded border p-0.5 gap-0.5">
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleQuestionType(qIdx, 'text')}
-                                            title="Text choices"
-                                            className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', (q.type ?? 'text') === 'text' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'].join(' ')}
-                                        >
-                                            <Type className="h-3 w-3" /> Text
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleQuestionType(qIdx, 'image_choice')}
-                                            title="Image choices"
-                                            className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', q.type === 'image_choice' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'].join(' ')}
-                                        >
-                                            <ImageIcon className="h-3 w-3" /> Images
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleMultiAnswer(qIdx)}
-                                        title={q.multi_answer ? 'Switch to single correct answer' : 'Allow multiple correct answers'}
-                                        className={['flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors', q.multi_answer ? 'border-green-400 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400' : 'border-muted text-muted-foreground hover:text-foreground'].join(' ')}
-                                    >
-                                        <Check className="h-3 w-3" /> Multi
-                                    </button>
+                        <Card key={q.id} className="overflow-visible">
+                            <CardHeader className="flex flex-row items-center gap-2 pb-2">
+                                <div className="flex-1">
+                                    <Label className="text-sm font-medium">Question {qIdx + 1}</Label>
                                 </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                    onClick={() => removeQuestion(qIdx)}
-                                >
-                                    <Trash2 className="h-3.5 w-3.5" />
+                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeQuestion(qIdx)}>
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </CardHeader>
                             <CardContent className="space-y-4">

@@ -306,4 +306,33 @@ class UsersController extends Controller
 
         return back()->with('error', 'Failed to send password reset link. Please try again.');
     }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        if (! $request->user()?->isSuperAdmin()) {
+            abort(403, 'Only super admins can delete users.');
+        }
+
+        if ($request->user()->is($user)) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($user->isSuperAdmin() && User::where('role', 'super_admin')->count() <= 1) {
+            return back()->with('error', 'You cannot delete the last remaining super admin.');
+        }
+
+        $deletedName = $user->name;
+        $deletedEmail = $user->email;
+        $deletedRole = $user->role;
+
+        ActivityLogger::record('Deleted user', $user, [
+            'title' => $deletedName,
+            'email' => $deletedEmail,
+            'role' => $deletedRole,
+        ], 'deleted');
+
+        $user->delete();
+
+        return back()->with('success', "{$deletedName} has been deleted.");
+    }
 }

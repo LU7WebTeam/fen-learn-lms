@@ -28,6 +28,7 @@ const LEARNER_ACTIVITY_EVENT_LABELS = {
 };
 
 function renderActivityResult(item) {
+    const t = useT();
     const hasScore = item.properties?.percentage !== null && item.properties?.percentage !== undefined;
     const hasPassed = typeof item.properties?.passed === 'boolean';
 
@@ -36,14 +37,14 @@ function renderActivityResult(item) {
     }
 
     if (hasScore && hasPassed) {
-        return `${item.properties.percentage}% (${item.properties.passed ? 'Passed' : 'Failed'})`;
+        return `${item.properties.percentage}% (${item.properties.passed ? t('courses.show.passed') : t('courses.show.failed')})`;
     }
 
     if (hasScore) {
         return `${item.properties.percentage}%`;
     }
 
-    return item.properties.passed ? 'Passed' : 'Failed';
+    return item.properties.passed ? t('courses.show.passed') : t('courses.show.failed');
 }
 
 function LessonRow({ lesson, completed, courseSlug, enrolled }) {
@@ -261,7 +262,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                             {learnerActivity.map((item) => (
                                                 <tr key={item.id} className="border-t align-top">
                                                     <td className="px-3 py-2">{t('courses.show.event.' + item.event)}</td>
-                                                    <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_title ?? '-'}</td>
+                                                    <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_id && item.properties?.lesson ? tl(item.properties.lesson, 'title', locale) : (item.properties?.lesson_title ?? '-')}</td>
                                                     <td className="px-3 py-2">{renderActivityResult(item)}</td>
                                                     <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
                                                 </tr>

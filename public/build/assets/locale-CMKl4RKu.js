@@ -1,0 +1,1 @@
+const r="Asia/Kuala_Lumpur";function i(t,n="en-GB",a={}){if(!t)return"";const e=t instanceof Date?t:new Date(t);return Number.isNaN(e.getTime())?"":new Intl.DateTimeFormat(n,{timeZone:r,...a}).format(e)}export{i as f};

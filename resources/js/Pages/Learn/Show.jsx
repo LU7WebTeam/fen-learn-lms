@@ -144,16 +144,10 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                         </span>
                     </div>
                     <Progress value={answeredProgress} className="h-2" />
-                    {/* Show passing score if set */}
+                    {/* Show passing score if set (removed info label for informational quizzes) */}
                     {hasPassingScore && (
                         <div className="mt-2 text-xs text-muted-foreground">
                             {t('learn.quiz.passing_score', { n: passingScore })}
-                        </div>
-                    )}
-                    {/* Show informational quiz label if no passing score */}
-                    {!hasPassingScore && (
-                        <div className="mt-2 text-xs text-muted-foreground">
-                            {t('learn.quiz.info_only')}
                         </div>
                     )}
                 </div>
@@ -199,9 +193,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                         a.passed
                                             ? <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
                                             : <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.need_pct', { n: passingScore })}</span>
-                                    ) : (
-                                        <span className="text-xs text-muted-foreground shrink-0">{t('learn.quiz.info_only_short')}</span>
-                                    )}
+                                    ) : null}
                                     <span className="hidden md:block text-xs text-muted-foreground shrink-0">{a.created_at}</span>
                                 </div>
                             </div>
@@ -221,7 +213,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                     <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
                     {hasPassingScore
                         ? (lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`)
-                        : ` — ${t('learn.quiz.info_only_short')}`}
+                        : ''}
                 </div>
             )}
 

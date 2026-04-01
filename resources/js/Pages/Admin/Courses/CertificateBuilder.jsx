@@ -10,6 +10,7 @@ import { Separator } from '@/Components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/Components/ui/accordion';
 import { Checkbox } from '@/Components/ui/checkbox';
+import { formatKualaLumpurDate } from '@/lib/locale';
 import {
     Award, Check, Loader2, Eye, EyeOff, RotateCcw,
     Type, Image as ImageIcon, Palette, Settings2, Users, BookOpen, Percent
@@ -24,7 +25,7 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
     const sampleDynamic = {
         recipient_name:  'Jane Smith',
         course_title:    courseTitle || 'Sample Course Title',
-        completion_date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        completion_date: formatKualaLumpurDate(new Date(), 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         certificate_id:  'ABC-123-SAMPLE',
         signatory_name:  signatory.name  || '',
         signatory_title: signatory.title || '',
