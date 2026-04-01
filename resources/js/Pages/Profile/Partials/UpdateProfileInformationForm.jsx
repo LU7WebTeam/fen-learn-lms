@@ -133,8 +133,8 @@ export default function UpdateProfileInformation({
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">{t('profile.info.title')}</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('profile.info.title')}</h2>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {t('profile.info.subtitle')}
                 </p>
             </header>
@@ -146,7 +146,7 @@ export default function UpdateProfileInformation({
                     <InputLabel htmlFor="name" value={t('profile.info.full_name') || 'Full Name'} />
                     <TextInput
                         id="name"
-                        className="mt-1 block w-full bg-gray-100 cursor-not-allowed"
+                        className="mt-1 block w-full bg-gray-100 dark:bg-slate-800 dark:text-slate-200 cursor-not-allowed"
                         value={data.name}
                         readOnly
                         disabled
@@ -168,7 +168,7 @@ export default function UpdateProfileInformation({
                         readOnly
                         autoComplete="username"
                     />
-                    <p className="mt-2 text-sm text-gray-500">{t('profile.info.email_locked')}</p>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('profile.info.email_locked')}</p>
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2">
@@ -176,7 +176,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="gender" value={t('profile.info.gender')} />
                         <select
                             id="gender"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.gender}
                             onChange={(e) => setData('gender', e.target.value)}
                         >
@@ -191,7 +191,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="race" value={t('profile.info.race')} />
                         <select
                             id="race"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.race}
                             onChange={(e) => setData('race', e.target.value)}
                         >
@@ -209,7 +209,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="state" value={t('profile.info.state')} />
                         <select
                             id="state"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.state}
                             onChange={(e) => setData('state', e.target.value)}
                         >
@@ -240,7 +240,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="occupation" value={t('profile.info.occupation')} />
                         <select
                             id="occupation"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             value={data.occupation}
                             onChange={(e) => handleOccupationChange(e.target.value)}
                         >
@@ -321,13 +321,13 @@ export default function UpdateProfileInformation({
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
-                        <p className="mt-2 text-sm text-gray-800">
+                        <p className="mt-2 text-sm text-gray-800 dark:text-gray-200">
                             {t('profile.info.unverified')}{' '}
                             <Link
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                className="rounded-md text-sm text-gray-600 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
                                 {t('profile.info.resend')}
                             </Link>
@@ -349,7 +349,7 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">{t('profile.info.saved')}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('profile.info.saved')}</p>
                     </Transition>
                 </div>
             </form>
