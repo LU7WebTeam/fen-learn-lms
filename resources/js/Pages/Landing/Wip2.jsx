@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { BookOpen, Award, CheckCircle, Clock } from 'lucide-react';
+import { BookOpen, Award, CheckCircle, Clock, Globe } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
 
@@ -47,9 +47,13 @@ const FAQ_ITEMS = [
 ];
 
 export default function Wip2() {
-    const { platform, auth } = usePage().props;
+    const { platform, auth, locale } = usePage().props;
     const platformName = platform?.name || 'FEN E-Learning Platform';
     const t = useT();
+    const posterLang = locale === 'ms' ? 'BM' : 'ENG';
+    const posterSrc = posterLang === 'BM'
+        ? '/images/FEN_PROAKTIF_20_BM.webp'
+        : '/images/FEN_PROAKTIF_20_ENG.webp';
 
     return (
         <div className="min-h-screen bg-white font-['Lexend',sans-serif] text-slate-600">
@@ -61,7 +65,8 @@ export default function Wip2() {
             </Head>
 
             {/* Navbar */}
-            <nav className="flex justify-between items-center py-5 px-8 max-w-7xl mx-auto bg-white">
+            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm">
+            <nav className="flex justify-between items-center py-4 px-8 max-w-7xl mx-auto">
                 <Link href="/" className="flex items-center gap-2">
                     {platform?.logo_url ? (
                         <div className="w-10 h-10 overflow-hidden flex items-center justify-center">
@@ -77,9 +82,9 @@ export default function Wip2() {
                     </span>
                 </Link>
                 <div className="hidden md:flex items-center gap-8 font-medium">
-                    <a href="#home" className="hover:text-slate-900 transition">{t('landing.nav.home')}</a>
-                    <Link href={route('courses.index')} className="hover:text-slate-900 transition">{t('landing.nav.courses')}</Link>
-                    <a href="#features" className="hover:text-slate-900 transition">{t('landing.nav.features')}</a>
+                    <a href="#proaktif" className="hover:text-slate-900 transition">{t('landing.nav.proaktif')}</a>
+                    <a href="#about" className="hover:text-slate-900 transition">{t('landing.nav.about')}</a>
+                    <a href="#features" className="hover:text-slate-900 transition">{t('landing.nav.why_fen')}</a>
                     <a href="#faq" className="hover:text-slate-900 transition">{t('landing.nav.faq')}</a>
                 </div>
                 <div className="flex items-center gap-3">
@@ -100,6 +105,7 @@ export default function Wip2() {
                     )}
                 </div>
             </nav>
+            </header>
 
             {/* Hero Section with full-width background image */}
             <style>{`
@@ -133,8 +139,138 @@ export default function Wip2() {
                 </section>
             </div>
 
+            {/* Featured Course Spotlight */}
+            <section
+                id="proaktif"
+                className="py-20 scroll-mt-20"
+                style={{
+                    backgroundColor: '#f8fafc',
+                    backgroundImage: "radial-gradient(circle at 15% 15%, rgba(96, 165, 250, 0.18) 0, rgba(96, 165, 250, 0) 35%), radial-gradient(circle at 85% 85%, rgba(129, 140, 248, 0.14) 0, rgba(129, 140, 248, 0) 38%), repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.08) 0, rgba(148, 163, 184, 0.08) 1px, transparent 1px, transparent 36px), repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0, rgba(148, 163, 184, 0.08) 1px, transparent 1px, transparent 36px)",
+                }}
+            >
+                <div className="max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    <div className="lg:col-span-7 p-1 lg:p-2">
+                        <div className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+                            {t('landing.spotlight.badge')}
+                        </div>
+                        <h2 className="mt-4 font-['Bricolage_Grotesque',sans-serif] text-4xl md:text-5xl font-extrabold text-primary">
+                            {t('landing.spotlight.title')}
+                        </h2>
+                        <div className="mt-6 space-y-4 text-slate-600 text-lg">
+                            <p>{t('landing.spotlight.p1')}</p>
+                            <p className="font-medium text-slate-800 border border-blue-100 bg-blue-50 rounded-2xl px-4 py-3">
+                                {t('landing.spotlight.highlight')}
+                            </p>
+                            <p>{t('landing.spotlight.p2')}</p>
+                            <p>{t('landing.spotlight.p3')}</p>
+                        </div>
+                        <div className="pt-6 flex flex-wrap gap-4">
+                            <Link href={route('register')} className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
+                                {t('landing.cta.register_enroll')}
+                            </Link>
+                            <Link href={route('courses.show', 'fen-proaktif')} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
+                                {t('landing.cta.view_course')}
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="lg:col-span-5">
+                        
+                        <div className="relative rounded-3xl overflow-hidden aspect-[4/5] bg-slate-100 shadow-sm">
+                            <img
+                                src={posterSrc}
+                                alt={`Proaktif 2.0 poster (${posterLang})`}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* What You Will Learn Section */}
+            <section
+                className="py-24 px-6 md:px-8"
+                style={{
+                    backgroundColor: '#f8fafc',
+                    backgroundImage: "radial-gradient(circle at 15% 15%, rgba(96, 165, 250, 0.18) 0, rgba(96, 165, 250, 0) 35%), radial-gradient(circle at 85% 85%, rgba(129, 140, 248, 0.14) 0, rgba(129, 140, 248, 0) 38%), repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.08) 0, rgba(148, 163, 184, 0.08) 1px, transparent 1px, transparent 36px), repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0, rgba(148, 163, 184, 0.08) 1px, transparent 1px, transparent 36px)",
+                }}
+            >
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        <div className="lg:col-span-4 sticky top-24 self-start">
+                            <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl lg:text-5xl font-extrabold text-primary">
+                                {t('landing.learn.title')}
+                            </h2>
+                            <p className="mt-4 text-slate-600 text-lg">
+                                Build the same Proaktif 2.0 skills highlighted above through five practical focus areas.
+                            </p>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            {LEARN_ITEMS.map((item, idx) => (
+                                <div key={idx} className="flex gap-5 py-6 border-b border-slate-200/70 last:border-b-0">
+                                    <div className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-pink-500 text-white font-bold text-sm">
+                                        {item.num}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-['Bricolage_Grotesque',sans-serif] text-2xl font-bold text-secondary">
+                                            {t(item.titleKey)}
+                                        </h3>
+                                        <p className="mt-2 text-base text-slate-600 leading-relaxed">
+                                            {t(item.descKey)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* About Section */}
+            <section id="about" className="py-20 px-6 md:px-8 bg-white scroll-mt-20">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                        <div>
+                            <div className="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-semibold tracking-wide uppercase mb-4">
+                                {t('nav.about')}
+                            </div>
+                            <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl md:text-5xl font-extrabold text-primary mb-4">
+                                {t('about.heading', { name: platformName })}
+                            </h2>
+                            <p className="text-xl text-slate-700 mb-8 leading-relaxed">
+                                {platform?.tagline || t('about.tagline')}
+                            </p>
+                            <div className="space-y-4 text-slate-600 text-lg leading-relaxed">
+                                <p>{t('about.body1', { name: platformName })}</p>
+                                <p>{t('about.body2')}</p>
+                            </div>
+                            
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                { icon: BookOpen, titleKey: 'about.feature1.title', descKey: 'about.feature1.desc' },
+                                { icon: Award, titleKey: 'about.feature2.title', descKey: 'about.feature2.desc' },
+                                { icon: Globe, titleKey: 'about.feature3.title', descKey: 'about.feature3.desc' },
+                            ].map(({ icon: Icon, titleKey, descKey }, idx) => (
+                                <div key={idx} className="flex gap-4 items-start rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+                                    <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Icon className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-['Bricolage_Grotesque',sans-serif] font-bold text-slate-900">{t(titleKey)}</h3>
+                                        <p className="mt-1 text-sm text-slate-600 leading-relaxed">{t(descKey)}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Features Section */}
-            <section id="features" className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+            <section id="features" className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16 scroll-mt-20">
                 <div className="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-3xl md:rounded-[2.5rem] p-6 md:p-16 shadow-sm">
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
                         <div className="lg:col-span-2 space-y-6">
@@ -144,9 +280,7 @@ export default function Wip2() {
                             <p className="text-lg text-slate-700">
                                 {t('landing.features.subtitle')}
                             </p>
-                            <a href="#features" className="inline-block bg-primary text-white px-8 py-3 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
-                                {t('landing.cta.learn_more')}
-                            </a>
+                            
                         </div>
                         <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {FEATURE_ITEMS.map((item, idx) => {
@@ -167,98 +301,35 @@ export default function Wip2() {
                 </div>
             </section>
 
-            {/* Featured Course Spotlight */}
-            <section className="bg-blue-50 py-20">
-                <div className="max-w-7xl mx-auto px-8 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                    <div className="lg:w-1/2 w-full">
-                        <div className="relative rounded-[2.5rem] overflow-hidden shadow-sm aspect-square max-h-[600px] bg-slate-200">
-                            <img 
-                                src="images/FEN_PROAKTIF_20_BM.webp" 
-                                alt="Student learning" 
-                                className="absolute inset-0 w-full h-full object-cover mix-blend-multiply"
-                            />
-                        </div>
-                    </div>
-                    <div className="lg:w-1/2 space-y-6">
-                        <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl md:text-5xl font-extrabold text-primary">
-                            {t('landing.spotlight.title')}
-                        </h2>
-                        <div className="space-y-4 text-slate-600 text-lg">
-                            <p>{t('landing.spotlight.p1')}</p>
-                            <p className="font-medium text-slate-800 border-l-4 border-blue-400 pl-4 py-1">
-                                {t('landing.spotlight.highlight')}
-                            </p>
-                            <p>{t('landing.spotlight.p2')}</p>
-                            <p>{t('landing.spotlight.p3')}</p>
-                        </div>
-                        <div className="pt-6 flex flex-wrap gap-4">
-                            <Link href={route('register')} className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
-                                {t('landing.cta.register_enroll')}
-                            </Link>
-                            <Link href={route('courses.show', 'fen-proaktif')} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
-                                {t('landing.cta.view_course')}
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* What You Will Learn Section */}
-            <div
-                className="w-full bg-cover bg-center bg-no-repeat"
+            {/* FAQs Section */}
+            <section
+                id="faq"
+                className="py-24 px-8 scroll-mt-20"
                 style={{
-                    backgroundImage: `url('images/WYWL_background.webp')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
+                    backgroundColor: '#0f172a',
+                    backgroundImage: "radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.08) 0, rgba(96, 165, 250, 0) 40%), radial-gradient(circle at 80% 80%, rgba(129, 140, 248, 0.08) 0, rgba(129, 140, 248, 0) 40%), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 36px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 36px)",
                 }}
             >
-                <section className="py-24 px-8">
-                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div className="lg:col-span-1">
-                            <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl lg:text-5xl font-extrabold text-primary sticky top-8">
-                                {t('landing.learn.title')}
-                            </h2>
-                        </div>
-                        <div className="lg:col-span-2 space-y-12">
-                            {LEARN_ITEMS.map((item, idx) => (
-                                <div key={idx} className={`flex gap-6 items-start ${idx % 2 !== 0 ? 'lg:ml-12' : ''}`}>
-                                    <div className="text-5xl font-extrabold font-['Bricolage_Grotesque',sans-serif] text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-pink-500">
-                                        {item.num}.
-                                    </div>
-                                    <div className="space-y-3 pt-2 lg:pt-3">
-                                        <h3 className="font-['Bricolage_Grotesque',sans-serif] text-2xl font-bold text-secondary">{t(item.titleKey)}</h3>
-                                        <p className="text-lg text-slate-600 leading-relaxed">{t(item.descKey)}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            {/* FAQs Section */}
-            <section id="faq" className="bg-slate-50 py-24 px-8">
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl font-bold text-primary mb-4">
+                        <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl font-bold text-white mb-4">
                             {t('landing.faq.title')}
                         </h2>
-                        <p className="text-lg text-slate-600">
+                        <p className="text-lg text-slate-400">
                             {t('landing.faq.subtitle')}
                         </p>
                     </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {FAQ_ITEMS.map((item, idx) => (
-                            <details key={idx} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden [&_summary::-webkit-details-marker]:hidden">
-                                <summary className="flex justify-between items-center font-medium cursor-pointer list-none p-6 text-slate-900">
+                            <details key={idx} className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                                <summary className="flex justify-between items-center font-medium cursor-pointer list-none p-6 text-white">
                                     <span className="font-['Bricolage_Grotesque',sans-serif] text-lg font-bold">{t(item.qKey)}</span>
-                                    <span className="transition group-open:rotate-180">
+                                    <span className="transition group-open:rotate-180 text-slate-400">
                                         <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" w="24"><path d="M6 9l6 6 6-6"></path></svg>
                                     </span>
                                 </summary>
-                                <div className="text-slate-600 px-6 pb-6 pt-0 leading-relaxed">
+                                <div className="text-slate-300 px-6 pb-6 pt-0 leading-relaxed border-t border-white/10">
                                     {t(item.aKey)}
                                 </div>
                             </details>
