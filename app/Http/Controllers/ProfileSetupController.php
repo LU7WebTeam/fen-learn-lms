@@ -27,6 +27,8 @@ class ProfileSetupController extends Controller
                 'state'        => $user->state,
                 'birthdate'    => $user->birthdate?->format('Y-m-d'),
                 'occupation'   => $user->occupation,
+                'occupation_other' => $user->occupation_other,
+                'student_id'   => $user->student_id,
                 'organization' => $user->organization,
             ],
         ]);
@@ -41,6 +43,8 @@ class ProfileSetupController extends Controller
             'state'        => 'required|string|max:100',
             'birthdate'    => 'required|date|before:today',
             'occupation'   => 'required|string|max:100',
+            'occupation_other' => 'nullable|string|max:150|required_if:occupation,other',
+            'student_id'   => 'nullable|string|max:100|required_if:occupation,student',
         ] + ProfileOrganizationOptions::rules($request));
 
         $validated = ProfileOrganizationOptions::normalize($validated);
@@ -52,6 +56,8 @@ class ProfileSetupController extends Controller
             'state'                => $validated['state'],
             'birthdate'            => $validated['birthdate'],
             'occupation'           => $validated['occupation'],
+            'occupation_other'     => $validated['occupation_other'] ?? null,
+            'student_id'           => $validated['student_id'] ?? null,
             'organization'         => $validated['organization'],
             'profile_completed_at' => now(),
         ]);

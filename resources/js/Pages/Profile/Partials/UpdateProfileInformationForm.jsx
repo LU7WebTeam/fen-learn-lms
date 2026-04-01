@@ -81,6 +81,8 @@ export default function UpdateProfileInformation({
         state:        user.state ?? '',
         birthdate:    user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : '',
         occupation:   user.occupation ?? '',
+        occupation_other: user.occupation_other ?? '',
+        student_id:   user.student_id ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -102,6 +104,8 @@ export default function UpdateProfileInformation({
         setData(prev => ({
             ...prev,
             occupation: value,
+            occupation_other: value === 'other' ? prev.occupation_other : '',
+            student_id: value === 'student' ? prev.student_id : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -246,6 +250,34 @@ export default function UpdateProfileInformation({
                             ))}
                         </select>
                         <InputError className="mt-2" message={errors.occupation} />
+                    </div>
+
+                    <div>
+                        {data.occupation === 'other' && (
+                            <>
+                                <InputLabel htmlFor="occupation_other" value={t('profile.info.occupation_other')} />
+                                <TextInput
+                                    id="occupation_other"
+                                    className="mt-1 block w-full"
+                                    value={data.occupation_other}
+                                    onChange={(e) => setData('occupation_other', e.target.value)}
+                                />
+                                <InputError className="mt-2" message={errors.occupation_other} />
+                            </>
+                        )}
+
+                        {data.occupation === 'student' && (
+                            <>
+                                <InputLabel htmlFor="student_id" value={t('profile.info.student_id')} />
+                                <TextInput
+                                    id="student_id"
+                                    className="mt-1 block w-full"
+                                    value={data.student_id}
+                                    onChange={(e) => setData('student_id', e.target.value)}
+                                />
+                                <InputError className="mt-2" message={errors.student_id} />
+                            </>
+                        )}
                     </div>
 
                     <div>

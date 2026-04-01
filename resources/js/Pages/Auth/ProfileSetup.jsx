@@ -102,6 +102,8 @@ export default function ProfileSetup({ user }) {
         state:        user?.state ?? '',
         birthdate:    user?.birthdate ?? '',
         occupation:   user?.occupation ?? '',
+        occupation_other: user?.occupation_other ?? '',
+        student_id:   user?.student_id ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -123,6 +125,8 @@ export default function ProfileSetup({ user }) {
         setData(prev => ({
             ...prev,
             occupation: value,
+            occupation_other: value === 'other' ? prev.occupation_other : '',
+            student_id: value === 'student' ? prev.student_id : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -276,6 +280,34 @@ export default function ProfileSetup({ user }) {
                                     </SelectContent>
                                 </Select>
                             </FormField>
+
+                            {data.occupation === 'other' && (
+                                <FormField
+                                    label={t('profile.info.occupation_other')}
+                                    required
+                                    error={errors.occupation_other}
+                                >
+                                    <Input
+                                        value={data.occupation_other}
+                                        onChange={e => setData('occupation_other', e.target.value)}
+                                        placeholder={t('profile.info.occupation_other_placeholder')}
+                                    />
+                                </FormField>
+                            )}
+
+                            {data.occupation === 'student' && (
+                                <FormField
+                                    label={t('profile.info.student_id')}
+                                    required
+                                    error={errors.student_id}
+                                >
+                                    <Input
+                                        value={data.student_id}
+                                        onChange={e => setData('student_id', e.target.value)}
+                                        placeholder={t('profile.info.student_id_placeholder')}
+                                    />
+                                </FormField>
+                            )}
 
                             {/* Organization */}
                             <FormField
