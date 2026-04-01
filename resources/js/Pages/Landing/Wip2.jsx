@@ -88,7 +88,9 @@ export default function Wip2() {
                     <a href="#faq" className="hover:text-slate-900 transition">{t('landing.nav.faq')}</a>
                 </div>
                 <div className="flex items-center gap-3">
-                    <LangSwitcher />
+                    <div className="hidden sm:block">
+                        <LangSwitcher className="bg-white border-slate-200 text-slate-700" />
+                    </div>
                     {auth?.user ? (
                         <Link href={route('dashboard')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
                             {t('landing.cta.my_dashboard')}
@@ -175,12 +177,11 @@ export default function Wip2() {
                     </div>
 
                     <div className="lg:col-span-5">
-                        
-                        <div className="relative rounded-3xl overflow-hidden aspect-[4/5] bg-slate-100 shadow-sm">
+                        <div className="rounded-3xl overflow-hidden bg-slate-100 shadow-sm">
                             <img
                                 src={posterSrc}
                                 alt={`Proaktif 2.0 poster (${posterLang})`}
-                                className="absolute inset-0 w-full h-full object-cover"
+                                className="w-full h-auto object-contain"
                             />
                         </div>
                     </div>
@@ -197,7 +198,7 @@ export default function Wip2() {
             >
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                        <div className="lg:col-span-4 sticky top-24 self-start">
+                        <div className="lg:col-span-4 lg:sticky lg:top-24 self-start">
                             <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl lg:text-5xl font-extrabold text-primary">
                                 {t('landing.learn.title')}
                             </h2>

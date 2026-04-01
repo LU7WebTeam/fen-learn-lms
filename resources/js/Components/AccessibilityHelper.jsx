@@ -85,11 +85,11 @@ export default function AccessibilityHelper() {
                 <Button
                     type="button"
                     onClick={() => setOpen(prev => !prev)}
-                    className="h-11 w-11 rounded-full shadow-lg"
+                    className="h-[70px] w-[70px] rounded-full shadow-lg [&_svg]:!h-[36px] [&_svg]:!w-[36px]"
                     title="Open accessibility helper"
                     aria-label="Open accessibility helper"
                 >
-                    <Accessibility className="h-5 w-5" />
+                    <Accessibility />
                 </Button>
             </div>
 
