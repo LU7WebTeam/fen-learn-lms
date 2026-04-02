@@ -201,15 +201,13 @@ export default function Wip2() {
                             <h2 className="font-['Bricolage_Grotesque',sans-serif] text-4xl lg:text-5xl font-extrabold text-primary">
                                 {t('landing.learn.title')}
                             </h2>
-                            <p className="mt-4 text-slate-600 text-lg">
-                                Build the same Proaktif 2.0 skills highlighted above through five practical focus areas.
-                            </p>
+                            
                         </div>
 
                         <div className="lg:col-span-8">
                             {LEARN_ITEMS.map((item, idx) => (
                                 <div key={idx} className="flex gap-5 py-6 border-b border-slate-200/70 last:border-b-0">
-                                    <div className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-pink-500 text-white font-bold text-sm">
+                                    <div className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-pink-500 text-white font-bold text-xl">
                                         {item.num}
                                     </div>
                                     <div>
