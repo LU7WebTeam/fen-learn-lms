@@ -373,17 +373,27 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                         ? (result.passed ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800' : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800')
                         : 'border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800'
                 )}>
-                    <p className={cn('mb-1 text-3xl font-bold', hasPassingScore ? (result.passed ? 'text-green-700' : 'text-red-700') : 'text-blue-700')}>
+                    <div className="mb-3 flex justify-center">
+                        <div className={cn(
+                            'flex h-14 w-14 items-center justify-center rounded-full',
+                            hasPassingScore
+                                ? (result.passed ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300')
+                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                        )}>
+                            <Award className="h-7 w-7" />
+                        </div>
+                    </div>
+                    <div className={cn('mb-1 text-3xl font-bold', hasPassingScore ? (result.passed ? 'text-green-700' : 'text-red-700') : 'text-blue-700')}>
                         {result.score} / {result.max_score}
-                    </p>
-                    <p className={cn('mb-1 text-sm font-medium', hasPassingScore ? (result.passed ? 'text-green-600' : 'text-red-600') : 'text-blue-600')}>
+                    </div>
+                    <p className={cn('text-sm font-medium', hasPassingScore ? (result.passed ? 'text-green-600' : 'text-red-600') : 'text-blue-600')}>
                         {result.percentage}%
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                        {hasPassingScore
-                            ? (result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score }))
-                            : t('learn.quiz.info_only_result')}
-                    </p>
+                    {hasPassingScore && (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
+                        </p>
+                    )}
                     {/* Only show retry for failed attempts if passing score is set */}
                     {hasPassingScore && !result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
                         <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
