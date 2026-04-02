@@ -170,3 +170,13 @@ html {
 .bn-renderer-wrap mark {
   white-space: pre-wrap;
 }
+
+/* Keep BlockNote viewer typography aligned with site font settings */
+.bn-renderer-wrap,
+.bn-renderer-wrap .bn-container,
+.bn-renderer-wrap .bn-editor,
+.bn-renderer-wrap .bn-block-content,
+.bn-renderer-wrap .ProseMirror {
+    font-family: inherit !important;
+    color: inherit;
+}

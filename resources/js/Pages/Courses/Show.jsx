@@ -125,7 +125,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1.5">
                                 <BookOpen className="h-4 w-4" />
-                                {totalLessons} lessons
+                                {totalLessons} {totalLessons === 1 ? t('common.lesson') : t('common.lessons')}
                             </span>
                         </div>
                         {enrolled && (
@@ -213,7 +213,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                                     <span className="flex items-center gap-2">
                                                         {tl(section, 'title', locale)}
                                                         <span className="text-xs font-normal text-muted-foreground">
-                                                            {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
+                                                            {section.lessons.length} {section.lessons.length === 1 ? t('common.lesson') : t('common.lessons')}
                                                         </span>
                                                     </span>
                                                 </AccordionTrigger>
@@ -303,7 +303,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                                 <span className="flex items-center gap-2">
                                                     {tl(section, 'title', locale)}
                                                     <span className="text-xs font-normal text-muted-foreground">
-                                                        {section.lessons.length} lesson{section.lessons.length !== 1 ? 's' : ''}
+                                                        {section.lessons.length} {section.lessons.length === 1 ? t('common.lesson') : t('common.lessons')}
                                                     </span>
                                                 </span>
                                             </AccordionTrigger>
