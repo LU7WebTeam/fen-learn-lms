@@ -43,10 +43,6 @@ class AppServiceProvider extends ServiceProvider
             $tokens = [
                 'platform_name' => $branding['platformName'],
             ];
-            $tokenMap = [
-                '{{platform_name}}' => (string) $branding['platformName'],
-            ];
-
             $titleEnFallback = 'Verify your email address';
             $bodyEnFallback = 'Please verify your email address for {{platform_name}} by clicking the button below.';
             $ctaEnFallback = 'Verify Email Address';
@@ -68,17 +64,9 @@ class AppServiceProvider extends ServiceProvider
             );
             $ctaBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
 
-            if (trim($title) === trim($titleBM)) {
-                $title = $titleEnFallback;
-            }
-
-            if (trim($body) === trim($bodyBM)) {
-                $body = strtr($bodyEnFallback, $tokenMap);
-            }
-
-            if (trim($cta) === trim($ctaBM)) {
-                $cta = $ctaEnFallback;
-            }
+            $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
+            $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
+            $cta = EmailContent::resolveSecondaryEnglish($cta, $ctaBM, $ctaEnFallback, $tokens);
 
             return (new MailMessage)
                 ->subject($subject)
@@ -101,10 +89,6 @@ class AppServiceProvider extends ServiceProvider
             $tokens = [
                 'platform_name' => $branding['platformName'],
             ];
-            $tokenMap = [
-                '{{platform_name}}' => (string) $branding['platformName'],
-            ];
-
             $titleEnFallback = 'Reset your password';
             $bodyEnFallback = 'We received a request to reset your password for {{platform_name}}.';
             $ctaEnFallback = 'Reset Password';
@@ -126,17 +110,9 @@ class AppServiceProvider extends ServiceProvider
             );
             $ctaBM = EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens);
 
-            if (trim($title) === trim($titleBM)) {
-                $title = $titleEnFallback;
-            }
-
-            if (trim($body) === trim($bodyBM)) {
-                $body = strtr($bodyEnFallback, $tokenMap);
-            }
-
-            if (trim($cta) === trim($ctaBM)) {
-                $cta = $ctaEnFallback;
-            }
+            $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
+            $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
+            $cta = EmailContent::resolveSecondaryEnglish($cta, $ctaBM, $ctaEnFallback, $tokens);
 
             $resetUrl = url(route('password.reset', [
                 'token' => $token,

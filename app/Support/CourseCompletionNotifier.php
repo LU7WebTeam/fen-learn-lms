@@ -58,21 +58,15 @@ class CourseCompletionNotifier
             $tokens
         );
 
-        if (trim($body) === trim($bodyBM)) {
-            $body = strtr($bodyEnFallback, $tokenMap);
-        }
+        $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
 
         $title = EmailContent::get('course_completion_email_title', $titleEnFallback, $tokens);
         $titleBM = EmailContent::get('course_completion_email_title_bm', 'Anda telah menyelesaikan sebuah kursus', $tokens);
-        if (trim($title) === trim($titleBM)) {
-            $title = $titleEnFallback;
-        }
+        $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
 
         $emailCta = EmailContent::get('course_completion_email_cta', $ctaEnFallback, $tokens);
         $emailCtaBM = EmailContent::get('course_completion_email_cta_bm', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens);
-        if (trim($emailCta) === trim($emailCtaBM)) {
-            $emailCta = $ctaEnFallback;
-        }
+        $emailCta = EmailContent::resolveSecondaryEnglish($emailCta, $emailCtaBM, $ctaEnFallback, $tokens);
 
         $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
         $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));

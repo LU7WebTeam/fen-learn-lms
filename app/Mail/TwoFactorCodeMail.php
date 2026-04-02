@@ -45,27 +45,19 @@ class TwoFactorCodeMail extends Mailable
 
         $title = EmailContent::get('two_factor_email_title', $titleEnFallback, $tokens);
         $titleBM = EmailContent::get('two_factor_email_title_bm', 'Kod Pengesahan Log Masuk', $tokens);
-        if (trim($title) === trim($titleBM)) {
-            $title = $titleEnFallback;
-        }
+        $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
 
         $bodyText = EmailContent::get('two_factor_email_body', $bodyEnFallback, $tokens);
         $bodyTextBM = EmailContent::get('two_factor_email_body_bm', 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:', $tokens);
-        if (trim($bodyText) === trim($bodyTextBM)) {
-            $bodyText = $bodyEnFallback;
-        }
+        $bodyText = EmailContent::resolveSecondaryEnglish($bodyText, $bodyTextBM, $bodyEnFallback, $tokens);
 
         $expiryText = EmailContent::get('two_factor_email_expiry', $expiryEnFallback, $tokens);
         $expiryTextBM = EmailContent::get('two_factor_email_expiry_bm', 'Kod ini akan tamat tempoh dalam 10 minit.', $tokens);
-        if (trim($expiryText) === trim($expiryTextBM)) {
-            $expiryText = $expiryEnFallback;
-        }
+        $expiryText = EmailContent::resolveSecondaryEnglish($expiryText, $expiryTextBM, $expiryEnFallback, $tokens);
 
         $securityNote = EmailContent::get('two_factor_email_security_note', $securityEnFallback, $tokens);
         $securityNoteBM = EmailContent::get('two_factor_email_security_note_bm', 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.', $tokens);
-        if (trim($securityNote) === trim($securityNoteBM)) {
-            $securityNote = $securityEnFallback;
-        }
+        $securityNote = EmailContent::resolveSecondaryEnglish($securityNote, $securityNoteBM, $securityEnFallback, $tokens);
 
         return new Content(
             view: 'emails.two-factor-code',

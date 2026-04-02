@@ -107,17 +107,19 @@ class StaffInvitationMail extends Mailable
             ],
         );
 
-        if (trim($emailTitle) === trim($emailTitleBM)) {
-            $emailTitle = $titleEnFallback;
-        }
+        $emailTitle = EmailContent::resolveSecondaryEnglish($emailTitle, $emailTitleBM, $titleEnFallback, [
+            'platform_name' => $branding['platformName'],
+        ]);
 
-        if (trim($emailBody) === trim($emailBodyBM)) {
-            $emailBody = strtr($bodyEnFallback, $tokenMap);
-        }
+        $emailBody = EmailContent::resolveSecondaryEnglish($emailBody, $emailBodyBM, $bodyEnFallback, [
+            'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
+            'platform_name' => $branding['platformName'],
+            'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
+        ]);
 
-        if (trim($emailCta) === trim($emailCtaBM)) {
-            $emailCta = $ctaEnFallback;
-        }
+        $emailCta = EmailContent::resolveSecondaryEnglish($emailCta, $emailCtaBM, $ctaEnFallback, [
+            'platform_name' => $branding['platformName'],
+        ]);
 
         return new Content(
             view: 'emails.staff-invitation',
