@@ -131,7 +131,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         {enrolled && (
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Your progress</span>
+                                    <span className="text-muted-foreground">{t('courses.show.your_progress')}</span>
                                     <span className="font-medium">{enrollment.progress}%</span>
                                 </div>
                                 <Progress value={enrollment.progress} className="h-2" />
@@ -262,7 +262,13 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                             {learnerActivity.map((item) => (
                                                 <tr key={item.id} className="border-t align-top">
                                                     <td className="px-3 py-2">{t('courses.show.event.' + item.event)}</td>
-                                                    <td className="px-3 py-2 text-muted-foreground">{item.properties?.lesson_id && item.properties?.lesson ? tl(item.properties.lesson, 'title', locale) : (item.properties?.lesson_title ?? '-')}</td>
+                                                    <td className="px-3 py-2 text-muted-foreground">
+                                                        {item.properties?.lesson
+                                                            ? tl(item.properties.lesson, 'title', locale)
+                                                            : locale === 'ms'
+                                                                ? (item.properties?.lesson_title_ms || item.properties?.lesson_title || '-')
+                                                                : (item.properties?.lesson_title || '-')}
+                                                    </td>
                                                     <td className="px-3 py-2">{renderActivityResult(item)}</td>
                                                     <td className="px-3 py-2 text-muted-foreground">{item.created_at}</td>
                                                 </tr>

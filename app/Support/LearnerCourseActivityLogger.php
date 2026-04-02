@@ -28,6 +28,7 @@ class LearnerCourseActivityLogger
         if ($subject instanceof Lesson) {
             $baseProperties['lesson_id'] = $subject->id;
             $baseProperties['lesson_title'] = $subject->title;
+            $baseProperties['lesson_title_ms'] = $subject->title_ms;
             $baseProperties['section_id'] = $subject->section_id;
             $baseProperties['lesson_type'] = $subject->type;
         }

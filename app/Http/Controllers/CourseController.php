@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -77,15 +78,25 @@ class CourseController extends Controller
                     ->pluck('lesson_id')
                     ->all();
 
-                $learnerActivity = Activity::query()
+                $activities = Activity::query()
                     ->where('log_name', 'learner_course')
                     ->where('causer_id', $user->id)
                     ->where('properties->course_id', $course->id)
                     ->latest()
                     ->limit(200)
-                    ->get()
-                    ->map(function (Activity $activity) {
+                    ->get();
+
+                $activityLessonMap = Lesson::query()
+                    ->whereIn('id', $activities->pluck('properties.lesson_id')->filter()->unique()->values())
+                    ->get(['id', 'title', 'title_ms'])
+                    ->keyBy('id');
+
+                $learnerActivity = $activities
+                    ->map(function (Activity $activity) use ($activityLessonMap) {
                         $properties = $activity->properties?->toArray() ?? [];
+                        $lesson = isset($properties['lesson_id'])
+                            ? $activityLessonMap->get($properties['lesson_id'])
+                            : null;
 
                         return [
                             'id' => $activity->id,
@@ -93,7 +104,14 @@ class CourseController extends Controller
                             'description' => $activity->description,
                             'created_at' => $activity->created_at?->format('M j, Y g:i A'),
                             'properties' => [
+                                'lesson_id' => $properties['lesson_id'] ?? null,
+                                'lesson' => $lesson ? [
+                                    'id' => $lesson->id,
+                                    'title' => $lesson->title,
+                                    'title_ms' => $lesson->title_ms,
+                                ] : null,
                                 'lesson_title' => $properties['lesson_title'] ?? null,
+                                'lesson_title_ms' => $properties['lesson_title_ms'] ?? $lesson?->title_ms,
                                 'lesson_type' => $properties['lesson_type'] ?? null,
                                 'score' => $properties['score'] ?? null,
                                 'max_score' => $properties['max_score'] ?? null,
