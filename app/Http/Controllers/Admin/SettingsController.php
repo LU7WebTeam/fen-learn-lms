@@ -548,6 +548,20 @@ class SettingsController extends Controller
                 $emailBody = EmailContent::resolveSecondaryEnglish($emailBody, $emailBodyBM, '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.', $tokens);
                 $emailCta = EmailContent::resolveSecondaryEnglish($emailCta, $emailCtaBM, 'Accept Invitation', $tokens);
 
+                // Get label translations
+                $greetingLabel = EmailContent::get('invitation_email_greeting', 'Hi there,', []);
+                $greetingLabelBM = EmailContent::get('invitation_email_greeting_bm', 'Hai,', []);
+                $instructionLabel = EmailContent::get('invitation_email_instruction', 'Click the button below to set up your account. The link is valid until {{expires_at}}.', ['expires_at' => now()->addDays(7)->format('d M Y')]);
+                $instructionLabelBM = EmailContent::get('invitation_email_instruction_bm', 'Klik butang di bawah untuk menyediakan akaun anda. Pautan ini sah sehingga {{expires_at}}.', ['expires_at' => now()->addDays(7)->format('d M Y')]);
+                $buttonFallbackLabel = EmailContent::get('invitation_email_button_fallback', 'If the button does not work, copy and paste this URL into your browser:', []);
+                $buttonFallbackLabelBM = EmailContent::get('invitation_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', []);
+                $invitedAsLabel = EmailContent::get('invitation_email_invited_as_label', 'Invited as', []);
+                $invitedAsLabelBM = EmailContent::get('invitation_email_invited_as_label_bm', 'Dijemput sebagai', []);
+                $expiresLabel = EmailContent::get('invitation_email_expires_label', 'Expires', []);
+                $expiresLabelBM = EmailContent::get('invitation_email_expires_label_bm', 'Tamat tempoh', []);
+                $ignoreLabel = EmailContent::get('invitation_email_ignore', 'If you did not expect this invitation, you can safely ignore this email.', []);
+                $ignoreLabelBM = EmailContent::get('invitation_email_ignore_bm', 'Jika anda tidak menjangkakan jemputan ini, anda boleh mengabaikan e-mel ini dengan selamat.', []);
+
                 Mail::send('emails.staff-invitation', [
                     ...$branding,
                     'acceptUrl' => $testUrls['invitation'],
@@ -560,6 +574,18 @@ class SettingsController extends Controller
                     'emailTitleBM' => $emailTitleBM,
                     'emailBodyBM' => $emailBodyBM,
                     'emailCtaBM' => $emailCtaBM,
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'instructionLabel' => $instructionLabel,
+                    'instructionLabelBM' => $instructionLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                    'invitedAsLabel' => $invitedAsLabel,
+                    'invitedAsLabelBM' => $invitedAsLabelBM,
+                    'expiresLabel' => $expiresLabel,
+                    'expiresLabelBM' => $expiresLabelBM,
+                    'ignoreLabel' => $ignoreLabel,
+                    'ignoreLabelBM' => $ignoreLabelBM,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
@@ -578,6 +604,16 @@ class SettingsController extends Controller
                 $bodyText = EmailContent::resolveSecondaryEnglish($bodyText, $bodyTextBM, 'Please verify your email address for {{platform_name}} by clicking the button below.', $tokens);
                 $actionText = EmailContent::resolveSecondaryEnglish($actionText, $actionTextBM, 'Verify Email Address', $tokens);
 
+                // Get label translations
+                $greetingLabel = EmailContent::get('verification_email_greeting', 'Hello', []);
+                $greetingLabelBM = EmailContent::get('verification_email_greeting_bm', 'Hai', []);
+                $accountLabel = EmailContent::get('verification_email_account_label', 'Account', []);
+                $accountLabelBM = EmailContent::get('verification_email_account_label_bm', 'Akaun', []);
+                $expiresInLabel = EmailContent::get('verification_email_expires_in_label', 'Expires in', []);
+                $expiresInLabelBM = EmailContent::get('verification_email_expires_in_label_bm', 'Tamat tempoh dalam', []);
+                $buttonFallbackLabel = EmailContent::get('verification_email_button_fallback', 'If the button does not work, copy and paste this URL into your browser:', []);
+                $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', []);
+
                 Mail::send('emails.auth-verify-email', [
                     ...$branding,
                     'title' => $title,
@@ -589,6 +625,14 @@ class SettingsController extends Controller
                     'actionTextBM' => $actionTextBM,
                     'bodyTextBM' => $bodyTextBM,
                     'expiresInMinutes' => 60,
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'accountLabel' => $accountLabel,
+                    'accountLabelBM' => $accountLabelBM,
+                    'expiresInLabel' => $expiresInLabel,
+                    'expiresInLabelBM' => $expiresInLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
@@ -607,6 +651,18 @@ class SettingsController extends Controller
                 $bodyText = EmailContent::resolveSecondaryEnglish($bodyText, $bodyTextBM, 'We received a request to reset your password for {{platform_name}}.', $tokens);
                 $actionText = EmailContent::resolveSecondaryEnglish($actionText, $actionTextBM, 'Reset Password', $tokens);
 
+                // Get label translations
+                $greetingLabel = EmailContent::get('reset_email_greeting', 'Hello', []);
+                $greetingLabelBM = EmailContent::get('reset_email_greeting_bm', 'Hai', []);
+                $accountLabel = EmailContent::get('reset_email_account_label', 'Account', []);
+                $accountLabelBM = EmailContent::get('reset_email_account_label_bm', 'Akaun', []);
+                $expiresInLabel = EmailContent::get('reset_email_expires_in_label', 'Expires in', []);
+                $expiresInLabelBM = EmailContent::get('reset_email_expires_in_label_bm', 'Tamat tempoh dalam', []);
+                $buttonFallbackLabel = EmailContent::get('reset_email_button_fallback', 'If the button does not work, copy and paste this URL into your browser:', []);
+                $buttonFallbackLabelBM = EmailContent::get('reset_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', []);
+                $noActionNeededLabel = EmailContent::get('reset_email_no_action_needed', 'If you did not request this password reset, no further action is needed.', []);
+                $noActionNeededLabelBM = EmailContent::get('reset_email_no_action_needed_bm', 'Jika anda tidak meminta penetapan semula kata laluan ini, tidak perlu tindakan lanjut.', []);
+
                 Mail::send('emails.auth-reset-password', [
                     ...$branding,
                     'title' => $title,
@@ -618,6 +674,16 @@ class SettingsController extends Controller
                     'actionTextBM' => $actionTextBM,
                     'bodyTextBM' => $bodyTextBM,
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 1440),
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'accountLabel' => $accountLabel,
+                    'accountLabelBM' => $accountLabelBM,
+                    'expiresInLabel' => $expiresInLabel,
+                    'expiresInLabelBM' => $expiresInLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                    'noActionNeededLabel' => $noActionNeededLabel,
+                    'noActionNeededLabelBM' => $noActionNeededLabelBM,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
@@ -644,6 +710,20 @@ class SettingsController extends Controller
                 $emailCtaBM = EmailContent::get('course_completion_email_cta_bm', 'Buka Halaman Kursus', $tokens);
                 $emailCta = EmailContent::resolveSecondaryEnglish($emailCta, $emailCtaBM, 'Open Course Page', $tokens);
 
+                // Get label translations
+                $greetingLabel = EmailContent::get('course_completion_email_greeting', 'Hi', $tokens);
+                $greetingLabelBM = EmailContent::get('course_completion_email_greeting_bm', 'Hai', $tokens);
+                $buttonFallbackLabel = EmailContent::get('course_completion_email_button_fallback', 'If the button does not work, copy and paste this URL into your browser:', $tokens);
+                $buttonFallbackLabelBM = EmailContent::get('course_completion_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', $tokens);
+                $courseLabel = EmailContent::get('course_completion_email_course_label', 'Course', $tokens);
+                $courseLabelBM = EmailContent::get('course_completion_email_course_label_bm', 'Kursus', $tokens);
+                $learnerLabel = EmailContent::get('course_completion_email_learner_label', 'Learner', $tokens);
+                $learnerLabelBM = EmailContent::get('course_completion_email_learner_label_bm', 'Pelajar', $tokens);
+                $completedAtLabel = EmailContent::get('course_completion_email_completed_at_label', 'Completed at', $tokens);
+                $completedAtLabelBM = EmailContent::get('course_completion_email_completed_at_label_bm', 'Selesai pada', $tokens);
+                $certificateLabel = EmailContent::get('course_completion_email_certificate_label', 'Certificate', $tokens);
+                $certificateLabelBM = EmailContent::get('course_completion_email_certificate_label_bm', 'Sijil', $tokens);
+
                 Mail::send('emails.course-completion', [
                     ...$branding,
                     'title' => $emailTitle,
@@ -659,6 +739,18 @@ class SettingsController extends Controller
                     'learnerName' => $tokens['learner_name'],
                     'completedAt' => $tokens['completed_at'],
                     'certificateAvailable' => true,
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                    'courseLabel' => $courseLabel,
+                    'courseLabelBM' => $courseLabelBM,
+                    'learnerLabel' => $learnerLabel,
+                    'learnerLabelBM' => $learnerLabelBM,
+                    'completedAtLabel' => $completedAtLabel,
+                    'completedAtLabelBM' => $completedAtLabelBM,
+                    'certificateLabel' => $certificateLabel,
+                    'certificateLabelBM' => $certificateLabelBM,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
