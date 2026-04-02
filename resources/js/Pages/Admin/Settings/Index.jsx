@@ -1150,6 +1150,12 @@ function EmailTab({ settings, onSave, processing }) {
     const [activeSection, setActiveSection] = useState('smtp');
 
     function save() {
+        const basePayload = {
+            mail_driver: driver,
+            course_completion_notify_learner: completionNotifyLearner ? '1' : '0',
+            course_completion_notify_admins: completionNotifyAdmins ? '1' : '0',
+        };
+
         const smtpPayload = {
             mail_driver:         driver,
             mail_host:           host,
@@ -1194,7 +1200,10 @@ function EmailTab({ settings, onSave, processing }) {
             test: smtpPayload,
         };
 
-        onSave('email', sectionPayloads[activeSection] || smtpPayload);
+        onSave('email', {
+            ...basePayload,
+            ...(sectionPayloads[activeSection] || smtpPayload),
+        });
     }
 
     function sendTestEmail() {
