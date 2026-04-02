@@ -46,9 +46,9 @@ export default function AuthenticatedLayout({ children }) {
                     <Link href={route('dashboard')} className="flex items-center gap-2 font-bold text-foreground">
                         {platformLogoUrl ? (
                             <>
-                                <img src={platformLogoUrl} alt={platformName} className={`h-16 w-auto ${platformLogoDarkUrl ? 'dark:hidden' : ''}`} />
+                                <img src={platformLogoUrl} alt={platformName} className={`h-8 w-auto ${platformLogoDarkUrl ? 'dark:hidden' : ''}`} />
                                 {platformLogoDarkUrl && (
-                                    <img src={platformLogoDarkUrl} alt={platformName} className="hidden h-16 w-auto dark:block" />
+                                    <img src={platformLogoDarkUrl} alt={platformName} className="hidden h-8 w-auto dark:block" />
                                 )}
                             </>
                         ) : (
@@ -75,9 +75,9 @@ export default function AuthenticatedLayout({ children }) {
                                 <Link href={route('dashboard')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
                                     {platformLogoUrl ? (
                                         <>
-                                            <img src={platformLogoUrl} alt={platformName} className={`h-16 w-auto ${platformLogoDarkUrl ? 'dark:hidden' : ''}`} />
+                                            <img src={platformLogoUrl} alt={platformName} className={`h-8 w-auto ${platformLogoDarkUrl ? 'dark:hidden' : ''}`} />
                                             {platformLogoDarkUrl && (
-                                                <img src={platformLogoDarkUrl} alt={platformName} className="hidden h-16 w-auto dark:block" />
+                                                <img src={platformLogoDarkUrl} alt={platformName} className="hidden h-8 w-auto dark:block" />
                                             )}
                                         </>
                                     ) : (

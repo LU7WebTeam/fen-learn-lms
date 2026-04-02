@@ -69,7 +69,7 @@ export default function Wip2() {
             <nav className="flex w-full justify-between items-center py-2 px-4">
                 <Link href="/" className="flex items-center gap-2">
                     {platform?.logo_url ? (
-                        <img src={platform.logo_url} alt={platformName} className="h-16 w-auto object-contain" />
+                        <img src={platform.logo_url} alt={platformName} className="h-8 w-auto object-contain" />
                     ) : (
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
                             {platformName.charAt(0)}
