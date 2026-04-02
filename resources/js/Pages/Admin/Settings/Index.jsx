@@ -1150,7 +1150,7 @@ function EmailTab({ settings, onSave, processing }) {
     const [activeSection, setActiveSection] = useState('smtp');
 
     function save() {
-        onSave('email', {
+        const smtpPayload = {
             mail_driver:         driver,
             mail_host:           host,
             mail_port:           port,
@@ -1160,26 +1160,41 @@ function EmailTab({ settings, onSave, processing }) {
             clear_mail_password: clearPassword ? '1' : '0',
             mail_sender_name:    senderName,
             mail_sender_address: senderAddress,
-            invitation_email_subject: invitationSubject,
-            invitation_email_title: invitationTitle,
-            invitation_email_body: invitationBody,
-            invitation_email_cta: invitationCta,
-            verification_email_subject: verificationSubject,
-            verification_email_title: verificationTitle,
-            verification_email_body: verificationBody,
-            verification_email_cta: verificationCta,
-            reset_email_subject: resetSubject,
-            reset_email_title: resetTitle,
-            reset_email_body: resetBody,
-            reset_email_cta: resetCta,
-            course_completion_notify_learner: completionNotifyLearner ? '1' : '0',
-            course_completion_notify_admins: completionNotifyAdmins ? '1' : '0',
-            course_completion_admin_recipients: completionAdminRecipients,
-            course_completion_email_subject: completionSubject,
-            course_completion_email_title: completionTitle,
-            course_completion_email_body: completionBody,
-            course_completion_email_cta: completionCta,
-        });
+        };
+
+        const sectionPayloads = {
+            smtp: smtpPayload,
+            invitation: {
+                invitation_email_subject: invitationSubject,
+                invitation_email_title: invitationTitle,
+                invitation_email_body: invitationBody,
+                invitation_email_cta: invitationCta,
+            },
+            verification: {
+                verification_email_subject: verificationSubject,
+                verification_email_title: verificationTitle,
+                verification_email_body: verificationBody,
+                verification_email_cta: verificationCta,
+            },
+            reset: {
+                reset_email_subject: resetSubject,
+                reset_email_title: resetTitle,
+                reset_email_body: resetBody,
+                reset_email_cta: resetCta,
+            },
+            completion: {
+                course_completion_notify_learner: completionNotifyLearner ? '1' : '0',
+                course_completion_notify_admins: completionNotifyAdmins ? '1' : '0',
+                course_completion_admin_recipients: completionAdminRecipients,
+                course_completion_email_subject: completionSubject,
+                course_completion_email_title: completionTitle,
+                course_completion_email_body: completionBody,
+                course_completion_email_cta: completionCta,
+            },
+            test: smtpPayload,
+        };
+
+        onSave('email', sectionPayloads[activeSection] || smtpPayload);
     }
 
     function sendTestEmail() {
@@ -1611,7 +1626,9 @@ function EmailTab({ settings, onSave, processing }) {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                    <Button onClick={save} disabled={processing}>Save Email Settings</Button>
+                    <Button onClick={save} disabled={processing}>
+                        {activeSection === 'smtp' ? 'Save SMTP & Sender' : 'Save Email Settings'}
+                    </Button>
                 </div>
             </CardContent>
         </Card>
