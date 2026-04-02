@@ -3,6 +3,10 @@ import { BookOpen, Award, CheckCircle, Clock, Globe } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
 
+const HERO_IMAGE_VERSION = '20260402-1';
+const HERO_MOBILE_IMAGE_URL = `/images/FEN_learn-hero-mobile.webp?v=${HERO_IMAGE_VERSION}`;
+const HERO_DESKTOP_IMAGE_URL = `/images/FEN_learn-hero-desktop.webp?v=${HERO_IMAGE_VERSION}`;
+
 const FEATURE_ITEMS = [
     {
         icon: Clock,
@@ -106,9 +110,9 @@ export default function Wip2() {
 
             {/* Hero Section with full-width background image */}
             <style>{`
-                .hero-bg { background-image: url('/images/FEN_learn-hero-mobile.webp'); }
+                .hero-bg { background-image: url('${HERO_MOBILE_IMAGE_URL}'); }
                 @media (min-width: 768px) {
-                    .hero-bg { background-image: url('/images/FEN_learn-hero-desktop.webp'); }
+                    .hero-bg { background-image: url('${HERO_DESKTOP_IMAGE_URL}'); }
                 }
             `}</style>
             <div className="hero-bg w-full bg-cover bg-center bg-no-repeat">
