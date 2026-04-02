@@ -17,10 +17,9 @@ export default function GuestLayout({ children, fullWidth = false }) {
             <div>
                 <Link href="/" className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-gray-900">
                     {platformLogoUrl
-                        ? <img src={platformLogoUrl} alt={platformName} className="h-7 w-auto" />
+                        ? <img src={platformLogoUrl} alt={platformName} className="h-8 w-auto" />
                         : <GraduationCap className="h-7 w-7 text-primary" />
                     }
-                    <span className="text-lg font-semibold tracking-tight">{platformName}</span>
                 </Link>
             </div>
 

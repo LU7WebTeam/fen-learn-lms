@@ -66,20 +66,15 @@ export default function Wip2() {
 
             {/* Navbar */}
             <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm">
-            <nav className="flex justify-between items-center py-4 px-8 max-w-7xl mx-auto">
+            <nav className="flex w-full justify-between items-center py-2 px-4">
                 <Link href="/" className="flex items-center gap-2">
                     {platform?.logo_url ? (
-                        <div className="w-10 h-10 overflow-hidden flex items-center justify-center">
-                            <img src={platform.logo_url} alt={platformName} className="w-full h-full object-contain" />
-                        </div>
+                        <img src={platform.logo_url} alt={platformName} className="h-16 w-auto object-contain" />
                     ) : (
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
                             {platformName.charAt(0)}
                         </div>
                     )}
-                    <span className="font-['Bricolage_Grotesque',sans-serif] font-bold text-slate-900 text-xl">
-                        {platformName}
-                    </span>
                 </Link>
                 <div className="hidden md:flex items-center gap-8 font-medium">
                     <a href="#proaktif" className="hover:text-slate-900 transition">{t('landing.nav.proaktif')}</a>

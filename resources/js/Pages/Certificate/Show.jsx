@@ -14,6 +14,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
         download_url,
     } = certificate;
     const platformName = platform?.name || 'FENLearn';
+    const platformLogoUrl = platform?.logo_url || null;
 
     const dynamicValues = {
         recipient_name:  user_name,
@@ -34,7 +35,11 @@ export default function CertificateShow({ certificate, template, customFont }) {
                             href="/"
                             className="flex items-center gap-2 text-sm font-semibold tracking-widest text-indigo-700 uppercase"
                         >
-                            {platformName}
+                            {platformLogoUrl ? (
+                                <img src={platformLogoUrl} alt={platformName} className="h-10 w-auto object-contain" />
+                            ) : (
+                                platformName
+                            )}
                         </Link>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
