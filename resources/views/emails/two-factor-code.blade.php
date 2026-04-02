@@ -9,7 +9,7 @@
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $title }}</p>
     @endif
     
-    <p>Hello {{ $user->name }},</p>
+    <p>{{ $greetingLabelBM ?: $greetingLabel }} {{ $user->name }},</p>
     <p>{{ $bodyTextBM ?: $bodyText }}</p>
     @if (!empty($bodyTextBM))
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $bodyText }}</p>
@@ -27,7 +27,7 @@
     @endif
 
     <div class="meta">
-        <p><strong>Account:</strong> {{ $user->email }}</p>
+        <p><strong>{{ $accountLabelBM ?: $accountLabel }}:</strong> {{ $user->email }}</p>
         <p style="margin-top: 6px; color: #999; font-size: 12px;">{{ $securityNoteBM ?: $securityNote }}</p>
         @if (!empty($securityNoteBM))
             <p style="margin-top: 6px; color: #999; font-size: 12px; font-style: italic;">{{ $securityNote }}</p>

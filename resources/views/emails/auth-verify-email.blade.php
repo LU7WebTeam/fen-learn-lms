@@ -9,7 +9,7 @@
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $title }}</p>
     @endif
     
-    <p>Hello,</p>
+    <p>{{ $greetingLabelBM ?: $greetingLabel }}</p>
     <p>{!! nl2br(e($bodyTextBM ?: $bodyText)) !!}</p>
     @if (!empty($bodyTextBM))
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($bodyText)) !!}</p>
@@ -22,11 +22,11 @@
         @endif
     </div>
 
-    <p style="font-size:13px;color:{{ $theme['mutedText'] }};">If the button does not work, copy and paste this URL into your browser:</p>
+    <p style="font-size:13px;color:{{ $theme['mutedText'] }};">{{ $buttonFallbackLabelBM ?: $buttonFallbackLabel }}</p>
     <p class="url-fallback">{{ $actionUrl }}</p>
 
     <div class="meta">
-        <p><strong>Account:</strong> {{ $email }}</p>
-        <p style="margin-top:6px;"><strong>Expires in:</strong> {{ $expiresInMinutes }} minutes</p>
+        <p><strong>{{ $accountLabelBM ?: $accountLabel }}:</strong> {{ $email }}</p>
+        <p style="margin-top:6px;"><strong>{{ $expiresInLabelBM ?: $expiresInLabel }}:</strong> {{ $expiresInMinutes }} minutes</p>
     </div>
 @endcomponent

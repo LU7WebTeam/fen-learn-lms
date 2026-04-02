@@ -121,6 +121,31 @@ class StaffInvitationMail extends Mailable
             'platform_name' => $branding['platformName'],
         ]);
 
+        // Get label translations
+        $greetingEnFallback = 'Hi there,';
+        $greetingLabel = EmailContent::get('invitation_email_greeting', $greetingEnFallback, []);
+        $greetingLabelBM = EmailContent::get('invitation_email_greeting_bm', 'Hai,', []);
+
+        $instructionEnFallback = 'Click the button below to set up your account. The link is valid until {{expires_at}}.';
+        $instructionLabel = EmailContent::get('invitation_email_instruction', $instructionEnFallback, ['expires_at' => $this->invitation->expires_at->format('d M Y')]);
+        $instructionLabelBM = EmailContent::get('invitation_email_instruction_bm', 'Klik butang di bawah untuk menyediakan akaun anda. Pautan ini sah sehingga {{expires_at}}.', ['expires_at' => $this->invitation->expires_at->format('d M Y')]);
+
+        $buttonFallbackEnFallback = 'If the button does not work, copy and paste this URL into your browser:';
+        $buttonFallbackLabel = EmailContent::get('invitation_email_button_fallback', $buttonFallbackEnFallback, []);
+        $buttonFallbackLabelBM = EmailContent::get('invitation_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', []);
+
+        $invitedAsEnFallback = 'Invited as';
+        $invitedAsLabel = EmailContent::get('invitation_email_invited_as_label', $invitedAsEnFallback, []);
+        $invitedAsLabelBM = EmailContent::get('invitation_email_invited_as_label_bm', 'Dijemput sebagai', []);
+
+        $expiresEnFallback = 'Expires';
+        $expiresLabel = EmailContent::get('invitation_email_expires_label', $expiresEnFallback, []);
+        $expiresLabelBM = EmailContent::get('invitation_email_expires_label_bm', 'Tamat tempoh', []);
+
+        $ignoreEnFallback = 'If you did not expect this invitation, you can safely ignore this email.';
+        $ignoreLabel = EmailContent::get('invitation_email_ignore', $ignoreEnFallback, []);
+        $ignoreLabelBM = EmailContent::get('invitation_email_ignore_bm', 'Jika anda tidak menjangkakan jemputan ini, anda boleh mengabaikan e-mel ini dengan selamat.', []);
+
         return new Content(
             view: 'emails.staff-invitation',
             with: [
@@ -138,6 +163,18 @@ class StaffInvitationMail extends Mailable
                 'emailTitleBM' => $emailTitleBM,
                 'emailBodyBM'  => $emailBodyBM,
                 'emailCtaBM'   => $emailCtaBM,
+                'greetingLabel' => $greetingLabel,
+                'greetingLabelBM' => $greetingLabelBM,
+                'instructionLabel' => $instructionLabel,
+                'instructionLabelBM' => $instructionLabelBM,
+                'buttonFallbackLabel' => $buttonFallbackLabel,
+                'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                'invitedAsLabel' => $invitedAsLabel,
+                'invitedAsLabelBM' => $invitedAsLabelBM,
+                'expiresLabel' => $expiresLabel,
+                'expiresLabelBM' => $expiresLabelBM,
+                'ignoreLabel' => $ignoreLabel,
+                'ignoreLabelBM' => $ignoreLabelBM,
             ],
         );
     }

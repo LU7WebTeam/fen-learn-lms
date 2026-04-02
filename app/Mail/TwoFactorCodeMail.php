@@ -42,6 +42,8 @@ class TwoFactorCodeMail extends Mailable
         $bodyEnFallback = 'You requested to log in to your account. To complete your sign in, please use the verification code below:';
         $expiryEnFallback = 'This code will expire in 10 minutes.';
         $securityEnFallback = 'If you did not request this code, please ignore this email and secure your account.';
+        $greetingEnFallback = 'Hello';
+        $accountLabelEnFallback = 'Account';
 
         $title = EmailContent::get('two_factor_email_title', $titleEnFallback, $tokens);
         $titleBM = EmailContent::get('two_factor_email_title_bm', 'Kod Pengesahan Log Masuk', $tokens);
@@ -59,6 +61,14 @@ class TwoFactorCodeMail extends Mailable
         $securityNoteBM = EmailContent::get('two_factor_email_security_note_bm', 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.', $tokens);
         $securityNote = EmailContent::resolveSecondaryEnglish($securityNote, $securityNoteBM, $securityEnFallback, $tokens);
 
+        $greetingLabel = EmailContent::get('two_factor_email_greeting', $greetingEnFallback, $tokens);
+        $greetingLabelBM = EmailContent::get('two_factor_email_greeting_bm', 'Hai', $tokens);
+        $greetingLabel = EmailContent::resolveSecondaryEnglish($greetingLabel, $greetingLabelBM, $greetingEnFallback, $tokens);
+
+        $accountLabel = EmailContent::get('two_factor_email_account_label', $accountLabelEnFallback, $tokens);
+        $accountLabelBM = EmailContent::get('two_factor_email_account_label_bm', 'Akaun', $tokens);
+        $accountLabel = EmailContent::resolveSecondaryEnglish($accountLabel, $accountLabelBM, $accountLabelEnFallback, $tokens);
+
         return new Content(
             view: 'emails.two-factor-code',
             with: [
@@ -73,6 +83,10 @@ class TwoFactorCodeMail extends Mailable
                 'expiryTextBM' => $expiryTextBM,
                 'securityNote' => $securityNote,
                 'securityNoteBM' => $securityNoteBM,
+                'greetingLabel' => $greetingLabel,
+                'greetingLabelBM' => $greetingLabelBM,
+                'accountLabel' => $accountLabel,
+                'accountLabelBM' => $accountLabelBM,
             ],
         );
     }

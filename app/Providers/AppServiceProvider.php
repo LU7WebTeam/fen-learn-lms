@@ -46,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
             $titleEnFallback = 'Verify your email address';
             $bodyEnFallback = 'Please verify your email address for {{platform_name}} by clicking the button below.';
             $ctaEnFallback = 'Verify Email Address';
+            $greetingEnFallback = 'Hello';
+            $accountLabelEnFallback = 'Account';
+            $expiresInEnFallback = 'Expires in';
+            $buttonFallbackEnFallback = 'If the button does not work, copy and paste this URL into your browser:';
 
             $title = EmailContent::get('verification_email_title', $titleEnFallback, $tokens);
             $subject = EmailContent::get('verification_email_subject', 'Sahkan alamat e-mel anda', $tokens);
@@ -64,6 +68,18 @@ class AppServiceProvider extends ServiceProvider
             );
             $ctaBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
 
+            $greetingLabel = EmailContent::get('verification_email_greeting', $greetingEnFallback, $tokens);
+            $greetingLabelBM = EmailContent::get('verification_email_greeting_bm', 'Hai', $tokens);
+
+            $accountLabel = EmailContent::get('verification_email_account_label', $accountLabelEnFallback, $tokens);
+            $accountLabelBM = EmailContent::get('verification_email_account_label_bm', 'Akaun', $tokens);
+
+            $expiresInLabel = EmailContent::get('verification_email_expires_in_label', $expiresInEnFallback, $tokens);
+            $expiresInLabelBM = EmailContent::get('verification_email_expires_in_label_bm', 'Tamat tempoh dalam', $tokens);
+
+            $buttonFallbackLabel = EmailContent::get('verification_email_button_fallback', $buttonFallbackEnFallback, $tokens);
+            $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', $tokens);
+
             $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
             $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
             $cta = EmailContent::resolveSecondaryEnglish($cta, $ctaBM, $ctaEnFallback, $tokens);
@@ -81,6 +97,14 @@ class AppServiceProvider extends ServiceProvider
                     'bodyText' => $body,
                     'bodyTextBM' => $bodyBM,
                     'expiresInMinutes' => (int) config('auth.verification.expire', 60),
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'accountLabel' => $accountLabel,
+                    'accountLabelBM' => $accountLabelBM,
+                    'expiresInLabel' => $expiresInLabel,
+                    'expiresInLabelBM' => $expiresInLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
                 ]);
         });
 
@@ -92,6 +116,11 @@ class AppServiceProvider extends ServiceProvider
             $titleEnFallback = 'Reset your password';
             $bodyEnFallback = 'We received a request to reset your password for {{platform_name}}.';
             $ctaEnFallback = 'Reset Password';
+            $greetingEnFallback = 'Hello';
+            $accountLabelEnFallback = 'Account';
+            $expiresInEnFallback = 'Expires in';
+            $buttonFallbackEnFallback = 'If the button does not work, copy and paste this URL into your browser:';
+            $noActionNeededEnFallback = 'If you did not request this password reset, no further action is needed.';
 
             $title = EmailContent::get('reset_email_title', $titleEnFallback, $tokens);
             $subject = EmailContent::get('reset_email_subject', 'Tetapkan semula kata laluan anda', $tokens);
@@ -109,6 +138,21 @@ class AppServiceProvider extends ServiceProvider
                 $tokens,
             );
             $ctaBM = EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens);
+
+            $greetingLabel = EmailContent::get('reset_email_greeting', $greetingEnFallback, $tokens);
+            $greetingLabelBM = EmailContent::get('reset_email_greeting_bm', 'Hai', $tokens);
+
+            $accountLabel = EmailContent::get('reset_email_account_label', $accountLabelEnFallback, $tokens);
+            $accountLabelBM = EmailContent::get('reset_email_account_label_bm', 'Akaun', $tokens);
+
+            $expiresInLabel = EmailContent::get('reset_email_expires_in_label', $expiresInEnFallback, $tokens);
+            $expiresInLabelBM = EmailContent::get('reset_email_expires_in_label_bm', 'Tamat tempoh dalam', $tokens);
+
+            $buttonFallbackLabel = EmailContent::get('reset_email_button_fallback', $buttonFallbackEnFallback, $tokens);
+            $buttonFallbackLabelBM = EmailContent::get('reset_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', $tokens);
+
+            $noActionNeededLabel = EmailContent::get('reset_email_no_action_needed', $noActionNeededEnFallback, $tokens);
+            $noActionNeededLabelBM = EmailContent::get('reset_email_no_action_needed_bm', 'Jika anda tidak meminta penetapan semula kata laluan ini, tidak perlu tindakan lanjut.', $tokens);
 
             $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
             $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
@@ -132,6 +176,16 @@ class AppServiceProvider extends ServiceProvider
                     'bodyText' => $body,
                     'bodyTextBM' => $bodyBM,
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
+                    'greetingLabel' => $greetingLabel,
+                    'greetingLabelBM' => $greetingLabelBM,
+                    'accountLabel' => $accountLabel,
+                    'accountLabelBM' => $accountLabelBM,
+                    'expiresInLabel' => $expiresInLabel,
+                    'expiresInLabelBM' => $expiresInLabelBM,
+                    'buttonFallbackLabel' => $buttonFallbackLabel,
+                    'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                    'noActionNeededLabel' => $noActionNeededLabel,
+                    'noActionNeededLabelBM' => $noActionNeededLabelBM,
                 ]);
         });
     }

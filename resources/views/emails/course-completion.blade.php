@@ -9,7 +9,7 @@
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $emailTitle }}</p>
     @endif
     
-    <p>Hi {{ $greetingName }},</p>
+    <p>{{ $greetingLabelBM ?: $greetingLabel }} {{ $greetingName }},</p>
 
     @foreach(($bodyLinesBM ?? []) ?: $bodyLines as $line)
         <p>{{ $line }}</p>
@@ -29,14 +29,14 @@
             @endif
         </div>
 
-        <p style="font-size:13px;color:{{ $theme['mutedText'] }};">If the button does not work, copy and paste this URL into your browser:</p>
+        <p style="font-size:13px;color:{{ $theme['mutedText'] }};">{{ $buttonFallbackLabelBM ?: $buttonFallbackLabel }}</p>
         <p class="url-fallback">{{ $ctaUrl }}</p>
     @endif
 
     <div class="meta">
-        <p><strong>Course:</strong> {{ $courseTitle }}</p>
-        <p style="margin-top:6px;"><strong>Learner:</strong> {{ $learnerName }}</p>
-        <p style="margin-top:6px;"><strong>Completed at:</strong> {{ $completedAt }}</p>
-        <p style="margin-top:6px;"><strong>Certificate:</strong> {{ $certificateAvailable ? 'Issued' : 'Not issued' }}</p>
+        <p><strong>{{ $courseLabelBM ?: $courseLabel }}:</strong> {{ $courseTitle }}</p>
+        <p style="margin-top:6px;"><strong>{{ $learnerLabelBM ?: $learnerLabel }}:</strong> {{ $learnerName }}</p>
+        <p style="margin-top:6px;"><strong>{{ $completedAtLabelBM ?: $completedAtLabel }}:</strong> {{ $completedAt }}</p>
+        <p style="margin-top:6px;"><strong>{{ $certificateLabelBM ?: $certificateLabel }}:</strong> {{ $certificateAvailable ? 'Issued' : 'Not issued' }}</p>
     </div>
 @endcomponent

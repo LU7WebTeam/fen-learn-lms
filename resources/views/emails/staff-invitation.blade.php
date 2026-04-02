@@ -9,13 +9,13 @@
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $emailTitle }}</p>
     @endif
     
-    <p>Hi there,</p>
+    <p>{{ $greetingLabelBM ?: $greetingLabel }}</p>
     <p>{!! nl2br(e($emailBodyBM ?: $emailBody)) !!}</p>
     @if (!empty($emailBodyBM))
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($emailBody)) !!}</p>
     @endif
     
-    <p>Click the button below to set up your account. The link is valid until <strong>{{ $expiresAt }}</strong>.</p>
+    <p>{{ $instructionLabelBM ?: $instructionLabel }}</p>
 
     <div class="button-wrap">
         <a href="{{ $acceptUrl }}" class="button">{{ $emailCtaBM ?: $emailCta }}</a>
@@ -24,13 +24,13 @@
         @endif
     </div>
 
-    <p style="font-size:13px;color:{{ $theme['mutedText'] }};">If the button does not work, copy and paste this URL into your browser:</p>
+    <p style="font-size:13px;color:{{ $theme['mutedText'] }};">{{ $buttonFallbackLabelBM ?: $buttonFallbackLabel }}</p>
     <p class="url-fallback">{{ $acceptUrl }}</p>
 
     <div class="meta">
-        <p><strong>Invited as:</strong> {{ $roleLabel }}</p>
-        <p style="margin-top:6px;"><strong>Expires:</strong> {{ $expiresAt }}</p>
+        <p><strong>{{ $invitedAsLabelBM ?: $invitedAsLabel }}:</strong> {{ $roleLabel }}</p>
+        <p style="margin-top:6px;"><strong>{{ $expiresLabelBM ?: $expiresLabel }}:</strong> {{ $expiresAt }}</p>
     </div>
 
-    <p style="margin-top:16px;">If you did not expect this invitation, you can safely ignore this email.</p>
+    <p style="margin-top:16px;">{{ $ignoreLabelBM ?: $ignoreLabel }}</p>
 @endcomponent

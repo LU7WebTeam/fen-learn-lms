@@ -90,6 +90,31 @@ class CourseCompletionNotifier
             $bodyLinesBM[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
         }
 
+        // Get label translations
+        $greetingEnFallback = 'Hi';
+        $greetingLabel = EmailContent::get('course_completion_email_greeting', $greetingEnFallback, $tokens);
+        $greetingLabelBM = EmailContent::get('course_completion_email_greeting_bm', 'Hai', $tokens);
+
+        $buttonFallbackEnFallback = 'If the button does not work, copy and paste this URL into your browser:';
+        $buttonFallbackLabel = EmailContent::get('course_completion_email_button_fallback', $buttonFallbackEnFallback, $tokens);
+        $buttonFallbackLabelBM = EmailContent::get('course_completion_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', $tokens);
+
+        $courseEnFallback = 'Course';
+        $courseLabel = EmailContent::get('course_completion_email_course_label', $courseEnFallback, $tokens);
+        $courseLabelBM = EmailContent::get('course_completion_email_course_label_bm', 'Kursus', $tokens);
+
+        $learnerEnFallback = 'Learner';
+        $learnerLabel = EmailContent::get('course_completion_email_learner_label', $learnerEnFallback, $tokens);
+        $learnerLabelBM = EmailContent::get('course_completion_email_learner_label_bm', 'Pelajar', $tokens);
+
+        $completedAtEnFallback = 'Completed at';
+        $completedAtLabel = EmailContent::get('course_completion_email_completed_at_label', $completedAtEnFallback, $tokens);
+        $completedAtLabelBM = EmailContent::get('course_completion_email_completed_at_label_bm', 'Selesai pada', $tokens);
+
+        $certificateEnFallback = 'Certificate';
+        $certificateLabel = EmailContent::get('course_completion_email_certificate_label', $certificateEnFallback, $tokens);
+        $certificateLabelBM = EmailContent::get('course_completion_email_certificate_label_bm', 'Sijil', $tokens);
+
         self::deliver(
             $learner->email,
             EmailContent::get('course_completion_email_subject', 'Kursus selesai: {{course_title}}', $tokens),
@@ -108,6 +133,18 @@ class CourseCompletionNotifier
                 'learnerName' => $learner->name,
                 'completedAt' => $tokens['completed_at'],
                 'certificateAvailable' => $certificateAvailable,
+                'greetingLabel' => $greetingLabel,
+                'greetingLabelBM' => $greetingLabelBM,
+                'buttonFallbackLabel' => $buttonFallbackLabel,
+                'buttonFallbackLabelBM' => $buttonFallbackLabelBM,
+                'courseLabel' => $courseLabel,
+                'courseLabelBM' => $courseLabelBM,
+                'learnerLabel' => $learnerLabel,
+                'learnerLabelBM' => $learnerLabelBM,
+                'completedAtLabel' => $completedAtLabel,
+                'completedAtLabelBM' => $completedAtLabelBM,
+                'certificateLabel' => $certificateLabel,
+                'certificateLabelBM' => $certificateLabelBM,
             ]
         );
     }
