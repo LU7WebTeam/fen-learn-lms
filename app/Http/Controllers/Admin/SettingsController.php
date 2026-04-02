@@ -758,8 +758,14 @@ class SettingsController extends Controller
 
             return back()->with('success', ucfirst($type).' test email sent successfully to '.$recipient.'.');
         } catch (\Throwable $e) {
+            \Log::error('Test email failed for type: '.$type, [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             report($e);
-            return back()->with('error', 'Failed to send '.$type.' test email. Please verify SMTP settings and template content.');
+            return back()->with('error', 'Failed to send '.$type.' test email. Error: '.$e->getMessage());
         }
     }
 
