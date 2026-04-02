@@ -3,7 +3,7 @@ import { BookOpen, Award, CheckCircle, Clock, Globe } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
 
-const HERO_IMAGE_VERSION = '20260402-1';
+const HERO_IMAGE_VERSION = '20260402-2';
 const HERO_MOBILE_IMAGE_URL = `/images/FEN_learn-hero-mobile.webp?v=${HERO_IMAGE_VERSION}`;
 const HERO_DESKTOP_IMAGE_URL = `/images/FEN_learn-hero-desktop.webp?v=${HERO_IMAGE_VERSION}`;
 
