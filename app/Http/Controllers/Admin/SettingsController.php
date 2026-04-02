@@ -459,6 +459,10 @@ class SettingsController extends Controller
 
     public function testEmail(Request $request): RedirectResponse
     {
+        if ($smtpError = $this->smtpPreflightError()) {
+            return back()->with('error', $smtpError);
+        }
+
         $validated = $request->validate([
             'recipient' => 'nullable|email|max:200',
         ]);
@@ -491,6 +495,10 @@ class SettingsController extends Controller
 
     public function testTemplateEmail(Request $request, string $type): RedirectResponse
     {
+        if ($smtpError = $this->smtpPreflightError()) {
+            return back()->with('error', $smtpError);
+        }
+
         $validated = $request->validate([
             'recipient' => 'nullable|email|max:200',
         ]);
@@ -539,6 +547,9 @@ class SettingsController extends Controller
                     'emailTitle' => EmailContent::get('invitation_email_title', 'Anda dijemput untuk menyertai pasukan', $tokens),
                     'emailBody' => EmailContent::get('invitation_email_body', '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.', $tokens),
                     'emailCta' => EmailContent::get('invitation_email_cta', 'Terima Undangan', $tokens),
+                    'emailTitleBM' => EmailContent::get('invitation_email_title_bm', 'Anda dijemput untuk menyertai pasukan', $tokens),
+                    'emailBodyBM' => EmailContent::get('invitation_email_body_bm', '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.', $tokens),
+                    'emailCtaBM' => EmailContent::get('invitation_email_cta_bm', 'Terima Undangan', $tokens),
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
@@ -554,6 +565,9 @@ class SettingsController extends Controller
                     'actionUrl' => $testUrls['verification'],
                     'actionText' => EmailContent::get('verification_email_cta', 'Sahkan Alamat E-mel', $tokens),
                     'bodyText' => EmailContent::get('verification_email_body', 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.', $tokens),
+                    'titleBM' => EmailContent::get('verification_email_title_bm', 'Sahkan alamat e-mel anda', $tokens),
+                    'actionTextBM' => EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens),
+                    'bodyTextBM' => EmailContent::get('verification_email_body_bm', 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.', $tokens),
                     'expiresInMinutes' => 60,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
@@ -570,6 +584,9 @@ class SettingsController extends Controller
                     'actionUrl' => $testUrls['reset'],
                     'actionText' => EmailContent::get('reset_email_cta', 'Tetapkan Semula Kata Laluan', $tokens),
                     'bodyText' => EmailContent::get('reset_email_body', 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.', $tokens),
+                    'titleBM' => EmailContent::get('reset_email_title_bm', 'Tetapkan semula kata laluan anda', $tokens),
+                    'actionTextBM' => EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens),
+                    'bodyTextBM' => EmailContent::get('reset_email_body_bm', 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.', $tokens),
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 1440),
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
@@ -579,17 +596,25 @@ class SettingsController extends Controller
             if ($type === 'completion') {
                 $subject = EmailContent::get('course_completion_email_subject', 'Kursus selesai: {{course_title}}', $tokens);
                 $body = EmailContent::get('course_completion_email_body', 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.', $tokens);
+                $bodyBM = EmailContent::get('course_completion_email_body_bm', 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.', $tokens);
                 $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
                 $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
                 $bodyLines[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
+
+                $bodyLinesBM = preg_split('/\r\n|\r|\n/', $bodyBM) ?: [$bodyBM];
+                $bodyLinesBM = array_values(array_filter(array_map('trim', $bodyLinesBM), fn($line) => $line !== ''));
+                $bodyLinesBM[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
 
                 Mail::send('emails.course-completion', [
                     ...$branding,
                     'title' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
                     'emailTitle' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
+                    'titleBM' => EmailContent::get('course_completion_email_title_bm', 'Anda telah menyelesaikan sebuah kursus', $tokens),
                     'greetingName' => $tokens['learner_name'],
                     'bodyLines' => $bodyLines,
+                    'bodyLinesBM' => $bodyLinesBM,
                     'emailCta' => EmailContent::get('course_completion_email_cta', 'Buka Halaman Kursus', $tokens),
+                    'emailCtaBM' => EmailContent::get('course_completion_email_cta_bm', 'Buka Halaman Kursus', $tokens),
                     'ctaUrl' => $testUrls['completion'],
                     'courseTitle' => $tokens['course_title'],
                     'learnerName' => $tokens['learner_name'],
@@ -706,7 +731,6 @@ class SettingsController extends Controller
                     'captcha_site_key' => 'Captcha site key is required when captcha is enabled.',
                 ]);
             }
-
             $hasSecret = $newSecret !== '' || (!$clearSecret && $storedSecret !== '');
             if (!$hasSecret) {
                 throw ValidationException::withMessages([
@@ -783,5 +807,27 @@ class SettingsController extends Controller
         Setting::set('system_log_capture_context', $validated['system_log_capture_context']);
         Setting::set('system_log_redaction_enabled', $validated['system_log_redaction_enabled']);
         Setting::set('system_log_redacted_keys', trim((string) ($validated['system_log_redacted_keys'] ?? '')));
+    }
+
+    private function smtpPreflightError(): ?string
+    {
+        $driver = (string) Setting::get('mail_driver', 'smtp');
+
+        if ($driver !== 'smtp') {
+            return null;
+        }
+
+        $host = trim((string) Setting::get('mail_host', ''));
+        $sender = trim((string) Setting::get('mail_sender_address', ''));
+
+        if ($host === '') {
+            return 'SMTP host is empty. Please set SMTP Host in Email / SMTP settings.';
+        }
+
+        if ($sender === '') {
+            return 'Sender address is empty. Please set Sender Address in Email / SMTP settings.';
+        }
+
+        return null;
     }
 }
