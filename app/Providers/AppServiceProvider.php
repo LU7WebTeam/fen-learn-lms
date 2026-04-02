@@ -43,15 +43,22 @@ class AppServiceProvider extends ServiceProvider
             $tokens = [
                 'platform_name' => $branding['platformName'],
             ];
+            $tokenMap = [
+                '{{platform_name}}' => (string) $branding['platformName'],
+            ];
 
-            $title = EmailContent::get('verification_email_title', 'Sahkan alamat e-mel anda', $tokens);
+            $titleEnFallback = 'Verify your email address';
+            $bodyEnFallback = 'Please verify your email address for {{platform_name}} by clicking the button below.';
+            $ctaEnFallback = 'Verify Email Address';
+
+            $title = EmailContent::get('verification_email_title', $titleEnFallback, $tokens);
             $subject = EmailContent::get('verification_email_subject', 'Sahkan alamat e-mel anda', $tokens);
             $body = EmailContent::get(
                 'verification_email_body',
-                'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+                $bodyEnFallback,
                 $tokens,
             );
-            $cta = EmailContent::get('verification_email_cta', 'Sahkan Alamat E-mel', $tokens);
+            $cta = EmailContent::get('verification_email_cta', $ctaEnFallback, $tokens);
 
             $titleBM = EmailContent::get('verification_email_title_bm', 'Sahkan alamat email anda', $tokens);
             $bodyBM = EmailContent::get(
@@ -60,6 +67,18 @@ class AppServiceProvider extends ServiceProvider
                 $tokens,
             );
             $ctaBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
+
+            if (trim($title) === trim($titleBM)) {
+                $title = $titleEnFallback;
+            }
+
+            if (trim($body) === trim($bodyBM)) {
+                $body = strtr($bodyEnFallback, $tokenMap);
+            }
+
+            if (trim($cta) === trim($ctaBM)) {
+                $cta = $ctaEnFallback;
+            }
 
             return (new MailMessage)
                 ->subject($subject)
@@ -82,15 +101,22 @@ class AppServiceProvider extends ServiceProvider
             $tokens = [
                 'platform_name' => $branding['platformName'],
             ];
+            $tokenMap = [
+                '{{platform_name}}' => (string) $branding['platformName'],
+            ];
 
-            $title = EmailContent::get('reset_email_title', 'Tetapkan semula kata laluan anda', $tokens);
+            $titleEnFallback = 'Reset your password';
+            $bodyEnFallback = 'We received a request to reset your password for {{platform_name}}.';
+            $ctaEnFallback = 'Reset Password';
+
+            $title = EmailContent::get('reset_email_title', $titleEnFallback, $tokens);
             $subject = EmailContent::get('reset_email_subject', 'Tetapkan semula kata laluan anda', $tokens);
             $body = EmailContent::get(
                 'reset_email_body',
-                'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
+                $bodyEnFallback,
                 $tokens,
             );
-            $cta = EmailContent::get('reset_email_cta', 'Tetapkan Semula Kata Laluan', $tokens);
+            $cta = EmailContent::get('reset_email_cta', $ctaEnFallback, $tokens);
 
             $titleBM = EmailContent::get('reset_email_title_bm', 'Tetapkan semula kata laluan anda', $tokens);
             $bodyBM = EmailContent::get(
@@ -99,6 +125,18 @@ class AppServiceProvider extends ServiceProvider
                 $tokens,
             );
             $ctaBM = EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens);
+
+            if (trim($title) === trim($titleBM)) {
+                $title = $titleEnFallback;
+            }
+
+            if (trim($body) === trim($bodyBM)) {
+                $body = strtr($bodyEnFallback, $tokenMap);
+            }
+
+            if (trim($cta) === trim($ctaBM)) {
+                $cta = $ctaEnFallback;
+            }
 
             $resetUrl = url(route('password.reset', [
                 'token' => $token,

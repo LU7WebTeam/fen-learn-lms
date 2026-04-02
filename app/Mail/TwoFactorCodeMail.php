@@ -38,20 +38,49 @@ class TwoFactorCodeMail extends Mailable
         $branding = EmailBranding::data();
         $tokens = [];
 
+        $titleEnFallback = 'Login verification code';
+        $bodyEnFallback = 'You requested to log in to your account. To complete your sign in, please use the verification code below:';
+        $expiryEnFallback = 'This code will expire in 10 minutes.';
+        $securityEnFallback = 'If you did not request this code, please ignore this email and secure your account.';
+
+        $title = EmailContent::get('two_factor_email_title', $titleEnFallback, $tokens);
+        $titleBM = EmailContent::get('two_factor_email_title_bm', 'Kod Pengesahan Log Masuk', $tokens);
+        if (trim($title) === trim($titleBM)) {
+            $title = $titleEnFallback;
+        }
+
+        $bodyText = EmailContent::get('two_factor_email_body', $bodyEnFallback, $tokens);
+        $bodyTextBM = EmailContent::get('two_factor_email_body_bm', 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:', $tokens);
+        if (trim($bodyText) === trim($bodyTextBM)) {
+            $bodyText = $bodyEnFallback;
+        }
+
+        $expiryText = EmailContent::get('two_factor_email_expiry', $expiryEnFallback, $tokens);
+        $expiryTextBM = EmailContent::get('two_factor_email_expiry_bm', 'Kod ini akan tamat tempoh dalam 10 minit.', $tokens);
+        if (trim($expiryText) === trim($expiryTextBM)) {
+            $expiryText = $expiryEnFallback;
+        }
+
+        $securityNote = EmailContent::get('two_factor_email_security_note', $securityEnFallback, $tokens);
+        $securityNoteBM = EmailContent::get('two_factor_email_security_note_bm', 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.', $tokens);
+        if (trim($securityNote) === trim($securityNoteBM)) {
+            $securityNote = $securityEnFallback;
+        }
+
         return new Content(
             view: 'emails.two-factor-code',
             with: [
                 'user' => $this->user,
                 'code' => $this->code,
                 'branding' => $branding,
-                'title' => EmailContent::get('two_factor_email_title', 'Kod Pengesahan Log Masuk', $tokens),
-                'titleBM' => EmailContent::get('two_factor_email_title_bm', 'Kod Pengesahan Log Masuk', $tokens),
-                'bodyText' => EmailContent::get('two_factor_email_body', 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:', $tokens),
-                'bodyTextBM' => EmailContent::get('two_factor_email_body_bm', 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:', $tokens),
-                'expiryText' => EmailContent::get('two_factor_email_expiry', 'Kod ini akan tamat tempoh dalam 10 minit.', $tokens),
-                'expiryTextBM' => EmailContent::get('two_factor_email_expiry_bm', 'Kod ini akan tamat tempoh dalam 10 minit.', $tokens),
-                'securityNote' => EmailContent::get('two_factor_email_security_note', 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.', $tokens),
-                'securityNoteBM' => EmailContent::get('two_factor_email_security_note_bm', 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.', $tokens),
+                'title' => $title,
+                'titleBM' => $titleBM,
+                'bodyText' => $bodyText,
+                'bodyTextBM' => $bodyTextBM,
+                'expiryText' => $expiryText,
+                'expiryTextBM' => $expiryTextBM,
+                'securityNote' => $securityNote,
+                'securityNoteBM' => $securityNoteBM,
             ],
         );
     }

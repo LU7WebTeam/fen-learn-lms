@@ -37,9 +37,18 @@ class CourseCompletionNotifier
             'certificate_status' => $certificateAvailable ? 'Issued' : 'Not issued',
         ];
 
+        $tokenMap = [];
+        foreach ($tokens as $key => $value) {
+            $tokenMap['{{'.$key.'}}'] = (string) $value;
+        }
+
+        $bodyEnFallback = 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.';
+        $titleEnFallback = 'You completed a course';
+        $ctaEnFallback = $certificateAvailable ? 'Open Course Page' : 'Continue Learning';
+
         $body = EmailContent::get(
             'course_completion_email_body',
-            'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.',
+            $bodyEnFallback,
             $tokens
         );
 
@@ -49,6 +58,22 @@ class CourseCompletionNotifier
             $tokens
         );
 
+        if (trim($body) === trim($bodyBM)) {
+            $body = strtr($bodyEnFallback, $tokenMap);
+        }
+
+        $title = EmailContent::get('course_completion_email_title', $titleEnFallback, $tokens);
+        $titleBM = EmailContent::get('course_completion_email_title_bm', 'Anda telah menyelesaikan sebuah kursus', $tokens);
+        if (trim($title) === trim($titleBM)) {
+            $title = $titleEnFallback;
+        }
+
+        $emailCta = EmailContent::get('course_completion_email_cta', $ctaEnFallback, $tokens);
+        $emailCtaBM = EmailContent::get('course_completion_email_cta_bm', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens);
+        if (trim($emailCta) === trim($emailCtaBM)) {
+            $emailCta = $ctaEnFallback;
+        }
+
         $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
         $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
 
@@ -56,18 +81,18 @@ class CourseCompletionNotifier
         $bodyLinesBM = array_values(array_filter(array_map('trim', $bodyLinesBM), fn($line) => $line !== ''));
 
         if (empty($bodyLines)) {
-            $bodyLines = ["Tahniah kerana telah menyelesaikan {$course->title} di {$branding['platformName']}." ];
+            $bodyLines = ["Congratulations on completing {$course->title} on {$branding['platformName']}."];
         }
 
         if (empty($bodyLinesBM)) {
             $bodyLinesBM = ["Tahniah kerana telah menyelesaikan {$course->title} di {$branding['platformName']}." ];
         }
 
-        $bodyLines[] = 'Kemajuan pembelajaran anda telah berjaya direkodkan.';
+        $bodyLines[] = 'Your learning progress has been successfully recorded.';
         $bodyLinesBM[] = 'Kemajuan pembelajaran anda telah berjaya direkodkan.';
 
         if ($certificateAvailable) {
-            $bodyLines[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
+            $bodyLines[] = 'Your certificate is ready. Open the course page to view and download it.';
             $bodyLinesBM[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
         }
 
@@ -76,14 +101,14 @@ class CourseCompletionNotifier
             EmailContent::get('course_completion_email_subject', 'Kursus selesai: {{course_title}}', $tokens),
             [
                 ...$branding,
-                'title' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
-                'emailTitle' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
-                'titleBM' => EmailContent::get('course_completion_email_title_bm', 'Anda telah menyelesaikan sebuah kursus', $tokens),
+                'title' => $title,
+                'emailTitle' => $title,
+                'titleBM' => $titleBM,
                 'greetingName' => $learner->name,
                 'bodyLines' => $bodyLines,
                 'bodyLinesBM' => $bodyLinesBM,
-                'emailCta' => EmailContent::get('course_completion_email_cta', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens),
-                'emailCtaBM' => EmailContent::get('course_completion_email_cta_bm', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens),
+                'emailCta' => $emailCta,
+                'emailCtaBM' => $emailCtaBM,
                 'ctaUrl' => $courseUrl,
                 'courseTitle' => $course->title,
                 'learnerName' => $learner->name,

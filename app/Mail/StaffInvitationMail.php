@@ -45,6 +45,79 @@ class StaffInvitationMail extends Mailable
         ];
 
         $branding = EmailBranding::data();
+        $tokenMap = [
+            '{{inviter_name}}' => (string) ($this->invitation->inviter->name ?? 'An administrator'),
+            '{{platform_name}}' => (string) $branding['platformName'],
+            '{{role_label}}' => (string) ($roleLabels[$this->invitation->role] ?? $this->invitation->role),
+        ];
+
+        $titleEnFallback = "You're invited to join the team";
+        $bodyEnFallback = '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.';
+        $ctaEnFallback = 'Accept Invitation';
+
+        $emailTitle = EmailContent::get(
+            'invitation_email_title',
+            $titleEnFallback,
+            [
+                'platform_name' => $branding['platformName'],
+            ],
+        );
+
+        $emailBody = EmailContent::get(
+            'invitation_email_body',
+            $bodyEnFallback,
+            [
+                'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
+                'platform_name' => $branding['platformName'],
+                'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
+            ],
+        );
+
+        $emailCta = EmailContent::get(
+            'invitation_email_cta',
+            $ctaEnFallback,
+            [
+                'platform_name' => $branding['platformName'],
+            ],
+        );
+
+        $emailTitleBM = EmailContent::get(
+            'invitation_email_title_bm',
+            'Anda dijemput untuk bergabung dengan pasukan',
+            [
+                'platform_name' => $branding['platformName'],
+            ],
+        );
+
+        $emailBodyBM = EmailContent::get(
+            'invitation_email_body_bm',
+            '{{inviter_name}} telah menjemput anda untuk bergabung dengan {{platform_name}} sebagai {{role_label}}.',
+            [
+                'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
+                'platform_name' => $branding['platformName'],
+                'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
+            ],
+        );
+
+        $emailCtaBM = EmailContent::get(
+            'invitation_email_cta_bm',
+            'Terima Jemputan',
+            [
+                'platform_name' => $branding['platformName'],
+            ],
+        );
+
+        if (trim($emailTitle) === trim($emailTitleBM)) {
+            $emailTitle = $titleEnFallback;
+        }
+
+        if (trim($emailBody) === trim($emailBodyBM)) {
+            $emailBody = strtr($bodyEnFallback, $tokenMap);
+        }
+
+        if (trim($emailCta) === trim($emailCtaBM)) {
+            $emailCta = $ctaEnFallback;
+        }
 
         return new Content(
             view: 'emails.staff-invitation',
@@ -57,52 +130,12 @@ class StaffInvitationMail extends Mailable
                 'expiresAt'    => $this->invitation->expires_at->format('d M Y'),
                 'logoUrl'      => $branding['logoUrl'],
                 'theme'        => $branding['theme'],
-                'emailTitle'   => EmailContent::get(
-                    'invitation_email_title',
-                    'Anda dijemput untuk menyertai pasukan',
-                    [
-                        'platform_name' => $branding['platformName'],
-                    ],
-                ),
-                'emailBody'    => EmailContent::get(
-                    'invitation_email_body',
-                    '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.',
-                    [
-                        'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
-                        'platform_name' => $branding['platformName'],
-                        'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
-                    ],
-                ),
-                'emailCta'     => EmailContent::get(
-                    'invitation_email_cta',
-                    'Terima Undangan',
-                    [
-                        'platform_name' => $branding['platformName'],
-                    ],
-                ),
-                'emailTitleBM' => EmailContent::get(
-                    'invitation_email_title_bm',
-                    'Anda dijemput untuk bergabung dengan pasukan',
-                    [
-                        'platform_name' => $branding['platformName'],
-                    ],
-                ),
-                'emailBodyBM'  => EmailContent::get(
-                    'invitation_email_body_bm',
-                    '{{inviter_name}} telah menjemput anda untuk bergabung dengan {{platform_name}} sebagai {{role_label}}.',
-                    [
-                        'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
-                        'platform_name' => $branding['platformName'],
-                        'role_label' => $roleLabels[$this->invitation->role] ?? $this->invitation->role,
-                    ],
-                ),
-                'emailCtaBM'   => EmailContent::get(
-                    'invitation_email_cta_bm',
-                    'Terima Jemputan',
-                    [
-                        'platform_name' => $branding['platformName'],
-                    ],
-                ),
+                'emailTitle'   => $emailTitle,
+                'emailBody'    => $emailBody,
+                'emailCta'     => $emailCta,
+                'emailTitleBM' => $emailTitleBM,
+                'emailBodyBM'  => $emailBodyBM,
+                'emailCtaBM'   => $emailCtaBM,
             ],
         );
     }
