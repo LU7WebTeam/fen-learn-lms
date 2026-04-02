@@ -348,13 +348,13 @@ class SettingsController extends Controller
 
         $this->validateEmailTemplateGuardrails($request);
 
-        Setting::set('mail_driver', $request->input('mail_driver'));
-        Setting::set('mail_host', $request->input('mail_host', ''));
-        Setting::set('mail_port', $request->input('mail_port', '587'));
-        Setting::set('mail_scheme', $request->input('mail_scheme', 'none'));
-        Setting::set('mail_username', $request->input('mail_username', ''));
-        Setting::set('mail_sender_name', $request->input('mail_sender_name', ''));
-        Setting::set('mail_sender_address', $request->input('mail_sender_address', ''));
+        Setting::set('mail_driver', $request->input('mail_driver', Setting::get('mail_driver', 'smtp')));
+        Setting::set('mail_host', $request->input('mail_host', Setting::get('mail_host', '')));
+        Setting::set('mail_port', $request->input('mail_port', Setting::get('mail_port', '587')));
+        Setting::set('mail_scheme', $request->input('mail_scheme', Setting::get('mail_scheme', 'none')));
+        Setting::set('mail_username', $request->input('mail_username', Setting::get('mail_username', '')));
+        Setting::set('mail_sender_name', $request->input('mail_sender_name', Setting::get('mail_sender_name', '')));
+        Setting::set('mail_sender_address', $request->input('mail_sender_address', Setting::get('mail_sender_address', '')));
         Setting::set('invitation_email_subject', $request->input('invitation_email_subject', $this->defaults['invitation_email_subject']));
         Setting::set('invitation_email_title', $request->input('invitation_email_title', $this->defaults['invitation_email_title']));
         Setting::set('invitation_email_body', $request->input('invitation_email_body', $this->defaults['invitation_email_body']));
