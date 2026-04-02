@@ -327,11 +327,6 @@ export default function VideoPlayer({ url, onWatchComplete, captionsDefault = fa
                 />
             )}
             {!ytId && !vimeoId && <NativePlayer url={url} onWatchComplete={handleComplete} allowSeeking={allowSeeking} />}
-            {captionsDefault && (
-                <p className="text-xs text-muted-foreground">
-                    Captions are set to open by default when the provider supports them.
-                </p>
-            )}
             <WatchedBadge watched={watched} />
         </div>
     );
