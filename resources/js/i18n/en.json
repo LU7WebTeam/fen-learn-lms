@@ -154,6 +154,8 @@
   "learn.lesson.no_image": "No image",
   "learn.lesson.locked_message": "Complete the prerequisite lesson first.",
   "learn.lesson.locked_prerequisite": "Prerequisite: {title}",
+  "learn.lesson.get_certificate": "Get Certificate",
+  "learn.lesson.course_complete": "Course Complete!",
 
   "learn.quiz.title": "Quiz",
   "learn.quiz.passing_score": "Passing score: {n}%",
@@ -469,7 +471,7 @@
   "certificate.download_pdf": "Download PDF",
   "certificate.view_course": "View Course",
   "certificate.authentic_title": "Authentic Certificate",
-  "certificate.authentic_body": "This certificate is verified by {platform_name}. Share this page URL or the certificate ID to allow anyone to confirm its authenticity.",
+  "certificate.authentic_body": "This certificate is verified by {platform_name}.",
   "certificate.issued_on_label": "Issued on",
   "certificate.id_label": "ID:",
   "certificate.back_to_learning": "Back to My Learning"

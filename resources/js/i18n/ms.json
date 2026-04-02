@@ -149,6 +149,8 @@
   "learn.lesson.no_image": "Tiada imej",
   "learn.lesson.locked_message": "Selesaikan pelajaran prasyarat terlebih dahulu.",
   "learn.lesson.locked_prerequisite": "Prasyarat: {title}",
+  "learn.lesson.get_certificate": "Dapatkan Sijil",
+  "learn.lesson.course_complete": "Kursus Selesai!",
 
   "learn.quiz.title": "Kuiz",
   "learn.quiz.passing_score": "Skor lulus: {n}%",
@@ -465,7 +467,7 @@
   "certificate.download_pdf": "Muat Turun PDF",
   "certificate.view_course": "Lihat Kursus",
   "certificate.authentic_title": "Sijil Sah",
-  "certificate.authentic_body": "Sijil ini disahkan oleh {platform_name}. Kongsikan URL halaman ini atau ID sijil untuk membolehkan sesiapa sahaja mengesahkan ketulenannya.",
+  "certificate.authentic_body": "Sijil ini disahkan oleh {platform_name}.",
   "certificate.issued_on_label": "Dikeluarkan pada",
   "certificate.id_label": "ID:",
   "certificate.back_to_learning": "Kembali ke Pembelajaran Saya"

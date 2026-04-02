@@ -886,14 +886,14 @@ export default function LearnShow({
                                             <Button asChild className="bg-[#8B1A4A] hover:bg-[#7a1740] text-white">
                                                 <Link href={`/certificate/${enrollment.certificate_uuid}`}>
                                                     <Award className="mr-2 h-4 w-4" />
-                                                    Get Certificate
+                                                    {t('learn.lesson.get_certificate')}
                                                 </Link>
                                             </Button>
                                         ) : (
                                             <Button asChild>
                                                 <Link href={route('courses.show', course.slug)}>
                                                     <Award className="mr-2 h-4 w-4" />
-                                                    Course Complete!
+                                                    {t('learn.lesson.course_complete')}
                                                 </Link>
                                             </Button>
                                         )
