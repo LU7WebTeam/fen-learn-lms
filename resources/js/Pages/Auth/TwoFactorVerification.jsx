@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { BookOpen, Lock, Loader2, CheckCircle, ArrowRight } from 'lucide-react';
 import InputError from '@/Components/InputError';
+import { useT } from '@/lib/i18n';
 
 export default function TwoFactorVerification({ email }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
     const flash = props.flash ?? {};
+    const t = useT();
     const [showSuccess, setShowSuccess] = useState(false);
     
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -37,7 +39,7 @@ export default function TwoFactorVerification({ email }) {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <Head title={`Verify your login - ${platform.name || 'LMS'}`} />
+            <Head title={`${t('auth.two_factor.title')} - ${platform.name || 'LMS'}`} />
 
             {/* Left panel — form */}
             <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-8">
@@ -55,9 +57,9 @@ export default function TwoFactorVerification({ email }) {
                             )}
                             <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Verify your login</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('auth.two_factor.title')}</h1>
                         <p className="text-sm text-gray-500">
-                            We've sent a verification code to <strong>{email}</strong>
+                            {t('auth.two_factor.sent_to')} <strong>{email}</strong>
                         </p>
                     </div>
 
@@ -77,14 +79,14 @@ export default function TwoFactorVerification({ email }) {
                     {showSuccess && (
                         <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-center gap-3 text-sm text-emerald-700">
                             <CheckCircle className="h-5 w-5 flex-shrink-0" />
-                            <span>Verification successful! Redirecting...</span>
+                            <span>{t('auth.two_factor.success_redirecting')}</span>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700" htmlFor="code">
-                                Verification Code
+                                {t('auth.two_factor.code_label')}
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -107,7 +109,7 @@ export default function TwoFactorVerification({ email }) {
                             </div>
                             <InputError message={errors.code} />
                             <p className="text-xs text-gray-500 mt-1.5">
-                                Enter the 6-digit code sent to your email. It expires in 10 minutes.
+                                {t('auth.two_factor.code_hint')}
                             </p>
                         </div>
 
@@ -119,11 +121,11 @@ export default function TwoFactorVerification({ email }) {
                             {processing ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Verifying...
+                                    {t('auth.two_factor.verifying')}
                                 </>
                             ) : (
                                 <>
-                                    Verify
+                                    {t('auth.two_factor.verify')}
                                     <ArrowRight className="h-4 w-4" />
                                 </>
                             )}
@@ -137,7 +139,7 @@ export default function TwoFactorVerification({ email }) {
                             type="button"
                             className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {processing ? 'Sending...' : "Didn't receive a code? Resend"}
+                            {processing ? t('auth.two_factor.sending') : t('auth.two_factor.resend')}
                         </button>
                     </div>
 
@@ -151,10 +153,9 @@ export default function TwoFactorVerification({ email }) {
                         <Lock className="h-12 w-12 text-primary/60" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-3">Secure Login</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('auth.two_factor.secure_title')}</h2>
                         <p className="text-gray-600">
-                            Two-factor verification adds an extra layer of security to your account. 
-                            Verify your login with the code we've sent to your email.
+                            {t('auth.two_factor.secure_desc')}
                         </p>
                     </div>
                 </div>

@@ -4,23 +4,23 @@
     'logoUrl' => $logoUrl,
     'theme' => $theme,
 ])
-    <h2>{{ $emailTitle }}</h2>
+    <h2>{{ $emailTitleBM ?: $emailTitle }}</h2>
     @if (!empty($emailTitleBM))
-        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $emailTitleBM }}</p>
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $emailTitle }}</p>
     @endif
     
     <p>Hi there,</p>
-    <p>{!! nl2br(e($emailBody)) !!}</p>
+    <p>{!! nl2br(e($emailBodyBM ?: $emailBody)) !!}</p>
     @if (!empty($emailBodyBM))
-        <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($emailBodyBM)) !!}</p>
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($emailBody)) !!}</p>
     @endif
     
     <p>Click the button below to set up your account. The link is valid until <strong>{{ $expiresAt }}</strong>.</p>
 
     <div class="button-wrap">
-        <a href="{{ $acceptUrl }}" class="button">{{ $emailCta }}</a>
+        <a href="{{ $acceptUrl }}" class="button">{{ $emailCtaBM ?: $emailCta }}</a>
         @if (!empty($emailCtaBM))
-            <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $emailCtaBM }}</p>
+            <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $emailCta }}</p>
         @endif
     </div>
 

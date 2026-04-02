@@ -44,14 +44,14 @@ class AppServiceProvider extends ServiceProvider
                 'platform_name' => $branding['platformName'],
             ];
 
-            $title = EmailContent::get('verification_email_title', 'Verify your email address', $tokens);
-            $subject = EmailContent::get('verification_email_subject', 'Verify your email address', $tokens);
+            $title = EmailContent::get('verification_email_title', 'Sahkan alamat e-mel anda', $tokens);
+            $subject = EmailContent::get('verification_email_subject', 'Sahkan alamat e-mel anda', $tokens);
             $body = EmailContent::get(
                 'verification_email_body',
-                'Please confirm your email address for {{platform_name}} by clicking the button below.',
+                'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
                 $tokens,
             );
-            $cta = EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens);
+            $cta = EmailContent::get('verification_email_cta', 'Sahkan Alamat E-mel', $tokens);
 
             $titleBM = EmailContent::get('verification_email_title_bm', 'Sahkan alamat email anda', $tokens);
             $bodyBM = EmailContent::get(
@@ -83,14 +83,14 @@ class AppServiceProvider extends ServiceProvider
                 'platform_name' => $branding['platformName'],
             ];
 
-            $title = EmailContent::get('reset_email_title', 'Reset your password', $tokens);
-            $subject = EmailContent::get('reset_email_subject', 'Reset your password', $tokens);
+            $title = EmailContent::get('reset_email_title', 'Tetapkan semula kata laluan anda', $tokens);
+            $subject = EmailContent::get('reset_email_subject', 'Tetapkan semula kata laluan anda', $tokens);
             $body = EmailContent::get(
                 'reset_email_body',
-                'We received a request to reset your password for {{platform_name}}.',
+                'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
                 $tokens,
             );
-            $cta = EmailContent::get('reset_email_cta', 'Reset Password', $tokens);
+            $cta = EmailContent::get('reset_email_cta', 'Tetapkan Semula Kata Laluan', $tokens);
 
             $titleBM = EmailContent::get('reset_email_title_bm', 'Tetapkan semula kata laluan anda', $tokens);
             $bodyBM = EmailContent::get(

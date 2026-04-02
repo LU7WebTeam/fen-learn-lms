@@ -4,21 +4,21 @@
     'logoUrl' => $logoUrl,
     'theme' => $theme,
 ])
-    <h2>{{ $title }}</h2>
+    <h2>{{ $titleBM ?: $title }}</h2>
     @if (!empty($titleBM))
-        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $titleBM }}</p>
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $title }}</p>
     @endif
     
     <p>Hello,</p>
-    <p>{!! nl2br(e($bodyText)) !!}</p>
+    <p>{!! nl2br(e($bodyTextBM ?: $bodyText)) !!}</p>
     @if (!empty($bodyTextBM))
-        <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($bodyTextBM)) !!}</p>
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($bodyText)) !!}</p>
     @endif
 
     <div class="button-wrap">
-        <a href="{{ $actionUrl }}" class="button">{{ $actionText }}</a>
+        <a href="{{ $actionUrl }}" class="button">{{ $actionTextBM ?: $actionText }}</a>
         @if (!empty($actionTextBM))
-            <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $actionTextBM }}</p>
+            <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $actionText }}</p>
         @endif
     </div>
 

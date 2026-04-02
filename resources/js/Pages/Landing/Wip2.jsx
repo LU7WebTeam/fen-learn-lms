@@ -82,7 +82,7 @@ export default function Wip2() {
                 </Link>
                 <div className="hidden md:flex items-center gap-8 font-medium">
                     <a href="#proaktif" className="hover:text-slate-900 transition">{t('landing.nav.proaktif')}</a>
-                    <a href="#about" className="hover:text-slate-900 transition">{t('landing.nav.about')}</a>
+                    <a href="#about" className="hidden hover:text-slate-900 transition">{t('landing.nav.about')}</a>
                     <a href="#features" className="hover:text-slate-900 transition">{t('landing.nav.why_fen')}</a>
                     <a href="#faq" className="hover:text-slate-900 transition">{t('landing.nav.faq')}</a>
                 </div>
@@ -228,7 +228,7 @@ export default function Wip2() {
             </section>
 
             {/* About Section */}
-            <section id="about" className="py-20 px-6 md:px-8 bg-white scroll-mt-20">
+            <section id="about" className="hidden py-20 px-6 md:px-8 bg-white scroll-mt-20">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
                         <div>
@@ -329,7 +329,7 @@ export default function Wip2() {
                                         <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" w="24"><path d="M6 9l6 6 6-6"></path></svg>
                                     </span>
                                 </summary>
-                                <div className="text-slate-300 px-6 pb-6 pt-0 leading-relaxed border-t border-white/10">
+                                <div className="whitespace-pre-line text-slate-300 px-6 pb-6 pt-0 leading-relaxed border-t border-white/10">
                                     {t(item.aKey)}
                                 </div>
                             </details>

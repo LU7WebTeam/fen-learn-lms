@@ -39,34 +39,50 @@ class CourseCompletionNotifier
 
         $body = EmailContent::get(
             'course_completion_email_body',
-            'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.',
+            'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.',
+            $tokens
+        );
+
+        $bodyBM = EmailContent::get(
+            'course_completion_email_body_bm',
+            'Tahniah {{learner_name}} kerana telah menyelesaikan {{course_title}} di {{platform_name}}.',
             $tokens
         );
 
         $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
         $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
 
+        $bodyLinesBM = preg_split('/\r\n|\r|\n/', $bodyBM) ?: [$bodyBM];
+        $bodyLinesBM = array_values(array_filter(array_map('trim', $bodyLinesBM), fn($line) => $line !== ''));
+
         if (empty($bodyLines)) {
-            $bodyLines = ["Congratulations on completing {$course->title} on {$branding['platformName']}." ];
+            $bodyLines = ["Tahniah kerana telah menyelesaikan {$course->title} di {$branding['platformName']}." ];
         }
 
-        $bodyLines[] = 'Your learning progress has been recorded successfully.';
+        if (empty($bodyLinesBM)) {
+            $bodyLinesBM = ["Tahniah kerana telah menyelesaikan {$course->title} di {$branding['platformName']}." ];
+        }
+
+        $bodyLines[] = 'Kemajuan pembelajaran anda telah berjaya direkodkan.';
+        $bodyLinesBM[] = 'Kemajuan pembelajaran anda telah berjaya direkodkan.';
 
         if ($certificateAvailable) {
-            $bodyLines[] = 'Your certificate is ready. Please open the course page to view and download it.';
+            $bodyLines[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
+            $bodyLinesBM[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
         }
 
         self::deliver(
             $learner->email,
-            EmailContent::get('course_completion_email_subject', 'Course completed: {{course_title}}', $tokens),
+            EmailContent::get('course_completion_email_subject', 'Kursus selesai: {{course_title}}', $tokens),
             [
                 ...$branding,
-                'title' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
-                'emailTitle' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
+                'title' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
+                'emailTitle' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
                 'titleBM' => EmailContent::get('course_completion_email_title_bm', 'Anda telah menyelesaikan sebuah kursus', $tokens),
                 'greetingName' => $learner->name,
                 'bodyLines' => $bodyLines,
-                'emailCta' => EmailContent::get('course_completion_email_cta', $certificateAvailable ? 'Open Course Page' : 'Continue Learning', $tokens),
+                'bodyLinesBM' => $bodyLinesBM,
+                'emailCta' => EmailContent::get('course_completion_email_cta', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens),
                 'emailCtaBM' => EmailContent::get('course_completion_email_cta_bm', $certificateAvailable ? 'Buka Halaman Kursus' : 'Teruskan Pembelajaran', $tokens),
                 'ctaUrl' => $courseUrl,
                 'courseTitle' => $course->title,

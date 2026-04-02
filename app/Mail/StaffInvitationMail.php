@@ -25,7 +25,7 @@ class StaffInvitationMail extends Mailable
         $platform = Setting::get('platform_name', config('app.name'));
         $subject = EmailContent::get(
             'invitation_email_subject',
-            "You've been invited to join {{platform_name}}",
+            'Anda telah dijemput untuk menyertai {{platform_name}}',
             [
                 'platform_name' => $platform,
             ],
@@ -59,14 +59,14 @@ class StaffInvitationMail extends Mailable
                 'theme'        => $branding['theme'],
                 'emailTitle'   => EmailContent::get(
                     'invitation_email_title',
-                    "You're invited to join the team",
+                    'Anda dijemput untuk menyertai pasukan',
                     [
                         'platform_name' => $branding['platformName'],
                     ],
                 ),
                 'emailBody'    => EmailContent::get(
                     'invitation_email_body',
-                    '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.',
+                    '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.',
                     [
                         'inviter_name' => $this->invitation->inviter->name ?? 'An administrator',
                         'platform_name' => $branding['platformName'],
@@ -75,7 +75,7 @@ class StaffInvitationMail extends Mailable
                 ),
                 'emailCta'     => EmailContent::get(
                     'invitation_email_cta',
-                    'Accept Invitation',
+                    'Terima Undangan',
                     [
                         'platform_name' => $branding['platformName'],
                     ],

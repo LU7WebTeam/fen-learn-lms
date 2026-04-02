@@ -4,22 +4,28 @@
     'logoUrl' => $logoUrl,
     'theme' => $theme,
 ])
-    <h2>{{ $emailTitle }}</h2>
+    <h2>{{ $titleBM ?: $emailTitle }}</h2>
     @if (!empty($titleBM))
-        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $titleBM }}</p>
+        <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $emailTitle }}</p>
     @endif
     
     <p>Hi {{ $greetingName }},</p>
 
-    @foreach($bodyLines as $line)
+    @foreach(($bodyLinesBM ?? []) ?: $bodyLines as $line)
         <p>{{ $line }}</p>
     @endforeach
 
+    @if (!empty($bodyLinesBM))
+        @foreach($bodyLines as $line)
+            <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $line }}</p>
+        @endforeach
+    @endif
+
     @if(!empty($ctaUrl))
         <div class="button-wrap">
-            <a href="{{ $ctaUrl }}" class="button">{{ $emailCta }}</a>
+            <a href="{{ $ctaUrl }}" class="button">{{ $emailCtaBM ?: $emailCta }}</a>
             @if (!empty($emailCtaBM))
-                <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $emailCtaBM }}</p>
+                <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 4px;">{{ $emailCta }}</p>
             @endif
         </div>
 

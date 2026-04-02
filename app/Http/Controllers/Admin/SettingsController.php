@@ -42,43 +42,43 @@ class SettingsController extends Controller
         'mail_password'              => '',
         'mail_sender_name'           => '',
         'mail_sender_address'        => '',
-        'invitation_email_subject'   => "You've been invited to join {{platform_name}}",
-        'invitation_email_title'     => "You're invited to join the team",
-        'invitation_email_body'      => '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.',
-        'invitation_email_cta'       => 'Accept Invitation',
+        'invitation_email_subject'   => 'Anda telah dijemput untuk menyertai {{platform_name}}',
+        'invitation_email_title'     => 'Anda dijemput untuk menyertai pasukan',
+        'invitation_email_body'      => '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.',
+        'invitation_email_cta'       => 'Terima Undangan',
         'invitation_email_subject_bm'   => "Anda telah dijemput untuk menyertai {{platform_name}}",
         'invitation_email_title_bm'     => "Anda dijemput untuk menyertai pasukan",
         'invitation_email_body_bm'      => '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.',
         'invitation_email_cta_bm'       => 'Terima Undangan',
-        'verification_email_subject' => 'Verify your email address',
-        'verification_email_title'   => 'Verify your email address',
-        'verification_email_body'    => 'Please confirm your email address for {{platform_name}} by clicking the button below.',
-        'verification_email_cta'     => 'Verify Email Address',
+        'verification_email_subject' => 'Sahkan alamat e-mel anda',
+        'verification_email_title'   => 'Sahkan alamat e-mel anda',
+        'verification_email_body'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+        'verification_email_cta'     => 'Sahkan Alamat E-mel',
         'verification_email_subject_bm' => 'Sahkan alamat e-mel anda',
         'verification_email_title_bm'   => 'Sahkan alamat e-mel anda',
         'verification_email_body_bm'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
         'verification_email_cta_bm'     => 'Sahkan Alamat E-mel',
-        'reset_email_subject'        => 'Reset your password',
-        'reset_email_title'          => 'Reset your password',
-        'reset_email_body'           => 'We received a request to reset your password for {{platform_name}}.',
-        'reset_email_cta'            => 'Reset Password',
+        'reset_email_subject'        => 'Tetapkan semula kata laluan anda',
+        'reset_email_title'          => 'Tetapkan semula kata laluan anda',
+        'reset_email_body'           => 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
+        'reset_email_cta'            => 'Tetapkan Semula Kata Laluan',
         'reset_email_subject_bm'        => 'Tetapkan semula kata laluan anda',
         'reset_email_title_bm'          => 'Tetapkan semula kata laluan anda',
         'reset_email_body_bm'           => 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
         'reset_email_cta_bm'            => 'Tetapkan Semula Kata Laluan',
-        'course_completion_email_subject' => 'Course completed: {{course_title}}',
-        'course_completion_email_title'   => 'You completed a course',
-        'course_completion_email_body'    => 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.',
-        'course_completion_email_cta'     => 'Open Course Page',
+        'course_completion_email_subject' => 'Kursus selesai: {{course_title}}',
+        'course_completion_email_title'   => 'Anda telah menyelesaikan sebuah kursus',
+        'course_completion_email_body'    => 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.',
+        'course_completion_email_cta'     => 'Buka Halaman Kursus',
         'course_completion_email_subject_bm' => 'Kursus selesai: {{course_title}}',
         'course_completion_email_title_bm'   => 'Anda telah menyelesaikan sebuah kursus',
         'course_completion_email_body_bm'    => 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.',
         'course_completion_email_cta_bm'     => 'Buka Halaman Kursus',
-        'two_factor_email_subject'   => 'Your login verification code',
-        'two_factor_email_title'     => 'Login Verification Code',
-        'two_factor_email_body'      => 'You\'ve requested to log in to your account. To complete your login, please use the verification code below:',
-        'two_factor_email_expiry'    => 'This code will expire in 10 minutes.',
-        'two_factor_email_security_note' => 'If you didn\'t request this code, please ignore this email and ensure your account is secure.',
+        'two_factor_email_subject'   => 'Kod pengesahan log masuk anda',
+        'two_factor_email_title'     => 'Kod Pengesahan Log Masuk',
+        'two_factor_email_body'      => 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:',
+        'two_factor_email_expiry'    => 'Kod ini akan tamat tempoh dalam 10 minit.',
+        'two_factor_email_security_note' => 'Jika anda tidak meminta kod ini, sila abaikan e-mel ini dan pastikan akaun anda selamat.',
         'two_factor_email_subject_bm'   => 'Kod pengesahan log masuk anda',
         'two_factor_email_title_bm'     => 'Kod Pengesahan Log Masuk',
         'two_factor_email_body_bm'      => 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:',
@@ -528,7 +528,7 @@ class SettingsController extends Controller
             ];
 
             if ($type === 'invitation') {
-                $subject = EmailContent::get('invitation_email_subject', "You've been invited to join {{platform_name}}", $tokens);
+                $subject = EmailContent::get('invitation_email_subject', 'Anda telah dijemput untuk menyertai {{platform_name}}', $tokens);
 
                 Mail::send('emails.staff-invitation', [
                     ...$branding,
@@ -536,24 +536,24 @@ class SettingsController extends Controller
                     'roleLabel' => $tokens['role_label'],
                     'inviterName' => $tokens['inviter_name'],
                     'expiresAt' => now()->addDays(7)->format('d M Y'),
-                    'emailTitle' => EmailContent::get('invitation_email_title', "You're invited to join the team", $tokens),
-                    'emailBody' => EmailContent::get('invitation_email_body', '{{inviter_name}} has invited you to join {{platform_name}} as a {{role_label}}.', $tokens),
-                    'emailCta' => EmailContent::get('invitation_email_cta', 'Accept Invitation', $tokens),
+                    'emailTitle' => EmailContent::get('invitation_email_title', 'Anda dijemput untuk menyertai pasukan', $tokens),
+                    'emailBody' => EmailContent::get('invitation_email_body', '{{inviter_name}} telah menjemput anda untuk menyertai {{platform_name}} sebagai {{role_label}}.', $tokens),
+                    'emailCta' => EmailContent::get('invitation_email_cta', 'Terima Undangan', $tokens),
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
                 });
             }
 
             if ($type === 'verification') {
-                $subject = EmailContent::get('verification_email_subject', 'Verify your email address', $tokens);
+                $subject = EmailContent::get('verification_email_subject', 'Sahkan alamat e-mel anda', $tokens);
 
                 Mail::send('emails.auth-verify-email', [
                     ...$branding,
-                    'title' => EmailContent::get('verification_email_title', 'Verify your email address', $tokens),
+                    'title' => EmailContent::get('verification_email_title', 'Sahkan alamat e-mel anda', $tokens),
                     'email' => $recipient,
                     'actionUrl' => $testUrls['verification'],
-                    'actionText' => EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens),
-                    'bodyText' => EmailContent::get('verification_email_body', 'Please confirm your email address for {{platform_name}} by clicking the button below.', $tokens),
+                    'actionText' => EmailContent::get('verification_email_cta', 'Sahkan Alamat E-mel', $tokens),
+                    'bodyText' => EmailContent::get('verification_email_body', 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.', $tokens),
                     'expiresInMinutes' => 60,
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
@@ -561,15 +561,15 @@ class SettingsController extends Controller
             }
 
             if ($type === 'reset') {
-                $subject = EmailContent::get('reset_email_subject', 'Reset your password', $tokens);
+                $subject = EmailContent::get('reset_email_subject', 'Tetapkan semula kata laluan anda', $tokens);
 
                 Mail::send('emails.auth-reset-password', [
                     ...$branding,
-                    'title' => EmailContent::get('reset_email_title', 'Reset your password', $tokens),
+                    'title' => EmailContent::get('reset_email_title', 'Tetapkan semula kata laluan anda', $tokens),
                     'email' => $recipient,
                     'actionUrl' => $testUrls['reset'],
-                    'actionText' => EmailContent::get('reset_email_cta', 'Reset Password', $tokens),
-                    'bodyText' => EmailContent::get('reset_email_body', 'We received a request to reset your password for {{platform_name}}.', $tokens),
+                    'actionText' => EmailContent::get('reset_email_cta', 'Tetapkan Semula Kata Laluan', $tokens),
+                    'bodyText' => EmailContent::get('reset_email_body', 'Kami telah menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.', $tokens),
                     'expiresInMinutes' => (int) config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 1440),
                 ], function ($message) use ($recipient, $subject) {
                     $message->to($recipient)->subject($subject.' [Test]');
@@ -577,19 +577,19 @@ class SettingsController extends Controller
             }
 
             if ($type === 'completion') {
-                $subject = EmailContent::get('course_completion_email_subject', 'Course completed: {{course_title}}', $tokens);
-                $body = EmailContent::get('course_completion_email_body', 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.', $tokens);
+                $subject = EmailContent::get('course_completion_email_subject', 'Kursus selesai: {{course_title}}', $tokens);
+                $body = EmailContent::get('course_completion_email_body', 'Tahniah {{learner_name}} telah menyelesaikan {{course_title}} di {{platform_name}}.', $tokens);
                 $bodyLines = preg_split('/\r\n|\r|\n/', $body) ?: [$body];
                 $bodyLines = array_values(array_filter(array_map('trim', $bodyLines), fn($line) => $line !== ''));
-                $bodyLines[] = 'Your certificate is ready. Please open the course page to view and download it.';
+                $bodyLines[] = 'Sijil anda telah siap. Sila buka halaman kursus untuk melihat dan memuat turunnya.';
 
                 Mail::send('emails.course-completion', [
                     ...$branding,
-                    'title' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
-                    'emailTitle' => EmailContent::get('course_completion_email_title', 'You completed a course', $tokens),
+                    'title' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
+                    'emailTitle' => EmailContent::get('course_completion_email_title', 'Anda telah menyelesaikan sebuah kursus', $tokens),
                     'greetingName' => $tokens['learner_name'],
                     'bodyLines' => $bodyLines,
-                    'emailCta' => EmailContent::get('course_completion_email_cta', 'Open Course Page', $tokens),
+                    'emailCta' => EmailContent::get('course_completion_email_cta', 'Buka Halaman Kursus', $tokens),
                     'ctaUrl' => $testUrls['completion'],
                     'courseTitle' => $tokens['course_title'],
                     'learnerName' => $tokens['learner_name'],

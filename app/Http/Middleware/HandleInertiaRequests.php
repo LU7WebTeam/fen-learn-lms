@@ -19,12 +19,15 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $locale = 'en';
+
         try {
             $platformName    = Setting::get('platform_name', 'Free LMS');
             $platformTagline = Setting::get('platform_tagline', '');
             $logoPath        = Setting::get('logo_path');
             $logoDarkPath    = Setting::get('logo_dark_path');
             $faviconPath     = Setting::get('favicon_path');
+            $defaultLocale   = (string) Setting::get('default_locale', 'en');
             $captchaConfig   = CaptchaVerifier::frontendConfig();
             $analyticsConfig = [
                 'enabled' => Setting::get('analytics_enabled', '0') === '1',
@@ -32,6 +35,19 @@ class HandleInertiaRequests extends Middleware
                 'anonymize_ip' => Setting::get('ga4_anonymize_ip', '1') === '1',
                 'debug_mode' => Setting::get('ga4_debug_mode', '0') === '1',
             ];
+
+            if (!in_array($defaultLocale, ['en', 'ms'], true)) {
+                $defaultLocale = 'en';
+            }
+
+            $locale = (string) $request->session()->get('locale', $defaultLocale);
+            if (!in_array($locale, ['en', 'ms'], true)) {
+                $locale = $defaultLocale;
+            }
+
+            if (!$request->session()->has('locale')) {
+                $request->session()->put('locale', $locale);
+            }
         } catch (\Throwable) {
             $platformName    = 'Free LMS';
             $platformTagline = '';
@@ -55,7 +71,11 @@ class HandleInertiaRequests extends Middleware
                 'anonymize_ip' => true,
                 'debug_mode' => false,
             ];
+
+            $locale = (string) $request->session()->get('locale', 'en');
         }
+
+        app()->setLocale($locale);
 
         return [
             ...parent::share($request),
@@ -67,7 +87,7 @@ class HandleInertiaRequests extends Middleware
                 'error'       => $request->session()->get('error'),
                 'quiz_result' => $request->session()->get('quiz_result'),
             ],
-            'locale'   => $request->session()->get('locale', 'en'),
+            'locale'   => $locale,
             'platform' => [
                 'name'        => $platformName,
                 'tagline'     => $platformTagline,
