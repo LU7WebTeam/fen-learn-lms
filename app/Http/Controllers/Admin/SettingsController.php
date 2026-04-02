@@ -294,7 +294,7 @@ class SettingsController extends Controller
             'mail_driver'         => 'required|in:smtp,sendmail,log',
             'mail_host'           => 'nullable|string|max:255',
             'mail_port'           => 'nullable|integer|min:1|max:65535',
-            'mail_scheme'         => 'nullable|in:none,tls,smtps',
+            'mail_scheme'         => 'nullable|in:none,tls,smtp,smtps,ssl',
             'mail_username'       => 'nullable|string|max:255',
             'mail_sender_name'    => 'nullable|string|max:100',
             'mail_sender_address' => 'nullable|email|max:200',
