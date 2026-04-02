@@ -175,7 +175,8 @@ function PlaceholderChips({ tokens }) {
 }
 
 export default function SettingsIndex({ settings, customFonts = [] }) {
-    const { flash, errors = {} } = usePage().props;
+    const { flash, errors = {}, auth } = usePage().props;
+    const currentUserEmail = auth?.user?.email || '';
     const [processing, setProcessing] = useState(false);
 
     function submitGroup(group, data, files = {}) {
@@ -270,7 +271,12 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
 
                     {/* ── EMAIL / SMTP ── */}
                     <TabsContent value="email">
-                        <EmailTab settings={settings} onSave={submitGroup} processing={processing} />
+                        <EmailTab
+                            settings={settings}
+                            currentUserEmail={currentUserEmail}
+                            onSave={submitGroup}
+                            processing={processing}
+                        />
                     </TabsContent>
 
                     {/* ── CERTIFICATES ── */}
@@ -1114,7 +1120,7 @@ function ProfileTab({ settings, onSave, processing }) {
     );
 }
 
-function EmailTab({ settings, onSave, processing }) {
+function EmailTab({ settings, currentUserEmail, onSave, processing }) {
     const [driver, setDriver] = useState(settings.mail_driver || 'smtp');
     const [host, setHost] = useState(settings.mail_host || '');
     const [port, setPort] = useState(settings.mail_port || '587');
@@ -1145,7 +1151,7 @@ function EmailTab({ settings, onSave, processing }) {
     const [completionTitle, setCompletionTitle] = useState(settings.course_completion_email_title || 'You completed a course');
     const [completionBody, setCompletionBody] = useState(settings.course_completion_email_body || 'Congratulations {{learner_name}} on completing {{course_title}} on {{platform_name}}.');
     const [completionCta, setCompletionCta] = useState(settings.course_completion_email_cta || 'Open Course Page');
-    const [testRecipient, setTestRecipient] = useState(settings.mail_sender_address || '');
+    const [testRecipient, setTestRecipient] = useState(currentUserEmail || settings.mail_sender_address || '');
     const [showPassword, setShowPassword] = useState(false);
     const [activeSection, setActiveSection] = useState('smtp');
 
