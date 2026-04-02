@@ -2,9 +2,11 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Download, CheckCircle2, BookOpen, ArrowLeft } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import CertificatePreview from '@/Components/CertificatePreview';
+import { useT } from '@/lib/i18n';
 
 export default function CertificateShow({ certificate, template, customFont }) {
     const { platform } = usePage().props;
+    const t = useT();
     const {
         uuid,
         user_name,
@@ -25,7 +27,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
 
     return (
         <>
-            <Head title={`Certificate — ${course_title}`} />
+            <Head title={t('certificate.page_title', { course_title })} />
 
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
                 {/* Top nav */}
@@ -43,7 +45,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
                         </Link>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            Verified Certificate
+                            {t('certificate.verified_badge')}
                         </div>
                     </div>
                 </div>
@@ -65,13 +67,13 @@ export default function CertificateShow({ certificate, template, customFont }) {
                         <Button asChild size="lg" className="gap-2">
                             <a href={download_url} download>
                                 <Download className="h-4 w-4" />
-                                Download PDF
+                                {t('certificate.download_pdf')}
                             </a>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="gap-2">
                             <Link href={`/courses/${course_slug}`}>
                                 <BookOpen className="h-4 w-4" />
-                                View Course
+                                {t('certificate.view_course')}
                             </Link>
                         </Button>
                     </div>
@@ -80,18 +82,19 @@ export default function CertificateShow({ certificate, template, customFont }) {
                     <div className="mt-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-5 py-4">
                         <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                         <div>
-                            <p className="text-sm font-semibold text-green-800">Authentic Certificate</p>
+                            <p className="text-sm font-semibold text-green-800">{t('certificate.authentic_title')}</p>
                             <p className="text-sm text-green-700 mt-0.5">
-                                This certificate is verified by {platformName}. Share this page URL or the
-                                certificate ID to allow anyone to confirm its authenticity.
+                                {t('certificate.authentic_body', { platform_name: platformName })}
                             </p>
                         </div>
                     </div>
 
                     {/* Certificate meta */}
                     <div className="mt-4 flex flex-wrap justify-center gap-6 text-xs text-muted-foreground">
-                        <span>Issued on <strong className="text-foreground">{completed_at}</strong></span>
-                        <span className="font-mono">ID: {uuid}</span>
+                        <span>
+                            {t('certificate.issued_on_label')} <strong className="text-foreground">{completed_at}</strong>
+                        </span>
+                        <span className="font-mono">{t('certificate.id_label')} {uuid}</span>
                     </div>
 
                     <div className="mt-6 text-center">
@@ -100,7 +103,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
                             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
-                            Back to My Learning
+                            {t('certificate.back_to_learning')}
                         </Link>
                     </div>
                 </div>
