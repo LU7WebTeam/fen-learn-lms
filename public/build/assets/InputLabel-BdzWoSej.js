@@ -1,0 +1,1 @@
+import{j as n}from"./app-B_pb-por.js";function m({value:t,className:e="",children:o,...r}){return n.jsx("label",{...r,className:"block text-sm font-medium text-foreground/90 "+e,children:t||o})}export{m as I};
