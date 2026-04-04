@@ -93,6 +93,19 @@ This keeps the documentation accurate and ensures it is never silently out of da
 
 ---
 
+## Documentation + Build Checklist
+
+When a change touches frontend behavior, translations, or UI copy, use this checklist:
+
+1. Update relevant docs in `docs/admin/*.md`.
+2. Run `npm run build`.
+3. Commit source changes and `public/build` artifacts in the same push.
+4. Verify route references and feature descriptions still match production behavior.
+
+For backend-only changes that do not affect frontend bundles, `public/build` does not need to be updated.
+
+---
+
 ## Why Markdown Files Instead of a CMS?
 
 The documentation is intentionally stored as repository files rather than in a database or CMS because:

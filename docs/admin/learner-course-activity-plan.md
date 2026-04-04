@@ -8,6 +8,19 @@ summary: Implementation roadmap for learner course activity capture, learner-fac
 
 # Learner Course Activity Logging Plan
 
+## Current Status
+
+This capability is now implemented in production for learner and course pages:
+
+- Learner course activity events are captured in the `learner_course` log stream.
+- Learners can view per-course activity in the course page Activity tab.
+- Admins can view course-scoped learner activity on course management pages.
+
+Recent localization behavior:
+
+- Activity item titles support BM (`title_ms`) when available.
+- Older events safely fall back to English title values.
+
 ## Goal
 
 Capture learner learning activity events (lesson completion, quiz attempts, course progress milestones) and expose them in two places:

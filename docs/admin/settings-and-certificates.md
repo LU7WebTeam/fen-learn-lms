@@ -60,11 +60,16 @@ These fields control how outgoing emails connect to your mail provider:
 | **SMTP Port** | Typically `587` (TLS) or `465` (SSL) |
 | **SMTP Username** | Account credential |
 | **SMTP Password** | Account credential |
-| **Encryption** | `tls` or `ssl` |
+| **Encryption** | `smtp`, `tls`, `ssl`, or `smtps` |
 | **From Address** | Sender email address shown to recipients |
 | **From Name** | Sender name shown to recipients |
 
 > SMTP credentials are saved in the `settings` table. They can also be configured in `.env` if you prefer environment-level control — `.env` values take precedence.
+
+Implementation notes:
+
+- Saving non-SMTP email template sections does not overwrite existing SMTP credentials.
+- Sender name and sender address persist independently from template content sections.
 
 ### Email branding
 
@@ -87,6 +92,11 @@ Each of the three system emails — Staff Invitation, Email Verification, and Pa
 | **Body** | Main message paragraph |
 | **Button text** | Label on the call-to-action button |
 
+Templates support bilingual output:
+
+- Bahasa Melayu content is rendered as primary when BM content exists.
+- English content is rendered as secondary fallback content.
+
 Inline **placeholder chips** are shown under each field to indicate which tokens may be used in that field. Saving a template that uses an unsupported `{{token}}` will be blocked with a validation error.
 
 ### Available placeholder tokens
@@ -101,7 +111,7 @@ Inline **placeholder chips** are shown under each field to indicate which tokens
 
 Each template section (Invitation, Verification, Reset) includes:
 
-1. A **Test Recipient Email** field — enter any address to receive the test
+1. A **Test Recipient Email** field — defaults to the current logged-in admin email (editable)
 2. A **Send test email** button — sends the current saved template to that address
 
 Test emails use realistic dummy data for dynamic values (action URLs, names, etc.) and append `[Test]` to the subject so they are easy to identify in the recipient's inbox.

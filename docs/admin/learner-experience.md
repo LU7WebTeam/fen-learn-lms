@@ -25,6 +25,7 @@ When a learner logs in, they land on the **My Learning** dashboard (`/dashboard`
 | **Continue learning** | A shortcut card for the most recently active course. |
 | **In-progress courses** | All courses the learner has started but not yet completed. |
 | **Completed courses** | All courses where 100% of lessons are marked complete. |
+| **Recent activity** | Chronological learner activity stream with event, item, result, and timestamp. |
 
 ---
 
@@ -66,6 +67,16 @@ This progress figure is used across:
 - **Admin user view** — per-enrollment progress for each learner
 - **Course completion logic** — triggers certificate readiness
 - **Continue-learning shortcut** — identifies the most active in-progress course
+
+Learners also see progress and activity on each enrolled course page (`/courses/{slug}`):
+
+- **Main tab:** curriculum and introduction
+- **Activity tab:** event history (enrollment, lesson completion, quiz results, completion)
+
+Localization behavior for activity item titles:
+
+- Uses BM lesson titles when locale is `ms` and BM content exists
+- Falls back safely to English titles for older events or missing BM fields
 
 ---
 

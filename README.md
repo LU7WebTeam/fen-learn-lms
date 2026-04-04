@@ -23,6 +23,7 @@ A free, high-performance Learning Management System built for public access. Del
 ### Learner Experience
 - Public course catalog with search and difficulty filters
 - Course detail page with full curriculum preview
+- Per-course activity history for enrolled learners (event, lesson/item, result, timestamp)
 - One-click enrollment and resume from last lesson
 - Full lesson player — video, rich text, PDF, and auto-graded quizzes
 - Per-lesson progress tracking
@@ -42,6 +43,7 @@ A free, high-performance Learning Management System built for public access. Del
 - Account suspension with reason logging
 - Super-admin password reset controls — set new password directly or send reset link
 - Platform settings — branding, registration controls, SMTP, localization, maintenance mode
+- Bilingual system emails with BM primary content and EN secondary fallback
 - Certificate template builder per course (toggle on/off, custom layout)
 - SEO metadata per course — title, description, Open Graph image
 - Static legal pages (About, Terms, Privacy)
@@ -87,6 +89,11 @@ npm run dev
 
 Open `http://localhost:8000` in your browser.
 
+Landing routes:
+- `/` renders the current landing page (`Landing/Wip2`)
+- `/wip/landing` renders the previous landing page (`Landing/Wip`)
+- `/backup-landing` renders the backup welcome page (`Welcome`)
+
 **Seeded admin credentials:**
 - Email: `admin@lms.test`
 - Password: `password`
@@ -125,7 +132,19 @@ php artisan key:generate
 php artisan storage:link
 ```
 
-### 2. GitHub Actions CI/CD
+### 2. Build and commit frontend assets
+
+Production does not run `npm`, so any frontend or translation changes must be built locally and committed before deployment:
+
+```bash
+npm run build
+git add public/build
+git commit -m "Build frontend assets"
+```
+
+Build warnings (for example, current CSS minify and chunk size warnings) are non-blocking when `vite build` exits successfully.
+
+### 3. GitHub Actions CI/CD
 
 Every push to `main` automatically:
 1. Installs Composer dependencies (production, no dev)

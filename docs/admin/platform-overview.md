@@ -32,6 +32,12 @@ The guest-facing side requires no account. Visitors can:
 
 All public pages use the LMS branding (logo, platform name) set in admin Settings.
 
+Landing page routes currently available:
+
+- `/` → active landing page (`Landing/Wip2`)
+- `/wip/landing` → previous landing page (`Landing/Wip`)
+- `/backup-landing` → backup welcome page (`Welcome`)
+
 ---
 
 ## Learner Side
@@ -78,7 +84,7 @@ Authentication note:
 | Layer | Technology |
 |---|---|
 | Backend | Laravel 12 (PHP) |
-| Frontend | React 18 via Inertia.js v2 |
+| Frontend | React 19 via Inertia.js v2 |
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Build tool | Vite 7 |
 | Database | MySQL (via Laragon locally) |
@@ -92,3 +98,4 @@ Authentication note:
 
 - Documentation lives in `docs/admin/*.md` in the repository and is displayed inside the admin documentation page — no database involved.
 - Documentation should be updated in the same commit as any feature change it describes.
+- Frontend assets are tracked in `public/build`. For frontend updates, run `npm run build` and commit updated build artifacts before deploy.
