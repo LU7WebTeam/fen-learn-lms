@@ -16,14 +16,9 @@ export default function About() {
 
     return (
         <>
-            <Head>
-                <title>{t('about.title', { name })}</title>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-                <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Lexend:wght@300..700&display=swap" rel="stylesheet" />
-            </Head>
+            <Head title={t('about.title', { name })} />
 
-            <div className="min-h-screen bg-white font-['Lexend',sans-serif] text-slate-600">
+            <div className="min-h-screen bg-white text-slate-600">
                 <nav className="flex justify-between items-center py-5 px-8 max-w-7xl mx-auto bg-white">
                     <Link href="/" className="flex items-center gap-2">
                         {platform?.logo_url ? (
@@ -35,7 +30,7 @@ export default function About() {
                                 <GraduationCap className="h-5 w-5" />
                             </div>
                         )}
-                        <span className="font-['Bricolage_Grotesque',sans-serif] font-bold text-slate-900 text-xl">
+                        <span className="font-bold text-slate-900 text-xl">
                             {name}
                         </span>
                     </Link>
@@ -67,7 +62,7 @@ export default function About() {
                 </nav>
 
                 <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-                    <h1 className="font-['Bricolage_Grotesque',sans-serif] text-4xl font-bold tracking-tight mb-4 text-slate-900">{t('about.heading', { name })}</h1>
+                    <h1 className="text-4xl font-bold tracking-tight mb-4 text-slate-900">{t('about.heading', { name })}</h1>
                     <p className="text-xl text-slate-600 mb-12 leading-relaxed">
                         {platform?.tagline || t('about.tagline')}
                     </p>
@@ -111,7 +106,7 @@ export default function About() {
                                     <img src={platform.logo_url} alt={name} className="w-full h-full object-contain" />
                                 </div>
                             ) : (
-                                <span className="font-['Bricolage_Grotesque',sans-serif] font-bold text-white text-lg">{name.charAt(0)}</span>
+                                <span className="font-bold text-white text-lg">{name.charAt(0)}</span>
                             )}
                             {!platform?.logo_url && <span className="text-slate-500">|</span>}
                             <span>&copy; {new Date().getFullYear()} {name}. {t('common.all_rights_reserved')}</span>

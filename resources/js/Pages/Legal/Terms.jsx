@@ -1,150 +1,184 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { GraduationCap } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
+import { useEffect, useState } from 'react';
 
 function Section({ title, children }) {
     return (
-        <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-            <div className="text-sm text-muted-foreground leading-relaxed space-y-2">{children}</div>
+        <section className="space-y-3 border-t border-[#d9dee8] pt-6 first:border-t-0 first:pt-0">
+            <h2 className="text-2xl leading-tight text-[#131722] sm:text-3xl">{title}</h2>
+            <div className="space-y-3 text-base leading-relaxed text-[#545c6b]">{children}</div>
         </section>
     );
 }
 
 export default function Terms() {
-    const { platform, auth, locale } = usePage().props;
+    const { platform, auth } = usePage().props;
     const name = platform?.name || 'FEN Learn';
+    const platformDarkLogoUrl = platform?.logo_dark_url || platform?.logo_url || null;
     const website = 'fen-learn.fenetwork.my';
     const country = 'Malaysia';
     const updatedOn = '16 March 2026';
     const t = useT();
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => {
+            setIsScrolled(window.scrollY > 24);
+        };
+
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
         <>
-            <Head>
-                <title>{t('terms.title', { name })}</title>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-                <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Lexend:wght@300..700&display=swap" rel="stylesheet" />
-            </Head>
+            <Head title={t('terms.title', { name })} />
 
-            <div className="min-h-screen bg-white font-['Lexend',sans-serif] text-slate-600">
-                <nav className="flex justify-between items-center py-5 px-8 max-w-7xl mx-auto bg-white">
-                    <Link href="/" className="flex items-center gap-2">
-                        {platform?.logo_url ? (
-                            <div className="w-10 h-10 overflow-hidden flex items-center justify-center">
-                                <img src={platform.logo_url} alt={name} className="w-full h-full object-contain" />
+            <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
+                <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+                    <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-[#2a1548]/85' : 'bg-black/30'}`}>
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-6">
+                                {platform?.logo_url ? (
+                                    <img src={platform.logo_url} alt={name} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                ) : (
+                                    <span className="text-3xl font-black tracking-tight">{name}</span>
+                                )}
+                                <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
+                                    <Link href={route('about')} className="opacity-80 transition hover:opacity-100">{t('nav.about')}</Link>
+                                    <Link href={route('terms')} className="opacity-95 transition hover:opacity-100">{t('nav.terms')}</Link>
+                                    <Link href={route('privacy')} className="opacity-80 transition hover:opacity-100">{t('nav.privacy')}</Link>
+                                    <Link href={route('courses.index')} className="opacity-80 transition hover:opacity-100">{t('nav.catalog')}</Link>
+                                </nav>
                             </div>
-                        ) : (
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-                                <GraduationCap className="h-5 w-5" />
+
+                            <div className="flex items-center gap-3 text-sm font-semibold">
+                                <div className="hidden sm:block">
+                                    <LangSwitcher className="border-white bg-white text-[#131722]" />
+                                </div>
+                                {auth?.user ? (
+                                    <Link href={route('dashboard')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[0.95rem] text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1.2rem]">
+                                        {t('landing.cta.my_dashboard')}
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link href={route('login')} className="hidden opacity-90 transition hover:opacity-100 sm:inline-flex">
+                                            {t('landing.cta.login')}
+                                        </Link>
+                                        <Link href={route('register')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[0.95rem] text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1.2rem]">
+                                            {t('landing.cta.register')}
+                                        </Link>
+                                    </>
+                                )}
                             </div>
-                        )}
-                        <span className="font-['Bricolage_Grotesque',sans-serif] font-bold text-slate-900 text-xl">
-                            {name}
-                        </span>
-                    </Link>
-
-                    <div className="hidden md:flex items-center gap-8 font-medium">
-                        <Link href={route('about')} className="hover:text-slate-900 transition">{t('nav.about')}</Link>
-                        <Link href={route('courses.index')} className="hover:text-slate-900 transition">{t('nav.catalog')}</Link>
-                        <Link href={route('terms')} className="hover:text-slate-900 transition">{t('nav.terms')}</Link>
-                        <Link href={route('privacy')} className="hover:text-slate-900 transition">{t('nav.privacy')}</Link>
+                        </div>
                     </div>
+                </header>
 
-                    <div className="flex items-center gap-3">
-                        <LangSwitcher />
-                        {auth?.user ? (
-                            <Link href={route('dashboard')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
-                                {t('dashboard.title')}
-                            </Link>
-                        ) : (
-                            <div className="flex gap-4 items-center">
-                                <Link href={route('login')} className="font-medium hover:text-slate-900 hidden sm:block">
-                                    {t('auth.login.submit')}
-                                </Link>
-                                <Link href={route('register')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
-                                    {t('landing.cta.register_free', 'Register Free')}
-                                </Link>
+                <section className="-mt-[84px] w-full px-4 pt-4 sm:px-6 lg:px-8">
+                    <div
+                        className="relative min-h-[50vh] overflow-hidden rounded-2xl bg-cover bg-center"
+                        style={{
+                            backgroundImage:
+                                'radial-gradient(circle at 18% 24%, rgba(252,184,47,0.22) 0 10%, transparent 11%), radial-gradient(circle at 78% 30%, rgba(181,51,145,0.2) 0 12%, transparent 13%), linear-gradient(135deg, #1f1437 0%, #2a1548 38%, #5a267c 100%)',
+                        }}
+                    >
+                        <div className="relative z-10 flex min-h-[50vh] w-full items-end px-6 pb-8 pt-[100px] sm:px-8 sm:pb-12 lg:px-10">
+                            <div className="max-w-full sm:max-w-[70%]">
+                                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/75">{t('nav.terms')}</p>
+                                <h1 className="mt-3 text-4xl leading-[0.95] text-white sm:text-6xl">{t('terms.heading')}</h1>
+                                <p className="mt-4 text-base text-white/85 sm:text-lg">{t('terms.last_updated', { updatedOn })}</p>
                             </div>
-                        )}
+                        </div>
                     </div>
-                </nav>
+                </section>
 
-                <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 space-y-10">
-                    <div>
-                        <h1 className="font-['Bricolage_Grotesque',sans-serif] text-3xl font-bold tracking-tight mb-2 text-slate-900">{t('terms.heading')}</h1>
-                        <p className="text-sm text-slate-500">{t('terms.last_updated', { updatedOn })}</p>
-                    </div>
+                <main className="mx-auto w-full max-w-[1440px] p-0">
+                    <section className="mt-4 rounded-xl bg-[#ebedf1] p-4 sm:p-5">
+                        <article className="rounded-xl bg-white p-6 shadow-[0_18px_45px_-34px_rgba(15,17,21,0.35)] sm:p-8 lg:p-10">
+                            <div className="mb-8 space-y-4">
+                                <h2 className="text-4xl leading-[0.95] text-[#131722] sm:text-5xl">{t('terms.heading')}</h2>
+                                <p className="text-base leading-relaxed text-[#545c6b]">{t('terms.last_updated', { updatedOn })}</p>
+                                <div className="rounded-xl bg-[#f4f6fa] p-4 text-sm leading-relaxed text-[#545c6b]">
+                                    <p><span className="font-semibold text-[#131722]">Website:</span> {website}</p>
+                                    <p className="mt-2"><span className="font-semibold text-[#131722]">Jurisdiction:</span> {country}</p>
+                                </div>
+                            </div>
 
-                    <Section title={t('terms.section1.title')}>
-                        <p>{t('terms.section1.body', { website })}</p>
-                    </Section>
-                    <Section title={t('terms.section2.title')}>
-                        <p>{t('terms.section2.body')}</p>
-                    </Section>
-                    <Section title={t('terms.section3.title', { name })}>
-                        <p>{t('terms.section3.body1', { name })}</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>{t('terms.section3.list1')}</li>
-                            <li>{t('terms.section3.list2')}</li>
-                            <li>{t('terms.section3.list3')}</li>
-                        </ul>
-                        <p>{t('terms.section3.body2')}</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>{t('terms.section3.list4')}</li>
-                            <li>{t('terms.section3.list5')}</li>
-                            <li>{t('terms.section3.list6')}</li>
-                            <li>{t('terms.section3.list7')}</li>
-                        </ul>
-                    </Section>
-                    <Section title={t('terms.section4.title')}>
-                        <p>{t('terms.section4.body', { name })}</p>
-                    </Section>
-                    <Section title={t('terms.section5.title')}>
-                        <p>{t('terms.section5.body')}</p>
-                    </Section>
-                    <Section title={t('terms.section6.title')}>
-                        <p>{t('terms.section6.body')}</p>
-                    </Section>
-                    <Section title={t('terms.section7.title')}>
-                        <p>{t('terms.section7.body')}</p>
-                    </Section>
-                    <Section title={t('terms.section8.title')}>
-                        <p>{t('terms.section8.body')}</p>
-                    </Section>
-                    <Section title={t('terms.section9.title')}>
-                        <p>{t('terms.section9.body', { website })}</p>
-                    </Section>
-                    <Section title={t('terms.section10.title', { country })}>
-                        <p>{t('terms.section10.body', { country })}</p>
-                    </Section>
-                    <Section title={t('terms.section11.title')}>
-                        <p>{t('terms.section11.body', { website })}</p>
-                    </Section>
+                            <div className="space-y-6">
+                                <Section title={t('terms.section1.title')}>
+                                    <p>{t('terms.section1.body', { website })}</p>
+                                </Section>
+                                <Section title={t('terms.section2.title')}>
+                                    <p>{t('terms.section2.body')}</p>
+                                </Section>
+                                <Section title={t('terms.section3.title', { name })}>
+                                    <p>{t('terms.section3.body1', { name })}</p>
+                                    <ul className="list-disc space-y-1 pl-5">
+                                        <li>{t('terms.section3.list1')}</li>
+                                        <li>{t('terms.section3.list2')}</li>
+                                        <li>{t('terms.section3.list3')}</li>
+                                    </ul>
+                                    <p>{t('terms.section3.body2')}</p>
+                                    <ul className="list-disc space-y-1 pl-5">
+                                        <li>{t('terms.section3.list4')}</li>
+                                        <li>{t('terms.section3.list5')}</li>
+                                        <li>{t('terms.section3.list6')}</li>
+                                        <li>{t('terms.section3.list7')}</li>
+                                    </ul>
+                                </Section>
+                                <Section title={t('terms.section4.title')}>
+                                    <p>{t('terms.section4.body', { name })}</p>
+                                </Section>
+                                <Section title={t('terms.section5.title')}>
+                                    <p>{t('terms.section5.body')}</p>
+                                </Section>
+                                <Section title={t('terms.section6.title')}>
+                                    <p>{t('terms.section6.body')}</p>
+                                </Section>
+                                <Section title={t('terms.section7.title')}>
+                                    <p>{t('terms.section7.body')}</p>
+                                </Section>
+                                <Section title={t('terms.section8.title')}>
+                                    <p>{t('terms.section8.body')}</p>
+                                </Section>
+                                <Section title={t('terms.section9.title')}>
+                                    <p>{t('terms.section9.body', { website })}</p>
+                                </Section>
+                                <Section title={t('terms.section10.title', { country })}>
+                                    <p>{t('terms.section10.body', { country })}</p>
+                                </Section>
+                                <Section title={t('terms.section11.title')}>
+                                    <p>{t('terms.section11.body', { website })}</p>
+                                </Section>
+                            </div>
+                        </article>
+                    </section>
                 </main>
 
-                <footer className="bg-slate-900 text-slate-400 py-12 px-8 text-sm mt-16">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-3">
-                            {platform?.logo_url ? (
-                                <div className="w-8 h-8 overflow-hidden bg-white/10 rounded p-1">
-                                    <img src={platform.logo_url} alt={name} className="w-full h-full object-contain" />
-                                </div>
-                            ) : (
-                                <span className="font-['Bricolage_Grotesque',sans-serif] font-bold text-white text-lg">{name.charAt(0)}</span>
-                            )}
-                            {!platform?.logo_url && <span className="text-slate-500">|</span>}
-                            <span>&copy; {new Date().getFullYear()} {name}. {t('common.all_rights_reserved')}</span>
-                        </div>
+                <footer className="mt-4 w-full px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8">
+                    <div className="w-full rounded-2xl bg-[#17191f] px-6 py-7 text-[#d4d8e2] sm:px-8">
+                        <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+                            <div className="flex items-center gap-3 text-sm">
+                                {platformDarkLogoUrl ? (
+                                    <img src={platformDarkLogoUrl} alt={name} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                ) : (
+                                    <span className="text-lg font-bold text-white">{name.charAt(0)}</span>
+                                )}
+                                {!platformDarkLogoUrl && <span className="text-[#4a5060]">|</span>}
+                                <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {name}. {t('common.all_rights_reserved')}</span>
+                            </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-6">
-                            <Link href={route('about')} className="hover:text-white transition">{t('nav.about')}</Link>
-                            <Link href={route('terms')} className="hover:text-white transition">{t('nav.terms')}</Link>
-                            <Link href={route('privacy')} className="hover:text-white transition">{t('nav.privacy')}</Link>
-                            <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
-                            <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('nav.catalog')}</Link>
+                            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+                                <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">About FEN</a>
+                                <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
+                                <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                                <span className="hidden h-1 w-1 rounded-full bg-[#4a5060] md:block" />
+                                <Link href={route('courses.index')} className="font-semibold text-white transition hover:text-[#ff8a00]">{t('landing.footer.browse_courses')}</Link>
+                            </div>
                         </div>
                     </div>
                 </footer>

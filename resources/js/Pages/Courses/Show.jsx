@@ -53,7 +53,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
     const canOpen = enrolled || lesson.is_free_preview;
     return (
-        <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${canOpen ? 'hover:bg-muted' : ''}`}>
+        <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-base ${canOpen ? 'hover:bg-muted' : ''}`}>
             {completed
                 ? <Check className="h-4 w-4 shrink-0 text-green-500" />
                 : canOpen
@@ -249,7 +249,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto rounded-lg border">
-                                    <table className="w-full min-w-[760px] text-sm">
+                                    <table className="w-full min-w-[760px] text-base">
                                         <thead className="bg-muted/40 text-left">
                                             <tr>
                                                 <th className="px-3 py-2 font-medium">{t('courses.show.activity_col_event')}</th>

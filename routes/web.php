@@ -36,6 +36,14 @@ Route::get('/wip/landing', function () {
     return Inertia::render('Landing/Wip');
 })->name('landing.wip');
 
+Route::get('/wip/sorted-style', function () {
+    return Inertia::render('Landing/SortedStyle');
+})->name('landing.sorted-style');
+
+Route::get('/wip/sorted-style-retry', function () {
+    return Inertia::render('Landing/SortedStyleRetry');
+})->name('landing.sorted-style-retry');
+
 Route::get('/backup-landing', function () {
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),

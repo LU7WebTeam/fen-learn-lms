@@ -311,7 +311,7 @@ export default function Dashboard({ inProgress, completed, learnerActivity = [] 
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-lg border">
-                            <table className="w-full min-w-[860px] text-sm">
+                            <table className="w-full min-w-[860px] text-base">
                                 <thead className="bg-muted/40 text-left">
                                     <tr>
                                         <th className="px-3 py-2 font-medium">{t('dashboard.activity.col_course')}</th>
