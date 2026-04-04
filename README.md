@@ -100,6 +100,55 @@ Landing routes:
 
 ---
 
+## New Developer Quickstart
+
+Use this checklist when joining the project or resuming work after a break.
+
+### 1. First-time local setup
+
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate --seed
+npm install
+```
+
+Start services:
+
+```bash
+php artisan serve
+npm run dev
+```
+
+### 2. Daily development workflow
+
+1. Pull latest from `main`.
+2. Make code/content/i18n changes.
+3. Run targeted checks locally (and full checks before push when needed).
+4. If frontend output changed, run `npm run build` and include `public/build` updates in commit.
+5. Push to `main` (or your working branch/PR flow if your team adopts one).
+
+### 3. Known build notes
+
+- `vite build` currently shows non-blocking CSS minify warnings (unterminated string token) and chunk size warnings.
+- These warnings are expected in current state when build exits successfully.
+- Treat build as failed only when `npm run build` returns a non-zero exit code.
+
+### 4. Translation and localization notes
+
+- Static UI translations live in:
+  - `resources/js/i18n/en.json`
+  - `resources/js/i18n/ms.json`
+- Localized content fields use `*_ms` values with fallback behavior (`tl(...)`) when BM content is missing.
+- Frontend translation changes require rebuilding assets (`npm run build`) and committing updated `public/build` files.
+
+### 5. Documentation rule
+
+- Update relevant docs in `docs/admin/*.md` in the same commit as feature or workflow changes.
+
+---
+
 ## Production Deployment (cPanel)
 
 ### 1. Set environment variables on the server
