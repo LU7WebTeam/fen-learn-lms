@@ -88,6 +88,9 @@ export default function UpdateProfileInformation({
     });
 
     const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+    const fieldSurfaceClass = 'rounded-md border border-slate-300 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100';
+    const dropdownFieldClass = `mt-1 block w-full ${fieldSurfaceClass}`;
+    const textFieldClass = `mt-1 block w-full ${fieldSurfaceClass}`;
 
     function handleOccupationChange(value) {
         const currentOrganizationValue = usesOrganizationDropdown
@@ -176,7 +179,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="gender" value={t('profile.info.gender')} />
                         <select
                             id="gender"
-                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className={dropdownFieldClass}
                             value={data.gender}
                             onChange={(e) => setData('gender', e.target.value)}
                         >
@@ -191,7 +194,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="race" value={t('profile.info.race')} />
                         <select
                             id="race"
-                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className={dropdownFieldClass}
                             value={data.race}
                             onChange={(e) => setData('race', e.target.value)}
                         >
@@ -209,7 +212,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="state" value={t('profile.info.state')} />
                         <select
                             id="state"
-                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className={dropdownFieldClass}
                             value={data.state}
                             onChange={(e) => setData('state', e.target.value)}
                         >
@@ -226,7 +229,7 @@ export default function UpdateProfileInformation({
                         <TextInput
                             id="birthdate"
                             type="date"
-                            className="mt-1 block w-full"
+                            className={textFieldClass}
                             value={data.birthdate}
                             onChange={(e) => setData('birthdate', e.target.value)}
                             max={new Date().toISOString().split('T')[0]}
@@ -240,7 +243,7 @@ export default function UpdateProfileInformation({
                         <InputLabel htmlFor="occupation" value={t('profile.info.occupation')} />
                         <select
                             id="occupation"
-                            className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className={dropdownFieldClass}
                             value={data.occupation}
                             onChange={(e) => handleOccupationChange(e.target.value)}
                         >
@@ -258,7 +261,7 @@ export default function UpdateProfileInformation({
                                 <InputLabel htmlFor="occupation_other" value={t('profile.info.occupation_other')} />
                                 <TextInput
                                     id="occupation_other"
-                                    className="mt-1 block w-full"
+                                    className={textFieldClass}
                                     value={data.occupation_other}
                                     onChange={(e) => setData('occupation_other', e.target.value)}
                                 />
@@ -271,7 +274,7 @@ export default function UpdateProfileInformation({
                                 <InputLabel htmlFor="student_id" value={t('profile.info.student_id')} />
                                 <TextInput
                                     id="student_id"
-                                    className="mt-1 block w-full"
+                                    className={textFieldClass}
                                     value={data.student_id}
                                     onChange={(e) => setData('student_id', e.target.value)}
                                 />
@@ -293,13 +296,13 @@ export default function UpdateProfileInformation({
                                     onChange={(nextValue) => setData('organization', nextValue)}
                                     placeholder={t('profile.info.select_organization')}
                                     searchPlaceholder={t('profile.info.select_organization')}
-                                    className="mt-0"
+                                    className="mt-0 border-slate-300 bg-slate-50 text-gray-900 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                                 />
 
                                 {data.organization === ORGANIZATION_OTHER_VALUE && (
                                     <TextInput
                                         id="organization_other"
-                                        className="block w-full"
+                                        className={`${fieldSurfaceClass} block w-full`}
                                         value={data.organization_other}
                                         onChange={(e) => setData('organization_other', e.target.value)}
                                         autoComplete="organization"
@@ -309,7 +312,7 @@ export default function UpdateProfileInformation({
                         ) : (
                             <TextInput
                                 id="organization"
-                                className="mt-1 block w-full"
+                                className={textFieldClass}
                                 value={data.organization}
                                 onChange={(e) => setData('organization', e.target.value)}
                                 autoComplete="organization"

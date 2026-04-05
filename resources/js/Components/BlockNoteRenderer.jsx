@@ -2,6 +2,7 @@ import { useCreateBlockNote, createReactBlockSpec } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
 import { BlockNoteSchema, defaultBlockSpecs } from '@blocknote/core';
 import { normalizeBlockNoteInitialContent } from '@/lib/blocknote-content';
+import { useTheme } from '@/Components/ThemeProvider';
 import '@blocknote/mantine/style.css';
 
 function toEmbedUrl(url) {
@@ -59,13 +60,14 @@ const schema = BlockNoteSchema.create({
 export default function BlockNoteRenderer({ content }) {
     const initialContent = normalizeBlockNoteInitialContent(content);
     const contentKey = JSON.stringify(initialContent);
+    const { theme } = useTheme();
 
-    return <BlockNoteRendererInner key={contentKey} initialContent={initialContent} />;
+    return <BlockNoteRendererInner key={`${contentKey}-${theme}`} initialContent={initialContent} theme={theme} />;
 }
 
 import { useEffect, useRef } from 'react';
 
-function BlockNoteRendererInner({ initialContent }) {
+function BlockNoteRendererInner({ initialContent, theme }) {
     const editor = useCreateBlockNote({
         schema,
         initialContent,
@@ -97,7 +99,7 @@ function BlockNoteRendererInner({ initialContent }) {
 
     return (
         <div className="bn-renderer-wrap" ref={containerRef}>
-            <BlockNoteView editor={editor} editable={false} theme="light" />
+            <BlockNoteView editor={editor} editable={false} theme={theme === 'dark' ? 'dark' : 'light'} />
         </div>
     );
 }

@@ -1,11 +1,14 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Download, CheckCircle2, BookOpen, ArrowLeft } from 'lucide-react';
+import { Download, BookOpen, ArrowLeft, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import CertificatePreview from '@/Components/CertificatePreview';
 import { useT } from '@/lib/i18n';
+import LangSwitcher from '@/Components/LangSwitcher';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
+import UserMenu from '@/Components/UserMenu';
 
 export default function CertificateShow({ certificate, template, customFont }) {
-    const { platform } = usePage().props;
+    const { platform, auth } = usePage().props;
     const t = useT();
     const {
         uuid,
@@ -29,26 +32,37 @@ export default function CertificateShow({ certificate, template, customFont }) {
         <>
             <Head title={t('certificate.page_title', { course_title })} />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
-                {/* Top nav */}
-                <div className="border-b bg-white/80 backdrop-blur-sm">
-                    <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 text-sm font-semibold tracking-widest text-indigo-700 uppercase"
-                        >
-                            {platformLogoUrl ? (
-                                <img src={platformLogoUrl} alt={platformName} className="h-10 w-auto object-contain" />
-                            ) : (
-                                platformName
-                            )}
-                        </Link>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            {t('certificate.verified_badge')}
+            <div className="min-h-screen bg-[#eceff3] dark:bg-[#0b1020]">
+                <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+                    <div className="w-full rounded-2xl bg-[#2a1548]/90 px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md sm:px-7">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-6">
+                                <Link href={route('home')}>
+                                    {platformLogoUrl ? (
+                                        <img src={platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                    ) : (
+                                        <span className="text-xl font-black tracking-tight">{platformName}</span>
+                                    )}
+                                </Link>
+
+                                <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
+                                    <Link href={route('dashboard')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
+                                        <LayoutDashboard className="h-4 w-4" />
+                                        {t('nav.my_dashboard')}
+                                    </Link>
+                                </nav>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <ThemeToggleButton className="h-9 w-9 text-white hover:bg-white/10 hover:text-white focus-visible:text-white active:text-white" />
+                                <div className="hidden sm:block">
+                                    <LangSwitcher className="border-white bg-white text-[#131722]" />
+                                </div>
+                                {auth?.user && <UserMenu />}
+                            </div>
                         </div>
                     </div>
-                </div>
+                </header>
 
                 <div className="mx-auto max-w-4xl px-4 py-12">
                     {/* Certificate preview — matches the builder design */}
@@ -76,17 +90,6 @@ export default function CertificateShow({ certificate, template, customFont }) {
                                 {t('certificate.view_course')}
                             </Link>
                         </Button>
-                    </div>
-
-                    {/* Verification note */}
-                    <div className="mt-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-5 py-4">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
-                        <div>
-                            <p className="text-sm font-semibold text-green-800">{t('certificate.authentic_title')}</p>
-                            <p className="text-sm text-green-700 mt-0.5">
-                                {t('certificate.authentic_body', { platform_name: platformName })}
-                            </p>
-                        </div>
                     </div>
 
                     {/* Certificate meta */}

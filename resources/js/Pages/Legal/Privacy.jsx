@@ -39,7 +39,7 @@ export default function Privacy() {
 
             <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
                 <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-                    <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-[#2a1548]/85' : 'bg-black/30'}`}>
+                    <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-[linear-gradient(135deg,rgba(255,138,0,0.88),rgba(255,179,102,0.84))]' : 'bg-black/30'}`}>
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-6">
                                 {platform?.logo_url ? (
@@ -60,7 +60,7 @@ export default function Privacy() {
                                     <LangSwitcher className="border-white bg-white text-[#131722]" />
                                 </div>
                                 {auth?.user ? (
-                                    <Link href={route('dashboard')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[0.95rem] text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1.2rem]">
+                                    <Link href={route('dashboard')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
                                         {t('landing.cta.my_dashboard')}
                                     </Link>
                                 ) : (
@@ -68,7 +68,7 @@ export default function Privacy() {
                                         <Link href={route('login')} className="hidden opacity-90 transition hover:opacity-100 sm:inline-flex">
                                             {t('landing.cta.login')}
                                         </Link>
-                                        <Link href={route('register')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[0.95rem] text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1.2rem]">
+                                        <Link href={route('register')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
                                             {t('landing.cta.register')}
                                         </Link>
                                     </>

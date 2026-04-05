@@ -58,7 +58,7 @@ function WelcomeHero({ user, inProgress, completed }) {
     const activeCount   = inProgress.filter(e => e.progress > 0 && !e.is_completed).length;
 
     return (
-        <Card className="bg-gradient-to-br from-primary/10 via-background to-background border-primary/20 mb-8">
+        <Card className="mb-8 rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
             <CardContent className="pt-6 pb-6">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                     {/* Greeting */}

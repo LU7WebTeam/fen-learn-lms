@@ -11,6 +11,7 @@ export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
     const t = useT();
+    const passwordFieldClass = 'mt-1 block w-full rounded-md border border-slate-300 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100';
 
     const {
         data,
@@ -73,7 +74,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             setData('current_password', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className={passwordFieldClass}
                         autoComplete="current-password"
                     />
 
@@ -92,7 +93,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
                         type="password"
-                        className="mt-1 block w-full"
+                        className={passwordFieldClass}
                         autoComplete="new-password"
                     />
 
@@ -112,7 +113,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                             setData('password_confirmation', e.target.value)
                         }
                         type="password"
-                        className="mt-1 block w-full"
+                        className={passwordFieldClass}
                         autoComplete="new-password"
                     />
 

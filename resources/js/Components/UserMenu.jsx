@@ -30,24 +30,24 @@ export default function UserMenu() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                    <Avatar className="h-9 w-9">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 text-[#131722] hover:bg-white/10">
+                    <Avatar className="h-9 w-9 ring-1 ring-white/30">
                         <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback>{initials}</AvatarFallback>
+                        <AvatarFallback className="bg-white text-[#131722] font-semibold">{initials}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+            <DropdownMenuContent align="end" className="w-56 text-foreground">
+                <DropdownMenuLabel className="font-normal text-foreground">
+                    <p className="text-sm font-medium leading-none text-foreground">{user.name}</p>
                     <p className="mt-1 text-xs leading-none text-muted-foreground">{user.email}</p>
                 </DropdownMenuLabel>
 
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                    <Link href={route('profile.edit')} className="flex items-center gap-2">
+                    <Link href={route('profile.edit')} className="flex items-center gap-2 text-foreground">
                         <User className="h-4 w-4" />
                         {t('user_menu.profile_settings')}
                     </Link>
@@ -55,7 +55,7 @@ export default function UserMenu() {
 
                 {isAdmin && (
                     <DropdownMenuItem asChild>
-                        <Link href={route('admin.dashboard')} className="flex items-center gap-2">
+                        <Link href={route('admin.dashboard')} className="flex items-center gap-2 text-foreground">
                             <ShieldCheck className="h-4 w-4" />
                             {t('user_menu.admin_panel')}
                         </Link>

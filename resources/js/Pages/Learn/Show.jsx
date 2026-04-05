@@ -13,11 +13,9 @@ import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 import {
-    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from '@/Components/ui/dialog';
-import {
-    Check, ChevronLeft, ChevronRight, Keyboard, Menu,
+    Check, ChevronLeft, ChevronRight, Menu,
     Video, FileText, HelpCircle, GraduationCap, Award, Lock, LayoutDashboard, User,
     BookOpen
 } from 'lucide-react';
@@ -417,121 +415,105 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
     const t = useT();
 
     return (
-        <div className="flex h-full flex-col">
-            <div className="border-b px-4 py-4">
-                <Link href={route('courses.show', course.slug)} className="block overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-sm">
+        <div className="flex h-full flex-col gap-3 p-3">
+            {/* Course card */}
+            <div className="rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
+                <Link href={route('courses.show', course.slug)} className="block overflow-hidden rounded-xl">
                     {course.cover_image ? (
                         <img
                             src={course.cover_image}
                             alt={courseTitle}
-                            className="h-32 w-full object-cover"
+                            className="h-32 w-full object-cover rounded-t-xl"
                         />
                     ) : (
-                        <div className="flex h-32 w-full items-center justify-center bg-muted text-muted-foreground">
+                        <div className="flex h-32 w-full items-center justify-center rounded-t-xl bg-[#f4f6fa] text-[#545c6b] dark:bg-[#1f2937] dark:text-slate-300">
                             <BookOpen className="h-8 w-8" />
                         </div>
                     )}
-                    <div className="space-y-2 p-3">
-                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <div className="space-y-1.5 p-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#b53391] dark:text-[#e879f9]">
                             <GraduationCap className="h-3.5 w-3.5" />
                             {t('learn.sidebar.course_overview')}
                         </div>
-                        <p className="line-clamp-2 text-sm font-semibold leading-snug">{courseTitle}</p>
+                        <p className="line-clamp-2 font-['Young_Serif',serif] text-base leading-snug text-[#131722] dark:text-slate-100">{courseTitle}</p>
                         {courseDescription && (
-                            <p className="line-clamp-2 text-xs text-muted-foreground">{courseDescription}</p>
+                            <p className="line-clamp-2 text-xs text-[#545c6b] dark:text-slate-300">{courseDescription}</p>
                         )}
                     </div>
                 </Link>
-
-                <div className="mt-3 space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="px-3 pb-3 space-y-1">
+                    <div className="flex justify-between text-xs text-[#545c6b] dark:text-slate-300">
                         <span>{t('learn.sidebar.progress')}</span>
-                        <span>{enrollment.progress}%</span>
+                        <span className="font-semibold text-[#131722] dark:text-slate-100">{enrollment.progress}%</span>
                     </div>
                     <Progress value={enrollment.progress} className="h-1.5" />
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-2">
-                {course.sections.map((section) => (
-                    <div key={section.id} className="mb-2">
-                        <p className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {tl(section, 'title', locale)}
-                        </p>
-                        {section.lessons.map((l) => {
-                            const Icon      = LESSON_ICONS[l.type] ?? FileText;
-                            const isCurrent = l.id === lesson.id;
-                            const isDone    = completedIds.includes(l.id);
-                            const isLocked  = lockedIds.includes(l.id);
-                            const itemClassName = cn(
-                                'flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                                isCurrent
-                                    ? 'bg-primary/10 font-medium text-primary'
-                                    : isLocked
-                                        ? 'cursor-not-allowed text-muted-foreground/60'
-                                        : 'text-foreground hover:bg-muted'
-                            );
+            {/* Lesson list */}
+            <div className="flex-1 overflow-y-auto rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
+                <div className="py-2">
+                    {course.sections.map((section) => (
+                        <div key={section.id} className="mb-1">
+                            <p className="px-4 pt-3 pb-1 font-['Young_Serif',serif] text-xs font-semibold uppercase tracking-wider text-[#9ca3af] dark:text-slate-400">
+                                {tl(section, 'title', locale)}
+                            </p>
+                            {section.lessons.map((l) => {
+                                const Icon      = LESSON_ICONS[l.type] ?? FileText;
+                                const isCurrent = l.id === lesson.id;
+                                const isDone    = completedIds.includes(l.id);
+                                const isLocked  = lockedIds.includes(l.id);
+                                const itemClassName = cn(
+                                    'flex items-center gap-3 px-4 py-2 text-sm transition-colors',
+                                    isCurrent
+                                        ? 'bg-[#f3e8ff] font-semibold text-[#7c3aed] dark:bg-[#4c1d95]/35 dark:text-purple-200'
+                                        : isLocked
+                                            ? 'cursor-not-allowed text-[#c0c7d4] dark:text-slate-500'
+                                            : 'text-[#131722] hover:bg-[#f4f6fa] dark:text-slate-100 dark:hover:bg-[#1f2937]'
+                                );
 
-                            const content = (
-                                <>
-                                    <span className="shrink-0">
-                                        {isDone
-                                            ? <Check className="h-4 w-4 text-green-500" />
-                                            : isLocked
-                                                ? <Lock className="h-4 w-4 text-muted-foreground/60" />
-                                                : <Icon className="h-4 w-4 text-muted-foreground" />}
-                                    </span>
-                                    <span className="line-clamp-2 flex-1 leading-snug">{tl(l, 'title', locale)}</span>
-                                    {l.duration_minutes > 0 && (
-                                        <span className="shrink-0 text-xs text-muted-foreground">{l.duration_minutes}m</span>
-                                    )}
-                                </>
-                            );
+                                const content = (
+                                    <>
+                                        <span className="shrink-0">
+                                            {isDone
+                                                ? <Check className="h-4 w-4 text-green-500" />
+                                                : isLocked
+                                                    ? <Lock className="h-4 w-4 text-[#c0c7d4] dark:text-slate-500" />
+                                                    : <Icon className="h-4 w-4 text-[#9ca3af] dark:text-slate-400" />}
+                                        </span>
+                                        <span className="line-clamp-2 flex-1 leading-snug">{tl(l, 'title', locale)}</span>
+                                        {l.duration_minutes > 0 && (
+                                            <span className="shrink-0 text-xs text-[#9ca3af] dark:text-slate-400">{l.duration_minutes}m</span>
+                                        )}
+                                    </>
+                                );
 
-                            if (isLocked) {
+                                if (isLocked) {
+                                    return (
+                                        <div
+                                            key={l.id}
+                                            aria-disabled="true"
+                                            className={itemClassName}
+                                            title={t('learn.lesson.locked_message')}
+                                        >
+                                            {content}
+                                        </div>
+                                    );
+                                }
+
                                 return (
-                                    <div
+                                    <Link
                                         key={l.id}
-                                        aria-disabled="true"
+                                        href={route('learn.lesson', [course.slug, l.id])}
                                         className={itemClassName}
-                                        title={t('learn.lesson.locked_message')}
                                     >
                                         {content}
-                                    </div>
+                                    </Link>
                                 );
-                            }
-
-                            return (
-                                <Link
-                                    key={l.id}
-                                    href={route('learn.lesson', [course.slug, l.id])}
-                                    className={itemClassName}
-                                >
-                                    {content}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                ))}
-            </div>
-
-            <div className="border-t p-3">
-                <nav className="space-y-1">
-                    <Link
-                        href={route('dashboard')}
-                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                        <LayoutDashboard className="h-4 w-4" />
-                        {t('learn.sidebar.my_learning')}
-                    </Link>
-                    <Link
-                        href={route('profile.edit')}
-                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                        <User className="h-4 w-4" />
-                        {t('learn.sidebar.profile')}
-                    </Link>
-                </nav>
+                            })}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -543,12 +525,14 @@ export default function LearnShow({
     course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
     nextLesson, prevLesson, allAttempts,
 }) {
-    const { locale } = usePage().props;
+    const { locale, platform, auth } = usePage().props;
+    const platformName = platform?.name || 'FEN Learn';
+    const platformLogoUrl = platform?.logo_url || null;
+    const platformDarkLogoUrl = platform?.logo_dark_url || null;
     const t = useT();
     const [completed, setCompleted]     = useState(isCompleted);
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
-    const [showShortcuts, setShowShortcuts] = useState(false);
     const [a11yMediaPreferences, setA11yMediaPreferences] = useState(DEFAULT_A11Y_MEDIA_PREFERENCES);
     const sidebarRef = useRef(null);
     const mainRef = useRef(null);
@@ -590,55 +574,6 @@ export default function LearnShow({
     const lessonTitle = tl(lesson, 'title', locale);
     const courseTitle = tl(course, 'title', locale);
 
-    useEffect(() => {
-        function handleShortcuts(event) {
-            const tag = event.target?.tagName;
-            const isTypingTarget = tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable;
-
-            if (isTypingTarget) {
-                return;
-            }
-
-            if (event.key === '?') {
-                event.preventDefault();
-                setShowShortcuts(true);
-                return;
-            }
-
-            if (!event.altKey) {
-                return;
-            }
-
-            if (event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                sidebarRef.current?.focus();
-            }
-
-            if (event.key.toLowerCase() === 'm') {
-                event.preventDefault();
-                mainRef.current?.focus();
-            }
-
-            if (event.key.toLowerCase() === 'c' && lesson.type !== 'quiz' && !completed && canComplete) {
-                event.preventDefault();
-                handleComplete();
-            }
-
-            if (event.key.toLowerCase() === 'n' && nextLesson && !nextLessonLocked) {
-                event.preventDefault();
-                router.get(route('learn.lesson', [course.slug, nextLesson.id]));
-            }
-
-            if (event.key.toLowerCase() === 'p' && prevLesson) {
-                event.preventDefault();
-                router.get(route('learn.lesson', [course.slug, prevLesson.id]));
-            }
-        }
-
-        window.addEventListener('keydown', handleShortcuts);
-        return () => window.removeEventListener('keydown', handleShortcuts);
-    }, [canComplete, completed, course.slug, handleComplete, lesson.type, nextLesson, nextLessonLocked, prevLesson]);
-
     return (
         <>
             <Head title={`${lessonTitle} — ${courseTitle}`} />
@@ -649,55 +584,72 @@ export default function LearnShow({
                 <a href="#lesson-actions" className="text-sm underline">{t('learn.lesson.skip_to_actions')}</a>
             </div>
 
-            <div className="flex h-screen flex-col overflow-hidden bg-background">
+            <div className="flex h-screen flex-col overflow-hidden bg-[#eceff3] dark:bg-[#0b1020]">
                 {/* Top bar */}
-                <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-background px-4 lg:px-6">
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="lg:hidden">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-80 p-0">
-                            <SidebarContent
-                                course={course}
-                                lesson={lesson}
-                                completedIds={effectiveCompletedIds}
-                                enrollment={enrollment}
-                                lockedIds={lockedIds}
-                                locale={locale}
-                            />
-                        </SheetContent>
-                    </Sheet>
+                <header className="shrink-0 px-4 pt-4 sm:px-6 lg:px-8">
+                    <div className="w-full rounded-2xl bg-[#2a1548]/90 px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md sm:px-7">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 lg:hidden">
+                                        <Menu className="h-5 w-5" />
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="w-80 p-0">
+                                    <SidebarContent
+                                        course={course}
+                                        lesson={lesson}
+                                        completedIds={effectiveCompletedIds}
+                                        enrollment={enrollment}
+                                        lockedIds={lockedIds}
+                                        locale={locale}
+                                    />
+                                </SheetContent>
+                            </Sheet>
 
-                    <Link
-                        href={route('courses.show', course.slug)}
-                        className="flex items-center gap-2 text-sm font-medium hover:underline"
-                    >
-                        <GraduationCap className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline line-clamp-1 max-w-xs">{courseTitle}</span>
-                    </Link>
+                            {platformLogoUrl ? (
+                                <Link href={route('home')} className="shrink-0">
+                                    <img src={platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                </Link>
+                            ) : (
+                                <Link href={route('home')} className="shrink-0 text-base font-black">{platformName}</Link>
+                            )}
 
-                    <div className="ml-auto flex items-center gap-3">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowShortcuts(true)}
-                            className="hidden gap-1.5 text-muted-foreground md:inline-flex"
-                        >
-                            <Keyboard className="h-4 w-4" />
-                            {t('learn.lesson.shortcuts_button')}
-                        </Button>
-                        {completed && (
-                            <Badge variant="outline" className="hidden gap-1 text-green-600 border-green-300 sm:flex">
-                                <Check className="h-3.5 w-3.5" />
-                                {t('learn.lesson.completed')}
-                            </Badge>
-                        )}
-                        <span className="text-sm text-muted-foreground">{enrollment.progress}%</span>
-                        <LangSwitcher />
-                        <UserMenu />
+                            <span className="hidden h-5 w-px bg-white/25 sm:block" />
+
+                            <Link
+                                href={route('dashboard')}
+                                className="hidden items-center gap-1.5 text-sm font-semibold text-white/90 transition hover:text-white sm:flex"
+                            >
+                                <LayoutDashboard className="h-4 w-4" />
+                                {t('nav.my_dashboard')}
+                            </Link>
+
+                            <span className="hidden h-5 w-px bg-white/25 sm:block" />
+
+                            <Link
+                                href={route('courses.show', course.slug)}
+                                className="flex items-center gap-2 text-sm font-medium text-white/90 transition hover:text-white"
+                            >
+                                <GraduationCap className="h-4 w-4 shrink-0" />
+                                <span className="hidden sm:inline line-clamp-1 max-w-xs">{courseTitle}</span>
+                            </Link>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {completed && (
+                                <Badge variant="outline" className="hidden gap-1 border-green-400/50 text-green-300 sm:flex">
+                                    <Check className="h-3.5 w-3.5" />
+                                    {t('learn.lesson.completed')}
+                                </Badge>
+                            )}
+                            <span className="text-sm text-white/70">{enrollment.progress}%</span>
+                            <ThemeToggleButton className="h-9 w-9 text-white hover:bg-white/10 hover:text-white focus-visible:text-white active:text-white" />
+                            <LangSwitcher className="border-white bg-white text-[#131722]" />
+                            <UserMenu />
+                        </div>
+                    </div>
                     </div>
                 </header>
 
@@ -707,7 +659,7 @@ export default function LearnShow({
                         id="lesson-sidebar"
                         ref={sidebarRef}
                         tabIndex={-1}
-                        className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block focus:outline-none"
+                        className="hidden w-80 shrink-0 overflow-y-auto bg-inherit lg:block focus:outline-none"
                     >
                         <SidebarContent
                             course={course}
@@ -913,45 +865,29 @@ export default function LearnShow({
                         </div>
                     </main>
                 </div>
-            </div>
 
-            <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{t('learn.shortcuts.title')}</DialogTitle>
-                        <DialogDescription>
-                            {t('learn.shortcuts.description')}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.open_dialog')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">?</kbd>
+                {/* Footer */}
+                <footer className="shrink-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8">
+                    <div className="w-full rounded-2xl bg-[#17191f] px-6 py-4 text-[#d4d8e2] sm:px-8">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                        <div className="flex items-center gap-3">
+                            {platformDarkLogoUrl ? (
+                                <img src={platformDarkLogoUrl} alt={platformName} className="h-5 w-auto object-contain" />
+                            ) : (
+                                <span className="font-bold text-white">{platformName.charAt(0)}</span>
+                            )}
+                            <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
                         </div>
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.focus_list')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + S</kbd>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.focus_content')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + M</kbd>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.previous_lesson')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + P</kbd>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.next_lesson')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + N</kbd>
-                        </div>
-                        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                            <span>{t('learn.shortcuts.mark_complete')}</span>
-                            <kbd className="rounded border px-1.5 py-0.5 text-xs">Alt + C</kbd>
+                        <div className="flex flex-wrap items-center gap-5">
+                            <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">About FEN</a>
+                            <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
+                            <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
                         </div>
                     </div>
-                </DialogContent>
-            </Dialog>
+                    </div>
+                </footer>
+            </div>
+
         </>
     );
 }

@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
 import LangSwitcher from '@/Components/LangSwitcher';
+import ThemeToggleButton from '@/Components/ThemeToggleButton';
 import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { useT } from '@/lib/i18n';
 import { useState, useEffect } from 'react';
@@ -45,7 +46,7 @@ export default function AuthenticatedLayout({ children }) {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
+        <div className="min-h-screen bg-[#eceff3] text-[#0f1115] dark:bg-[#0b1020] dark:text-slate-100">
             <AnalyticsTracker />
 
             <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
@@ -60,15 +61,15 @@ export default function AuthenticatedLayout({ children }) {
                                 )}
                             </Link>
                             <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
-                                <Link href={route('dashboard')} className="flex items-center gap-1.5 opacity-80 transition hover:opacity-100">
+                                <Link href={route('dashboard')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
                                     <LayoutDashboard className="h-4 w-4" />
                                     {t('nav.my_dashboard')}
                                 </Link>
-                                <Link href="/courses" className="flex items-center gap-1.5 opacity-80 transition hover:opacity-100">
+                                <Link href="/courses" className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
                                     <BookOpen className="h-4 w-4" />
                                     {t('nav.catalog')}
                                 </Link>
-                                <Link href={route('profile.edit')} className="flex items-center gap-1.5 opacity-80 transition hover:opacity-100">
+                                <Link href={route('profile.edit')} className="flex items-center gap-1.5 text-white transition hover:text-white">
                                     <User className="h-4 w-4" />
                                     {t('nav.profile')}
                                 </Link>
@@ -76,6 +77,7 @@ export default function AuthenticatedLayout({ children }) {
                         </div>
 
                         <div className="flex items-center gap-3">
+                            <ThemeToggleButton className="h-9 w-9 text-white hover:bg-white/10 hover:text-white focus-visible:text-white active:text-white" />
                             <div className="hidden sm:block">
                                 <LangSwitcher className="border-white bg-white text-[#131722]" />
                             </div>
