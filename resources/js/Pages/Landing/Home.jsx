@@ -118,14 +118,14 @@ export default function Home() {
                     background-image:
                         linear-gradient(180deg, rgba(7,8,11,0.12) 0%, rgba(7,8,11,0.35) 45%, rgba(7,8,11,0.78) 78%, rgba(7,8,11,0.92) 100%),
                         url('/images/FEN-Learn-hero-v2-mobile.webp');
-                    background-size: contain;
-                    background-position: top center;
+                    background-size: cover;
+                    background-position: center top;
                     background-repeat: no-repeat;
                     background-color: #0b1017;
                 }
 
                 .hero-home-content {
-                    padding-top: 200px;
+                    padding-top: 250px;
                 }
 
                 @media (min-width: 768px) {
@@ -136,6 +136,10 @@ export default function Home() {
                         background-size: cover;
                         background-position: center;
                         background-repeat: no-repeat;
+                    }
+
+                    .hero-home-content {
+                        padding-top: 200px;
                     }
                 }
 
@@ -210,7 +214,7 @@ export default function Home() {
                             <p className="mt-5 text-lg font-semibold text-white/95">
                                 {t('landing.hero.subtitle')}
                             </p>
-                            <p className="mt-3 text-base leading-relaxed text-white/85 sm:text-lg">
+                            <p className="mt-3 hidden text-base leading-relaxed text-white/85 sm:block sm:text-lg">
                                 {t('landing.hero.description', { platform: platformName })}
                             </p>
                             <div className="mt-7">
