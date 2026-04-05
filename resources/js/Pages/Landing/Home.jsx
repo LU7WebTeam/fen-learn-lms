@@ -124,6 +124,10 @@ export default function Home() {
                     background-color: #0b1017;
                 }
 
+                .hero-home-content {
+                    padding-top: 200px;
+                }
+
                 @media (min-width: 768px) {
                     .hero-home-bg {
                         background-image:
@@ -198,7 +202,7 @@ export default function Home() {
                 <div
                     className="hero-home-bg relative min-h-[70vh] overflow-hidden rounded-2xl"
                 >
-                    <div className="relative z-10 flex min-h-[70vh] w-full items-end px-6 pb-8 pt-[200px] md:pt-0 sm:px-8 sm:pb-12 lg:px-10">
+                    <div className="hero-home-content relative z-10 flex min-h-[70vh] w-full items-end px-6 pb-8 sm:px-8 sm:pb-12 lg:px-10">
                         <div className="max-w-full sm:max-w-[70%]">
                             <h1 className="font-['Young_Serif',serif] text-4xl leading-[0.95] text-white sm:text-6xl">
                             {t('landing.hero.title', { platform: platformName })}
