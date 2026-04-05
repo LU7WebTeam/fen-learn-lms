@@ -55,7 +55,6 @@ export default function TwoFactorVerification({ email }) {
                                     <BookOpen className="h-5 w-5" />
                                 </div>
                             )}
-                            <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">{t('auth.two_factor.title')}</h1>
                         <p className="text-sm text-gray-500">
@@ -71,7 +70,7 @@ export default function TwoFactorVerification({ email }) {
 
                     {Object.keys(errors).length > 0 && (
                         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                            <p className="font-medium mb-1">Verification failed</p>
+                            <p className="font-medium mb-1">{t('auth.two_factor.failed_title')}</p>
                             <p>{Object.values(errors)[0]}</p>
                         </div>
                     )}

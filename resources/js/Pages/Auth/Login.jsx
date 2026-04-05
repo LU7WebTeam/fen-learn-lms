@@ -40,7 +40,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            <Head title="Log in" />
+            <Head title={t('auth.login.submit')} />
 
             {/* Left panel — form */}
             <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-8">
@@ -56,7 +56,6 @@ export default function Login({ status, canResetPassword }) {
                                     <BookOpen className="h-5 w-5" />
                                 </div>
                             )}
-                            <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900">{t('auth.login.title')}</h1>
                         <p className="text-sm text-gray-500">
@@ -186,15 +185,19 @@ export default function Login({ status, canResetPassword }) {
                             <BookOpen className="h-4 w-4 text-white" />
                         </div>
                     )}
-                    <span className="text-white font-semibold">{platform.name || 'LMS'}</span>
                 </div>
 
                 <div className="relative z-10 space-y-4">
                     <h2 className="text-4xl font-bold text-white leading-tight">
-                        Learn at your<br />own pace
+                        {t('auth.login.hero_heading').split('\n').map((line, index) => (
+                            <span key={index}>
+                                {index > 0 && <br />}
+                                {line}
+                            </span>
+                        ))}
                     </h2>
                     <p className="text-gray-300 text-lg leading-relaxed max-w-sm">
-                        {platform.tagline || 'Access all your courses, track your progress, and earn certificates — all in one place.'}
+                        {platform.tagline || t('auth.login.hero_body')}
                     </p>
                 </div>
 

@@ -42,7 +42,6 @@ export default function ResetPassword({ token, email }) {
                                 <BookOpen className="h-5 w-5" />
                             </div>
                         )}
-                        <span className="font-bold text-xl text-gray-900">{platform.name || 'LMS'}</span>
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">{t('auth.reset_password.title')}</h1>
                     <p className="text-sm text-gray-500">{t('auth.reset_password.subtitle')}</p>

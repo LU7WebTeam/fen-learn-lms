@@ -34,8 +34,7 @@ All public pages use the LMS branding (logo, platform name) set in admin Setting
 
 Landing page routes currently available:
 
-- `/` → active landing page (`Landing/Wip2`)
-- `/wip/landing` → previous landing page (`Landing/Wip`)
+- `/` → active landing page (`Landing/Home`)
 - `/backup-landing` → backup welcome page (`Welcome`)
 
 ---

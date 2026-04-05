@@ -24,25 +24,13 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Landing/Wip2', [
+    return Inertia::render('Landing/Home', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
     ]);
 })->name('home');
-
-Route::get('/wip/landing', function () {
-    return Inertia::render('Landing/Wip');
-})->name('landing.wip');
-
-Route::get('/wip/sorted-style', function () {
-    return Inertia::render('Landing/SortedStyle');
-})->name('landing.sorted-style');
-
-Route::get('/wip/sorted-style-retry', function () {
-    return Inertia::render('Landing/SortedStyleRetry');
-})->name('landing.sorted-style-retry');
 
 Route::get('/backup-landing', function () {
     return Inertia::render('Welcome', [

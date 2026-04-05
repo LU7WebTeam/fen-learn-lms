@@ -3,12 +3,14 @@ import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ShieldCheck, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
+import { useT } from '@/lib/i18n';
 
 export default function AdminLogin({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
     const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const [showPass, setShowPass] = useState(false);
+    const t = useT();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
@@ -27,7 +29,7 @@ export default function AdminLogin({ status, canResetPassword }) {
 
     return (
         <div className="flex min-h-screen bg-zinc-950">
-            <Head title="Admin Login" />
+            <Head title={t('auth.admin.title')} />
 
             {/* Left panel — branding */}
             <div
@@ -45,24 +47,28 @@ export default function AdminLogin({ status, canResetPassword }) {
                             <ShieldCheck className="h-4 w-4 text-white" />
                         </div>
                     )}
-                    <span className="text-white font-semibold text-lg">{platform.name || 'LMS Admin'}</span>
                 </div>
 
                 <div className="relative z-10 space-y-4">
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-300">
                         <ShieldCheck className="h-3.5 w-3.5" />
-                        Admin Portal
+                        {t('auth.admin.portal_badge')}
                     </div>
                     <h2 className="text-4xl font-bold text-white leading-tight">
-                        Manage your<br />learning platform
+                        {t('auth.admin.hero_heading').split('\n').map((line, index) => (
+                            <span key={index}>
+                                {index > 0 && <br />}
+                                {line}
+                            </span>
+                        ))}
                     </h2>
                     <p className="text-zinc-300 text-lg leading-relaxed max-w-sm">
-                        Access the admin dashboard to manage courses, learners, and platform settings.
+                        {t('auth.admin.hero_body')}
                     </p>
                 </div>
 
                 <p className="relative z-10 text-xs text-zinc-400">
-                    &copy; {new Date().getFullYear()} {platform.name || 'LMS'}. Admin access only.
+                    &copy; {new Date().getFullYear()} {platform.name || 'LMS'}. {t('auth.admin.footer_note')}
                 </p>
             </div>
 
@@ -77,13 +83,12 @@ export default function AdminLogin({ status, canResetPassword }) {
                         ) : (
                             <ShieldCheck className="h-6 w-6 text-white" />
                         )}
-                        <span className="text-white font-semibold">{platform.name || 'LMS Admin'}</span>
                     </div>
 
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Admin sign in</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('auth.admin.title')}</h1>
                         <p className="mt-1.5 text-sm text-zinc-400">
-                            For administrators and content editors only.
+                            {t('auth.admin.subtitle')}
                         </p>
                     </div>
 
@@ -96,7 +101,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                     <form onSubmit={submit} className="space-y-5">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-zinc-300" htmlFor="email">
-                                Email address
+                                {t('auth.login.email')}
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -116,7 +121,7 @@ export default function AdminLogin({ status, canResetPassword }) {
 
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-zinc-300" htmlFor="password">
-                                Password
+                                {t('auth.login.password')}
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -149,14 +154,14 @@ export default function AdminLogin({ status, canResetPassword }) {
                                     onChange={e => setData('remember', e.target.checked)}
                                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-white"
                                 />
-                                <span className="text-sm text-zinc-400">Remember me</span>
+                                <span className="text-sm text-zinc-400">{t('auth.login.remember_me')}</span>
                             </label>
                             {canResetPassword && (
                                 <Link
                                     href={route('password.request')}
                                     className="text-sm text-zinc-400 hover:text-white transition-colors"
                                 >
-                                    Forgot password?
+                                    {t('auth.login.forgot_password')}
                                 </Link>
                             )}
                         </div>
@@ -166,14 +171,14 @@ export default function AdminLogin({ status, canResetPassword }) {
                             disabled={processing}
                             className="w-full rounded-lg bg-white py-2.5 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-100 disabled:opacity-50"
                         >
-                            {processing ? 'Signing in…' : 'Sign in to admin'}
+                            {processing ? t('auth.admin.submitting') : t('auth.admin.submit')}
                         </button>
                     </form>
 
                     <p className="text-center text-sm text-zinc-600">
-                        Not an admin?{' '}
+                        {t('auth.admin.not_admin')}{' '}
                         <Link href={route('login')} className="text-zinc-400 hover:text-white transition-colors">
-                            Go to learner login
+                            {t('auth.admin.learner_login')}
                         </Link>
                     </p>
                 </div>

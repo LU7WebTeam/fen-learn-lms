@@ -90,8 +90,7 @@ npm run dev
 Open `http://localhost:8000` in your browser.
 
 Landing routes:
-- `/` renders the current landing page (`Landing/Wip2`)
-- `/wip/landing` renders the previous landing page (`Landing/Wip`)
+- `/` renders the current landing page (`Landing/Home`)
 - `/backup-landing` renders the backup welcome page (`Welcome`)
 
 **Seeded admin credentials:**
