@@ -13,6 +13,7 @@ import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
+import { Dialog, DialogContent, DialogClose } from '@/Components/ui/dialog';
 import ThemeToggleButton from '@/Components/ThemeToggleButton';
 import {
     Check, ChevronLeft, ChevronRight, Menu,
@@ -57,8 +58,10 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     const { flash } = usePage().props;
     const t = useT();
     const result = flash?.quiz_result ?? null;
+    const [animateResult, setAnimateResult] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
 
-    let quizData = { questions: [], passing_score: 70, max_attempts: 0 };
+    let quizData = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true };
     try {
         quizData = JSON.parse(lesson.content || '{}');
         if (!Array.isArray(quizData.questions)) quizData.questions = [];
@@ -86,10 +89,18 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                     }),
                 };
             }
+            if (typeof msData.description === 'string' && msData.description.trim()) {
+                quizData = {
+                    ...quizData,
+                    description: msData.description,
+                };
+            }
         } catch { /* keep EN */ }
     }
 
     const questions    = quizData.questions;
+    const quizDescription = typeof quizData.description === 'string' ? quizData.description.trim() : '';
+    const showAnswerFeedback = quizData.show_answer_feedback !== false;
     // If passing_score is null, undefined, 0, or not a number, treat as informational quiz (no passing mark)
     const hasPassingScore = typeof quizData.passing_score === 'number' && quizData.passing_score > 0;
     const passingScore = hasPassingScore ? quizData.passing_score : null;
@@ -121,6 +132,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     }
 
     const showResult = !!result;
+    const shouldShowAnswerReview = showResult && showAnswerFeedback && (result?.show_answer_feedback ?? true) !== false;
     const lastAttempt = allAttempts.length > 0 ? allAttempts[allAttempts.length - 1] : null;
     const answeredCount = questions.filter((question, index) => (
         question.multi_answer
@@ -131,8 +143,66 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
         ? Math.round((answeredCount / questions.length) * 100)
         : 0;
 
+    useEffect(() => {
+        if (!showResult) {
+            setAnimateResult(false);
+            setModalOpen(false);
+            return;
+        }
+
+        setModalOpen(true);
+        setAnimateResult(true);
+        const timer = window.setTimeout(() => setAnimateResult(false), 1400);
+        return () => window.clearTimeout(timer);
+    }, [showResult]);
+
     return (
         <div className="space-y-6">
+            <style>{`
+                @keyframes marks-pop-in {
+                    0% { opacity: 0; transform: translateY(14px) scale(0.96); }
+                    70% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+
+                @keyframes confetti-fall {
+                    0% { transform: translateY(-12px) rotate(0deg); opacity: 0; }
+                    10% { opacity: 1; }
+                    100% { transform: translateY(150px) rotate(540deg); opacity: 0; }
+                }
+
+                @keyframes quiz-modal-pop {
+                    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.65); }
+                    65%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+                    100% {             transform: translate(-50%, -50%) scale(1); }
+                }
+
+                .marks-pop-in {
+                    animation: marks-pop-in 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+                }
+
+                .quiz-confetti {
+                    position: absolute;
+                    top: -4px;
+                    width: 8px;
+                    height: 14px;
+                    border-radius: 3px;
+                    animation-name: confetti-fall;
+                    animation-timing-function: ease-out;
+                    animation-fill-mode: both;
+                }
+
+                .quiz-result-modal[data-state="open"] {
+                    animation: quiz-modal-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+                }
+            `}</style>
+
+            {!!quizDescription && (
+                <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                    {quizDescription}
+                </div>
+            )}
+
             {!showResult && (
                 <div className="sticky top-0 z-20 rounded-lg border bg-card px-4 py-3 shadow-sm">
                     <div className="mb-2 flex items-center justify-between gap-3 text-sm">
@@ -216,7 +286,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             )}
 
             {/* Questions */}
-            {(showResult ? result.results : questions).map((q, qi) => {
+            {(!showResult || shouldShowAnswerReview) && (shouldShowAnswerReview ? result.results : questions).map((q, qi) => {
                 const isMultiAnswer = q.multi_answer === true;
                 const chosen    = showResult ? q.selected : data.answers[qi];
                 const correct   = showResult ? q.correct  : null;
@@ -346,6 +416,12 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 );
             })}
 
+            {showResult && !shouldShowAnswerReview && (
+                <div className="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                    Answer review is disabled for this quiz. You can only view your marks.
+                </div>
+            )}
+
             {!showResult && !limitReached && (
                 <Button
                     onClick={handleSubmit}
@@ -363,44 +439,121 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 </Button>
             )}
 
-            {/* Result panel (shown after submission) */}
+            {/* Quiz Result Modal */}
             {showResult && (
-                <div className={cn(
-                    'rounded-xl border p-6 text-center',
-                    hasPassingScore
-                        ? (result.passed ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800' : 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800')
-                        : 'border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800'
-                )}>
-                    <div className="mb-3 flex justify-center">
-                        <div className={cn(
-                            'flex h-14 w-14 items-center justify-center rounded-full',
-                            hasPassingScore
-                                ? (result.passed ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300')
-                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-                        )}>
-                            <Award className="h-7 w-7" />
+                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                    <DialogContent className="quiz-result-modal max-w-xs gap-0 overflow-hidden rounded-2xl p-0">
+                        {/* Confetti overlay inside modal */}
+                        {hasPassingScore && result.passed && animateResult && (
+                            <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
+                                {[...Array(18)].map((_, i) => {
+                                    const colors = ['#22c55e', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6', '#f43f5e'];
+                                    return (
+                                        <span
+                                            key={i}
+                                            className="quiz-confetti"
+                                            style={{
+                                                left: `${4 + (i * 5.2)}%`,
+                                                backgroundColor: colors[i % colors.length],
+                                                animationDelay: `${(i % 6) * 70}ms`,
+                                                animationDuration: `${900 + (i % 5) * 140}ms`,
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Outcome image */}
+                        <img
+                            src={
+                                !hasPassingScore
+                                    ? '/images/quiz-completed.webp'
+                                    : result.passed
+                                        ? '/images/quiz-passed.webp'
+                                        : '/images/quiz-failed.webp'
+                            }
+                            alt={
+                                !hasPassingScore ? 'Quiz completed' : result.passed ? 'Quiz passed' : 'Quiz failed'
+                            }
+                            className="w-full object-contain"
+                        />
+
+                        {/* Score content */}
+                        <div className="space-y-1.5 px-6 pb-6 pt-4 text-center">
+                            <div className={cn(
+                                'text-4xl font-bold tabular-nums',
+                                hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                            )}>
+                                {result.score} / {result.max_score}
+                            </div>
+                            <p className={cn(
+                                'text-lg font-semibold tabular-nums',
+                                hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                            )}>
+                                {result.percentage}%
+                            </p>
+                            {hasPassingScore && (
+                                <p className="text-sm text-muted-foreground">
+                                    {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
+                                </p>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="space-y-2 pt-3">
+                                {hasPassingScore && !result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
+                                    <Button
+                                        onClick={() => { setModalOpen(false); handleRetry(); }}
+                                        className="w-full"
+                                        size="sm"
+                                    >
+                                        {t('learn.quiz.try_again')}
+                                    </Button>
+                                )}
+                                {hasPassingScore && !result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
+                                    <p className="text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
+                                )}
+                                <DialogClose asChild>
+                                    <Button variant="outline" size="sm" className="w-full">
+                                        {shouldShowAnswerReview ? t('dashboard.card.review') + ' Answers' : t('common.close')}
+                                    </Button>
+                                </DialogClose>
+                            </div>
                         </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Compact score banner — visible after modal is dismissed */}
+            {showResult && !modalOpen && (
+                <div className={cn(
+                    'flex items-center justify-between rounded-lg border px-4 py-3 text-sm',
+                    hasPassingScore
+                        ? (result.passed ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30')
+                        : 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30'
+                )}>
+                    <span className={cn(
+                        'font-semibold tabular-nums',
+                        hasPassingScore ? (result.passed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400') : 'text-blue-700 dark:text-blue-400'
+                    )}>
+                        {result.score}/{result.max_score} &mdash; {result.percentage}%
+                    </span>
+                    <div className="flex items-center gap-3">
+                        {hasPassingScore && (
+                            <span className={cn(
+                                'text-xs font-medium',
+                                result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            )}>
+                                {result.passed ? t('learn.quiz.passed_label') : t('learn.quiz.failed_label')}
+                            </span>
+                        )}
+                        <button
+                            onClick={() => setModalOpen(true)}
+                            className="text-xs text-muted-foreground underline hover:text-foreground"
+                        >
+                            View result
+                        </button>
                     </div>
-                    <div className={cn('mb-1 text-3xl font-bold', hasPassingScore ? (result.passed ? 'text-green-700' : 'text-red-700') : 'text-blue-700')}>
-                        {result.score} / {result.max_score}
-                    </div>
-                    <p className={cn('text-sm font-medium', hasPassingScore ? (result.passed ? 'text-green-600' : 'text-red-600') : 'text-blue-600')}>
-                        {result.percentage}%
-                    </p>
-                    {hasPassingScore && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
-                        </p>
-                    )}
-                    {/* Only show retry for failed attempts if passing score is set */}
-                    {hasPassingScore && !result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
-                        <Button onClick={handleRetry} variant="outline" size="sm" className="mt-4">
-                            {t('learn.quiz.try_again')}
-                        </Button>
-                    )}
-                    {hasPassingScore && !result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
-                        <p className="mt-3 text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
-                    )}
                 </div>
             )}
         </div>

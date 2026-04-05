@@ -262,6 +262,7 @@ class LearnController extends Controller
         $questions    = $quizData['questions'] ?? [];
         $passingScore = (int) ($quizData['passing_score'] ?? 70);
         $maxAttempts  = (int) ($quizData['max_attempts'] ?? 0);
+        $showAnswerFeedback = ($quizData['show_answer_feedback'] ?? true) !== false;
         $answers      = $request->input('answers', []);
 
         // Enforce attempt limit
@@ -444,7 +445,8 @@ class LearnController extends Controller
             'percentage'    => $percentage,
             'passed'        => $passed,
             'passing_score' => $passingScore,
-            'results'       => $results,
+            'show_answer_feedback' => $showAnswerFeedback,
+            'results'       => $showAnswerFeedback ? $results : [],
         ]);
     }
 

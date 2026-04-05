@@ -278,16 +278,22 @@ function QuizBMEditor({ data, setData }) {
     let enParsed = { questions: [] };
     try { enParsed = JSON.parse(data.content ?? '{}'); } catch {}
     const enQuestions = enParsed.questions ?? [];
+    const enDescription = enParsed.description ?? '';
 
     let msParsed = { questions: [] };
     try { msParsed = JSON.parse(data.content_ms || '{}'); } catch {}
+    const msDescription = msParsed.description ?? '';
 
     function getMsQ(idx) {
         return msParsed.questions?.[idx] ?? { text: '', options: [] };
     }
 
     function saveMsQuestions(qs) {
-        setData('content_ms', JSON.stringify({ questions: qs }));
+        setData('content_ms', JSON.stringify({ ...msParsed, questions: qs }));
+    }
+
+    function updateMsDescription(value) {
+        setData('content_ms', JSON.stringify({ ...msParsed, description: value }));
     }
 
     function updateMsQuestion(qIdx, field, value) {
@@ -318,6 +324,21 @@ function QuizBMEditor({ data, setData }) {
 
     return (
         <div className="space-y-4">
+            <Card>
+                <CardHeader className="pb-2">
+                    <p className="text-xs text-muted-foreground font-medium">Quiz description (EN): {enDescription || 'Not set'}</p>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Quiz description (BM, optional)</Label>
+                    <Textarea
+                        value={msDescription}
+                        onChange={(e) => updateMsDescription(e.target.value)}
+                        placeholder="Penerangan kuiz dalam Bahasa Melayu..."
+                        rows={3}
+                    />
+                </CardContent>
+            </Card>
+
             <p className="text-xs rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-amber-800">
                 Translate question text and answer options. Question type and correct answer are controlled in the EN tab.
             </p>
@@ -429,19 +450,21 @@ function QuizEditor({ data, setData, errors, lang }) {
     }
 
     const rawContent = data.content ?? '';
-    let parsed = { questions: [], passing_score: 70, max_attempts: 0 };
+    let parsed = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true };
     try { parsed = JSON.parse(rawContent); } catch {}
 
     const questions    = parsed.questions    ?? [];
     // Allow passing_score to be 0 (informational quiz)
     const passingScore = typeof parsed.passing_score === 'number' ? parsed.passing_score : 70;
     const maxAttempts  = parsed.max_attempts  ?? 0;
+    const description  = typeof parsed.description === 'string' ? parsed.description : '';
+    const showAnswerFeedback = parsed.show_answer_feedback !== false;
 
-    function save(qs = questions, ps = passingScore, ma = maxAttempts) {
+    function save(qs = questions, ps = passingScore, ma = maxAttempts, desc = description, saf = showAnswerFeedback) {
         // If ps is blank, null, or NaN, treat as informational (no passing mark)
         let passing_score = ps;
         if (ps === '' || ps === null || isNaN(ps)) passing_score = 0;
-        setData('content', JSON.stringify({ questions: qs, passing_score, max_attempts: ma }));
+        setData('content', JSON.stringify({ questions: qs, passing_score, max_attempts: ma, description: desc, show_answer_feedback: saf }));
     }
 
     function addQuestion() {
@@ -561,6 +584,31 @@ function QuizEditor({ data, setData, errors, lang }) {
                     </div>
                 </div>
             </div>
+
+            <Field
+                label="Quiz description (optional)"
+                hint="Shown to learners before they start the quiz."
+            >
+                <Textarea
+                    value={description}
+                    onChange={(e) => save(undefined, undefined, undefined, e.target.value)}
+                    placeholder="Briefly describe this quiz..."
+                    rows={3}
+                />
+            </Field>
+
+            <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <Checkbox
+                    id="show-answer-feedback"
+                    checked={showAnswerFeedback}
+                    onCheckedChange={(checked) => save(undefined, undefined, undefined, undefined, checked === true)}
+                />
+                <div className="flex-1">
+                    <Label htmlFor="show-answer-feedback" className="text-sm font-medium cursor-pointer">Show correct / incorrect answer feedback after submit</Label>
+                    <p className="text-xs text-muted-foreground mt-1">If disabled, learners only see marks and percentage after submission.</p>
+                </div>
+            </div>
+
             {questions.length === 0 ? (
                 <div className="rounded-xl border border-dashed py-12 text-center">
                     <p className="mb-4 text-sm text-muted-foreground">No questions yet.</p>
