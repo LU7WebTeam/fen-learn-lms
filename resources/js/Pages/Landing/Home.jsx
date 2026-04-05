@@ -114,6 +114,27 @@ export default function Home() {
                     transition: transform 240ms ease, box-shadow 240ms ease;
                 }
 
+                .hero-home-bg {
+                    background-image:
+                        linear-gradient(180deg, rgba(7,8,11,0.12) 0%, rgba(7,8,11,0.35) 45%, rgba(7,8,11,0.78) 78%, rgba(7,8,11,0.92) 100%),
+                        url('/images/FEN-Learn-hero-v2-mobile.webp');
+                    background-size: contain;
+                    background-position: top center;
+                    background-repeat: no-repeat;
+                    background-color: #0b1017;
+                }
+
+                @media (min-width: 768px) {
+                    .hero-home-bg {
+                        background-image:
+                            linear-gradient(180deg, rgba(7,8,11,0.08) 0%, rgba(7,8,11,0.28) 46%, rgba(7,8,11,0.7) 76%, rgba(7,8,11,0.9) 100%),
+                            url('/images/FEN-Learn-hero-v2-desktop.webp');
+                        background-size: cover;
+                        background-position: center;
+                        background-repeat: no-repeat;
+                    }
+                }
+
                 .card-raise:hover {
                     transform: translateY(-4px);
                     box-shadow: 0 16px 36px -24px rgba(15, 17, 21, 0.65);
@@ -175,13 +196,9 @@ export default function Home() {
 
             <section className="-mt-[84px] w-full px-4 pt-4 sm:px-6 lg:px-8">
                 <div
-                    className="relative min-h-[70vh] overflow-hidden rounded-2xl bg-cover bg-center"
-                    style={{
-                        backgroundImage:
-                            'linear-gradient(90deg, rgba(7,8,11,0.82) 0%, rgba(7,8,11,0.58) 46%, rgba(7,8,11,0.2) 100%), url(/images/FEN-Learn-hero-v2-desktop.webp)',
-                    }}
+                    className="hero-home-bg relative min-h-[70vh] overflow-hidden rounded-2xl"
                 >
-                    <div className="relative z-10 flex min-h-[70vh] w-full items-end px-6 pb-8 pt-[100px] sm:px-8 sm:pb-12 lg:px-10">
+                    <div className="relative z-10 flex min-h-[70vh] w-full items-end px-6 pb-8 pt-[200px] md:pt-0 sm:px-8 sm:pb-12 lg:px-10">
                         <div className="max-w-full sm:max-w-[70%]">
                             <h1 className="font-['Young_Serif',serif] text-4xl leading-[0.95] text-white sm:text-6xl">
                             {t('landing.hero.title', { platform: platformName })}
