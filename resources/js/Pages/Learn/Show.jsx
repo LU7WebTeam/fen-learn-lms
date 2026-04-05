@@ -418,7 +418,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 
             {showResult && !shouldShowAnswerReview && (
                 <div className="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                    Answer review is disabled for this quiz. You can only view your marks.
+                    {t('learn.quiz.answer_review_disabled')}
                 </div>
             )}
 
@@ -474,7 +474,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                         : '/images/quiz-failed.webp'
                             }
                             alt={
-                                !hasPassingScore ? 'Quiz completed' : result.passed ? 'Quiz passed' : 'Quiz failed'
+                                !hasPassingScore
+                                    ? t('learn.quiz.result_img_alt_completed')
+                                    : result.passed
+                                        ? t('learn.quiz.result_img_alt_passed')
+                                        : t('learn.quiz.result_img_alt_failed')
                             }
                             className="mx-auto block object-contain"
                             style={{ maxWidth: '240px' }}
@@ -516,7 +520,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                 )}
                                 <DialogClose asChild>
                                     <Button variant="outline" size="sm" className="w-full">
-                                        {shouldShowAnswerReview ? t('dashboard.card.review') + ' Answers' : t('common.close')}
+                                        {shouldShowAnswerReview ? t('learn.quiz.review_answers') : t('common.close')}
                                     </Button>
                                 </DialogClose>
                             </div>
@@ -552,7 +556,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                             onClick={() => setModalOpen(true)}
                             className="text-xs text-muted-foreground underline hover:text-foreground"
                         >
-                            View result
+                            {t('learn.quiz.view_result')}
                         </button>
                     </div>
                 </div>
