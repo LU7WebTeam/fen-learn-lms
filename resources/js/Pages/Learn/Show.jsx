@@ -442,7 +442,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             {/* Quiz Result Modal */}
             {showResult && (
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                    <DialogContent className="quiz-result-modal w-80 gap-0 overflow-hidden rounded-2xl p-0">
+                    <DialogContent className="quiz-result-modal w-80 gap-0 overflow-hidden rounded-2xl p-0 pt-4">
                         {/* Confetti overlay inside modal */}
                         {hasPassingScore && result.passed && animateResult && (
                             <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">

@@ -39,11 +39,11 @@ const FEATURE_ITEMS = [
 ];
 
 const LEARN_ITEMS = [
-    { iconSrc: '/images/cashflow.svg', titleKey: 'landing.learn.item1.title', descKey: 'landing.learn.item1.desc' },
-    { iconSrc: '/images/debt.svg', titleKey: 'landing.learn.item2.title', descKey: 'landing.learn.item2.desc' },
-    { iconSrc: '/images/building-wealth.svg', titleKey: 'landing.learn.item3.title', descKey: 'landing.learn.item3.desc' },
-    { iconSrc: '/images/risk-management.svg', titleKey: 'landing.learn.item4.title', descKey: 'landing.learn.item4.desc' },
-    { iconSrc: '/images/digital-financial-literacy.svg', titleKey: 'landing.learn.item5.title', descKey: 'landing.learn.item5.desc' },
+    { iconSrc: '/images/cashflow.svg', titleKey: 'landing.learn.item1.title', descKey: 'landing.learn.item1.desc', iconBg: '#95C93D' },
+    { iconSrc: '/images/debt.svg', titleKey: 'landing.learn.item2.title', descKey: 'landing.learn.item2.desc', iconBg: '#F26723' },
+    { iconSrc: '/images/building-wealth.svg', titleKey: 'landing.learn.item3.title', descKey: 'landing.learn.item3.desc', iconBg: '#0651A0' },
+    { iconSrc: '/images/risk-management.svg', titleKey: 'landing.learn.item4.title', descKey: 'landing.learn.item4.desc', iconBg: '#FDB930' },
+    { iconSrc: '/images/digital-financial-literacy.svg', titleKey: 'landing.learn.item5.title', descKey: 'landing.learn.item5.desc', iconBg: '#B63393' },
 ];
 
 const FAQ_ITEMS = [
@@ -303,11 +303,11 @@ export default function Home() {
                                     background: softCardTint,
                                 }}
                             >
-                                <div className="inline-flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#fcb82f] p-[15px] sm:h-[120px] sm:w-[120px] sm:p-[20px]">
+                                <div className="inline-flex h-[80px] w-[80px] items-center justify-center rounded-full p-[15px]" style={{ backgroundColor: firstLearnItem.iconBg }}>
                                     <img
                                         src={firstLearnItem.iconSrc}
                                         alt={t(firstLearnItem.titleKey)}
-                                        className="h-[50px] w-[50px] object-contain sm:h-[80px] sm:w-[80px]"
+                                        className="h-[50px] w-[50px] object-contain brightness-0 invert"
                                     />
                                 </div>
                                 <h4 className="mt-2 font-['Young_Serif',serif] text-2xl leading-tight text-[#1a1f2b]">
@@ -330,11 +330,11 @@ export default function Home() {
                                             background: softCardTint,
                                         }}
                                     >
-                                        <div className="inline-flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#fcb82f] p-[15px] sm:h-[120px] sm:w-[120px] sm:p-[20px]">
+                                        <div className="inline-flex h-[80px] w-[80px] items-center justify-center rounded-full p-[15px]" style={{ backgroundColor: item.iconBg }}>
                                             <img
                                                 src={item.iconSrc}
                                                 alt={t(item.titleKey)}
-                                                className="h-[50px] w-[50px] object-contain sm:h-[80px] sm:w-[80px]"
+                                                className="h-[50px] w-[50px] object-contain brightness-0 invert"
                                             />
                                         </div>
                                         <h4 className="mt-2 font-['Young_Serif',serif] text-2xl leading-tight text-[#1a1f2b]">
