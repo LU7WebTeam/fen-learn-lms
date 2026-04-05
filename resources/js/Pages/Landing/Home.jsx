@@ -158,7 +158,7 @@ export default function Home() {
                 }
 
                 .anim-card.in-view {
-                    animation: fadeSlideUp 0.55s ease forwards;
+                    animation: fadeSlideUp 0.75s ease forwards;
                 }
             `}</style>
 
