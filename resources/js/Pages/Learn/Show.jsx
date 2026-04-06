@@ -143,6 +143,33 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
         ? Math.round((answeredCount / questions.length) * 100)
         : 0;
 
+    // Apply client-side translations to result.results for answer review
+    const translatedResults = shouldShowAnswerReview && result?.results
+        ? result.results.map((resultItem, idx) => {
+            const translatedQuestion = questions[idx];
+            if (!translatedQuestion) return resultItem;
+            
+            // Merge translated question text and options with result data
+            return {
+                ...resultItem,
+                text: translatedQuestion.text ?? resultItem.text,
+                options: resultItem.options.map((opt, optIdx) => {
+                    const translatedOpt = translatedQuestion.options?.[optIdx];
+                    if (!translatedOpt) return opt;
+                    
+                    // Handle both string and object options
+                    if (typeof opt === 'object') {
+                        return {
+                            ...opt,
+                            label: (typeof translatedOpt === 'string' ? translatedOpt : translatedOpt.label) ?? opt.label,
+                        };
+                    }
+                    return typeof translatedOpt === 'string' ? translatedOpt : (translatedOpt.label ?? opt);
+                }),
+            };
+        })
+        : result?.results;
+
     useEffect(() => {
         if (!showResult) {
             setAnimateResult(false);
@@ -286,7 +313,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             )}
 
             {/* Questions */}
-            {(!showResult || shouldShowAnswerReview) && (shouldShowAnswerReview ? result.results : questions).map((q, qi) => {
+            {(!showResult || shouldShowAnswerReview) && (shouldShowAnswerReview ? translatedResults : questions).map((q, qi) => {
                 const isMultiAnswer = q.multi_answer === true;
                 const chosen    = showResult ? q.selected : data.answers[qi];
                 const correct   = showResult ? q.correct  : null;
