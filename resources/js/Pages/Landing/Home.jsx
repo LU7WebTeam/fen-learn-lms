@@ -294,12 +294,6 @@ export default function Home() {
                                 <h3 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
                                     {t('landing.learn.title')}
                                 </h3>
-                                    <p className="mt-2 text-sm text-[#5b6070]">
-                                        {t('landing.faq.help_contact')}{' '}
-                                        <a href="mailto:learn@fenetwork.my" className="font-semibold text-[#b53391] hover:text-[#9f2c80]">
-                                            learn@fenetwork.my
-                                        </a>
-                                    </p>
                                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
                                     {t('landing.learn.subtitle')}
                                 </p>
