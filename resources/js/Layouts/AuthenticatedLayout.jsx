@@ -54,8 +54,8 @@ export default function AuthenticatedLayout({ children }) {
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-6">
                             <Link href={route('home')}>
-                                {platformLogoUrl ? (
-                                    <img src={platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                {(platformDarkLogoUrl || platformLogoUrl) ? (
+                                    <img src={platformDarkLogoUrl || platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                                 ) : (
                                     <span className="text-xl font-black tracking-tight">{platformName}</span>
                                 )}

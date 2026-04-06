@@ -766,9 +766,9 @@ export default function LearnShow({
                                 </SheetContent>
                             </Sheet>
 
-                            {platformLogoUrl ? (
+                            {(platformDarkLogoUrl || platformLogoUrl) ? (
                                 <Link href={route('home')} className="shrink-0">
-                                    <img src={platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                    <img src={platformDarkLogoUrl || platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                                 </Link>
                             ) : (
                                 <Link href={route('home')} className="shrink-0 text-base font-black">{platformName}</Link>

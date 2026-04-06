@@ -1,210 +1,220 @@
-# UAT Activities Outline
+# Fen Learn LMS UAT Test Script
 
-## Purpose
-This document outlines User Acceptance Testing (UAT) activities for the LMS from two points of view:
-- Public and Learner users
-- Admin users
+## 1) UAT Information
+- Live URL: https://fen-learn.fenetwork.my
+- Test date: __________________
+- Build/commit reference: __________________
+- Test lead: __________________
+- Testers: __________________
 
-It is intended to guide internal test runs and later be adapted into a client-facing UAT script.
+## 2) UAT Goal
+Validate end-to-end behavior for key roles in production-like conditions before sign-off.
 
-## UAT Objectives
-- Validate that key business flows work end-to-end.
-- Confirm role-based access and permissions are correct.
-- Ensure usability, clarity, and expected behavior across major screens.
-- Verify core reporting and export outputs used by stakeholders.
-- Capture issues clearly for triage and re-test.
+## 3) Roles Covered
+- Public
+- Learners
+- Course Viewers
+- Superadmin
 
-## Scope
-### In scope
-- Public pages and learner journeys (registration, login, enrollment, learning, quiz, certificate).
-- Admin journeys (courses, lessons/quizzes, users, analytics, exports, settings).
-- Critical integrations/features in normal operation.
+## 4) Execution Rules
+- Record Pass/Fail for each test case.
+- For any Fail, capture screenshot and exact URL.
+- Include actual result and severity (Critical/High/Medium/Low).
+- Re-test failed cases after fix and mark as Retest-Pass/Retest-Fail.
+- Execute cross-browser tests in Section 10 before sign-off.
 
-### Out of scope (unless explicitly requested)
-- Load/performance benchmarking.
-- Penetration testing.
-- Browser support outside agreed target list.
+## 5) Suggested Test Accounts
+- Learner account: __________________
+- Course Viewer account: __________________
+- Superadmin account: __________________
+- Test course slug: __________________
 
-## Test Setup
-- Environment: staging/UAT environment mirroring production config.
-- Test accounts:
-  - Public user (not logged in)
-  - Learner account
-  - Content Editor account
-  - Course Viewer account
-  - Super Admin account
-- Test data:
-  - At least 1 published course with mixed lesson types (text/video/quiz/pdf).
-  - At least 1 course completion path that generates certificate.
-  - At least 1 quiz with passing score and 1 informational quiz.
+## 6) Public UAT
 
-## UAT Execution Workflow
-1. Prepare test data and accounts.
-2. Run test cases by module.
-3. Log defects with steps, expected result, actual result, screenshots/video.
-4. Triage defects by severity and business impact.
-5. Re-test fixed defects.
-6. Final sign-off based on acceptance criteria.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| PUB-01 | Home page load | Open `/` | Home page loads without error; hero, navigation, and sections render correctly |  |  |
+| PUB-02 | Language switch | Switch EN/BM from landing | Text changes language across key landing sections; no broken layout |  |  |
+| PUB-03 | Legal pages | Open `/about`, `/terms`, `/privacy` | All pages load and content is readable |  |  |
+| PUB-04 | Course catalog access | Open `/courses` | Course list loads for public user |  |  |
+| PUB-05 | Course detail access | Open a published course detail page | Detail page renders with lesson/curriculum preview |  |  |
+| PUB-06 | Enroll requires auth | From course detail, click enroll/start as logged-out user | User is redirected to login/register flow |  |  |
+| PUB-07 | Staff login separation | Open `/admin/login` and `/login` | Separate staff and learner login pages are accessible and clear |  |  |
 
-## Acceptance Severity Guide
-- Critical: Core flow broken, no workaround.
-- High: Major function impacted, workaround exists but painful.
-- Medium: Function works partially or with minor confusion.
-- Low: Cosmetic/wording/minor UX issue.
+## 7) Learner UAT
 
----
+### 7.1 Account and Access
 
-## A. Public and Learner UAT Activities
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| LRN-01 | Learner login | Login via `/login` | Login succeeds for valid learner account |  |  |
+| LRN-02 | Invalid login handling | Login with invalid password | Error shown, no login |  |  |
+| LRN-03 | Forgot password flow | Run forgot-password flow | Reset email flow works and user can log in with new password |  |  |
+| LRN-04 | Profile completion gate | Login with incomplete profile account | User is prompted to complete profile before learning routes |  |  |
+| LRN-05 | Suspended learner block | Try login with suspended learner | Access is blocked with clear message |  |  |
 
-### A1. Public Access and Discovery
-- Verify landing/home page loads and key links work.
-- Verify course catalog visibility for public users.
-- Verify course details page renders correctly for non-logged-in users.
-- Verify language switcher and localization display expected content.
-- Verify legal pages (terms/privacy/about) are reachable.
+### 7.2 Enrollment and Learning Journey
 
-### A2. Registration, Login, and Access
-- Verify new learner registration flow completes successfully.
-- Verify login, logout, and forgot-password flows.
-- Verify email verification behavior (if enabled).
-- Verify captcha behavior (if enabled on auth forms).
-- Verify blocked/suspended accounts cannot log in.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| LRN-06 | Enroll in course | Enroll in published course | Enrollment succeeds and course appears on learner dashboard |  |  |
+| LRN-07 | Resume learning | Open enrolled course and resume | Learner lands in correct lesson player route |  |  |
+| LRN-08 | Locked lesson behavior | Attempt to open locked lesson before prerequisite | Locked behavior is enforced and user cannot bypass |  |  |
+| LRN-09 | Text lesson completion | Complete a text lesson | Lesson marked complete; progress increments |  |  |
+| LRN-10 | Video lesson completion | Watch/complete a video lesson | Completion updates correctly |  |  |
+| LRN-11 | PDF lesson rendering | Open PDF lesson | PDF content displays/download opens correctly |  |  |
 
-### A3. Enrollment and Course Start
-- Verify learner can enroll in a published course.
-- Verify learner sees enrolled course in dashboard/my learning.
-- Verify learner can enter lesson player and navigate lessons.
-- Verify prerequisite/locked lesson logic behaves correctly.
+### 7.3 Quiz Journey
 
-### A4. Learning Experience
-- Verify text lesson content displays correctly.
-- Verify video lesson playback and completion behavior.
-- Verify PDF lesson display/open behavior.
-- Verify lesson completion updates progress accurately.
-- Verify progress percentages and completion states match expected outcomes.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| LRN-12 | Standard quiz submit | Submit valid answers on scored quiz | Score and percentage are calculated and shown |  |  |
+| LRN-13 | Quiz result modal | Submit quiz and observe result modal | Modal opens, shows score and pass/fail state correctly |  |  |
+| LRN-14 | Outcome image mapping | Test passed and failed outcomes | Correct image appears for passed and failed states |  |  |
+| LRN-15 | Informational quiz outcome | Submit quiz with no passing score (if configured) | Completed/informational outcome displays correctly |  |  |
+| LRN-16 | Retry control | Fail quiz with attempts remaining | Try Again option appears and allows new attempt |  |  |
+| LRN-17 | Attempt limit enforcement | Exhaust max attempts | Further attempt is blocked and message is shown |  |  |
+| LRN-18 | Answer-review toggle off | Use quiz with review disabled | Marks visible but answer review is hidden |  |  |
 
-### A5. Quiz Experience
-- Verify quiz submission and scoring for standard quizzes.
-- Verify multiple attempts behavior where max attempts is configured.
-- Verify informational quiz behavior where passing score is not required.
-- Verify quiz history and marks display expected values.
-- Verify edge cases (empty/invalid answer attempts blocked appropriately).
+### 7.4 Completion and Certificate
 
-### A6. Completion and Certificate
-- Verify course completion status is set correctly.
-- Verify certificate generation occurs when configured.
-- Verify certificate page displays valid learner/course/date data.
-- Verify certificate download works.
-- Verify no certificate shown when course/certificate conditions are not met.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| LRN-19 | Course completion status | Finish all required lessons | Course marked completed |  |  |
+| LRN-20 | Certificate view | Open generated certificate page | Certificate loads with correct learner/course/date data |  |  |
+| LRN-21 | Certificate download | Download certificate PDF | PDF downloads and content is valid |  |  |
 
-### A7. Learner Profile and Localization
-- Verify learner can view/update allowed profile fields.
-- Verify profile options (occupation/organization, etc.) behave correctly.
-- Verify date/time display appears in expected timezone format.
+## 8) Course Viewer UAT
 
-### A8. Learner Notifications and Messaging
-- Verify success/error/flash messages are understandable.
-- Verify key learner emails (if in scope) are delivered and correctly branded.
+Course Viewer should have admin-panel access that is read-only and scoped to assigned courses.
 
----
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| CVW-01 | Admin login | Login via `/admin/login` with course_viewer role | Login succeeds and admin interface loads |  |  |
+| CVW-02 | Dashboard visibility | Open admin dashboard | Read-only dashboard access works |  |  |
+| CVW-03 | Course scope restriction | Attempt to access unassigned course pages by URL | Access denied or content hidden based on scope rules |  |  |
+| CVW-04 | Read-only enforcement: courses | Open assigned course edit pages and attempt updates | Save/update controls are blocked or unavailable |  |  |
+| CVW-05 | Read-only enforcement: lessons | Open lesson edit pages and attempt changes | Edit, create, delete, reorder actions are blocked |  |  |
+| CVW-06 | Restricted modules | Try to access users/settings routes under `/admin` | Access denied (403/redirect/hidden UI) |  |  |
+| CVW-07 | Analytics page visibility | Open `/admin/analytics` as course_viewer | Analytics page loads only for assigned-course scope and without privilege escalation |  |  |
+| CVW-08 | Course analytics filters | Apply date/course/profile filters in analytics | Filtered charts/table update correctly and only include allowed course scope |  |  |
+| CVW-09 | Course analytics tabs | Switch between analytics tabs/cards/views (summary + table areas) | Tabs/views load correctly with consistent counts and no unauthorized data exposure |  |  |
+| CVW-10 | Course analytics CSV export | Export analytics CSV from course_viewer account | CSV downloads successfully and contains only permitted scoped analytics data |  |  |
 
-## B. Admin UAT Activities
+## 9) Superadmin UAT
 
-### B1. Admin Access and Role Permissions
-- Verify role-based access boundaries:
-  - Super Admin: full access
-  - Content Editor: content-focused access
-  - Course Viewer: read-only areas as designed
-- Verify unauthorized access returns correct behavior (403/hidden UI).
+### 9.1 Admin Core
 
-### B2. Dashboard and Overview
-- Verify admin dashboard metrics load.
-- Verify no major UI regressions across key widgets/cards.
-- Verify links from dashboard navigate to correct modules.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| SUP-01 | Superadmin login | Login via `/admin/login` | Login succeeds with full access |  |  |
+| SUP-02 | Dashboard | Open `/admin/dashboard` | Metrics and cards load correctly |  |  |
+| SUP-03 | Admin docs | Open `/admin/docs` | Documentation page loads correctly |  |  |
 
-### B3. Course Management
-- Verify create/edit/publish/unpublish course flow.
-- Verify section and lesson create/edit/reorder/duplicate/delete flows.
-- Verify media/content fields save and render correctly.
-- Verify course duplication behavior and resulting data quality.
+### 9.2 Course and Lesson Management
 
-### B4. Quiz Authoring (Admin)
-- Verify quiz lesson editor loads/saves correctly.
-- Verify passing score handling including zero/informational mode.
-- Verify question/option add, remove, reorder, and correctness toggles.
-- Verify quiz content appears correctly in learner player after publish.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| SUP-04 | Create course | Create new course with required fields | Course is created and listed |  |  |
+| SUP-05 | Edit/publish course | Edit and publish/unpublish a course | Visibility changes reflect on public catalog |  |  |
+| SUP-06 | Section operations | Create, rename, reorder, duplicate, delete section | All section actions persist correctly |  |  |
+| SUP-07 | Lesson operations | Create/edit/reorder/duplicate/delete lessons | Lesson actions persist correctly and display in learner flow |  |  |
+| SUP-08 | Quiz authoring options | Configure passing score, attempts, description, answer-review toggle | Learner quiz behavior matches configured settings |  |  |
 
-### B5. User Management
-- Verify user listing, searching, and profile view/edit.
-- Verify role change controls and restrictions.
-- Verify suspend/unsuspend flows.
-- Verify password reset flows from admin.
-- Verify super-admin-only delete user flow with safeguards:
-  - Cannot delete own account
-  - Cannot delete last remaining super admin
+### 9.3 Users and Access Control
 
-### B6. Analytics and Reporting
-- Verify analytics filters by date/course/profile attributes.
-- Verify charts and summary numbers are sensible for test data.
-- Verify learner table data accuracy.
-- Verify CSV export downloads and contains correct values.
-- Verify learners export includes quiz marks columns and values as expected.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| SUP-09 | Users list and search | Open `/admin/users`, filter/search | Data loads and filters work correctly |  |  |
+| SUP-10 | Role change | Change user role (learner/content_editor/course_viewer/super_admin) | Role updates and permissions apply correctly |  |  |
+| SUP-11 | Course access assignment | Assign course scope to course_viewer | Viewer can only access assigned courses |  |  |
+| SUP-12 | Suspend/unsuspend | Suspend and unsuspend a user | User access behavior updates immediately |  |  |
+| SUP-13 | Password reset actions | Use admin reset password and send reset link actions | Actions succeed and user can authenticate accordingly |  |  |
+| SUP-14 | Deletion safeguards | Attempt delete own superadmin or last superadmin | Protected paths are blocked by safeguard logic |  |  |
 
-### B7. Settings and Configuration
-- Verify branding updates (logos, platform name, etc.) reflect correctly.
-- Verify localization/settings changes apply correctly.
-- Verify email/SMTP test and template previews.
-- Verify captcha/security settings and behavior toggles.
-- Verify maintenance mode behavior (if enabled).
+### 9.4 Analytics, Logs, and Settings
 
-### B8. Logs and Auditing
-- Verify activity/system logs capture key admin actions.
-- Verify export from logs modules works.
-- Verify redaction/sensitive fields behavior where applicable.
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| SUP-15 | Analytics filters | Use date/course/profile filters in `/admin/analytics` | Charts and table update consistently |  |  |
+| SUP-16 | Analytics export | Export analytics CSV | File downloads and values match on-screen data |  |  |
+| SUP-17 | Activity logs | Open `/admin/activity-logs`, apply controls, export | Logs render and exports work |  |  |
+| SUP-18 | System logs | Open `/admin/system-logs` and export | System logs display and export works |  |  |
+| SUP-19 | Branding settings | Update platform branding and save | Changes reflect on UI and emails where applicable |  |  |
+| SUP-20 | Email settings tests | Send test email and template test email | Test email arrives and template renders correctly |  |  |
+| SUP-21 | Captcha test endpoint | Run captcha test from settings | Captcha validation behaves as configured |  |  |
+| SUP-22 | Maintenance mode | Toggle maintenance mode (during controlled test window) | Public routes show maintenance behavior; admins can still manage |  |  |
 
----
+## 10) Browser Testing (Required)
 
-## C. Cross-Cutting UAT Checks
+### 10.1 Browser Matrix
 
-### C1. Data Integrity
-- Verify no duplicate/invalid records created by normal usage.
-- Verify cascading/cleanup behavior for deletes where applicable.
+| ID | Device Type | Device / Model | OS | Browser Type | Browser Version | Viewport / Resolution | Test Method | Tester | Status | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| BRW-01 | Desktop | Windows laptop/PC | Windows 11 | Chrome (Stable) | Latest | 1920x1080 | Real device |  |  |  |
+| BRW-02 | Desktop | Windows laptop/PC | Windows 11 | Edge (Stable) | Latest | 1920x1080 | Real device |  |  |  |
+| BRW-03 | Desktop | MacBook/iMac | macOS | Safari | Latest | 1440x900 or native | Real device |  |  |  |
+| BRW-04 | Desktop | MacBook/iMac | macOS | Chrome (Stable) | Latest | 1440x900 or native | Real device |  |  |  |
+| BRW-05 | Mobile Phone | iPhone 13/14/15 (or newer) | iOS | Safari | Latest | 390x844 (or native) | Real device preferred |  |  |  |
+| BRW-06 | Mobile Phone | iPhone 13/14/15 (or newer) | iOS | Chrome | Latest | 390x844 (or native) | Real device preferred |  |  |  |
+| BRW-07 | Mobile Phone | Pixel/Samsung mid-high tier | Android 13+ | Chrome | Latest | 360x800 (or native) | Real device preferred |  |  |  |
+| BRW-08 | Tablet | iPad (9th gen or newer) | iPadOS | Safari | Latest | 820x1180 (or native) | Real device preferred |  |  |  |
 
-### C2. Usability and Content Quality
-- Verify labels, messages, and button text are clear.
-- Verify no broken links or unclear navigation paths.
+Required minimum for sign-off:
+- All Desktop rows must be tested on real devices.
+- At least one iOS mobile and one Android mobile row must be tested on real devices.
+- If any row is run using simulator/emulator, record it clearly in Notes.
 
-### C3. Browser and Device Sanity
-- Verify agreed browser set (desktop at minimum).
-- Verify mobile/responsive behavior for critical learner flows.
+If Safari testing is unavailable, record reason, risk impact, and obtain explicit business approval before sign-off.
 
-### C4. Timezone and Date Handling
-- Verify all key date/time displays align with expected timezone.
-- Verify exported date/time values are consistent.
+### 10.2 Browser Test Cases
 
----
+| ID | Scenario | Steps | Expected Result | Status | Notes |
+|---|---|---|---|---|---|
+| BRW-TC-01 | Public landing render | Open `/` on each browser in matrix | Layout, typography, and images render correctly with no overlap/clipping |  |  |
+| BRW-TC-02 | Public course discovery | Open `/courses`, open one course detail page | Catalog and detail UI function consistently across browsers |  |  |
+| BRW-TC-03 | Learner login + dashboard | Login as learner and open dashboard | Authentication and dashboard rendering are stable |  |  |
+| BRW-TC-04 | Lesson player flow | Open text/video/pdf lessons in one enrolled course | Lesson content works, navigation works, no major UI breakage |  |  |
+| BRW-TC-05 | Quiz submit + modal | Submit quiz and observe result modal | Modal opens, score visible, image not clipped, controls usable |  |  |
+| BRW-TC-06 | Language switch | Toggle EN/BM from landing and learner page | Strings update correctly, no truncation causing layout issues |  |  |
+| BRW-TC-07 | Responsive checks | Validate key pages at mobile and desktop widths | Critical actions remain accessible and readable |  |  |
 
-## Defect Log Template
-Use this format for each issue:
-- ID:
-- Module:
-- Role:
-- Steps to reproduce:
-- Expected result:
-- Actual result:
+### 10.3 Browser Pass Criteria
+
+- No Critical or High UI/function defects in any required browser.
+- Core flows pass on all required browsers: public discovery, learner learning flow, quiz submission/result modal, and admin login.
+- Any Medium/Low browser-specific defects are documented with workaround and accepted by business owner.
+
+## 11) Defect Log Format
+
+Use this template for each failed UAT case:
+
+- ID: UAT-XXX
+- Test Case ID: (example LRN-13)
+- Role: Public/Learner/Course Viewer/Superadmin
+- Module: (example Quiz Player)
+- URL:
+- Steps to Reproduce:
+- Expected Result:
+- Actual Result:
 - Severity: Critical/High/Medium/Low
-- Evidence: screenshot/video/log
-- Status: Open/In Progress/Ready for Retest/Closed
+- Evidence: Screenshot/Video
+- Status: Open/In Progress/Retest/Closed
+- Owner:
 
-## UAT Sign-Off Checklist
+## 12) Sign-Off Criteria
+
 - All Critical defects closed.
-- All High defects closed or explicitly accepted.
-- Medium/Low defects reviewed and dispositioned.
-- Client walkthrough completed.
-- Final approval recorded with date and approver names.
+- All High defects closed or formally accepted by business owner.
+- Core flows pass for all four user types.
+- Required browser matrix is completed and signed off.
+- UAT sign-off recorded with approver name and date.
 
-## Notes for Client Session Preparation
-- Convert this outline into executable test scripts with test IDs.
-- Pre-fill expected outcomes based on agreed business rules.
-- Assign owner per module (Facilitator, Tester, Observer, Recorder).
-- Timebox session by module to keep progress visible.
+## 13) Optional Fast-Track Plan (If Time Is Limited Today)
+
+Run these first as a minimum go-live confidence set:
+
+- Public: PUB-01, PUB-04, PUB-06
+- Learner: LRN-01, LRN-06, LRN-12, LRN-13, LRN-19, LRN-21
+- Course Viewer: CVW-03, CVW-04, CVW-08, CVW-09, CVW-10
+- Superadmin: SUP-05, SUP-08, SUP-10, SUP-15, SUP-19

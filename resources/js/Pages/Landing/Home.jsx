@@ -166,8 +166,8 @@ export default function Home() {
                 <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-[linear-gradient(135deg,rgba(255,138,0,0.88),rgba(255,179,102,0.84))]' : 'bg-black/30'}`}>
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-6">
-                            {platform?.logo_url ? (
-                                <img src={platform.logo_url} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                            {platformDarkLogoUrl ? (
+                                <img src={platformDarkLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                             ) : (
                                 <span className="text-3xl font-black tracking-tight">{platformName}</span>
                             )}
