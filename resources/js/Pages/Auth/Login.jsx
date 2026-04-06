@@ -8,7 +8,6 @@ import { useT } from '@/lib/i18n';
 export default function Login({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
-    const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
@@ -173,19 +172,7 @@ export default function Login({ status, canResetPassword }) {
                 {/* Dark overlay for text readability */}
                 <div className="absolute inset-0 bg-black/50" />
 
-                <div className="relative z-10 flex items-center gap-3">
-                    {platform.logo_url ? (
-                        <img
-                            src={platformDarkLogoUrl || platform.logo_url}
-                            alt={platform.name}
-                            className={`h-8 w-auto ${platformDarkLogoUrl ? '' : 'brightness-0 invert'}`}
-                        />
-                    ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                            <BookOpen className="h-4 w-4 text-white" />
-                        </div>
-                    )}
-                </div>
+                <div className="relative z-10" />
 
                 <div className="relative z-10 space-y-4">
                     <h2 className="text-4xl font-bold text-white leading-tight">
@@ -196,9 +183,6 @@ export default function Login({ status, canResetPassword }) {
                             </span>
                         ))}
                     </h2>
-                    <p className="text-gray-300 text-lg leading-relaxed max-w-sm">
-                        {platform.tagline || t('auth.login.hero_body')}
-                    </p>
                 </div>
 
                 <p className="relative z-10 text-xs text-gray-400">

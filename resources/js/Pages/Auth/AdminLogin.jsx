@@ -39,15 +39,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                 {/* Dark overlay for text readability */}
                 <div className="absolute inset-0 bg-black/60" />
 
-                <div className="relative z-10 flex items-center gap-3">
-                    {platform.logo_url ? (
-                        <img src={platformDarkLogoUrl || platform.logo_url} alt={platform.name} className="h-8 w-auto" />
-                    ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-                            <ShieldCheck className="h-4 w-4 text-white" />
-                        </div>
-                    )}
-                </div>
+                <div className="relative z-10" />
 
                 <div className="relative z-10 space-y-4">
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-300">
@@ -62,9 +54,6 @@ export default function AdminLogin({ status, canResetPassword }) {
                             </span>
                         ))}
                     </h2>
-                    <p className="text-zinc-300 text-lg leading-relaxed max-w-sm">
-                        {t('auth.admin.hero_body')}
-                    </p>
                 </div>
 
                 <p className="relative z-10 text-xs text-zinc-400">
