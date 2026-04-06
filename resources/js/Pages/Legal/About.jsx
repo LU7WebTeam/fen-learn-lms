@@ -44,7 +44,7 @@ export default function About() {
                     <div className="flex items-center gap-3">
                         <LangSwitcher />
                         {auth?.user ? (
-                            <Link href={route('courses.index')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
+                            <Link href={route('courses.show', 'fen-proaktif')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
                                 {t('dashboard.title')}
                             </Link>
                         ) : (

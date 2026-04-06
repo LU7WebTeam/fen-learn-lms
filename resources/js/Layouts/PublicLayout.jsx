@@ -45,7 +45,7 @@ export default function PublicLayout({ children }) {
                                 <LangSwitcher className="border-white bg-white text-[#131722]" />
                             </div>
                             {auth?.user ? (
-                                <Link href={route('courses.index')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
+                                <Link href={route('courses.show', 'fen-proaktif')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
                                     {t('landing.cta.my_dashboard')}
                                 </Link>
                             ) : (

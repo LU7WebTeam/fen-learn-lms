@@ -110,7 +110,12 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Course info card */}
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 lg:col-span-2 space-y-4 dark:bg-[#111827] dark:ring-white/10">
-                        <h1 className="font-['Inter',sans-serif] text-3xl font-extrabold leading-tight text-[#131722] dark:text-slate-100">{courseTitle}</h1>
+                        <div className="flex items-start gap-3">
+                            <h1 className="font-['Inter',sans-serif] text-3xl font-extrabold leading-tight text-[#131722] dark:text-slate-100">{courseTitle}</h1>
+                            {enrollment?.completed_at && (
+                                <Badge className="mt-1.5 shrink-0 bg-green-500 text-white hover:bg-green-500">{t('courses.show.completed_badge')}</Badge>
+                            )}
+                        </div>
                         {courseDescription && (
                             <p className="leading-relaxed text-[#545c6b] dark:text-slate-300">{courseDescription}</p>
                         )}
@@ -143,12 +148,21 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             )}
 
                             {enrolled ? (
-                                <Button asChild className="w-full bg-[#b53391] hover:bg-[#9f2c80] text-white" size="lg">
-                                    <Link href={route('learn.lesson', [course.slug, enrollment.last_lesson_id || firstLessonId])}>
-                                        <Play className="mr-2 h-4 w-4" />
-                                        {enrollment.progress > 0 ? t('courses.show.resume_course') : t('courses.show.start_course')}
-                                    </Link>
-                                </Button>
+                                enrollment.completed_at ? (
+                                    <Button asChild className="w-full bg-green-600 hover:bg-green-700 text-white" size="lg">
+                                        <Link href={route('certificate.show', enrollment.certificate_uuid)}>
+                                            <Award className="mr-2 h-4 w-4" />
+                                            {t('courses.show.get_certificate')}
+                                        </Link>
+                                    </Button>
+                                ) : (
+                                    <Button asChild className="w-full bg-[#b53391] hover:bg-[#9f2c80] text-white" size="lg">
+                                        <Link href={route('learn.lesson', [course.slug, enrollment.last_lesson_id || firstLessonId])}>
+                                            <Play className="mr-2 h-4 w-4" />
+                                            {enrollment.progress > 0 ? t('courses.show.resume_course') : t('courses.show.start_course')}
+                                        </Link>
+                                    </Button>
+                                )
                             ) : auth?.user ? (
                                 <Button className="w-full bg-[#b53391] hover:bg-[#9f2c80] text-white" size="lg" onClick={handleEnroll}>
                                     {t('courses.show.enroll_free')}

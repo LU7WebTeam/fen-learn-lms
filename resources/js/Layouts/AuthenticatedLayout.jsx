@@ -14,7 +14,7 @@ function MobileNavItems() {
     const linkClass = 'flex items-center gap-3 px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md';
     return (
         <>
-            <Link href={route('courses.index')} className={linkClass}>
+            <Link href={route('courses.show', 'fen-proaktif')} className={linkClass}>
                 <LayoutDashboard className="h-4 w-4" />
                 {t('nav.my_dashboard')}
             </Link>
@@ -57,7 +57,7 @@ export default function AuthenticatedLayout({ children }) {
                                 )}
                             </Link>
                             <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
-                                <Link href={route('courses.index')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
+                                <Link href={route('courses.show', 'fen-proaktif')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
                                     <LayoutDashboard className="h-4 w-4" />
                                     {t('nav.my_dashboard')}
                                 </Link>
@@ -81,7 +81,7 @@ export default function AuthenticatedLayout({ children }) {
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="left" className="w-72">
-                                    <Link href={route('courses.index')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
+                                    <Link href={route('courses.show', 'fen-proaktif')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
                                         {platformLogoUrl ? (
                                             <img src={platformLogoUrl} alt={platformName} className="h-7 w-auto" />
                                         ) : (
