@@ -372,7 +372,7 @@ export default function Home() {
                                 <p className="mt-2 max-w-3xl text-base text-white/80">{t('landing.features.subtitle')}</p>
                             </div>
                             <img
-                                src="https://images.unsplash.com/photo-1588702547919-26089e690ecc?auto=format&fit=crop&w=700&q=80"
+                                src="/images/why-choose.webp"
                                 alt="Why choose FEN Learning"
                                 className="hidden h-[160px] w-full rounded-2xl object-cover md:block"
                             />
