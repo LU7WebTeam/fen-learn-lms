@@ -173,7 +173,6 @@ export default function Home() {
                             )}
                             <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
                                 <a href="#proaktif" className="opacity-95 transition hover:opacity-100">{t('landing.nav.proaktif')}</a>
-                                <a href="#about" className="hidden opacity-80 transition hover:opacity-100">{t('landing.nav.about')}</a>
                                 <a href="#why-fen" className="opacity-80 transition hover:opacity-100">{t('landing.nav.why_fen')}</a>
                                 <a href="#faq" className="opacity-80 transition hover:opacity-100">{t('landing.nav.faq')}</a>
                             </nav>
@@ -294,6 +293,12 @@ export default function Home() {
                                 <h3 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
                                     {t('landing.learn.title')}
                                 </h3>
+                                    <p className="mt-2 text-sm text-[#5b6070]">
+                                        {t('landing.faq.help_contact')}{' '}
+                                        <a href="mailto:learn@fenetwork.my" className="font-semibold text-[#b53391] hover:text-[#9f2c80]">
+                                            learn@fenetwork.my
+                                        </a>
+                                    </p>
                                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
                                     {t('landing.learn.subtitle')}
                                 </p>
@@ -405,6 +410,12 @@ export default function Home() {
                                 </h2>
                                 <p className="mt-3 text-base leading-relaxed text-white/85">
                                     {t('landing.faq.subtitle')}
+                                </p>
+                                <p className="mt-3 text-sm text-white/90">
+                                    {t('landing.faq.help_contact')}{' '}
+                                    <a href="mailto:learn@fenetwork.my" className="font-semibold text-white underline underline-offset-2 hover:text-white/90">
+                                        learn@fenetwork.my
+                                    </a>
                                 </p>
                             </article>
 
