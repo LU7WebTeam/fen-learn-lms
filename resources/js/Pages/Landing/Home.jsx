@@ -357,7 +357,7 @@ export default function Home() {
                         className="!mt-10 rounded-xl p-4 scroll-mt-24 sm:p-5"
                         style={{
                             background:
-                                'radial-gradient(circle at 88% 22%, rgba(255,160,106,0.28) 0 14%, transparent 15%), radial-gradient(circle at 83% 70%, rgba(255,120,70,0.24) 0 11%, transparent 12%), linear-gradient(130deg, #f26a17, #d6599d)',
+                                'radial-gradient(circle at 12% 78%, rgba(242, 103, 35, 0.35) 0 18%, transparent 20%), radial-gradient(circle at 88% 22%, rgba(253, 185, 48, 0.28) 0 16%, transparent 18%), radial-gradient(circle at 78% 65%, rgba(182, 51, 147, 0.32) 0 15%, transparent 17%), linear-gradient(135deg, #f26723 0%, #fdb930 50%, #b63393 100%)',
                         }}
                     >
                         <div className="grid items-center gap-5 border-b border-white/25 pb-4 md:grid-cols-[1fr,260px]">
