@@ -11,8 +11,10 @@ export function translateAuthError(message, t) {
         'The email must be a valid email address.': 'auth.errors.email_invalid',
         'The password field is required.': 'auth.errors.password_required',
         'The password must be at least 8 characters.': 'auth.errors.password_min',
+        'The password field must be at least 8 characters.': 'auth.errors.password_min',
         'The name field is required.': 'auth.errors.name_required',
         'The password confirmation does not match.': 'auth.errors.password_confirmation_mismatch',
+        'The password field confirmation does not match.': 'auth.errors.password_confirmation_mismatch',
         'The email has already been taken.': 'auth.errors.email_taken',
         'The agree terms field must be accepted.': 'auth.errors.terms_accepted',
         'The terms field must be accepted.': 'auth.errors.terms_accepted',
@@ -23,6 +25,46 @@ export function translateAuthError(message, t) {
     const key = exactMap[normalized];
     if (key) {
         return t(key);
+    }
+
+    if (/^The password(?: field)? confirmation does not match\.$/.test(normalized)) {
+        return t('auth.errors.password_confirmation_mismatch');
+    }
+
+    if (/^The password(?: field)? must be at least \d+ characters\.$/.test(normalized)) {
+        return t('auth.errors.password_min');
+    }
+
+    if (/^The email(?: field)? is required\.$/.test(normalized)) {
+        return t('auth.errors.email_required');
+    }
+
+    if (/^The email(?: field)? must be a valid email address\.$/.test(normalized)) {
+        return t('auth.errors.email_invalid');
+    }
+
+    if (/^The password(?: field)? is required\.$/.test(normalized)) {
+        return t('auth.errors.password_required');
+    }
+
+    if (/^The name(?: field)? is required\.$/.test(normalized)) {
+        return t('auth.errors.name_required');
+    }
+
+    if (/^The email(?: field)? has already been taken\.$/.test(normalized)) {
+        return t('auth.errors.email_taken');
+    }
+
+    if (/^The (?:agree terms|terms)(?: field)? must be accepted\.$/.test(normalized)) {
+        return t('auth.errors.terms_accepted');
+    }
+
+    if (/^The captcha token(?: field)? is required\.$/.test(normalized)) {
+        return t('auth.errors.captcha_required');
+    }
+
+    if (/^The captcha token(?: field)? is invalid\.$/.test(normalized)) {
+        return t('auth.errors.captcha_invalid');
     }
 
     if (normalized.startsWith('Too many login attempts.')) {
