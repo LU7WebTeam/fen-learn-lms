@@ -1,9 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import GuestLayout from '@/Layouts/GuestLayout';
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { tl } from '@/lib/i18n';
-import { useT } from '@/lib/i18n';
-import LangSwitcher from '@/Components/LangSwitcher';
+import { tl, useT } from '@/lib/i18n';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
@@ -76,7 +74,7 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
 
 export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId, learnerActivity = [] }) {
     const { auth, locale } = usePage().props;
-    const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
+    const Layout = auth?.user ? AuthenticatedLayout : PublicLayout;
     const t = useT();
 
     const courseTitle       = tl(course, 'title', locale);
@@ -94,7 +92,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
     const metaImage = course.meta_image || course.cover_image || '';
 
     return (
-        <Layout fullWidth={!auth?.user}>
+        <Layout>
             <Head title={metaTitle}>
                 <meta name="description" content={metaDesc} />
                 <meta property="og:title" content={metaTitle} />
@@ -108,12 +106,6 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
             </Head>
 
             <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
-                {!auth?.user && (
-                    <div className="flex justify-end">
-                        <LangSwitcher />
-                    </div>
-                )}
-
                 {/* Hero grid */}
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Course info card */}

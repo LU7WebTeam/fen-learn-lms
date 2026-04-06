@@ -56,6 +56,9 @@ export default function Privacy() {
                             </div>
 
                             <div className="flex items-center gap-3 text-sm font-semibold">
+                                <a href="https://www.fenetwork.my" target="_blank" rel="noopener noreferrer" className="hidden sm:block">
+                                    <img src="/images/fen-logo-.png" alt="FEN Network" className="h-7 w-auto" />
+                                </a>
                                 <div className="hidden sm:block">
                                     <LangSwitcher className="border-white bg-white text-[#131722]" />
                                 </div>

@@ -203,3 +203,13 @@ html {
     font-family: inherit !important;
     color: inherit;
 }
+
+@media (max-width: 639px) {
+    .bn-renderer-wrap .bn-container,
+    .bn-renderer-wrap .bn-editor,
+    .bn-renderer-wrap .bn-block-content,
+    .bn-renderer-wrap .ProseMirror {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}

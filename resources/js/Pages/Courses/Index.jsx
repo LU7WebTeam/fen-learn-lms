@@ -1,11 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import GuestLayout from '@/Layouts/GuestLayout';
+import PublicLayout from '@/Layouts/PublicLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { BookOpen, Play, GraduationCap } from 'lucide-react';
 import { tl, useT } from '@/lib/i18n';
-import LangSwitcher from '@/Components/LangSwitcher';
 
 function CourseCard({ course, enrolled }) {
     const { locale } = usePage().props;
@@ -63,11 +62,11 @@ function Filters() {
 
 export default function CoursesIndex({ courses, enrolledIds, categories, filters }) {
     const { auth } = usePage().props;
-    const Layout = auth?.user ? AuthenticatedLayout : GuestLayout;
+    const Layout = auth?.user ? AuthenticatedLayout : PublicLayout;
     const t = useT();
 
     return (
-        <Layout fullWidth={!auth?.user}>
+        <Layout>
             <Head title={t('courses.index.title')} />
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -79,7 +78,6 @@ export default function CoursesIndex({ courses, enrolledIds, categories, filters
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                        {!auth?.user && <LangSwitcher />}
                         <Filters categories={categories} filters={filters} />
                     </div>
                 </div>
