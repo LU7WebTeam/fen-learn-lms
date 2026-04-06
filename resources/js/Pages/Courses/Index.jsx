@@ -2,19 +2,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/Components/ui/card';
-import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Progress } from '@/Components/ui/progress';
-import { BookOpen, Play, GraduationCap, Clock } from 'lucide-react';
+import { BookOpen, Play, GraduationCap } from 'lucide-react';
 import { tl, useT } from '@/lib/i18n';
 import LangSwitcher from '@/Components/LangSwitcher';
-
-const DIFFICULTY_COLORS = {
-    beginner:     'secondary',
-    intermediate: 'default',
-    advanced:     'destructive',
-};
 
 function CourseCard({ course, enrolled }) {
     const { locale } = usePage().props;
@@ -37,9 +28,6 @@ function CourseCard({ course, enrolled }) {
                     <CardHeader className="pb-2">
                         <div className="flex items-start justify-between gap-2">
                             <CardTitle className="line-clamp-2 text-lg leading-snug">{title}</CardTitle>
-                            <Badge variant={DIFFICULTY_COLORS[course.difficulty] || 'secondary'} className="shrink-0 capitalize">
-                                {course.difficulty}
-                            </Badge>
                         </div>
                         {course.category && <CardDescription>{course.category}</CardDescription>}
                     </CardHeader>
@@ -49,7 +37,7 @@ function CourseCard({ course, enrolled }) {
                         <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                                 <BookOpen className="h-3.5 w-3.5" />
-                                {course.lessons_count} lessons
+                                {course.lessons_count} {t('common.lessons')}
                             </span>
                         </div>
                     </CardContent>
@@ -69,53 +57,8 @@ function CourseCard({ course, enrolled }) {
     );
 }
 
-function Filters({ categories, filters }) {
-    function update(key, value) {
-        router.get(route('courses.index'), { ...filters, [key]: (value === 'all' ? undefined : value) || undefined }, { preserveState: true, replace: true });
-    }
-
-    function reset() {
-        router.get(route('courses.index'), {}, { preserveState: false });
-    }
-
-    const hasFilters = filters.category || filters.difficulty;
-    const t = useT();
-
-    return (
-        <div className="flex flex-wrap items-center gap-3">
-            <Select value={filters.difficulty || 'all'} onValueChange={(v) => update('difficulty', v)}>
-                <SelectTrigger className="w-40">
-                    <SelectValue placeholder={t('courses.index.filter_difficulty')} />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">{t('courses.index.filter_difficulty')}</SelectItem>
-                    <SelectItem value="beginner">{t('courses.index.filter_beginner')}</SelectItem>
-                    <SelectItem value="intermediate">{t('courses.index.filter_intermediate')}</SelectItem>
-                    <SelectItem value="advanced">{t('courses.index.filter_advanced')}</SelectItem>
-                </SelectContent>
-            </Select>
-
-            {categories.length > 0 && (
-                <Select value={filters.category || 'all'} onValueChange={(v) => update('category', v)}>
-                    <SelectTrigger className="w-44">
-                        <SelectValue placeholder={t('courses.index.filter_category')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">{t('courses.index.filter_category')}</SelectItem>
-                        {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            )}
-
-            {hasFilters && (
-                <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground">
-                    {t('courses.index.clear_filters')}
-                </Button>
-            )}
-        </div>
-    );
+function Filters() {
+    return null;
 }
 
 export default function CoursesIndex({ courses, enrolledIds, categories, filters }) {
