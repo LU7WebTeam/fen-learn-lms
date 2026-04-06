@@ -51,7 +51,6 @@ export default function Terms() {
                                     <Link href={route('about')} className="opacity-80 transition hover:opacity-100">{t('nav.about')}</Link>
                                     <Link href={route('terms')} className="opacity-95 transition hover:opacity-100">{t('nav.terms')}</Link>
                                     <Link href={route('privacy')} className="opacity-80 transition hover:opacity-100">{t('nav.privacy')}</Link>
-                                    <Link href={route('courses.index')} className="opacity-80 transition hover:opacity-100">{t('nav.catalog')}</Link>
                                 </nav>
                             </div>
 
@@ -63,7 +62,7 @@ export default function Terms() {
                                     <LangSwitcher className="border-white bg-white text-[#131722]" />
                                 </div>
                                 {auth?.user ? (
-                                    <Link href={route('dashboard')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
+                                    <Link href={route('courses.index')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
                                         {t('landing.cta.my_dashboard')}
                                     </Link>
                                 ) : (
@@ -179,8 +178,6 @@ export default function Terms() {
                                 <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">About FEN</a>
                                 <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
                                 <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
-                                <span className="hidden h-1 w-1 rounded-full bg-[#4a5060] md:block" />
-                                <Link href={route('courses.index')} className="font-semibold text-white transition hover:text-[#ff8a00]">{t('landing.footer.browse_courses')}</Link>
                             </div>
                         </div>
                     </div>

@@ -37,7 +37,6 @@ export default function About() {
 
                     <div className="hidden md:flex items-center gap-8 font-medium">
                         <Link href={route('about')} className="hover:text-slate-900 transition">{t('nav.about')}</Link>
-                        <Link href={route('courses.index')} className="hover:text-slate-900 transition">{t('nav.catalog')}</Link>
                         <Link href={route('terms')} className="hover:text-slate-900 transition">{t('nav.terms')}</Link>
                         <Link href={route('privacy')} className="hover:text-slate-900 transition">{t('nav.privacy')}</Link>
                     </div>
@@ -45,7 +44,7 @@ export default function About() {
                     <div className="flex items-center gap-3">
                         <LangSwitcher />
                         {auth?.user ? (
-                            <Link href={route('dashboard')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
+                            <Link href={route('courses.index')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
                                 {t('dashboard.title')}
                             </Link>
                         ) : (
@@ -116,8 +115,6 @@ export default function About() {
                             <Link href={route('about')} className="hover:text-white transition">{t('nav.about')}</Link>
                             <Link href={route('terms')} className="hover:text-white transition">{t('nav.terms')}</Link>
                             <Link href={route('privacy')} className="hover:text-white transition">{t('nav.privacy')}</Link>
-                            <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
-                            <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('nav.catalog')}</Link>
                         </div>
                     </div>
                 </footer>

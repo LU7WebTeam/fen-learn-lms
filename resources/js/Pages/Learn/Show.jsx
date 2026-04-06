@@ -777,7 +777,7 @@ export default function LearnShow({
                             <span className="hidden h-5 w-px bg-white/25 sm:block" />
 
                             <Link
-                                href={route('dashboard')}
+                                href={route('courses.index')}
                                 className="hidden items-center gap-1.5 text-sm font-semibold text-white/90 transition hover:text-white sm:flex"
                             >
                                 <LayoutDashboard className="h-4 w-4" />

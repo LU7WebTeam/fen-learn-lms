@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, LayoutDashboard, Menu, GraduationCap, User } from 'lucide-react';
+import { LayoutDashboard, Menu, GraduationCap, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
 import { Button } from '@/Components/ui/button';
 import UserMenu from '@/Components/UserMenu';
@@ -14,13 +14,9 @@ function MobileNavItems() {
     const linkClass = 'flex items-center gap-3 px-4 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-md';
     return (
         <>
-            <Link href={route('dashboard')} className={linkClass}>
+            <Link href={route('courses.index')} className={linkClass}>
                 <LayoutDashboard className="h-4 w-4" />
                 {t('nav.my_dashboard')}
-            </Link>
-            <Link href="/courses" className={linkClass}>
-                <BookOpen className="h-4 w-4" />
-                {t('nav.catalog')}
             </Link>
             <Link href={route('profile.edit')} className={linkClass}>
                 <User className="h-4 w-4" />
@@ -61,13 +57,9 @@ export default function AuthenticatedLayout({ children }) {
                                 )}
                             </Link>
                             <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
-                                <Link href={route('dashboard')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
+                                <Link href={route('courses.index')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
                                     <LayoutDashboard className="h-4 w-4" />
                                     {t('nav.my_dashboard')}
-                                </Link>
-                                <Link href="/courses" className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
-                                    <BookOpen className="h-4 w-4" />
-                                    {t('nav.catalog')}
                                 </Link>
                                 <Link href={route('profile.edit')} className="flex items-center gap-1.5 text-white transition hover:text-white">
                                     <User className="h-4 w-4" />
@@ -89,7 +81,7 @@ export default function AuthenticatedLayout({ children }) {
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="left" className="w-72">
-                                    <Link href={route('dashboard')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
+                                    <Link href={route('courses.index')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
                                         {platformLogoUrl ? (
                                             <img src={platformLogoUrl} alt={platformName} className="h-7 w-auto" />
                                         ) : (
@@ -125,8 +117,6 @@ export default function AuthenticatedLayout({ children }) {
                             <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">About FEN</a>
                             <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
                             <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
-                            <span className="hidden h-1 w-1 rounded-full bg-[#4a5060] md:block" />
-                            <Link href={route('courses.index')} className="font-semibold text-white transition hover:text-[#ff8a00]">{t('landing.footer.browse_courses')}</Link>
                         </div>
                     </div>
                 </div>
