@@ -28,7 +28,7 @@ export default {
                     ...defaultTheme.fontFamily.sans
                 ],
     			heading: [
-    				'Bricolage Grotesque"',
+    				'Inter',
     				'Lexend',
                     ...defaultTheme.fontFamily.sans
                 ],
