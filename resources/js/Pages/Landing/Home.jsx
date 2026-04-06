@@ -211,7 +211,7 @@ export default function Home() {
                 >
                     <div className="hero-home-content relative z-10 flex min-h-[70vh] w-full items-end px-6 pb-8 sm:px-8 sm:pb-12 lg:px-10">
                         <div className="max-w-full sm:max-w-[70%]">
-                            <h1 className="font-['Inter',sans-serif] text-4xl leading-[0.95] text-white sm:text-6xl">
+                            <h1 className="font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-6xl">
                             {t('landing.hero.title', { platform: platformName })}
                             </h1>
                             <p className="mt-5 text-lg font-semibold text-white/95">
@@ -245,10 +245,10 @@ export default function Home() {
                             }}
                         >
                             
-                            <h2 className="mt-2 font-['Inter',sans-serif] text-4xl leading-[0.95] text-[#131722] sm:text-5xl">
+                            <h2 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-[#131722] sm:text-5xl">
                                 {t('landing.spotlight.title')}
                             </h2>
-                            <h4 className="mt-5 font-['Inter',sans-serif] text-2xl leading-tight text-[#2a3140] sm:text-3xl">
+                            <h4 className="mt-5 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#2a3140] sm:text-3xl">
                                 {t('landing.spotlight.highlight')}
                             </h4>
                             <p className="mt-3 text-[#505765]">{t('landing.spotlight.p1')}</p>
@@ -291,7 +291,7 @@ export default function Home() {
                                     animationDelay: '0ms',
                                 }}
                             >
-                                <h3 className="mt-2 font-['Inter',sans-serif] text-4xl leading-[0.95] text-white sm:text-5xl">
+                                <h3 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
                                     {t('landing.learn.title')}
                                 </h3>
                                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
@@ -313,7 +313,7 @@ export default function Home() {
                                         className="h-[50px] w-[50px] object-contain brightness-0 invert"
                                     />
                                 </div>
-                                <h4 className="mt-2 font-['Inter',sans-serif] text-2xl leading-tight text-[#1a1f2b]">
+                                <h4 className="mt-2 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#1a1f2b]">
                                     {t(firstLearnItem.titleKey)}
                                 </h4>
                                 <p className="mt-3 text-base leading-relaxed text-[#545c6b]">
@@ -340,7 +340,7 @@ export default function Home() {
                                                 className="h-[50px] w-[50px] object-contain brightness-0 invert"
                                             />
                                         </div>
-                                        <h4 className="mt-2 font-['Inter',sans-serif] text-2xl leading-tight text-[#1a1f2b]">
+                                        <h4 className="mt-2 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#1a1f2b]">
                                             {t(item.titleKey)}
                                         </h4>
                                         <p className="mt-3 text-base leading-relaxed text-[#545c6b]">
@@ -362,7 +362,7 @@ export default function Home() {
                     >
                         <div className="grid items-center gap-5 border-b border-white/25 pb-4 md:grid-cols-[1fr,260px]">
                             <div>
-                                <h2 className="font-['Inter',sans-serif] text-4xl text-white sm:text-5xl">{t('landing.features.title')}</h2>
+                                <h2 className="font-['Inter',sans-serif] text-4xl font-extrabold text-white sm:text-5xl">{t('landing.features.title')}</h2>
                                 <p className="mt-2 max-w-3xl text-base text-white/80">{t('landing.features.subtitle')}</p>
                             </div>
                             <img
@@ -381,7 +381,7 @@ export default function Home() {
                                         <div className="inline-flex h-[56px] w-[56px] items-center justify-center rounded-2xl bg-slate-100">
                                             <Icon className={`h-7 w-7 ${item.iconClassName}`} />
                                         </div>
-                                        <h3 className="mt-4 font-['Inter',sans-serif] text-2xl leading-tight text-[#1a1f2b]">
+                                        <h3 className="mt-4 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#1a1f2b]">
                                             {t(item.titleKey)}
                                         </h3>
                                         <p className="mt-3 text-base leading-relaxed text-[#545c6b]">{t(item.descKey)}</p>
@@ -400,7 +400,7 @@ export default function Home() {
                                     background: 'linear-gradient(90deg, #4d45d6 0%, #924fef 100%)',
                                 }}
                             >
-                                <h2 className="mt-2 font-['Inter',sans-serif] text-4xl leading-[0.95] text-white sm:text-5xl">
+                                <h2 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
                                     {t('landing.faq.title')}
                                 </h2>
                                 <p className="mt-3 text-base leading-relaxed text-white/85">
@@ -416,7 +416,7 @@ export default function Home() {
                                             className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 [&_summary::-webkit-details-marker]:hidden"
                                         >
                                             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
-                                                <span className="font-['Inter',sans-serif] text-xl leading-tight text-[#1a1f2b]">
+                                                <span className="font-['Inter',sans-serif] text-xl font-extrabold leading-tight text-[#1a1f2b]">
                                                     {t(item.qKey)}
                                                 </span>
                                                 <ChevronDown className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" />
