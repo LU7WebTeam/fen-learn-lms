@@ -23,7 +23,7 @@ export default function PublicLayout({ children }) {
             <AnalyticsTracker />
 
             <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-                <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-[linear-gradient(135deg,rgba(255,138,0,0.88),rgba(255,179,102,0.84))]' : 'bg-black/30'}`}>
+                <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-black/45' : 'bg-black/30'}`}>
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-6">
                             <Link href="/">
