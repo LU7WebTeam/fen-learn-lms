@@ -593,7 +593,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                             <GraduationCap className="h-3.5 w-3.5" />
                             {t('learn.sidebar.course_overview')}
                         </div>
-                        <p className="line-clamp-2 font-['Young_Serif',serif] text-base leading-snug text-[#131722] dark:text-slate-100">{courseTitle}</p>
+                        <p className="line-clamp-2 font-['Inter',sans-serif] text-base leading-snug text-[#131722] dark:text-slate-100">{courseTitle}</p>
                         {courseDescription && (
                             <p className="line-clamp-2 text-xs text-[#545c6b] dark:text-slate-300">{courseDescription}</p>
                         )}
@@ -613,7 +613,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
                 <div className="py-2">
                     {course.sections.map((section) => (
                         <div key={section.id} className="mb-1">
-                            <p className="px-4 pt-3 pb-1 font-['Young_Serif',serif] text-xs font-semibold uppercase tracking-wider text-[#9ca3af] dark:text-slate-400">
+                            <p className="px-4 pt-3 pb-1 font-['Inter',sans-serif] text-xs font-semibold uppercase tracking-wider text-[#9ca3af] dark:text-slate-400">
                                 {tl(section, 'title', locale)}
                             </p>
                             {section.lessons.map((l) => {

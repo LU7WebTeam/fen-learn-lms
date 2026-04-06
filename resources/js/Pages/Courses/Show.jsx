@@ -110,7 +110,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Course info card */}
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 lg:col-span-2 space-y-4 dark:bg-[#111827] dark:ring-white/10">
-                        <h1 className="font-['Young_Serif',serif] text-3xl leading-tight text-[#131722] dark:text-slate-100">{courseTitle}</h1>
+                        <h1 className="font-['Inter',sans-serif] text-3xl leading-tight text-[#131722] dark:text-slate-100">{courseTitle}</h1>
                         {courseDescription && (
                             <p className="leading-relaxed text-[#545c6b] dark:text-slate-300">{courseDescription}</p>
                         )}
@@ -185,7 +185,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         <TabsContent value="main" className="space-y-4">
                             {Array.isArray(courseIntro) && courseIntro.length > 0 && (
                                 <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
-                                    <h2 className="mb-4 font-['Young_Serif',serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.about_course')}</h2>
+                                    <h2 className="mb-4 font-['Inter',sans-serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.about_course')}</h2>
                                     <Suspense fallback={<div className="h-20 animate-pulse rounded bg-[#f4f6fa] dark:bg-[#1f2937]" />}>
                                         <BlockNoteRenderer content={courseIntro} />
                                     </Suspense>
@@ -193,7 +193,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                             )}
 
                             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
-                                <h2 className="mb-4 font-['Young_Serif',serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.curriculum')}</h2>
+                                <h2 className="mb-4 font-['Inter',sans-serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.curriculum')}</h2>
                                 {course.sections.length === 0 ? (
                                     <p className="text-[#9ca3af] dark:text-slate-400">{t('courses.show.no_lessons')}</p>
                                 ) : (
@@ -231,7 +231,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         <TabsContent value="activity">
                             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
                                 <div className="mb-4 flex items-center justify-between">
-                                    <h2 className="font-['Young_Serif',serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.activity_title')}</h2>
+                                    <h2 className="font-['Inter',sans-serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.activity_title')}</h2>
                                     <span className="text-xs text-[#9ca3af] dark:text-slate-400">{t('courses.show.activity_events', { n: learnerActivity.length })}</span>
                                 </div>
 
@@ -276,7 +276,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                     <>
                         {Array.isArray(courseIntro) && courseIntro.length > 0 && (
                             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
-                                <h2 className="mb-4 font-['Young_Serif',serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.about_course')}</h2>
+                                <h2 className="mb-4 font-['Inter',sans-serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.about_course')}</h2>
                                 <Suspense fallback={<div className="h-20 animate-pulse rounded bg-[#f4f6fa] dark:bg-[#1f2937]" />}>
                                     <BlockNoteRenderer content={courseIntro} />
                                 </Suspense>
@@ -284,7 +284,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                         )}
 
                         <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
-                            <h2 className="mb-4 font-['Young_Serif',serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.curriculum')}</h2>
+                            <h2 className="mb-4 font-['Inter',sans-serif] text-2xl text-[#131722] dark:text-slate-100">{t('courses.show.curriculum')}</h2>
                             {course.sections.length === 0 ? (
                                 <p className="text-[#9ca3af] dark:text-slate-400">{t('courses.show.no_lessons')}</p>
                             ) : (
