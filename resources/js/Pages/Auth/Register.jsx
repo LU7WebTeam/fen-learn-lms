@@ -4,6 +4,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock, User } from 'lucide-react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 import { useT } from '@/lib/i18n';
+import { translateAuthError } from '@/lib/authErrorTranslations';
 
 export default function Register() {
     const { props } = usePage();
@@ -87,7 +88,8 @@ export default function Register() {
                                     placeholder="Jane Smith"
                                 />
                             </div>
-                            <InputError message={errors.name} />
+                            <p className="text-xs text-gray-500">{t('auth.register.name_certificate_hint')}</p>
+                            <InputError message={translateAuthError(errors.name, t)} />
                         </div>
 
                         {/* Email */}
@@ -108,7 +110,7 @@ export default function Register() {
                                     placeholder="you@example.com"
                                 />
                             </div>
-                            <InputError message={errors.email} />
+                            <InputError message={translateAuthError(errors.email, t)} />
                         </div>
 
                         {/* Password */}
@@ -137,7 +139,7 @@ export default function Register() {
                                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
-                            <InputError message={errors.password} />
+                            <InputError message={translateAuthError(errors.password, t)} />
                         </div>
 
                         {/* Confirm Password */}
@@ -166,7 +168,7 @@ export default function Register() {
                                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
-                            <InputError message={errors.password_confirmation} />
+                            <InputError message={translateAuthError(errors.password_confirmation, t)} />
                         </div>
 
                         <div className="space-y-1.5">
@@ -191,7 +193,7 @@ export default function Register() {
                                     .
                                 </span>
                             </label>
-                            <InputError message={errors.agree_terms} />
+                            <InputError message={translateAuthError(errors.agree_terms, t)} />
                         </div>
 
                         <button
@@ -207,7 +209,7 @@ export default function Register() {
                             action="register"
                             token={data.captcha_token}
                             onTokenChange={(value) => setData('captcha_token', value)}
-                            error={errors.captcha_token || captchaClientError}
+                            error={translateAuthError(errors.captcha_token || captchaClientError, t)}
                         />
                     </form>
 

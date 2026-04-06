@@ -4,6 +4,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, BookOpen, Mail, Lock } from 'lucide-react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 import { useT } from '@/lib/i18n';
+import { translateAuthError } from '@/lib/authErrorTranslations';
 
 export default function Login({ status, canResetPassword }) {
     const { props } = usePage();
@@ -86,7 +87,7 @@ export default function Login({ status, canResetPassword }) {
                                     placeholder="you@example.com"
                                 />
                             </div>
-                            <InputError message={errors.email} />
+                            <InputError message={translateAuthError(errors.email, t)} />
                         </div>
 
                         <div className="space-y-1.5">
@@ -120,7 +121,7 @@ export default function Login({ status, canResetPassword }) {
                                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
-                            <InputError message={errors.password} />
+                            <InputError message={translateAuthError(errors.password, t)} />
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -149,7 +150,7 @@ export default function Login({ status, canResetPassword }) {
                             action="login"
                             token={data.captcha_token}
                             onTokenChange={(value) => setData('captcha_token', value)}
-                            error={errors.captcha_token || captchaClientError}
+                            error={translateAuthError(errors.captcha_token || captchaClientError, t)}
                         />
                     </form>
 
