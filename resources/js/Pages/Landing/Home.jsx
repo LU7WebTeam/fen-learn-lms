@@ -52,6 +52,7 @@ const FAQ_ITEMS = [
     { qKey: 'landing.faq.item3.q', aKey: 'landing.faq.item3.a' },
     { qKey: 'landing.faq.item4.q', aKey: 'landing.faq.item4.a' },
     { qKey: 'landing.faq.item5.q', aKey: 'landing.faq.item5.a' },
+    { qKey: 'landing.faq.item6.q', aKey: 'landing.faq.item6.a' },
 ];
 
 export default function Home() {
@@ -410,12 +411,6 @@ export default function Home() {
                                 </h2>
                                 <p className="mt-3 text-base leading-relaxed text-white/85">
                                     {t('landing.faq.subtitle')}
-                                </p>
-                                <p className="mt-3 text-sm text-white/90">
-                                    {t('landing.faq.help_contact')}{' '}
-                                    <a href="mailto:learn@fenetwork.my" className="font-semibold text-white underline underline-offset-2 hover:text-white/90">
-                                        learn@fenetwork.my
-                                    </a>
                                 </p>
                             </article>
 
