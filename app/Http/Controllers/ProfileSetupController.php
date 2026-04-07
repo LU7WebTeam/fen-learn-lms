@@ -62,6 +62,6 @@ class ProfileSetupController extends Controller
             'profile_completed_at' => now(),
         ]);
 
-        return redirect()->route(UserHomeRoute::nameFor($request->user()))->with('success', 'Welcome! Your profile has been set up.');
+        return redirect()->to(UserHomeRoute::postRegistrationUrlFor($request->user()))->with('success', 'Welcome! Your profile has been set up.');
     }
 }

@@ -15,7 +15,7 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
-        $defaultUrl = route(UserHomeRoute::nameFor($request->user()), absolute: false).'?verified=1';
+        $defaultUrl = UserHomeRoute::postRegistrationUrlFor($request->user(), false).'?verified=1';
 
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended($defaultUrl);
