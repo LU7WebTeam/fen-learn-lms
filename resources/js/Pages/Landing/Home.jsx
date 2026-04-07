@@ -164,7 +164,7 @@ export default function Home() {
             `}</style>
 
             <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
-                <div className={`w-full rounded-2xl px-6 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-black/45' : 'bg-black/30'}`}>
+                <div className={`w-full rounded-2xl px-4 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-black/60' : 'bg-black/30'}`}>
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-6">
                             {platformDarkLogoUrl ? (
@@ -183,11 +183,11 @@ export default function Home() {
                             <a href="https://www.fenetwork.my" target="_blank" rel="noopener noreferrer" className="hidden sm:block">
                                 <img src="/images/fen-logo-.png" alt="FEN Network" className="h-7 w-auto" />
                             </a>
-                            <div className="hidden sm:block">
+                            <div className="block">
                                 <LangSwitcher className="border-white bg-white text-[#131722]" />
                             </div>
                             {auth?.user ? (
-                                <Link href={route('courses.show', 'fen-proaktif')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 font-['Inter',sans-serif] text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
+                                <Link href={route('courses.show', 'fen-proaktif')} className="inline-flex min-w-[118px] items-center justify-center rounded-full bg-[#b53391] px-3.5 py-1.5 font-['Inter',sans-serif] text-[0.92rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1rem]">
                                     {t('landing.cta.my_dashboard')}
                                 </Link>
                             ) : (
@@ -195,7 +195,7 @@ export default function Home() {
                                     <Link href={route('login')} className="hidden opacity-90 transition hover:opacity-100 sm:inline-flex">
                                         {t('landing.cta.login')}
                                     </Link>
-                                    <Link href={route('register')} className="inline-flex min-w-[132px] items-center justify-center rounded-full bg-[#b53391] px-4 py-2 font-['Inter',sans-serif] text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5">
+                                    <Link href={route('register')} className="inline-flex min-w-[118px] items-center justify-center rounded-full bg-[#b53391] px-3.5 py-1.5 font-['Inter',sans-serif] text-[0.92rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1rem]">
                                         {t('landing.cta.register')}
                                     </Link>
                                 </>
@@ -357,7 +357,7 @@ export default function Home() {
                         className="!mt-10 rounded-xl p-4 scroll-mt-24 sm:p-5"
                         style={{
                             background:
-                                'radial-gradient(circle at 12% 78%, rgba(242, 103, 35, 0.35) 0 18%, transparent 20%), radial-gradient(circle at 88% 22%, rgba(253, 185, 48, 0.28) 0 16%, transparent 18%), radial-gradient(circle at 78% 65%, rgba(182, 51, 147, 0.32) 0 15%, transparent 17%), linear-gradient(135deg, #f26723 0%, #fdb930 50%, #b63393 100%)',
+                                'radial-gradient(circle at 12% 78%, rgba(242, 103, 35, 0.35) 0 18%, transparent 20%), radial-gradient(circle at 88% 22%, rgba(253, 185, 48, 0.28) 0 16%, transparent 18%), radial-gradient(circle at 78% 65%, rgba(182, 51, 147, 0.32) 0 15%, transparent 17%), linear-gradient(135deg, #fdb930 0%, #f26723 30%, #b63393 80%)',
                         }}
                     >
                         <div className="grid items-center gap-5 border-b border-white/25 pb-4 md:grid-cols-[1fr,260px]">
