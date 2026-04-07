@@ -38,7 +38,7 @@ export default function Terms() {
             <Head title={t('terms.title', { name })} />
 
             <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
-                <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8">
+                <header className="sticky top-0 z-50 px-5 pt-4 2xl:px-8">
                     <div className={`w-full rounded-2xl px-4 py-4 text-white shadow-[0_18px_45px_-28px_rgba(0,0,0,0.9)] backdrop-blur-md transition-colors duration-300 sm:px-7 ${isScrolled ? 'bg-black/60' : 'bg-black/30'}`}>
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-6">
@@ -79,7 +79,7 @@ export default function Terms() {
                     </div>
                 </header>
 
-                <section className="-mt-[84px] w-full px-4 pt-4 sm:px-6 lg:px-8">
+                <section className="-mt-[84px] w-full px-5 pt-4 2xl:px-8">
                     <div
                         className="relative min-h-[50vh] overflow-hidden rounded-2xl bg-cover bg-center"
                         style={{
@@ -160,7 +160,7 @@ export default function Terms() {
                     </section>
                 </main>
 
-                <footer className="mt-4 w-full px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8">
+                <footer className="mt-4 w-full px-5 pb-4 sm:pb-6 2xl:px-8">
                     <div className="w-full rounded-2xl bg-[#17191f] px-6 py-7 text-[#d4d8e2] sm:px-8">
                         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
                             <div className="flex items-center gap-3 text-sm">
