@@ -277,7 +277,14 @@ function PdfEditor({ data, setData, errors, lang }) {
 function QuizBMEditor({ data, setData }) {
     let enParsed = { questions: [] };
     try { enParsed = JSON.parse(data.content ?? '{}'); } catch {}
-    const enQuestions = enParsed.questions ?? [];
+    const enQuestionsRaw = Array.isArray(enParsed)
+        ? enParsed
+        : (Array.isArray(enParsed.questions) ? enParsed.questions : []);
+    const enQuestions = enQuestionsRaw.map((q, i) => ({
+        id: q?.id ?? i,
+        text: typeof q?.text === 'string' ? q.text : '',
+        options: Array.isArray(q?.options) ? q.options : [],
+    }));
     const enDescription = enParsed.description ?? '';
 
     let msParsed = { questions: [] };
@@ -308,7 +315,8 @@ function QuizBMEditor({ data, setData }) {
         const qs = enQuestions.map((enQ, i) => {
             const cur = getMsQ(i);
             if (i !== qIdx) return cur;
-            const opts = enQ.options.map((_, j) => j === oIdx ? value : (cur.options?.[j] ?? ''));
+            const enOptions = Array.isArray(enQ.options) ? enQ.options : [];
+            const opts = enOptions.map((_, j) => j === oIdx ? value : (cur.options?.[j] ?? ''));
             return { ...cur, options: opts };
         });
         saveMsQuestions(qs);
@@ -358,7 +366,7 @@ function QuizBMEditor({ data, setData }) {
                             />
                             <div className="space-y-2">
                                 <Label className="text-xs text-muted-foreground">BM answer options</Label>
-                                {enQ.options.map((enOpt, oIdx) => {
+                                {(Array.isArray(enQ.options) ? enQ.options : []).map((enOpt, oIdx) => {
                                     const enLabel = typeof enOpt === 'object' ? (enOpt.label ?? `Option ${oIdx + 1}`) : (enOpt || `Option ${oIdx + 1}`);
                                     return (
                                         <div key={oIdx} className="flex items-center gap-2">
@@ -453,7 +461,17 @@ function QuizEditor({ data, setData, errors, lang }) {
     let parsed = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true, answer_review_requires_pass: false };
     try { parsed = JSON.parse(rawContent); } catch {}
 
-    const questions    = parsed.questions    ?? [];
+    const questionsRaw = Array.isArray(parsed)
+        ? parsed
+        : (Array.isArray(parsed.questions) ? parsed.questions : []);
+    const questions = questionsRaw.map((q, i) => ({
+        id: q?.id ?? i,
+        type: q?.type ?? 'text',
+        text: typeof q?.text === 'string' ? q.text : '',
+        options: Array.isArray(q?.options) ? q.options : [],
+        correct: q?.correct ?? 0,
+        multi_answer: q?.multi_answer === true,
+    }));
     // Allow passing_score to be 0 (informational quiz)
     const passingScore = typeof parsed.passing_score === 'number' ? parsed.passing_score : 70;
     const maxAttempts  = parsed.max_attempts  ?? 0;
@@ -664,7 +682,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                         <Label className="text-xs text-muted-foreground">
                                             {q.multi_answer ? 'Answer options — check all correct answers' : 'Answer options — click the circle to mark the correct one'}
                                         </Label>
-                                        {q.options.map((opt, oIdx) => {
+                                        {(Array.isArray(q.options) ? q.options : []).map((opt, oIdx) => {
                                             const isMarkedCorrect = q.multi_answer
                                                 ? (Array.isArray(q.correct) && q.correct.includes(oIdx))
                                                 : q.correct === oIdx;
@@ -683,7 +701,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                     placeholder={`Option ${oIdx + 1}`}
                                                     className="h-8 text-sm"
                                                 />
-                                                {q.options.length > 2 && (
+                                                {(Array.isArray(q.options) ? q.options.length : 0) > 2 && (
                                                     <Button type="button" variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeOption(qIdx, oIdx)}>
                                                         <Trash2 className="h-3 w-3" />
                                                     </Button>
@@ -691,7 +709,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                             </div>
                                             );
                                         })}
-                                        {q.options.length < 6 && (
+                                        {(Array.isArray(q.options) ? q.options.length : 0) < 6 && (
                                             <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>
                                                 <Plus className="mr-1 h-3 w-3" /> Add option
                                             </Button>
@@ -704,7 +722,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                     <div className="space-y-3">
                                         <Label className="text-xs text-muted-foreground">Image options — click the ring to mark correct, hover image to delete</Label>
                                         <div className="grid grid-cols-2 gap-3">
-                                            {q.options.map((opt, oIdx) => {
+                                            {(Array.isArray(q.options) ? q.options : []).map((opt, oIdx) => {
                                                 const isMarkedCorrect = q.multi_answer
                                                     ? (Array.isArray(q.correct) && q.correct.includes(oIdx))
                                                     : q.correct === oIdx;
@@ -728,7 +746,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                             placeholder="Caption (optional)"
                                                             className="h-7 text-xs"
                                                         />
-                                                        {q.options.length > 2 && (
+                                                        {(Array.isArray(q.options) ? q.options.length : 0) > 2 && (
                                                             <Button type="button" variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => removeOption(qIdx, oIdx)}>
                                                                 <Trash2 className="h-3 w-3" />
                                                             </Button>
@@ -738,7 +756,7 @@ function QuizEditor({ data, setData, errors, lang }) {
                                                 );
                                             })}
                                         </div>
-                                        {q.options.length < 6 && (
+                                        {(Array.isArray(q.options) ? q.options.length : 0) < 6 && (
                                             <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => addOption(qIdx)}>
                                                 <Plus className="mr-1 h-3 w-3" /> Add image option
                                             </Button>
