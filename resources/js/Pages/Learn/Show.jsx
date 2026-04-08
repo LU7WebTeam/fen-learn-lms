@@ -54,14 +54,16 @@ function getA11yMediaPreferences() {
 
 // ─── Quiz ─────────────────────────────────────────────────────────────────────
 
-function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
+function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult = null }) {
     const { flash } = usePage().props;
     const t = useT();
-    const result = flash?.quiz_result ?? null;
+    const sessionResult = flash?.quiz_result ?? null;
+    const result = sessionResult ?? latestQuizResult;
     const [animateResult, setAnimateResult] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
+    const [showAnswerReview, setShowAnswerReview] = useState(false);
 
-    let quizData = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true };
+    let quizData = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true, answer_review_requires_pass: false };
     try {
         quizData = JSON.parse(lesson.content || '{}');
         if (!Array.isArray(quizData.questions)) quizData.questions = [];
@@ -101,6 +103,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     const questions    = quizData.questions;
     const quizDescription = typeof quizData.description === 'string' ? quizData.description.trim() : '';
     const showAnswerFeedback = quizData.show_answer_feedback !== false;
+    const answerReviewRequiresPass = quizData.answer_review_requires_pass === true;
     // If passing_score is null, undefined, 0, or not a number, treat as informational quiz (no passing mark)
     const hasPassingScore = typeof quizData.passing_score === 'number' && quizData.passing_score > 0;
     const passingScore = hasPassingScore ? quizData.passing_score : null;
@@ -108,6 +111,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     const attemptsDone = allAttempts.length;
     const attemptsLeft = maxAttempts > 0 ? maxAttempts - attemptsDone : Infinity;
     const limitReached = maxAttempts > 0 && attemptsDone >= maxAttempts;
+    const canRetry = maxAttempts === 0 || attemptsDone < maxAttempts;
 
     const { data, setData, post, processing } = useForm({ answers: {} });
 
@@ -119,6 +123,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 
     function handleRetry() {
         setData('answers', {});
+        setShowAnswerReview(false);
         router.reload({ only: ['flash'] });
     }
 
@@ -132,7 +137,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
     }
 
     const showResult = !!result;
-    const shouldShowAnswerReview = showResult && showAnswerFeedback && (result?.show_answer_feedback ?? true) !== false;
+    const isStoredResult = !sessionResult && !!latestQuizResult;
+    const canReviewAnswers = showResult
+        && (result?.can_review_answers
+            ?? (showAnswerFeedback && (!answerReviewRequiresPass || !hasPassingScore || !!result?.passed)));
+    const shouldShowAnswerReview = showResult && canReviewAnswers && showAnswerReview;
     const lastAttempt = allAttempts.length > 0 ? allAttempts[allAttempts.length - 1] : null;
     const answeredCount = questions.filter((question, index) => (
         question.multi_answer
@@ -171,17 +180,18 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
         : result?.results;
 
     useEffect(() => {
-        if (!showResult) {
+        if (!sessionResult) {
             setAnimateResult(false);
             setModalOpen(false);
             return;
         }
 
         setModalOpen(true);
+        setShowAnswerReview(false);
         setAnimateResult(true);
         const timer = window.setTimeout(() => setAnimateResult(false), 1400);
         return () => window.clearTimeout(timer);
-    }, [showResult]);
+    }, [sessionResult]);
 
     return (
         <div className="space-y-6">
@@ -443,9 +453,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 );
             })}
 
-            {showResult && !shouldShowAnswerReview && (
+            {showResult && !canReviewAnswers && (
                 <div className="rounded-lg border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-                    {t('learn.quiz.answer_review_disabled')}
+                    {showAnswerFeedback && answerReviewRequiresPass && hasPassingScore
+                        ? t('learn.quiz.answer_review_requires_pass')
+                        : t('learn.quiz.answer_review_disabled')}
                 </div>
             )}
 
@@ -467,7 +479,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
             )}
 
             {/* Quiz Result Modal */}
-            {showResult && (
+            {sessionResult && (
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
                     <DialogContent className="quiz-result-modal w-80 gap-0 overflow-hidden rounded-2xl p-0 pt-4">
                         {/* Confetti overlay inside modal */}
@@ -533,7 +545,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
 
                             {/* Action buttons */}
                             <div className="space-y-2 pt-3">
-                                {hasPassingScore && !result.passed && (maxAttempts === 0 || (attemptsDone + 1) < maxAttempts) && (
+                                {canRetry && (
                                     <Button
                                         onClick={() => { setModalOpen(false); handleRetry(); }}
                                         className="w-full"
@@ -542,12 +554,21 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                                         {t('learn.quiz.try_again')}
                                     </Button>
                                 )}
-                                {hasPassingScore && !result.passed && maxAttempts > 0 && (attemptsDone + 1) >= maxAttempts && (
+                                {!canRetry && (
                                     <p className="text-sm text-muted-foreground">{t('learn.quiz.no_more_attempts')}</p>
                                 )}
                                 <DialogClose asChild>
-                                    <Button variant="outline" size="sm" className="w-full">
-                                        {shouldShowAnswerReview ? t('learn.quiz.review_answers') : t('common.close')}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => {
+                                            if (canReviewAnswers) {
+                                                setShowAnswerReview(true);
+                                            }
+                                        }}
+                                    >
+                                        {canReviewAnswers ? t('learn.quiz.review_answers') : t('common.close')}
                                     </Button>
                                 </DialogClose>
                             </div>
@@ -556,8 +577,62 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale }) {
                 </Dialog>
             )}
 
+            {isStoredResult && !showAnswerReview && (
+                <div className="rounded-2xl border bg-card p-5 shadow-sm">
+                    <div className="mx-auto max-w-sm space-y-1.5 text-center">
+                        <img
+                            src={
+                                !hasPassingScore
+                                    ? '/images/quiz-completed.webp'
+                                    : result.passed
+                                        ? '/images/quiz-passed.webp'
+                                        : '/images/quiz-failed.webp'
+                            }
+                            alt={
+                                !hasPassingScore
+                                    ? t('learn.quiz.result_img_alt_completed')
+                                    : result.passed
+                                        ? t('learn.quiz.result_img_alt_passed')
+                                        : t('learn.quiz.result_img_alt_failed')
+                            }
+                            className="mx-auto block object-contain"
+                            style={{ maxWidth: '220px' }}
+                        />
+                        <div className={cn(
+                            'text-4xl font-bold tabular-nums',
+                            hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                        )}>
+                            {result.score} / {result.max_score}
+                        </div>
+                        <p className={cn(
+                            'text-lg font-semibold tabular-nums',
+                            hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                        )}>
+                            {result.percentage}%
+                        </p>
+                        {hasPassingScore && (
+                            <p className="text-sm text-muted-foreground">
+                                {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
+                            </p>
+                        )}
+                        <div className="space-y-2 pt-3">
+                            {canReviewAnswers && (
+                                <Button className="w-full" size="sm" variant="outline" onClick={() => setShowAnswerReview(true)}>
+                                    {t('learn.quiz.review_answers')}
+                                </Button>
+                            )}
+                            {canRetry && (
+                                <Button className="w-full" size="sm" onClick={handleRetry}>
+                                    {t('learn.quiz.try_again')}
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Compact score banner — visible after modal is dismissed */}
-            {showResult && !modalOpen && (
+            {sessionResult && !modalOpen && (
                 <div className={cn(
                     'flex items-center justify-between rounded-lg border px-4 py-3 text-sm',
                     hasPassingScore
@@ -708,7 +783,7 @@ function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = 
 
 export default function LearnShow({
     course, lesson, enrollment, completedIds, isCompleted, isLocked, prerequisiteLesson,
-    nextLesson, prevLesson, allAttempts,
+    nextLesson, prevLesson, allAttempts, latestQuizResult,
 }) {
     const { locale, platform, auth } = usePage().props;
     const platformName = platform?.name || 'FEN Learn';
@@ -941,7 +1016,13 @@ export default function LearnShow({
 
                             {/* ── Quiz ── */}
                             {lesson.type === 'quiz' && !isLocked && (
-                                <QuizPlayer lesson={lesson} course={course} allAttempts={allAttempts ?? []} locale={locale} />
+                                <QuizPlayer
+                                    lesson={lesson}
+                                    course={course}
+                                    allAttempts={allAttempts ?? []}
+                                    latestQuizResult={latestQuizResult}
+                                    locale={locale}
+                                />
                             )}
 
                             {/* ── PDF ── */}

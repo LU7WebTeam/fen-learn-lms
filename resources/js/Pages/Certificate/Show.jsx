@@ -19,7 +19,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
         download_url,
     } = certificate;
     const platformName = platform?.name || 'FENLearn';
-    const platformLogoUrl = platform?.logo_url || null;
+    const platformDarkLogoUrl = platform?.logo_dark_url || platform?.logo_url || null;
 
     const dynamicValues = {
         recipient_name:  user_name,
@@ -38,8 +38,8 @@ export default function CertificateShow({ certificate, template, customFont }) {
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-6">
                                 <Link href={route('home')}>
-                                    {platformLogoUrl ? (
-                                        <img src={platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
+                                    {platformDarkLogoUrl ? (
+                                        <img src={platformDarkLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                                     ) : (
                                         <span className="text-xl font-black tracking-tight">{platformName}</span>
                                     )}

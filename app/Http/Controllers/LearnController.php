@@ -86,9 +86,16 @@ class LearnController extends Controller
         $lessonData  = $lesson->toArray();
         $allAttempts = [];
         $lastAttempt = null;
+        $latestQuizResult = null;
 
         if ($lesson->type === 'quiz') {
             $quizData = json_decode($lesson->content ?? '{}', true) ?? [];
+            $questions = $quizData['questions'] ?? [];
+            $passingScore = (int) ($quizData['passing_score'] ?? 70);
+            $hasPassingScore = $passingScore > 0;
+            $showAnswerFeedback = ($quizData['show_answer_feedback'] ?? true) !== false;
+            $answerReviewRequiresPass = ($quizData['answer_review_requires_pass'] ?? false) === true;
+
             if (isset($quizData['questions'])) {
                 $quizData['questions'] = array_map(function ($q) {
                     unset($q['correct']);
@@ -97,10 +104,12 @@ class LearnController extends Controller
             }
             $lessonData['content'] = json_encode($quizData);
 
-            $attempts = QuizAttempt::where('user_id', $request->user()->id)
+            $attemptRows = QuizAttempt::where('user_id', $request->user()->id)
                 ->where('lesson_id', $lesson->id)
                 ->orderBy('created_at')
-                ->get()
+                ->get();
+
+            $attempts = $attemptRows
                 ->map(fn($a) => [
                     'attempt_number' => $a->attempt_number,
                     'score'          => $a->score,
@@ -112,6 +121,27 @@ class LearnController extends Controller
 
             $allAttempts = $attempts->values()->all();
             $lastAttempt = $attempts->last();
+
+            $latestAttempt = $attemptRows->last();
+            if ($latestAttempt) {
+                $passed = $hasPassingScore ? $latestAttempt->percentage >= $passingScore : true;
+                $canReviewAnswers = $showAnswerFeedback
+                    && (!$answerReviewRequiresPass || !$hasPassingScore || $passed);
+
+                $latestQuizResult = [
+                    'score' => $latestAttempt->score,
+                    'max_score' => $latestAttempt->max_score,
+                    'percentage' => $latestAttempt->percentage,
+                    'passed' => $passed,
+                    'passing_score' => $passingScore,
+                    'show_answer_feedback' => $showAnswerFeedback,
+                    'answer_review_requires_pass' => $answerReviewRequiresPass,
+                    'can_review_answers' => $canReviewAnswers,
+                    'results' => $canReviewAnswers
+                        ? $this->buildQuizResults($questions, $latestAttempt->answers ?? [])
+                        : [],
+                ];
+            }
         }
 
         return Inertia::render('Learn/Show', [
@@ -142,6 +172,7 @@ class LearnController extends Controller
             'prevLesson'         => $prev ? ['id' => $prev->id, 'title' => $prev->title, 'title_ms' => $prev->title_ms] : null,
             'lastAttempt'        => $lastAttempt,
             'allAttempts'        => $allAttempts,
+            'latestQuizResult'   => $latestQuizResult,
         ]);
     }
 
@@ -263,6 +294,7 @@ class LearnController extends Controller
         $passingScore = (int) ($quizData['passing_score'] ?? 70);
         $maxAttempts  = (int) ($quizData['max_attempts'] ?? 0);
         $showAnswerFeedback = ($quizData['show_answer_feedback'] ?? true) !== false;
+        $answerReviewRequiresPass = ($quizData['answer_review_requires_pass'] ?? false) === true;
         $answers      = $request->input('answers', []);
 
         // Enforce attempt limit
@@ -439,6 +471,9 @@ class LearnController extends Controller
             }
         }
 
+        $canReviewAnswers = $showAnswerFeedback
+            && (!$answerReviewRequiresPass || $passingScore <= 0 || $passed);
+
         return back()->with('quiz_result', [
             'score'         => $correct,
             'max_score'     => $total,
@@ -446,8 +481,56 @@ class LearnController extends Controller
             'passed'        => $passed,
             'passing_score' => $passingScore,
             'show_answer_feedback' => $showAnswerFeedback,
-            'results'       => $showAnswerFeedback ? $results : [],
+            'answer_review_requires_pass' => $answerReviewRequiresPass,
+            'can_review_answers' => $canReviewAnswers,
+            'results'       => $canReviewAnswers ? $results : [],
         ]);
+    }
+
+    private function buildQuizResults(array $questions, array $answers): array
+    {
+        $results = [];
+
+        foreach ($questions as $i => $question) {
+            $isMulti = !empty($question['multi_answer']);
+
+            if ($isMulti) {
+                $correctSet  = is_array($question['correct'] ?? null)
+                    ? array_map('intval', $question['correct'])
+                    : [(int) ($question['correct'] ?? 0)];
+                $selectedRaw = isset($answers[$i]) && is_array($answers[$i]) ? $answers[$i] : [];
+                $selected    = array_map('intval', $selectedRaw);
+                sort($selected);
+                sort($correctSet);
+                $isCorrect = $selected === $correctSet;
+                $results[] = [
+                    'text'         => $question['text'] ?? '',
+                    'type'         => $question['type'] ?? 'text',
+                    'multi_answer' => true,
+                    'options'      => $question['options'] ?? [],
+                    'selected'     => $selected,
+                    'correct'      => $correctSet,
+                    'is_correct'   => $isCorrect,
+                ];
+            } else {
+                $selected   = isset($answers[$i]) && !is_array($answers[$i]) ? (int) $answers[$i] : null;
+                $correctVal = is_array($question['correct'] ?? null)
+                    ? (int) (($question['correct'][0] ?? 0))
+                    : (int) ($question['correct'] ?? 0);
+                $isCorrect  = $selected !== null && $selected === $correctVal;
+                $results[]  = [
+                    'text'         => $question['text'] ?? '',
+                    'type'         => $question['type'] ?? 'text',
+                    'multi_answer' => false,
+                    'options'      => $question['options'] ?? [],
+                    'selected'     => $selected,
+                    'correct'      => $correctVal,
+                    'is_correct'   => $isCorrect,
+                ];
+            }
+        }
+
+        return $results;
     }
 
     private function ensureLessonBelongsToCourse(Course $course, Lesson $lesson): void

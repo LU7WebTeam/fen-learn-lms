@@ -450,7 +450,7 @@ function QuizEditor({ data, setData, errors, lang }) {
     }
 
     const rawContent = data.content ?? '';
-    let parsed = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true };
+    let parsed = { questions: [], passing_score: 70, max_attempts: 0, description: '', show_answer_feedback: true, answer_review_requires_pass: false };
     try { parsed = JSON.parse(rawContent); } catch {}
 
     const questions    = parsed.questions    ?? [];
@@ -459,12 +459,20 @@ function QuizEditor({ data, setData, errors, lang }) {
     const maxAttempts  = parsed.max_attempts  ?? 0;
     const description  = typeof parsed.description === 'string' ? parsed.description : '';
     const showAnswerFeedback = parsed.show_answer_feedback !== false;
+    const answerReviewRequiresPass = parsed.answer_review_requires_pass === true;
 
-    function save(qs = questions, ps = passingScore, ma = maxAttempts, desc = description, saf = showAnswerFeedback) {
+    function save(qs = questions, ps = passingScore, ma = maxAttempts, desc = description, saf = showAnswerFeedback, arrp = answerReviewRequiresPass) {
         // If ps is blank, null, or NaN, treat as informational (no passing mark)
         let passing_score = ps;
         if (ps === '' || ps === null || isNaN(ps)) passing_score = 0;
-        setData('content', JSON.stringify({ questions: qs, passing_score, max_attempts: ma, description: desc, show_answer_feedback: saf }));
+        setData('content', JSON.stringify({
+            questions: qs,
+            passing_score,
+            max_attempts: ma,
+            description: desc,
+            show_answer_feedback: saf,
+            answer_review_requires_pass: arrp,
+        }));
     }
 
     function addQuestion() {
@@ -606,6 +614,19 @@ function QuizEditor({ data, setData, errors, lang }) {
                 <div className="flex-1">
                     <Label htmlFor="show-answer-feedback" className="text-sm font-medium cursor-pointer">Show correct / incorrect answer feedback after submit</Label>
                     <p className="text-xs text-muted-foreground mt-1">If disabled, learners only see marks and percentage after submission.</p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3">
+                <Checkbox
+                    id="answer-review-requires-pass"
+                    checked={answerReviewRequiresPass}
+                    disabled={!showAnswerFeedback}
+                    onCheckedChange={(checked) => save(undefined, undefined, undefined, undefined, undefined, checked === true)}
+                />
+                <div className="flex-1">
+                    <Label htmlFor="answer-review-requires-pass" className="text-sm font-medium cursor-pointer">Allow answer review only if passed</Label>
+                    <p className="text-xs text-muted-foreground mt-1">When enabled, failed attempts will only see score and retry options (if available).</p>
                 </div>
             </div>
 
