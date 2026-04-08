@@ -47,7 +47,7 @@ class AuthenticationTest extends TestCase
         $this->assertNotNull($user->two_factor_code);
         $this->assertNotNull($user->two_factor_code_expires_at);
 
-        Mail::assertSent(TwoFactorCodeMail::class);
+        Mail::assertQueued(TwoFactorCodeMail::class);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

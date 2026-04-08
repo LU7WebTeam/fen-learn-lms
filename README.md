@@ -180,6 +180,14 @@ php artisan key:generate
 php artisan storage:link
 ```
 
+Queue worker requirement:
+
+```bash
+php artisan queue:work --queue=mail,default --tries=3 --timeout=90
+```
+
+2FA verification emails and staff invitations are now queued. In production, a queue worker must be running or these emails will remain in the `jobs` table and users will not receive them.
+
 ### 2. Build and commit frontend assets
 
 Production does not run `npm`, so any frontend or translation changes must be built locally and committed before deployment:
@@ -199,6 +207,8 @@ Every push to `main` automatically:
 2. Builds frontend assets (`npm run build`)
 3. Rsyncs all files to the cPanel server over SSH
 4. Runs migrations, clears and rebuilds all caches, re-links storage
+
+Post-deploy operations must also ensure a queue worker is running for the `mail` queue.
 
 #### Required GitHub Secrets
 

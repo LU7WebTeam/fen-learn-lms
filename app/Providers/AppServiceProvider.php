@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -216,7 +217,14 @@ class AppServiceProvider extends ServiceProvider
             if ($password) Config::set('mail.mailers.smtp.password', $password);
             if ($name)    Config::set('mail.from.name', $name);
             if ($address) Config::set('mail.from.address', $address);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            if (!app()->runningUnitTests()) {
+                Log::warning('Unable to apply SMTP settings from database configuration.', [
+                    'component' => 'smtp_settings_bootstrap',
+                    'exception' => $e::class,
+                    'message' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }

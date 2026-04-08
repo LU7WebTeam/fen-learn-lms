@@ -4,6 +4,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mail Queue Name
+    |--------------------------------------------------------------------------
+    |
+    | Outbound emails are pushed onto a dedicated queue so authentication and
+    | invitation flows do not wait on SMTP round-trips. Point your worker at
+    | this queue in production, for example: `php artisan queue:work --queue=mail,default`.
+    |
+    */
+
+    'mail_queue' => env('MAIL_QUEUE', 'mail'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Queue Connection Name
     |--------------------------------------------------------------------------
     |

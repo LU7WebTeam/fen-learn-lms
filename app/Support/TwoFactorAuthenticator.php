@@ -24,8 +24,10 @@ class TwoFactorAuthenticator
         ]);
 
         try {
-            // Send the code via email
-            Mail::to($user->email)->send(new TwoFactorCodeMail($user, $code));
+            // Queue the code email so login isn't blocked by SMTP latency.
+            Mail::to($user->email)->queue(
+                (new TwoFactorCodeMail($user, $code))->onQueue(config('queue.mail_queue', 'mail'))
+            );
         } catch (\Throwable $e) {
             SystemLogger::write('error', '2FA code send failed', [
                 'auth_flow' => '2fa_code_send_failed',
@@ -37,9 +39,10 @@ class TwoFactorAuthenticator
         }
 
         // Log the event
-        SystemLogger::write('info', '2FA code sent', [
-            'auth_flow' => '2fa_code_sent',
+        SystemLogger::write('info', '2FA code queued', [
+            'auth_flow' => '2fa_code_queued',
             'user_id' => $user->id,
+            'queue' => config('queue.mail_queue', 'mail'),
         ]);
     }
 

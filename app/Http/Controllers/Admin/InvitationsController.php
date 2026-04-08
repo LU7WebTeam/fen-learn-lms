@@ -36,13 +36,15 @@ class InvitationsController extends Controller
         ]);
 
         try {
-            Mail::to($validated['email'])->send(new StaffInvitationMail($invitation));
+            Mail::to($validated['email'])->queue(
+                (new StaffInvitationMail($invitation))->onQueue(config('queue.mail_queue', 'mail'))
+            );
         } catch (\Throwable $e) {
             report($e);
             return back()->with('error', 'Invitation created, but email could not be sent. Please verify SMTP settings and try again.');
         }
 
-        return back()->with('success', "Invitation sent to {$validated['email']}.");
+        return back()->with('success', "Invitation queued for {$validated['email']}.");
     }
 
     public function show(string $token): Response|RedirectResponse

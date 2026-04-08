@@ -1,5 +1,5 @@
 Phase 1: Security Blockers (Do First)
-Status: In progress (implementation started)
+Status: Completed
 
 Harden 2FA endpoints [x]
 Scope: add throttling and lockout controls for verify/resend flows.
@@ -40,7 +40,12 @@ Files: web.php
 Done when:
 Landing still renders normally.
 Version values are removed from response payload.
+
+
 Phase 2: Reliability and Ops Safety
+Status: In progress
+
+[Deferred for now]
 5. Gate deploy on CI pass
 
 Scope: prevent production deploy unless tests/build pass.
@@ -49,8 +54,9 @@ Done when:
 Deploy workflow depends on successful CI.
 
 Failed test/build blocks deploy automatically.
+[/deferred]
 
-Move sync mail sends to queue
+Move sync mail sends to queue [x]
 
 Scope: queue 2FA/invitation emails and supervise workers.
 Files: TwoFactorAuthenticator.php, InvitationsController.php, queue.php
@@ -61,13 +67,15 @@ Queue retry/failure behavior is defined.
 
 Failed jobs are observable and recoverable.
 
-Improve config failure observability
+Improve config failure observability [x]
 
 Scope: replace silent catches with structured warning logs.
 Files: AppServiceProvider.php
 Done when:
 Misconfigured SMTP/settings are logged clearly.
 App still boots safely.
+
+
 Phase 3: Performance and Scale Readiness
 8. Switch production runtime to Redis-backed state
 
