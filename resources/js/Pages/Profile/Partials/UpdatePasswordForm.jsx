@@ -97,6 +97,10 @@ export default function UpdatePasswordForm({ className = '' }) {
                         autoComplete="new-password"
                     />
 
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                        {t('auth.password.requirements_notice')}
+                    </p>
+
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 

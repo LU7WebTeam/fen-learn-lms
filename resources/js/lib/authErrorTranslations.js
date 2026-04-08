@@ -12,6 +12,12 @@ export function translateAuthError(message, t) {
         'The password field is required.': 'auth.errors.password_required',
         'The password must be at least 8 characters.': 'auth.errors.password_min',
         'The password field must be at least 8 characters.': 'auth.errors.password_min',
+        'The password must contain at least one letter.': 'auth.errors.password_letters',
+        'The password field must contain at least one letter.': 'auth.errors.password_letters',
+        'The password must contain at least one uppercase and one lowercase letter.': 'auth.errors.password_mixed',
+        'The password field must contain at least one uppercase and one lowercase letter.': 'auth.errors.password_mixed',
+        'The password must contain at least one symbol.': 'auth.errors.password_symbols',
+        'The password field must contain at least one symbol.': 'auth.errors.password_symbols',
         'The name field is required.': 'auth.errors.name_required',
         'The password confirmation does not match.': 'auth.errors.password_confirmation_mismatch',
         'The password field confirmation does not match.': 'auth.errors.password_confirmation_mismatch',
@@ -33,6 +39,18 @@ export function translateAuthError(message, t) {
 
     if (/^The password(?: field)? must be at least \d+ characters\.$/.test(normalized)) {
         return t('auth.errors.password_min');
+    }
+
+    if (/^The password(?: field)? must contain at least one letter\.$/.test(normalized)) {
+        return t('auth.errors.password_letters');
+    }
+
+    if (/^The password(?: field)? must contain at least one uppercase and one lowercase letter\.$/.test(normalized)) {
+        return t('auth.errors.password_mixed');
+    }
+
+    if (/^The password(?: field)? must contain at least one symbol\.$/.test(normalized)) {
+        return t('auth.errors.password_symbols');
     }
 
     if (/^The email(?: field)? is required\.$/.test(normalized)) {

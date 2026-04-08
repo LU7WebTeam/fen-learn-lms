@@ -139,6 +139,7 @@ export default function Register() {
                                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500">{t('auth.password.requirements_notice')}</p>
                             <InputError message={translateAuthError(errors.password, t)} />
                         </div>
 
