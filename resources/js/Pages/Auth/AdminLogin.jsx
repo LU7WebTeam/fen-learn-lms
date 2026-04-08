@@ -3,27 +3,44 @@ import InputError from '@/Components/InputError';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ShieldCheck, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
+import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 import { useT } from '@/lib/i18n';
+import { translateAuthError } from '@/lib/authErrorTranslations';
 
 export default function AdminLogin({ status, canResetPassword }) {
     const { props } = usePage();
     const platform = props.platform ?? {};
+    const captchaConfig = props?.integrations?.captcha ?? {};
     const platformDarkLogoUrl = platform.logo_dark_url ?? null;
     const [showPass, setShowPass] = useState(false);
+    const [captchaClientError, setCaptchaClientError] = useState('');
     const t = useT();
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, transform, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
+        captcha_token: '',
     });
 
     useEffect(() => {
         return () => reset('password');
     }, []);
 
-    function submit(e) {
+    async function submit(e) {
         e.preventDefault();
+
+        setCaptchaClientError('');
+
+        const enabled = isCaptchaEnabled(captchaConfig, 'login');
+        const token = await resolveCaptchaToken(captchaConfig, 'login', data.captcha_token);
+
+        if (enabled && !token) {
+            setCaptchaClientError(t('auth.captcha.required'));
+            return;
+        }
+
+        transform((current) => ({ ...current, captcha_token: token || '' }));
         post(route('admin.login'));
     }
 
@@ -105,7 +122,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                                     placeholder="admin@example.com"
                                 />
                             </div>
-                            <InputError message={errors.email} className="text-red-400" />
+                            <InputError message={translateAuthError(errors.email, t)} className="text-red-400" />
                         </div>
 
                         <div className="space-y-1.5">
@@ -132,7 +149,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
-                            <InputError message={errors.password} className="text-red-400" />
+                            <InputError message={translateAuthError(errors.password, t)} className="text-red-400" />
                         </div>
 
                         <div className="flex items-center justify-between">
@@ -162,6 +179,14 @@ export default function AdminLogin({ status, canResetPassword }) {
                         >
                             {processing ? t('auth.admin.submitting') : t('auth.admin.submit')}
                         </button>
+
+                        <CaptchaField
+                            config={captchaConfig}
+                            action="login"
+                            token={data.captcha_token}
+                            onTokenChange={(value) => setData('captcha_token', value)}
+                            error={translateAuthError(errors.captcha_token || captchaClientError, t)}
+                        />
                     </form>
 
                     <p className="text-center text-sm text-zinc-600">

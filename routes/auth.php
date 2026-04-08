@@ -48,9 +48,11 @@ Route::middleware('guest')->group(function () {
         ->name('two-factor.verify');
 
     Route::post('verify-code', [TwoFactorVerificationController::class, 'verify'])
+        ->middleware('throttle:10,1')
         ->name('two-factor.verify.post');
 
     Route::post('verify-code/resend', [TwoFactorVerificationController::class, 'resend'])
+        ->middleware('throttle:3,1')
         ->name('two-factor.resend');
 });
 

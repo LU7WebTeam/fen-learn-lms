@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\CaptchaVerifier;
 use App\Support\TwoFactorAuthenticator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class AdminSessionController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
+        CaptchaVerifier::enforce($request, 'login');
+
         // Verify credentials without logging in (for 2FA)
         $user = $request->verifyCredentialsFor2FA();
 

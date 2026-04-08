@@ -19,7 +19,6 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,8 +26,6 @@ Route::get('/', function () {
     return Inertia::render('Landing/Home', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
     ]);
 })->name('home');
 
@@ -36,8 +33,6 @@ Route::get('/backup-landing', function () {
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion'     => PHP_VERSION,
     ]);
 })->name('landing.backup');
 
