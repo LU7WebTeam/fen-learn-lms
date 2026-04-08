@@ -180,7 +180,8 @@ class CoursesController extends Controller
                 'last_activity'        => $enrollment->lessonProgress->max('completed_at')
                     ? \Carbon\Carbon::parse($enrollment->lessonProgress->max('completed_at'))->format('M j, Y')
                     : null,
-            ]);
+            ])
+            ->values();
 
         $learnerActivityFeed = Activity::query()
             ->where('log_name', 'learner_course')
