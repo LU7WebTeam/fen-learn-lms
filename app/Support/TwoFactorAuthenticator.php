@@ -24,10 +24,10 @@ class TwoFactorAuthenticator
         ]);
 
         try {
-            // Queue the code email so login isn't blocked by SMTP latency.
-            Mail::to($user->email)->queue(
-                (new TwoFactorCodeMail($user, $code))->onQueue(config('queue.mail_queue', 'mail'))
-            );
+            // Send synchronously - 2FA codes are time-critical (10 min expiry)
+            // and users are actively waiting at the login screen, so queuing
+            // creates unacceptable delays if no worker is running.
+            Mail::to($user->email)->send(new TwoFactorCodeMail($user, $code));
         } catch (\Throwable $e) {
             SystemLogger::write('error', '2FA code send failed', [
                 'auth_flow' => '2fa_code_send_failed',
@@ -39,10 +39,9 @@ class TwoFactorAuthenticator
         }
 
         // Log the event
-        SystemLogger::write('info', '2FA code queued', [
-            'auth_flow' => '2fa_code_queued',
+        SystemLogger::write('info', '2FA code sent', [
+            'auth_flow' => '2fa_code_sent',
             'user_id' => $user->id,
-            'queue' => config('queue.mail_queue', 'mail'),
         ]);
     }
 
