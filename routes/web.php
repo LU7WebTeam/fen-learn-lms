@@ -19,8 +19,14 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SiteLockController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/site-lock', [SiteLockController::class, 'show'])->name('site-lock.show');
+Route::post('/site-lock', [SiteLockController::class, 'unlock'])
+    ->middleware('throttle:10,1')
+    ->name('site-lock.unlock');
 
 Route::get('/', function () {
     return Inertia::render('Landing/Home', [

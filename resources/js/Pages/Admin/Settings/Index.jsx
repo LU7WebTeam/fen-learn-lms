@@ -291,7 +291,7 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
 
                     {/* ── MAINTENANCE ── */}
                     <TabsContent value="maintenance">
-                        <MaintenanceTab settings={settings} onSave={submitGroup} processing={processing} />
+                        <MaintenanceTab settings={settings} errors={errors} onSave={submitGroup} processing={processing} />
                     </TabsContent>
 
                     {/* ── ROLE ACCESS ── */}
@@ -1690,15 +1690,22 @@ function CertificatesTab({ settings, onSave, processing }) {
     );
 }
 
-function MaintenanceTab({ settings, onSave, processing }) {
+function MaintenanceTab({ settings, errors, onSave, processing }) {
     const [enabled, setEnabled] = useState(settings.maintenance_mode === '1');
     const [message, setMessage] = useState(settings.maintenance_message || '');
+    const [siteLockEnabled, setSiteLockEnabled] = useState(settings.site_lock_enabled === '1');
+    const [siteLockPassword, setSiteLockPassword] = useState('');
+    const siteLockPasswordSet = settings.site_lock_password_set === '1';
 
     function save() {
         onSave('maintenance', {
             maintenance_mode:    enabled ? '1' : '0',
             maintenance_message: message,
+            site_lock_enabled:   siteLockEnabled ? '1' : '0',
+            site_lock_password:  siteLockPassword,
         });
+
+        setSiteLockPassword('');
     }
 
     return (
@@ -1719,11 +1726,47 @@ function MaintenanceTab({ settings, onSave, processing }) {
                     onChange={setEnabled}
                 />
 
+                <SwitchRow
+                    label="Site Password Lock"
+                    description="When on, visitors must enter a shared password before any public page is shown."
+                    checked={siteLockEnabled}
+                    onChange={setSiteLockEnabled}
+                />
+
+                <div className="space-y-2">
+                    <Label htmlFor="site_lock_password">Site Lock Password</Label>
+                    <Input
+                        id="site_lock_password"
+                        type="password"
+                        value={siteLockPassword}
+                        onChange={e => setSiteLockPassword(e.target.value)}
+                        placeholder={siteLockPasswordSet ? 'Leave blank to keep current password' : 'Set a password'}
+                        autoComplete="new-password"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        {siteLockPasswordSet
+                            ? 'A password is already configured. Enter a new one only if you want to change it.'
+                            : 'Required before enabling site password lock.'}
+                    </p>
+                    {errors.site_lock_password && (
+                        <p className="text-xs text-red-600">{errors.site_lock_password}</p>
+                    )}
+                </div>
+
                 {enabled && (
                     <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <span>
                             <strong>Maintenance mode is active.</strong> Non-admin users cannot access the platform.
+                        </span>
+                    </div>
+                )}
+
+                {siteLockEnabled && (
+                    <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>
+                            <strong>Site password lock is active.</strong> Visitors must enter the shared password to continue.
                         </span>
                     </div>
                 )}

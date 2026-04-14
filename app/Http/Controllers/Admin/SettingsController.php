@@ -12,6 +12,7 @@ use App\Support\EmailBranding;
 use App\Support\EmailContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -90,6 +91,7 @@ class SettingsController extends Controller
         'certificates_enabled'       => '1',
         'maintenance_mode'           => '0',
         'maintenance_message'        => 'We are currently down for scheduled maintenance. Please check back soon.',
+        'site_lock_enabled'          => '0',
         'learner_can_enroll'         => '1',
         'editor_can_manage_users'    => '1',
         'editor_can_access_settings' => '1',
@@ -129,6 +131,9 @@ class SettingsController extends Controller
         $settings['captcha_secret_key'] = filled((string) Setting::get('captcha_secret_key', ''))
             ? '__configured__'
             : '';
+        $settings['site_lock_password_set'] = filled((string) Setting::get('site_lock_password_hash', ''))
+            ? '1'
+            : '0';
 
         return Inertia::render('Admin/Settings/Index', [
             'settings'    => $settings,
@@ -821,13 +826,30 @@ class SettingsController extends Controller
 
     private function saveMaintenance(Request $request): void
     {
-        $request->validate([
+        $validated = $request->validate([
             'maintenance_mode'    => 'required|in:0,1',
             'maintenance_message' => 'nullable|string|max:500',
+            'site_lock_enabled'   => 'required|in:0,1',
+            'site_lock_password'  => 'nullable|string|min:6|max:255',
         ]);
 
-        Setting::set('maintenance_mode', $request->input('maintenance_mode'));
-        Setting::set('maintenance_message', $request->input('maintenance_message', ''));
+        $siteLockEnabled = $validated['site_lock_enabled'] === '1';
+        $existingHash = (string) Setting::get('site_lock_password_hash', '');
+        $newPassword = (string) ($validated['site_lock_password'] ?? '');
+
+        if ($siteLockEnabled && $newPassword === '' && $existingHash === '') {
+            throw ValidationException::withMessages([
+                'site_lock_password' => 'Set a password before enabling site lock.',
+            ]);
+        }
+
+        Setting::set('maintenance_mode', $validated['maintenance_mode']);
+        Setting::set('maintenance_message', $validated['maintenance_message'] ?? '');
+        Setting::set('site_lock_enabled', $validated['site_lock_enabled']);
+
+        if ($newPassword !== '') {
+            Setting::set('site_lock_password_hash', Hash::make($newPassword));
+        }
     }
 
     private function saveRoleAccess(Request $request): void
