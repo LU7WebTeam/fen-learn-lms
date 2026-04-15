@@ -96,7 +96,7 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking
                     cc_load_policy: captionsDefault ? 1 : 0,
                     cc_lang_pref: 'en',
                     disablekb: 1, // disables keyboard controls (prevents some sharing shortcuts)
-                    fs: 0, // disables fullscreen button
+                    fs: 1, // enables fullscreen button
                     controls: 1, // show minimal controls
                 },
                 events: {
