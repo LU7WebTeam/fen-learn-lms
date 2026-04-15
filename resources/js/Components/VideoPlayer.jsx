@@ -86,7 +86,8 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking
 
             playerRef.current = new window.YT.Player(divRef.current, {
                 videoId,
-                host: 'https://www.youtube-nocookie.com',
+                // Use standard YouTube host so existing YouTube login/session cookies can be used.
+                host: 'https://www.youtube.com',
                 playerVars: {
                     rel: 0, // no related videos at end
                     modestbranding: 1, // removes YouTube logo from control bar
