@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Accessibility, RotateCcw } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
+import { resolve } from '@/lib/i18n';
 
 const STORAGE_KEY = 'a11y_preferences_v1';
 
@@ -57,9 +58,11 @@ function formatScale(value) {
     return `${Math.round(value * 100)}%`;
 }
 
-export default function AccessibilityHelper() {
+export default function AccessibilityHelper({ locale = 'en' }) {
     const [open, setOpen] = useState(false);
     const [preferences, setPreferences] = useState(() => readStoredPreferences());
+    const triggerRef = useRef(null);
+    const t = (key, params) => resolve(key, locale, params ?? {});
 
     useEffect(() => {
         applyPreferences(preferences);
@@ -69,6 +72,36 @@ export default function AccessibilityHelper() {
     const canReset = useMemo(() => {
         return JSON.stringify(preferences) !== JSON.stringify(DEFAULT_PREFERENCES);
     }, [preferences]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return undefined;
+        }
+
+        const shouldReduce = preferences.reducedMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (shouldReduce) {
+            return undefined;
+        }
+
+        const interval = window.setInterval(() => {
+            if (!triggerRef.current) {
+                return;
+            }
+
+            triggerRef.current.animate(
+                [
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-6px)' },
+                    { transform: 'translateX(6px)' },
+                    { transform: 'translateX(0)' },
+                ],
+                { duration: 700, easing: 'ease-in-out' },
+            );
+        }, 30000);
+
+        return () => window.clearInterval(interval);
+    }, [preferences.reducedMotion]);
 
     function updatePreference(key, value) {
         setPreferences(prev => ({
@@ -83,16 +116,20 @@ export default function AccessibilityHelper() {
 
     return (
         <>
-            <div className="fixed bottom-24 right-4 z-[100]">
+            <div className="fixed bottom-24 right-4 z-[100] flex flex-col items-center gap-1">
                 <Button
+                    ref={triggerRef}
                     type="button"
                     onClick={() => setOpen(prev => !prev)}
                     className="h-[70px] w-[70px] rounded-full shadow-lg [&_svg]:!h-[36px] [&_svg]:!w-[36px]"
-                    title="Open accessibility helper"
-                    aria-label="Open accessibility helper"
+                    title={t('a11y.helper.open_aria')}
+                    aria-label={t('a11y.helper.open_aria')}
                 >
                     <Accessibility />
                 </Button>
+                <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-900 shadow-sm">
+                    {t('a11y.helper.trigger_label')}
+                </span>
             </div>
 
             {open && (

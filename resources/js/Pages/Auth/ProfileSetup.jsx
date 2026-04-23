@@ -59,6 +59,8 @@ const RACES = [
     { value: 'other' },
 ];
 
+const BIRTH_YEAR_OPTIONS = Array.from({ length: 2026 - 1950 + 1 }, (_, index) => String(2026 - index));
+
 function splitBirthdateParts(value) {
     if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return { year: '', month: '', day: '' };
@@ -131,9 +133,6 @@ function FormField({ label, required, error, children, hint }) {
 export default function ProfileSetup({ user }) {
     const { platform, profileOptions } = usePage().props;
     const t = useT();
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const minBirthYear = 1900;
     const initialBirthdateParts = splitBirthdateParts(user?.birthdate ?? '');
     const organizationOptions = profileOptions?.organizationOptions ?? [];
     const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
@@ -374,15 +373,9 @@ export default function ProfileSetup({ user }) {
                                         </SelectContent>
                                     </Select>
 
-                                    <Input
-                                        type="number"
-                                        inputMode="numeric"
-                                        min={minBirthYear}
-                                        max={currentYear}
-                                        placeholder={t('profile.info.year_placeholder')}
+                                    <Select
                                         value={data.birth_year}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                                        onValueChange={(value) => {
                                             setData((current) => {
                                                 const next = { ...current, birth_year: value };
                                                 const nextMaxDay = getDaysInMonth(current.birth_month, value);
@@ -392,7 +385,18 @@ export default function ProfileSetup({ user }) {
                                                 return next;
                                             });
                                         }}
-                                    />
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('profile.info.year_placeholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {BIRTH_YEAR_OPTIONS.map((year) => (
+                                                <SelectItem key={year} value={year}>
+                                                    {year}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </FormField>
 

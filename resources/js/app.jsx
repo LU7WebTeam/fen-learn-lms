@@ -19,10 +19,11 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
+        const locale = props?.initialPage?.props?.locale ?? 'en';
         root.render(
             <ThemeProvider>
                 <App {...props} />
-                <AccessibilityHelper />
+                <AccessibilityHelper locale={locale} />
                 <Toaster />
             </ThemeProvider>
         );
