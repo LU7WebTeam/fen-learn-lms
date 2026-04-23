@@ -161,6 +161,143 @@ html {
         --ring: oklch(0.82 0.19 102.8);
     }
 
+    :root[data-a11y-color='friendly'] {
+        --primary: oklch(0.54 0.16 255);
+        --primary-foreground: oklch(0.99 0 0);
+        --secondary: oklch(0.71 0.15 78);
+        --secondary-foreground: oklch(0.16 0 0);
+        --accent: oklch(0.9 0.05 240);
+        --accent-foreground: oklch(0.24 0.01 240);
+        --destructive: oklch(0.68 0.16 62);
+        --destructive-foreground: oklch(0.16 0 0);
+        --ring: oklch(0.54 0.16 255);
+        --chart-1: oklch(0.54 0.16 255);
+        --chart-2: oklch(0.71 0.15 78);
+        --chart-3: oklch(0.63 0.14 200);
+        --chart-4: oklch(0.62 0.14 320);
+        --chart-5: oklch(0.58 0.13 145);
+    }
+
+    :root.dark[data-a11y-color='friendly'] {
+        --primary: oklch(0.71 0.14 250);
+        --primary-foreground: oklch(0.16 0 0);
+        --secondary: oklch(0.78 0.13 80);
+        --secondary-foreground: oklch(0.16 0 0);
+        --accent: oklch(0.35 0.05 250);
+        --accent-foreground: oklch(0.96 0 0);
+        --destructive: oklch(0.77 0.14 62);
+        --destructive-foreground: oklch(0.16 0 0);
+        --ring: oklch(0.71 0.14 250);
+        --chart-1: oklch(0.71 0.14 250);
+        --chart-2: oklch(0.78 0.13 80);
+        --chart-3: oklch(0.74 0.11 200);
+        --chart-4: oklch(0.73 0.11 318);
+        --chart-5: oklch(0.7 0.11 150);
+    }
+
+    :root[data-a11y-color='friendly'] [class*='text-green-'],
+    :root[data-a11y-color='friendly'] [class*='text-emerald-'] {
+        color: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='bg-green-'],
+    :root[data-a11y-color='friendly'] [class*='bg-emerald-'] {
+        background-color: #0f62fe !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='border-green-'],
+    :root[data-a11y-color='friendly'] [class*='border-emerald-'] {
+        border-color: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='ring-green-'],
+    :root[data-a11y-color='friendly'] [class*='ring-emerald-'] {
+        --tw-ring-color: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='text-red-'],
+    :root[data-a11y-color='friendly'] [class*='text-rose-'] {
+        color: #b26a00 !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='bg-red-'],
+    :root[data-a11y-color='friendly'] [class*='bg-rose-'] {
+        background-color: #b26a00 !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='border-red-'],
+    :root[data-a11y-color='friendly'] [class*='border-rose-'] {
+        border-color: #b26a00 !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='ring-red-'],
+    :root[data-a11y-color='friendly'] [class*='ring-rose-'] {
+        --tw-ring-color: #b26a00 !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='fill-green-'],
+    :root[data-a11y-color='friendly'] [class*='fill-emerald-'],
+    :root[data-a11y-color='friendly'] [class*='stroke-green-'],
+    :root[data-a11y-color='friendly'] [class*='stroke-emerald-'] {
+        fill: #0f62fe !important;
+        stroke: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='fill-red-'],
+    :root[data-a11y-color='friendly'] [class*='fill-rose-'],
+    :root[data-a11y-color='friendly'] [class*='stroke-red-'],
+    :root[data-a11y-color='friendly'] [class*='stroke-rose-'] {
+        fill: #b26a00 !important;
+        stroke: #b26a00 !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='hover:bg-green-']:hover,
+    :root[data-a11y-color='friendly'] [class*='hover:bg-emerald-']:hover {
+        background-color: #0b57d0 !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='hover:bg-red-']:hover,
+    :root[data-a11y-color='friendly'] [class*='hover:bg-rose-']:hover {
+        background-color: #8a5300 !important;
+        color: #ffffff !important;
+    }
+
+    /* Home/Course pages use Tailwind arbitrary hex classes; remap those too. */
+    :root[data-a11y-color='friendly'] [class*='bg-[#b53391]'] {
+        background-color: #0f62fe !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='hover:bg-[#9f2c80]']:hover {
+        background-color: #0b57d0 !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='text-[#b53391]'] {
+        color: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='border-[#b53391]'] {
+        border-color: #0f62fe !important;
+    }
+
+    :root[data-a11y-color='friendly'] [class*='bg-[#4d45d6]'],
+    :root[data-a11y-color='friendly'] [style*='#4d45d6'],
+    :root[data-a11y-color='friendly'] [style*='#924fef'] {
+        background: linear-gradient(90deg, #0f62fe 0%, #0b57d0 100%) !important;
+        color: #ffffff !important;
+    }
+
+    :root[data-a11y-color='friendly'] [style*='rgba(182, 51, 147'],
+    :root[data-a11y-color='friendly'] [style*='rgba(242, 103, 35'],
+    :root[data-a11y-color='friendly'] [style*='rgba(253, 185, 48'],
+    :root[data-a11y-color='friendly'] [style*='linear-gradient(135deg, #fdb930 0%, #f26723 30%, #b63393 80%)'] {
+        background: linear-gradient(135deg, #0f62fe 0%, #3b82f6 55%, #f59e0b 100%) !important;
+    }
+
     :root[data-a11y-focus='strong'] :focus-visible {
         outline: 3px solid oklch(0.62 0.21 29.2);
         outline-offset: 2px;

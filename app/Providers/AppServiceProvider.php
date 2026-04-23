@@ -29,7 +29,9 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         if ($root = config('app.asset_url')) {
-            URL::forceScheme('https');
+            $scheme = parse_url($root, PHP_URL_SCHEME) ?: 'https';
+
+            URL::forceScheme($scheme);
             URL::forceRootUrl($root);
         }
 

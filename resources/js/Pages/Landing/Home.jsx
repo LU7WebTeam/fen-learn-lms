@@ -233,12 +233,12 @@ export default function Home() {
                 </div>
             </section>
 
-            <main className="mx-auto w-full max-w-[1440px] p-0">
+            <main className="mx-auto w-full max-w-[1440px] px-5 py-0 2xl:px-8">
 
-                <section id="proaktif" className="mt-4 space-y-4 rounded-xl bg-[#ebedf1] p-4 scroll-mt-24 sm:p-5">
+                <section id="proaktif" className="mt-4 space-y-4 rounded-xl bg-white p-4 scroll-mt-24 sm:p-5">
                     <div className="grid gap-4 lg:grid-cols-12">
                         <article
-                            className="card-raise anim-card rounded-xl p-8 lg:col-span-6"
+                            className="anim-card rounded-xl p-4 sm:p-8 lg:col-span-6"
                             style={{
                                 animationDelay: '0ms',
                                 background: softCardTint,
@@ -270,7 +270,7 @@ export default function Home() {
                                 </Link>
                             </div>
                         </article>
-                        <article className="card-raise anim-card overflow-hidden rounded-xl bg-[#c7dbe5] lg:col-span-6" style={{ animationDelay: '100ms' }}>
+                        <article className="anim-card overflow-hidden rounded-xl bg-[#c7dbe5] lg:col-span-6" style={{ animationDelay: '100ms' }}>
                             <img
                                 src="/images/proaktif-01.webp"
                                 alt="Proaktif 2.0"
@@ -282,7 +282,7 @@ export default function Home() {
                     <section id="learn" className="space-y-4 scroll-mt-24">
                         <div className="grid gap-4 lg:grid-cols-4">
                             <article
-                                className="card-raise anim-card rounded-xl p-8 text-white lg:col-span-3"
+                                className="anim-card rounded-xl p-4 text-white sm:p-8 lg:col-span-3"
                                 style={{
                                     backgroundImage:
                                         'linear-gradient(90deg, rgba(17,24,39,0.86) 0%, rgba(17,24,39,0.7) 48%, rgba(17,24,39,0.45) 100%), url(/images/wywl-01.webp)',
@@ -300,7 +300,7 @@ export default function Home() {
                             </article>
 
                             <article
-                                className="card-raise anim-card rounded-xl p-6"
+                                className="anim-card rounded-xl p-4 sm:p-6"
                                 style={{
                                     animationDelay: '100ms',
                                     background: softCardTint,
@@ -327,7 +327,7 @@ export default function Home() {
                                 return (
                                     <article
                                         key={item.titleKey}
-                                        className="card-raise anim-card rounded-xl p-6"
+                                        className="anim-card rounded-xl p-4 sm:p-6"
                                         style={{
                                             animationDelay: `${i * 100}ms`,
                                             background: softCardTint,
@@ -352,84 +352,85 @@ export default function Home() {
                         </div>
                     </section>
 
-                    <section
-                        id="why-fen"
-                        className="!mt-10 rounded-xl p-4 scroll-mt-24 sm:p-5"
-                        style={{
-                            background:
-                                'radial-gradient(circle at 12% 78%, rgba(242, 103, 35, 0.35) 0 18%, transparent 20%), radial-gradient(circle at 88% 22%, rgba(253, 185, 48, 0.28) 0 16%, transparent 18%), radial-gradient(circle at 78% 65%, rgba(182, 51, 147, 0.32) 0 15%, transparent 17%), linear-gradient(135deg, #fdb930 0%, #f26723 30%, #b63393 80%)',
-                        }}
-                    >
-                        <div className="grid items-center gap-5 border-b border-white/25 pb-4 md:grid-cols-[1fr,260px]">
-                            <div>
-                                <h2 className="font-['Inter',sans-serif] text-4xl font-extrabold text-white sm:text-5xl">{t('landing.features.title')}</h2>
-                                <p className="mt-2 max-w-3xl text-base text-white/80">{t('landing.features.subtitle')}</p>
-                            </div>
-                            <img
-                                src="/images/why-choose.webp"
-                                alt="Why choose FEN Learning"
-                                className="hidden h-[160px] w-full rounded-2xl object-cover md:block"
-                            />
+                </section>
+
+                <section
+                    id="why-fen"
+                    className="mt-12 rounded-xl p-4 scroll-mt-24 sm:p-5 lg:mt-16"
+                    style={{
+                        background:
+                            'radial-gradient(circle at 12% 78%, rgba(242, 103, 35, 0.35) 0 18%, transparent 20%), radial-gradient(circle at 88% 22%, rgba(253, 185, 48, 0.28) 0 16%, transparent 18%), radial-gradient(circle at 78% 65%, rgba(182, 51, 147, 0.32) 0 15%, transparent 17%), linear-gradient(135deg, #fdb930 0%, #f26723 30%, #b63393 80%)',
+                    }}
+                >
+                    <div className="grid items-center gap-5 border-b border-white/25 pb-4 md:grid-cols-[1fr,260px]">
+                        <div>
+                            <h2 className="font-['Inter',sans-serif] text-4xl font-extrabold text-white sm:text-5xl">{t('landing.features.title')}</h2>
+                            <p className="mt-2 max-w-3xl text-base text-white/80">{t('landing.features.subtitle')}</p>
                         </div>
+                        <img
+                            src="/images/why-choose.webp"
+                            alt="Why choose FEN Learning"
+                            className="hidden h-[160px] w-full rounded-2xl object-cover md:block"
+                        />
+                    </div>
 
-                        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                            {FEATURE_ITEMS.map((item, i) => {
-                                const Icon = item.icon;
+                    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        {FEATURE_ITEMS.map((item, i) => {
+                            const Icon = item.icon;
 
-                                return (
-                                    <article key={item.titleKey} className="card-raise anim-card overflow-hidden rounded-xl bg-white p-6" style={{ animationDelay: `${i * 100}ms` }}>
-                                        <div className="inline-flex h-[56px] w-[56px] items-center justify-center rounded-2xl bg-slate-100">
-                                            <Icon className={`h-7 w-7 ${item.iconClassName}`} />
+                            return (
+                                <article key={item.titleKey} className="card-raise anim-card overflow-hidden rounded-xl bg-white p-6" style={{ animationDelay: `${i * 100}ms` }}>
+                                    <div className="inline-flex h-[56px] w-[56px] items-center justify-center rounded-2xl bg-slate-100">
+                                        <Icon className={`h-7 w-7 ${item.iconClassName}`} />
+                                    </div>
+                                    <h3 className="mt-4 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#1a1f2b]">
+                                        {t(item.titleKey)}
+                                    </h3>
+                                    <p className="mt-3 text-base leading-relaxed text-[#545c6b]">{t(item.descKey)}</p>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                <section id="faq" className="mt-12 scroll-mt-24 lg:mt-16">
+                    <div className="grid gap-4 lg:grid-cols-12">
+                        <article
+                            className="card-raise anim-card rounded-xl p-8 text-white lg:col-span-4"
+                            style={{
+                                animationDelay: '0ms',
+                                background: 'linear-gradient(90deg, #4d45d6 0%, #924fef 100%)',
+                            }}
+                        >
+                            <h2 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
+                                {t('landing.faq.title')}
+                            </h2>
+                            <p className="mt-3 text-base leading-relaxed text-white/85">
+                                {t('landing.faq.subtitle')}
+                            </p>
+                        </article>
+
+                        <article className="card-raise anim-card rounded-xl bg-white p-4 lg:col-span-8 sm:p-5" style={{ animationDelay: '100ms' }}>
+                            <div className="space-y-3">
+                                {FAQ_ITEMS.map((item) => (
+                                    <details
+                                        key={item.qKey}
+                                        className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 [&_summary::-webkit-details-marker]:hidden"
+                                    >
+                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
+                                            <span className="font-['Inter',sans-serif] text-xl font-extrabold leading-tight text-[#1a1f2b]">
+                                                {t(item.qKey)}
+                                            </span>
+                                            <ChevronDown className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" />
+                                        </summary>
+                                        <div className="whitespace-pre-line border-t border-slate-200 px-4 py-4 text-base leading-relaxed text-[#545c6b]">
+                                            {t(item.aKey)}
                                         </div>
-                                        <h3 className="mt-4 font-['Inter',sans-serif] text-2xl font-extrabold leading-tight text-[#1a1f2b]">
-                                            {t(item.titleKey)}
-                                        </h3>
-                                        <p className="mt-3 text-base leading-relaxed text-[#545c6b]">{t(item.descKey)}</p>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    </section>
-
-                    <section id="faq" className="!mt-10 scroll-mt-24">
-                        <div className="grid gap-4 lg:grid-cols-12">
-                            <article
-                                className="card-raise anim-card rounded-xl p-8 text-white lg:col-span-4"
-                                style={{
-                                    animationDelay: '0ms',
-                                    background: 'linear-gradient(90deg, #4d45d6 0%, #924fef 100%)',
-                                }}
-                            >
-                                <h2 className="mt-2 font-['Inter',sans-serif] text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl">
-                                    {t('landing.faq.title')}
-                                </h2>
-                                <p className="mt-3 text-base leading-relaxed text-white/85">
-                                    {t('landing.faq.subtitle')}
-                                </p>
-                            </article>
-
-                            <article className="card-raise anim-card rounded-xl bg-white p-4 lg:col-span-8 sm:p-5" style={{ animationDelay: '100ms' }}>
-                                <div className="space-y-3">
-                                    {FAQ_ITEMS.map((item) => (
-                                        <details
-                                            key={item.qKey}
-                                            className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-50/80 [&_summary::-webkit-details-marker]:hidden"
-                                        >
-                                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4">
-                                                <span className="font-['Inter',sans-serif] text-xl font-extrabold leading-tight text-[#1a1f2b]">
-                                                    {t(item.qKey)}
-                                                </span>
-                                                <ChevronDown className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" />
-                                            </summary>
-                                            <div className="whitespace-pre-line border-t border-slate-200 px-4 py-4 text-base leading-relaxed text-[#545c6b]">
-                                                {t(item.aKey)}
-                                            </div>
-                                        </details>
-                                    ))}
-                                </div>
-                            </article>
-                        </div>
-                    </section>
+                                    </details>
+                                ))}
+                            </div>
+                        </article>
+                    </div>
                 </section>
 
             </main>

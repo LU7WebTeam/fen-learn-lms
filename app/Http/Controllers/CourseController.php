@@ -56,7 +56,7 @@ class CourseController extends Controller
             'sections' => function ($q) {
                 $q->orderBy('order')->with(['lessons' => function ($q2) {
                     $q2->orderBy('order')
-                        ->select(['id', 'section_id', 'title', 'title_ms', 'type', 'duration_minutes', 'is_free_preview']);
+                        ->select(['id', 'section_id', 'title', 'title_ms', 'type', 'duration_minutes', 'is_free_preview', 'prerequisite_lesson_id']);
                 }]);
             },
         ]);

@@ -13,10 +13,11 @@ class ForceHttpsOnReplit
     {
         // config() works after config:cache; env() returns null when cache is active.
         if ($root = config('app.asset_url')) {
-            // Tell the URL generator to always produce https:// URLs with the
-            // public Replit domain, regardless of the HTTP scheme the internal
-            // PHP server sees from the Replit proxy.
-            URL::forceScheme('https');
+            // Match generated URL scheme to configured root URL so local HTTP
+            // and deployed HTTPS environments both behave correctly.
+            $scheme = parse_url($root, PHP_URL_SCHEME) ?: 'https';
+
+            URL::forceScheme($scheme);
             URL::forceRootUrl($root);
         }
 

@@ -126,7 +126,14 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
 
     return (
         <div className="space-y-2">
-            {config.provider === 'turnstile' && <div ref={containerRef} />}
+            {config.provider === 'turnstile' && (
+                <>
+                    <div ref={containerRef} />
+                    <p className="text-xs text-gray-400">
+                        Having trouble with the verification? Try refreshing the page or switching to a different browser.
+                    </p>
+                </>
+            )}
             {config.provider === 'recaptcha' && (
                 <p className="text-xs text-gray-500">
                     This form is protected by reCAPTCHA and Google Privacy Policy and Terms of Service apply.

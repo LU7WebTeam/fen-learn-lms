@@ -59,6 +59,51 @@ const RACES = [
     { value: 'other' },
 ];
 
+function splitBirthdateParts(value) {
+    if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return { year: '', month: '', day: '' };
+    }
+
+    const [year, month, day] = value.split('-');
+    return {
+        year,
+        month: String(Number(month)),
+        day: String(Number(day)),
+    };
+}
+
+function getDaysInMonth(month, year) {
+    const monthNumber = Number(month);
+    if (!monthNumber || monthNumber < 1 || monthNumber > 12) {
+        return 31;
+    }
+
+    const yearNumber = Number(year);
+    const safeYear = Number.isInteger(yearNumber) && yearNumber > 0 ? yearNumber : 2000;
+    return new Date(safeYear, monthNumber, 0).getDate();
+}
+
+function buildBirthdate(day, month, year) {
+    const cleanedYear = String(year || '').trim();
+    const monthNumber = Number(month);
+    const dayNumber = Number(day);
+
+    if (!/^\d{4}$/.test(cleanedYear) || !monthNumber || !dayNumber) {
+        return '';
+    }
+
+    const yearNumber = Number(cleanedYear);
+    const maxDay = getDaysInMonth(monthNumber, yearNumber);
+
+    if (monthNumber < 1 || monthNumber > 12 || dayNumber < 1 || dayNumber > maxDay) {
+        return '';
+    }
+
+    const paddedMonth = String(monthNumber).padStart(2, '0');
+    const paddedDay = String(dayNumber).padStart(2, '0');
+    return `${cleanedYear}-${paddedMonth}-${paddedDay}`;
+}
+
 function FieldError({ message }) {
     if (!message) return null;
     return (
@@ -86,6 +131,10 @@ function FormField({ label, required, error, children, hint }) {
 export default function ProfileSetup({ user }) {
     const { platform, profileOptions } = usePage().props;
     const t = useT();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const minBirthYear = 1900;
+    const initialBirthdateParts = splitBirthdateParts(user?.birthdate ?? '');
     const organizationOptions = profileOptions?.organizationOptions ?? [];
     const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
     const initialOrganizationState = splitOrganizationValue(
@@ -95,18 +144,23 @@ export default function ProfileSetup({ user }) {
         organizationSelectOccupations,
     );
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, transform, processing, errors } = useForm({
         name:         user?.name ?? '',
         gender:       user?.gender ?? '',
         race:         user?.race ?? '',
         state:        user?.state ?? '',
         birthdate:    user?.birthdate ?? '',
+        birth_day: initialBirthdateParts.day,
+        birth_month: initialBirthdateParts.month,
+        birth_year: initialBirthdateParts.year,
         occupation:   user?.occupation ?? '',
         occupation_other: user?.occupation_other ?? '',
         student_id:   user?.student_id ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
+
+    const maxSelectableDay = getDaysInMonth(data.birth_month, data.birth_year);
 
     const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
 
@@ -134,6 +188,21 @@ export default function ProfileSetup({ user }) {
 
     function submit(e) {
         e.preventDefault();
+
+        const composedBirthdate = buildBirthdate(data.birth_day, data.birth_month, data.birth_year);
+        transform((current) => ({
+            name: current.name,
+            gender: current.gender,
+            race: current.race,
+            state: current.state,
+            birthdate: composedBirthdate,
+            occupation: current.occupation,
+            occupation_other: current.occupation_other,
+            student_id: current.student_id,
+            organization: current.organization,
+            organization_other: current.organization_other,
+        }));
+
         post(route('profile.setup.store'));
     }
 
@@ -257,12 +326,74 @@ export default function ProfileSetup({ user }) {
                                 error={errors.birthdate}
                                 hint={t('profile_setup.birthdate_hint')}
                             >
-                                <Input
-                                    type="date"
-                                    value={data.birthdate}
-                                    onChange={e => setData('birthdate', e.target.value)}
-                                    max={new Date().toISOString().split('T')[0]}
-                                />
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <Select
+                                        value={data.birth_day}
+                                        onValueChange={(value) => setData('birth_day', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('profile.info.select_day')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Array.from({ length: maxSelectableDay }, (_, index) => {
+                                                const day = index + 1;
+                                                return (
+                                                    <SelectItem key={day} value={String(day)}>
+                                                        {day}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Select
+                                        value={data.birth_month}
+                                        onValueChange={(value) => {
+                                            setData((current) => {
+                                                const next = { ...current, birth_month: value };
+                                                const nextMaxDay = getDaysInMonth(value, current.birth_year);
+                                                if (Number(next.birth_day) > nextMaxDay) {
+                                                    next.birth_day = String(nextMaxDay);
+                                                }
+                                                return next;
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('profile.info.select_month')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Array.from({ length: 12 }, (_, index) => {
+                                                const month = index + 1;
+                                                return (
+                                                    <SelectItem key={month} value={String(month)}>
+                                                        {month}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min={minBirthYear}
+                                        max={currentYear}
+                                        placeholder={t('profile.info.year_placeholder')}
+                                        value={data.birth_year}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                                            setData((current) => {
+                                                const next = { ...current, birth_year: value };
+                                                const nextMaxDay = getDaysInMonth(current.birth_month, value);
+                                                if (Number(next.birth_day) > nextMaxDay) {
+                                                    next.birth_day = String(nextMaxDay);
+                                                }
+                                                return next;
+                                            });
+                                        }}
+                                    />
+                                </div>
                             </FormField>
 
                             {/* Occupation */}

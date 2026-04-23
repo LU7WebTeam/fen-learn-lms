@@ -42,6 +42,9 @@ export default function VerifyEmail({ status }) {
                     <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
                         {t('auth.verify_email.description')}
                     </p>
+                    <p className="text-xs text-gray-400 leading-relaxed max-w-xs">
+                        {t('auth.verify_email.spam_hint')}
+                    </p>
                 </div>
 
                 {/* Success message */}

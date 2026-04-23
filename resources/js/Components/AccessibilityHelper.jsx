@@ -9,6 +9,7 @@ const DEFAULT_PREFERENCES = {
     lineHeight: 1.5,
     letterSpacing: 0,
     highContrast: false,
+    colorBlindFriendly: false,
     reducedMotion: false,
     strongFocus: false,
     dyslexicFont: false,
@@ -46,6 +47,7 @@ function applyPreferences(preferences) {
     root.style.setProperty('--a11y-letter-spacing', `${preferences.letterSpacing}em`);
 
     root.dataset.a11yContrast = preferences.highContrast ? 'high' : 'default';
+    root.dataset.a11yColor = preferences.colorBlindFriendly ? 'friendly' : 'default';
     root.dataset.a11yMotion = preferences.reducedMotion ? 'reduced' : 'default';
     root.dataset.a11yFocus = preferences.strongFocus ? 'strong' : 'default';
     root.dataset.a11yFont = preferences.dyslexicFont ? 'dyslexic' : 'default';
@@ -156,6 +158,15 @@ export default function AccessibilityHelper() {
                                 type="checkbox"
                                 checked={preferences.highContrast}
                                 onChange={(e) => updatePreference('highContrast', e.target.checked)}
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between rounded-md border p-2 text-xs">
+                            <span>Color-blind friendly colors</span>
+                            <input
+                                type="checkbox"
+                                checked={preferences.colorBlindFriendly}
+                                onChange={(e) => updatePreference('colorBlindFriendly', e.target.checked)}
                             />
                         </label>
 

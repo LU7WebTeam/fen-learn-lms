@@ -5,6 +5,7 @@ import { tl, useT } from '@/lib/i18n';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Progress } from '@/Components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/Components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { BookOpen, Play, Award, ChevronRight, Video, FileText, HelpCircle, Check, Lock } from 'lucide-react';
@@ -44,13 +45,22 @@ function renderActivityResult(item) {
     return item.properties.passed ? t('courses.show.passed') : t('courses.show.failed');
 }
 
-function LessonRow({ lesson, completed, courseSlug, enrolled }) {
+function LessonRow({ lesson, completed, courseSlug, enrolled, completedIds }) {
     const { locale } = usePage().props;
     const t = useT();
     const Icon = LESSON_ICONS[lesson.type] ?? FileText;
-    const canOpen = enrolled || lesson.is_free_preview;
-    return (
-        <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-base transition-colors ${canOpen ? 'hover:bg-[#f4f6fa] dark:hover:bg-[#1f2937]' : ''}`}>
+    const blockedByPrerequisite = enrolled
+        && !!lesson.prerequisite_lesson_id
+        && !completedIds.includes(lesson.prerequisite_lesson_id);
+    const canOpen = !blockedByPrerequisite && (enrolled || lesson.is_free_preview);
+    const tooltipText = !canOpen
+        ? enrolled && blockedByPrerequisite
+            ? t('courses.show.locked_prerequisite_tooltip')
+            : t('courses.show.locked_enroll_tooltip')
+        : null;
+
+    const row = (
+        <div className={`flex items-center gap-3 rounded-md px-3 py-2 text-base transition-colors ${canOpen ? 'hover:bg-[#f4f6fa] dark:hover:bg-[#1f2937]' : 'cursor-help'}`}>
             {completed
                 ? <Check className="h-4 w-4 shrink-0 text-green-500" />
                 : canOpen
@@ -69,6 +79,23 @@ function LessonRow({ lesson, completed, courseSlug, enrolled }) {
                 </Link>
             )}
         </div>
+    );
+
+    if (!tooltipText) {
+        return row;
+    }
+
+    return (
+        <TooltipProvider delayDuration={120}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    {row}
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{tooltipText}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }
 
@@ -231,6 +258,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                                                 completed={completedIds.includes(lesson.id)}
                                                                 courseSlug={course.slug}
                                                                 enrolled={enrolled}
+                                                                completedIds={completedIds}
                                                             />
                                                         ))}
                                                     </div>
@@ -322,6 +350,7 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
                                                             completed={completedIds.includes(lesson.id)}
                                                             courseSlug={course.slug}
                                                             enrolled={enrolled}
+                                                            completedIds={completedIds}
                                                         />
                                                     ))}
                                                 </div>
