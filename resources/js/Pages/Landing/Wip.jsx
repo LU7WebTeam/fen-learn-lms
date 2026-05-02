@@ -104,7 +104,7 @@ export default function WipLanding() {
 
             <header className="sticky top-0 z-50 border-b border-cyan-100/80 bg-white/75 backdrop-blur-xl">
                 <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href={route('home')} className="flex items-center gap-2">
                         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-600 text-white shadow-sm">
                             <GraduationCap className="h-5 w-5" />
                         </span>

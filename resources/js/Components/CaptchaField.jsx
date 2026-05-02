@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import InputError from '@/Components/InputError';
 
 const TURNSTILE_SCRIPT_ID = 'turnstile-script';
@@ -46,33 +46,93 @@ export async function resolveCaptchaToken(config, action, existingToken = '') {
             return '';
         }
 
-        await loadScript(
-            `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`,
-            `${RECAPTCHA_SCRIPT_PREFIX}${siteKey}`,
-        );
+        try {
+            await loadScript(
+                `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`,
+                `${RECAPTCHA_SCRIPT_PREFIX}${siteKey}`,
+            );
+        } catch {
+            return '';
+        }
 
         if (!window.grecaptcha) {
             return '';
         }
 
-        await new Promise((resolve) => window.grecaptcha.ready(resolve));
-        const token = await window.grecaptcha.execute(siteKey, { action });
-        return token || '';
+        try {
+            await new Promise((resolve) => window.grecaptcha.ready(resolve));
+            const token = await window.grecaptcha.execute(siteKey, { action });
+            return token || '';
+        } catch {
+            return '';
+        }
     }
 
     return '';
 }
 
-export default function CaptchaField({ config, action, token, onTokenChange, error }) {
+export default function CaptchaField({ config, action, token, onTokenChange, error, onAvailabilityChange, t }) {
     const containerRef = useRef(null);
     const widgetRef = useRef(null);
     const onTokenChangeRef = useRef(onTokenChange);
+    const [loadError, setLoadError] = useState(false);
+    const [retryTick, setRetryTick] = useState(0);
 
     const enabled = isCaptchaEnabled(config, action);
+
+    const unavailableMessage = t
+        ? t('auth.captcha.unavailable')
+        : 'Captcha could not be loaded. It may be blocked by your browser or network. Disable blockers, check your connection, then retry.';
+    const retryLabel = t ? t('auth.captcha.retry') : 'Retry captcha';
 
     useEffect(() => {
         onTokenChangeRef.current = onTokenChange;
     }, [onTokenChange]);
+
+    useEffect(() => {
+        if (!enabled) {
+            onAvailabilityChange?.(true);
+            setLoadError(false);
+            return;
+        }
+
+        setLoadError(false);
+        onAvailabilityChange?.(true);
+    }, [enabled, action, onAvailabilityChange]);
+
+    useEffect(() => {
+        if (!enabled || config.provider !== 'recaptcha' || !config.site_key) {
+            return;
+        }
+
+        let mounted = true;
+
+        loadScript(
+            `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(config.site_key)}`,
+            `${RECAPTCHA_SCRIPT_PREFIX}${config.site_key}`,
+        )
+            .then(() => {
+                if (!mounted) {
+                    return;
+                }
+
+                const available = typeof window.grecaptcha !== 'undefined';
+                setLoadError(!available);
+                onAvailabilityChange?.(available);
+            })
+            .catch(() => {
+                if (!mounted) {
+                    return;
+                }
+                setLoadError(true);
+                onAvailabilityChange?.(false);
+                onTokenChangeRef.current('');
+            });
+
+        return () => {
+            mounted = false;
+        };
+    }, [enabled, config?.provider, config?.site_key, retryTick, onAvailabilityChange]);
 
     useEffect(() => {
         if (!enabled || config.provider !== 'turnstile' || !config.site_key || !containerRef.current) {
@@ -86,6 +146,9 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
                 if (!mounted || !window.turnstile || !containerRef.current) {
                     return;
                 }
+
+                setLoadError(false);
+                onAvailabilityChange?.(true);
 
                 if (widgetRef.current !== null) {
                     try {
@@ -104,6 +167,8 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
                 });
             })
             .catch(() => {
+                setLoadError(true);
+                onAvailabilityChange?.(false);
                 onTokenChangeRef.current('');
             });
 
@@ -119,6 +184,20 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
             widgetRef.current = null;
         };
     }, [enabled, config?.provider, config?.site_key]);
+
+    useEffect(() => {
+        if (!enabled || config?.provider !== 'turnstile') {
+            return;
+        }
+
+        if (widgetRef.current !== null && window.turnstile && !loadError) {
+            try {
+                window.turnstile.reset(widgetRef.current);
+            } catch {
+                // no-op
+            }
+        }
+    }, [loadError, enabled, config?.provider]);
 
     if (!enabled) {
         return null;
@@ -138,6 +217,22 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
                 <p className="text-xs text-gray-500">
                     This form is protected by reCAPTCHA and Google Privacy Policy and Terms of Service apply.
                 </p>
+            )}
+            {loadError && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <p>{unavailableMessage}</p>
+                    <button
+                        type="button"
+                        className="mt-2 inline-flex rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
+                        onClick={() => {
+                            onTokenChangeRef.current('');
+                            setLoadError(false);
+                            setRetryTick((v) => v + 1);
+                        }}
+                    >
+                        {retryLabel}
+                    </button>
+                </div>
             )}
             <input type="hidden" value={token || ''} readOnly />
             <InputError message={error} />

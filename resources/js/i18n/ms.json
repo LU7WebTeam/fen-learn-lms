@@ -29,12 +29,12 @@
   "auth.login.hero_body": "Akses semua kursus anda, jejaki kemajuan, dan peroleh sijil -- semuanya di satu tempat.",
 
   "auth.register.title": "Mulakan di Sini",
-  "auth.register.subtitle": "Belajar hari ini untuk masa depan kewangan yang kukuh.",
+  "auth.register.subtitle": "Mulakan pembelajaran hari ini \u2013 percuma!",
   "auth.register.name": "Nama penuh",
   "auth.register.email": "Alamat e-mel",
   "auth.register.password": "Kata laluan",
   "auth.register.confirm_password": "Sahkan kata laluan",
-  "auth.password.requirements_notice": "Kata laluan mesti sekurang-kurangnya 8 aksara, mengandungi 1 huruf besar, dan 1 aksara khas.",
+  "auth.password.requirements_notice": "Sekurang-kurangnya 8 aksara, dengan satu huruf besar dan satu aksara khas.",
   "auth.register.name_certificate_hint": "Nama ini akan tertera pada sijil.",
   "auth.register.submit": "Buat akaun",
   "auth.register.submitting": "Akaun sedang dicipta\u2026",
@@ -45,7 +45,7 @@
   "auth.register.terms": "Terma Perkhidmatan",
   "auth.register.and": "dan",
   "auth.register.privacy": "Dasar Privasi",
-  "auth.register.hero_heading": "Mulakan\nperjalanan pembelajaran anda",
+  "auth.register.hero_heading": "Mulakan perjalanan kewangan anda.",
   "auth.register.hero_body": "Akses semua kursus anda, jejaki kemajuan, dan peroleh sijil -- semuanya di satu tempat.",
 
   "auth.admin.title": "Log masuk admin",
@@ -79,7 +79,7 @@
   "auth.forgot_password.submit": "Hantar Pautan Tetapan Semula",
 
   "auth.verify_email.title": "Sahkan e-mel anda",
-  "auth.verify_email.description": "Terima kasih kerana mendaftar! Sila sahkan alamat e-mel anda dengan klik pautan yang diterima.",
+  "auth.verify_email.description": "Terima kasih kerana mendaftar! Sila semak emel anda dan klik pautan pengesahan untuk mengaktifkan akaun anda. Tidak menerima emel tersebut? Anda boleh meminta penghantaran semula pada bila-bila masa.",
   "auth.verify_email.resend": "Hantar Semula E-mel Pengesahan",
   "auth.verify_email.resending": "Menghantar\u2026",
   "auth.verify_email.sent": "Pautan pengesahan baharu telah dihantar ke alamat e-mel anda.",
@@ -137,6 +137,8 @@
   "auth.invitation.role.course_viewer": "Penonton Kursus",
 
   "auth.captcha.required": "Pengesahan captcha diperlukan.",
+  "auth.captcha.unavailable": "Captcha tidak dapat dimuatkan. Ia mungkin disekat oleh pelayar atau rangkaian anda. Matikan penyekat, semak sambungan internet, kemudian cuba semula.",
+  "auth.captcha.retry": "Cuba semula captcha",
 
   "profile_setup.title": "Lengkapkan profil anda",
   "profile_setup.subtitle": "Hanya beberapa maklumat untuk memperkaya pengalaman pembelajaran anda.",

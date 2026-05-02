@@ -12,6 +12,7 @@ export default function Login({ status, canResetPassword }) {
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [showPass, setShowPass] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
     const t = useT();
 
     const { data, setData, post, transform, processing, errors, reset } = useForm({
@@ -30,7 +31,7 @@ export default function Login({ status, canResetPassword }) {
         const token = await resolveCaptchaToken(captchaConfig, 'login', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError(t('auth.captcha.required'));
+            setCaptchaClientError(t(captchaUnavailable ? 'auth.captcha.unavailable' : 'auth.captcha.required'));
             return;
         }
 
@@ -150,7 +151,9 @@ export default function Login({ status, canResetPassword }) {
                             action="login"
                             token={data.captcha_token}
                             onTokenChange={(value) => setData('captcha_token', value)}
+                            onAvailabilityChange={setCaptchaUnavailable}
                             error={translateAuthError(errors.captcha_token || captchaClientError, t)}
+                            t={t}
                         />
                     </form>
 

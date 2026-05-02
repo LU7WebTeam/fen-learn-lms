@@ -20,7 +20,7 @@ export default function About() {
 
             <div className="min-h-screen bg-white text-slate-600">
                 <nav className="flex justify-between items-center py-5 px-8 max-w-7xl mx-auto bg-white">
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href={route('home')} className="flex items-center gap-2">
                         {platform?.logo_url ? (
                             <div className="w-10 h-10 overflow-hidden flex items-center justify-center">
                                 <img src={platform.logo_url} alt={name} className="w-full h-full object-contain" />

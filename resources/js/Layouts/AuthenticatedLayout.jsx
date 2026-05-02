@@ -81,7 +81,7 @@ export default function AuthenticatedLayout({ children }) {
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent side="left" className="w-72">
-                                    <Link href={route('courses.show', 'fen-proaktif')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
+                                    <Link href={route('home')} className="flex items-center gap-2 pb-4 font-bold text-foreground">
                                         {platformLogoUrl ? (
                                             <img src={platformLogoUrl} alt={platformName} className="h-7 w-auto" />
                                         ) : (

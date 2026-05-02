@@ -71,7 +71,7 @@ export default function Wip2() {
             {/* Navbar */}
             <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100 shadow-sm">
             <nav className="flex w-full justify-between items-center py-2 px-4">
-                <Link href="/" className="flex items-center gap-2">
+                <Link href={route('home')} className="flex items-center gap-2">
                     {platform?.logo_url ? (
                         <img src={platform.logo_url} alt={platformName} className="h-8 w-auto object-contain" />
                     ) : (

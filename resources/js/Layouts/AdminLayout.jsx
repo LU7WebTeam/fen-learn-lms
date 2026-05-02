@@ -185,7 +185,7 @@ function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/">
+                            <Link href={route('home')}>
                                 {platformLogoUrl ? (
                                     <div className="flex aspect-square h-8 w-8 items-center justify-center overflow-hidden rounded-lg border bg-background">
                                         <img

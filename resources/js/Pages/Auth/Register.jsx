@@ -13,6 +13,7 @@ export default function Register() {
     const [showPass, setShowPass] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
     const t = useT();
 
     const { data, setData, post, transform, processing, errors, reset } = useForm({
@@ -33,7 +34,7 @@ export default function Register() {
         const token = await resolveCaptchaToken(captchaConfig, 'register', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError(t('auth.captcha.required'));
+            setCaptchaClientError(t(captchaUnavailable ? 'auth.captcha.unavailable' : 'auth.captcha.required'));
             return;
         }
 
@@ -210,7 +211,9 @@ export default function Register() {
                             action="register"
                             token={data.captcha_token}
                             onTokenChange={(value) => setData('captcha_token', value)}
+                            onAvailabilityChange={setCaptchaUnavailable}
                             error={translateAuthError(errors.captcha_token || captchaClientError, t)}
+                            t={t}
                         />
                     </form>
 

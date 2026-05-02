@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 const LESSON_ICONS = { video: Video, text: FileText, quiz: HelpCircle, pdf: FileText };
 const A11Y_PREFS_STORAGE_KEY = 'a11y_preferences_v1';
 const DEFAULT_A11Y_MEDIA_PREFERENCES = {
-    captionsByDefault: true,
+    captionsByDefault: false,
     textFirstLearning: false,
 };
 
@@ -44,8 +44,8 @@ function getA11yMediaPreferences() {
 
         return {
             ...DEFAULT_A11Y_MEDIA_PREFERENCES,
-            captionsByDefault: parsed?.captionsByDefault !== false,
-            textFirstLearning: !!parsed?.textFirstLearning,
+            captionsByDefault: parsed?.captionsByDefault === true,
+            textFirstLearning: parsed?.textFirstLearning === true,
         };
     } catch {
         return DEFAULT_A11Y_MEDIA_PREFERENCES;

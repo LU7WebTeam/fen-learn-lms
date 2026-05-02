@@ -15,7 +15,7 @@ export default function GuestLayout({ children, fullWidth = false }) {
         ].join(' ')}>
             <AnalyticsTracker />
             <div>
-                <Link href="/" className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-gray-900">
+                <Link href={route('home')} className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-gray-900">
                     {platformLogoUrl
                         ? <img src={platformLogoUrl} alt={platformName} className="h-8 w-auto" />
                         : <GraduationCap className="h-7 w-7 text-primary" />

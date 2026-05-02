@@ -93,7 +93,7 @@ export default function SortedStyle() {
 
             <header className="sticky top-0 z-50 border-b border-[#d8cfbf] bg-[#fcf8ef]/95 backdrop-blur-sm">
                 <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-                    <Link href="/" className="flex items-center gap-3">
+                    <Link href={route('home')} className="flex items-center gap-3">
                         {platform?.logo_url ? (
                             <img src={platform.logo_url} alt={platformName} className="h-9 w-auto object-contain" />
                         ) : (

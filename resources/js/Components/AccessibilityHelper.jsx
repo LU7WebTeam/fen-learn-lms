@@ -14,7 +14,7 @@ const DEFAULT_PREFERENCES = {
     reducedMotion: false,
     strongFocus: false,
     dyslexicFont: false,
-    captionsByDefault: true,
+    captionsByDefault: false,
     textFirstLearning: false,
 };
 
@@ -133,7 +133,7 @@ export default function AccessibilityHelper({ locale = 'en' }) {
             </div>
 
             {open && (
-                <div className="fixed bottom-40 right-4 z-[100] w-[320px] rounded-xl border bg-card p-4 shadow-2xl">
+                <div className="fixed bottom-4 right-4 top-4 z-[110] flex w-[min(320px,calc(100vw-2rem))] flex-col rounded-xl border bg-card p-4 shadow-2xl sm:bottom-40 sm:top-auto sm:max-h-[calc(100dvh-11rem)]">
                     <div className="mb-4 flex items-start justify-between gap-2">
                         <div>
                             <h3 className="text-sm font-semibold">Accessibility Helper</h3>
@@ -149,7 +149,7 @@ export default function AccessibilityHelper({ locale = 'en' }) {
                         </Button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 overflow-y-auto pr-1">
                         <label className="block text-xs font-medium text-muted-foreground">
                             Text Size ({formatScale(preferences.fontScale)})
                             <input

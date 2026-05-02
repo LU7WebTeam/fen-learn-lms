@@ -11,6 +11,7 @@ export default function ForgotPassword({ status }) {
     const { props } = usePage();
     const captchaConfig = props?.integrations?.captcha ?? {};
     const [captchaClientError, setCaptchaClientError] = useState('');
+    const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
     const t = useT();
 
     const { data, setData, post, transform, processing, errors } = useForm({
@@ -27,7 +28,7 @@ export default function ForgotPassword({ status }) {
         const token = await resolveCaptchaToken(captchaConfig, 'forgot_password', data.captcha_token);
 
         if (enabled && !token) {
-            setCaptchaClientError(t('auth.captcha.required'));
+            setCaptchaClientError(t(captchaUnavailable ? 'auth.captcha.unavailable' : 'auth.captcha.required'));
             return;
         }
 
@@ -68,7 +69,9 @@ export default function ForgotPassword({ status }) {
                         action="forgot_password"
                         token={data.captcha_token}
                         onTokenChange={(value) => setData('captcha_token', value)}
+                        onAvailabilityChange={setCaptchaUnavailable}
                         error={errors.captcha_token || captchaClientError}
+                        t={t}
                     />
                 </div>
 

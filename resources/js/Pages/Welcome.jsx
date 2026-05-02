@@ -20,7 +20,7 @@ function Nav({ auth, platform }) {
     return (
         <nav className="sticky inset-x-0 top-0 z-50 border-b border-sky-100/80 bg-white/90 backdrop-blur-md">
             <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-                <Link href="/" className="flex shrink-0 items-center gap-2.5">
+                <Link href={route('home')} className="flex shrink-0 items-center gap-2.5">
                     {platform?.logo_url ? (
                         <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-sky-200 bg-white">
                             <img src={platform.logo_url} alt={platformName} className="h-8 w-8 object-contain" />
