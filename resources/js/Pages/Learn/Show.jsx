@@ -483,11 +483,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
             )}
 
             {/* Quiz Result Modal */}
-            {sessionResult && (
+            {sessionResult && result && (
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
                     <DialogContent className="quiz-result-modal w-80 gap-0 overflow-hidden rounded-2xl p-0 pt-4">
                         {/* Confetti overlay inside modal */}
-                        {hasPassingScore && result.passed && animateResult && (
+                        {hasPassingScore && result?.passed && animateResult && (
                             <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
                                 {[...Array(18)].map((_, i) => {
                                     const colors = ['#22c55e', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6', '#f43f5e'];
@@ -512,14 +512,14 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                             src={
                                 !hasPassingScore
                                     ? '/images/quiz-completed.webp'
-                                    : result.passed
+                                    : result?.passed
                                         ? '/images/quiz-passed.webp'
                                         : '/images/quiz-failed.webp'
                             }
                             alt={
                                 !hasPassingScore
                                     ? t('learn.quiz.result_img_alt_completed')
-                                    : result.passed
+                                    : result?.passed
                                         ? t('learn.quiz.result_img_alt_passed')
                                         : t('learn.quiz.result_img_alt_failed')
                             }
@@ -531,19 +531,19 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                         <div className="space-y-1.5 px-6 pb-6 pt-4 text-center">
                             <div className={cn(
                                 'text-4xl font-bold tabular-nums',
-                                hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                                hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                             )}>
                                 {result.score} / {result.max_score}
                             </div>
                             <p className={cn(
                                 'text-lg font-semibold tabular-nums',
-                                hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                                hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                             )}>
                                 {result.percentage}%
                             </p>
                             {hasPassingScore && (
                                 <p className="text-sm text-muted-foreground">
-                                    {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
+                                    {result?.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
                                 </p>
                             )}
 
@@ -588,14 +588,14 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                             src={
                                 !hasPassingScore
                                     ? '/images/quiz-completed.webp'
-                                    : result.passed
+                                    : result?.passed
                                         ? '/images/quiz-passed.webp'
                                         : '/images/quiz-failed.webp'
                             }
                             alt={
                                 !hasPassingScore
                                     ? t('learn.quiz.result_img_alt_completed')
-                                    : result.passed
+                                    : result?.passed
                                         ? t('learn.quiz.result_img_alt_passed')
                                         : t('learn.quiz.result_img_alt_failed')
                             }
@@ -604,19 +604,19 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                         />
                         <div className={cn(
                             'text-4xl font-bold tabular-nums',
-                            hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                            hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                         )}>
                             {result.score} / {result.max_score}
                         </div>
                         <p className={cn(
                             'text-lg font-semibold tabular-nums',
-                            hasPassingScore ? (result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
+                            hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                         )}>
                             {result.percentage}%
                         </p>
                         {hasPassingScore && (
                             <p className="text-sm text-muted-foreground">
-                                {result.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
+                                {result?.passed ? t('learn.quiz.passed') : t('learn.quiz.failed', { n: result.passing_score })}
                             </p>
                         )}
                         <div className="space-y-2 pt-3">
@@ -636,16 +636,16 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
             )}
 
             {/* Compact score banner — visible after modal is dismissed */}
-            {sessionResult && !modalOpen && (
+            {sessionResult && result && !modalOpen && (
                 <div className={cn(
                     'flex items-center justify-between rounded-lg border px-4 py-3 text-sm',
                     hasPassingScore
-                        ? (result.passed ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30')
+                        ? (result?.passed ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30')
                         : 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30'
                 )}>
                     <span className={cn(
                         'font-semibold tabular-nums',
-                        hasPassingScore ? (result.passed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400') : 'text-blue-700 dark:text-blue-400'
+                        hasPassingScore ? (result?.passed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400') : 'text-blue-700 dark:text-blue-400'
                     )}>
                         {result.score}/{result.max_score} &mdash; {result.percentage}%
                     </span>
@@ -653,9 +653,9 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                         {hasPassingScore && (
                             <span className={cn(
                                 'text-xs font-medium',
-                                result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                                result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                             )}>
-                                {result.passed ? t('learn.quiz.passed_label') : t('learn.quiz.failed_label')}
+                                {result?.passed ? t('learn.quiz.passed_label') : t('learn.quiz.failed_label')}
                             </span>
                         )}
                         <button
