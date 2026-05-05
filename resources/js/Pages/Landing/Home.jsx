@@ -237,7 +237,7 @@ export default function Home() {
                 </div>
             </header>
 
-            <section className="-mt-[84px] w-full px-5 pt-4 2xl:px-8">
+            <section className="-mt-[calc(60px+1rem)] w-full px-5 pt-4 sm:-mt-[84px] 2xl:px-8">
                 <div
                     className="hero-home-bg relative min-h-[70vh] overflow-hidden rounded-2xl"
                 >

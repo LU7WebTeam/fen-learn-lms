@@ -58,7 +58,8 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
     const { flash } = usePage().props;
     const t = useT();
     const sessionResult = flash?.quiz_result ?? null;
-    const result = sessionResult ?? latestQuizResult;
+    const [isRetrying, setIsRetrying] = useState(false);
+    const result = sessionResult ?? (!isRetrying ? latestQuizResult : null);
     const [animateResult, setAnimateResult] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [showAnswerReview, setShowAnswerReview] = useState(false);
@@ -122,8 +123,10 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
     }
 
     function handleRetry() {
+        setIsRetrying(true);
         setData('answers', {});
         setShowAnswerReview(false);
+        setModalOpen(false);
         router.reload({ only: ['flash'] });
     }
 
@@ -186,6 +189,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
             return;
         }
 
+        setIsRetrying(false);
         setModalOpen(true);
         setShowAnswerReview(false);
         setAnimateResult(true);

@@ -1,4 +1,5 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { BookOpen, MailCheck } from 'lucide-react';
 import InputError from '@/Components/InputError';
 import AnalyticsTracker from '@/Components/AnalyticsTracker';
@@ -10,6 +11,14 @@ export default function VerifyEmail({ status }) {
     const t = useT();
 
     const { post, processing, errors } = useForm({});
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            router.reload({ preserveScroll: true, preserveState: true });
+        }, 8000);
+
+        return () => window.clearInterval(intervalId);
+    }, []);
 
     function submit(e) {
         e.preventDefault();
