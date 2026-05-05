@@ -140,7 +140,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
     }
 
     const showResult = !!result;
-    const isStoredResult = !sessionResult && !!latestQuizResult;
+    const isStoredResult = !sessionResult && !!result;
     const canReviewAnswers = showResult
         && (result?.can_review_answers
             ?? (showAnswerFeedback && (!answerReviewRequiresPass || !hasPassingScore || !!result?.passed)));
