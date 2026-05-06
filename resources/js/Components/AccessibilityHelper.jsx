@@ -61,7 +61,10 @@ function formatScale(value) {
 export default function AccessibilityHelper({ locale = 'en' }) {
     const [open, setOpen] = useState(false);
     const [preferences, setPreferences] = useState(() => readStoredPreferences());
+    const [scrollHidden, setScrollHidden] = useState(false);
     const triggerRef = useRef(null);
+    const scrollTimerRef = useRef(null);
+    const bounceTimerRef = useRef(null);
     const t = (key, params) => resolve(key, locale, params ?? {});
 
     useEffect(() => {
@@ -103,6 +106,47 @@ export default function AccessibilityHelper({ locale = 'en' }) {
         return () => window.clearInterval(interval);
     }, [preferences.reducedMotion]);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrollHidden(true);
+
+            if (scrollTimerRef.current) {
+                clearTimeout(scrollTimerRef.current);
+            }
+            if (bounceTimerRef.current) {
+                clearTimeout(bounceTimerRef.current);
+            }
+
+            scrollTimerRef.current = setTimeout(() => {
+                setScrollHidden(false);
+
+                if (!preferences.reducedMotion) {
+                    bounceTimerRef.current = setTimeout(() => {
+                        if (triggerRef.current) {
+                            triggerRef.current.animate(
+                                [
+                                    { transform: 'scale(1)' },
+                                    { transform: 'scale(1.25)' },
+                                    { transform: 'scale(0.9)' },
+                                    { transform: 'scale(1.1)' },
+                                    { transform: 'scale(1)' },
+                                ],
+                                { duration: 500, easing: 'ease-out' },
+                            );
+                        }
+                    }, 320);
+                }
+            }, 500);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+            if (bounceTimerRef.current) clearTimeout(bounceTimerRef.current);
+        };
+    }, [preferences.reducedMotion]);
+
     function updatePreference(key, value) {
         setPreferences(prev => ({
             ...prev,
@@ -116,12 +160,18 @@ export default function AccessibilityHelper({ locale = 'en' }) {
 
     return (
         <>
-            <div className="fixed bottom-24 right-4 z-[100] flex flex-col items-center gap-1">
+            <div
+                className="fixed bottom-24 right-4 z-[100] flex flex-col items-center gap-1"
+                style={{
+                    transform: scrollHidden ? 'translateX(calc(100% + 2rem))' : 'translateX(0)',
+                    transition: 'transform 0.3s ease-in-out',
+                }}
+            >
                 <Button
                     ref={triggerRef}
                     type="button"
                     onClick={() => setOpen(prev => !prev)}
-                    className="h-[70px] w-[70px] rounded-full shadow-lg [&_svg]:!h-[36px] [&_svg]:!w-[36px]"
+                    className="h-[50px] w-[50px] rounded-full shadow-lg [&_svg]:!h-[30px] [&_svg]:!w-[30px] sm:h-[70px] sm:w-[70px] sm:[&_svg]:!h-[36px] sm:[&_svg]:!w-[36px]"
                     title={t('a11y.helper.open_aria')}
                     aria-label={t('a11y.helper.open_aria')}
                 >
