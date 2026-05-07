@@ -14,6 +14,7 @@ class HandleMaintenanceMode
         '/login',
         '/logout',
         '/register',
+        '/verify-code',
         '/forgot-password',
         '/reset-password',
         '/email',
