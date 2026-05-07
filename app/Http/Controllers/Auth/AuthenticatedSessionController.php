@@ -38,6 +38,13 @@ class AuthenticatedSessionController extends Controller
         // Verify credentials without logging in (for 2FA)
         $user = $request->verifyCredentialsFor2FA();
 
+        // Keep admin roles on the dedicated admin authentication flow.
+        if ($user->isAdmin()) {
+            return back()->withErrors([
+                'email' => 'This login is for learners only. Please use the admin login.',
+            ]);
+        }
+
         // Skip 2FA when disabled (e.g. local dev without SMTP)
         if (!config('auth.two_factor_enabled')) {
             Auth::login($user, $request->boolean('remember'));

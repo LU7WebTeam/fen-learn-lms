@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Setting;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 class HandleMaintenanceMode
@@ -41,6 +42,10 @@ class HandleMaintenanceMode
         }
 
         if ($siteLockEnabled === '1' && !$this->shouldBypassSiteLock($request) && !$this->hasValidSiteLockSession($request)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location(route('site-lock.show'));
+            }
+
             return redirect()->route('site-lock.show');
         }
 
@@ -49,6 +54,10 @@ class HandleMaintenanceMode
                 'maintenance_message',
                 'We are currently down for scheduled maintenance. Please check back soon.'
             );
+
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
 
             return response()->view('maintenance', ['message' => $message], 503);
         }

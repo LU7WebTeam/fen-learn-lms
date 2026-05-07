@@ -1,9 +1,10 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { useEffect, useState } from 'react';
 import { Toaster } from '@/Components/ui/toaster';
 import { ThemeProvider } from '@/Components/ThemeProvider';
 import AccessibilityHelper from '@/Components/AccessibilityHelper';
@@ -19,13 +20,33 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        const locale = props?.initialPage?.props?.locale ?? 'en';
+
+        function RootApp() {
+            const [locale, setLocale] = useState(props?.initialPage?.props?.locale ?? 'en');
+
+            useEffect(() => {
+                const stopListening = router.on('success', (event) => {
+                    setLocale(event?.detail?.page?.props?.locale ?? 'en');
+                });
+
+                return () => {
+                    if (typeof stopListening === 'function') {
+                        stopListening();
+                    }
+                };
+            }, []);
+
+            return (
+                <ThemeProvider>
+                    <App {...props} />
+                    <AccessibilityHelper locale={locale} />
+                    <Toaster />
+                </ThemeProvider>
+            );
+        }
+
         root.render(
-            <ThemeProvider>
-                <App {...props} />
-                <AccessibilityHelper locale={locale} />
-                <Toaster />
-            </ThemeProvider>
+            <RootApp />
         );
     },
     progress: {

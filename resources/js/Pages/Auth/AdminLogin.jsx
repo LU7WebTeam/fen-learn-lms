@@ -159,7 +159,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                                     type="checkbox"
                                     checked={data.remember}
                                     onChange={e => setData('remember', e.target.checked)}
-                                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-white"
+                                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-800 accent-blue-500"
                                 />
                                 <span className="text-sm text-zinc-400">{t('auth.login.remember_me')}</span>
                             </label>
