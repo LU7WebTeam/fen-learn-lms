@@ -183,11 +183,12 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 function TrendChart({ data }) {
+    const { theme } = useTheme();
+
     if (!data?.length || data.every(d => d.enrollments === 0 && d.completions === 0)) {
         return <EmptyChart />;
     }
 
-    const { theme } = useTheme();
     const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
 
@@ -196,132 +197,142 @@ function TrendChart({ data }) {
     const tickInterval = tickCount <= 14 ? 0 : tickCount <= 31 ? 2 : Math.floor(tickCount / 10);
 
     return (
-        <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={data} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11, fill: tickColor }}
-                    interval={tickInterval}
-                    tickFormatter={d => {
-                        const dt = new Date(d);
-                        return `${dt.getMonth() + 1}/${dt.getDate()}`;
-                    }}
-                />
-                <YAxis tick={{ fontSize: 11, fill: tickColor }} allowDecimals={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
-                <Line
-                    type="monotone"
-                    dataKey="enrollments"
+        <div className="h-[280px] md:h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                    <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: tickColor }}
+                        interval={tickInterval}
+                        tickFormatter={d => {
+                            const dt = new Date(d);
+                            return `${dt.getMonth() + 1}/${dt.getDate()}`;
+                        }}
+                    />
+                    <YAxis tick={{ fontSize: 11, fill: tickColor }} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
+                    <Line
+                        type="monotone"
+                        dataKey="enrollments"
                         name="Enrolments"
-                    stroke={CHART_COLORS.primary}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                />
-                <Line
-                    type="monotone"
-                    dataKey="completions"
-                    name="Completions"
-                    stroke={CHART_COLORS.secondary}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                />
-            </LineChart>
-        </ResponsiveContainer>
+                        stroke={CHART_COLORS.primary}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 4 }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="completions"
+                        name="Completions"
+                        stroke={CHART_COLORS.secondary}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 4 }}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
 function LessonFunnelChart({ data }) {
+    const { theme } = useTheme();
     if (!data?.length) return <EmptyChart label="No lessons found" />;
 
-    const { theme } = useTheme();
     const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
     const tooltipStyle = theme === 'dark'
         ? { fontSize: 12, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }
         : { fontSize: 12 };
 
+    const chartHeight = Math.max(260, data.length * 38);
+
     return (
-        <ResponsiveContainer width="100%" height={Math.max(200, data.length * 32)}>
-            <BarChart
-                data={data}
-                layout="vertical"
-                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
-            >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-                <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    unit="%"
-                    tick={{ fontSize: 10, fill: tickColor }}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="title"
-                    width={160}
-                    tick={{ fontSize: 11, fill: tickColor }}
-                    tickFormatter={v => v.length > 22 ? v.slice(0, 22) + '…' : v}
-                />
-                <Tooltip
-                    formatter={(value, name, props) => [
-                        `${value}% (${props.payload.completed_count} learners)`,
-                        'Completion'
-                    ]}
-                    contentStyle={tooltipStyle}
-                />
-                <Bar dataKey="completion_rate" name="Completion %" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
-            </BarChart>
-        </ResponsiveContainer>
+        <div className="h-auto" style={{ minHeight: chartHeight }}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+                <BarChart
+                    data={data}
+                    layout="vertical"
+                    margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                    <XAxis
+                        type="number"
+                        domain={[0, 100]}
+                        unit="%"
+                        tick={{ fontSize: 10, fill: tickColor }}
+                    />
+                    <YAxis
+                        type="category"
+                        dataKey="title"
+                        width={160}
+                        tick={{ fontSize: 11, fill: tickColor }}
+                        tickFormatter={v => v.length > 22 ? v.slice(0, 22) + '…' : v}
+                    />
+                    <Tooltip
+                        formatter={(value, name, props) => [
+                            `${value}% (${props.payload.completed_count} learners)`,
+                            'Completion'
+                        ]}
+                        contentStyle={tooltipStyle}
+                    />
+                    <Bar dataKey="completion_rate" name="Completion %" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
 function DemographicBarChart({ data, color = CHART_COLORS.secondary }) {
+    const { theme } = useTheme();
     if (!data?.length) return <EmptyChart />;
 
-    const { theme } = useTheme();
     const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
     const tooltipStyle = theme === 'dark'
         ? { fontSize: 12, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }
         : { fontSize: 12 };
 
+    const chartHeight = Math.max(240, data.length * 40);
+
     return (
-        <ResponsiveContainer width="100%" height={Math.max(160, data.length * 36)}>
-            <BarChart
-                data={data}
-                layout="vertical"
-                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
-            >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-                <XAxis
-                    type="number"
-                    tick={{ fontSize: 10, fill: tickColor }}
-                    allowDecimals={false}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="label"
-                    width={130}
-                    tick={{ fontSize: 11, fill: tickColor }}
-                    tickFormatter={v => v.length > 18 ? v.slice(0, 18) + '…' : v}
-                />
-                <Tooltip
-                    formatter={(value) => [value, 'Learners']}
-                    contentStyle={tooltipStyle}
-                />
-                <Bar dataKey="count" name="Learners" fill={color} radius={[0, 4, 4, 0]} />
-            </BarChart>
-        </ResponsiveContainer>
+        <div className="h-auto" style={{ minHeight: chartHeight }}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+                <BarChart
+                    data={data}
+                    layout="vertical"
+                    margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                    <XAxis
+                        type="number"
+                        tick={{ fontSize: 10, fill: tickColor }}
+                        allowDecimals={false}
+                    />
+                    <YAxis
+                        type="category"
+                        dataKey="label"
+                        width={130}
+                        tick={{ fontSize: 11, fill: tickColor }}
+                        tickFormatter={v => v.length > 18 ? v.slice(0, 18) + '…' : v}
+                    />
+                    <Tooltip
+                        formatter={(value) => [value, 'Learners']}
+                        contentStyle={tooltipStyle}
+                    />
+                    <Bar dataKey="count" name="Learners" fill={color} radius={[0, 4, 4, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
 function DemographicPieChart({ data }) {
+    const { theme } = useTheme();
     if (!data?.length) return <EmptyChart />;
 
-    const { theme } = useTheme();
     const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const tooltipStyle = theme === 'dark'
         ? { fontSize: 12, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }
@@ -329,69 +340,75 @@ function DemographicPieChart({ data }) {
 
     const total = data.reduce((s, d) => s + d.count, 0);
     return (
-        <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-                <Pie
-                    data={data}
-                    dataKey="count"
-                    nameKey="label"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label={({ label, percent }) => `${label} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                >
-                    {data.map((_, idx) => (
-                        <Cell key={idx} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
-                    ))}
-                </Pie>
-                <Tooltip
-                    formatter={(value) => [`${value} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`, 'Learners']}
-                    contentStyle={tooltipStyle}
-                />
-                <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
-            </PieChart>
-        </ResponsiveContainer>
+        <div className="h-[340px] md:h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                        data={data}
+                        dataKey="count"
+                        nameKey="label"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ label, percent }) => `${label} ${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                    >
+                        {data.map((_, idx) => (
+                            <Cell key={idx} fill={PIE_PALETTE[idx % PIE_PALETTE.length]} />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        formatter={(value) => [`${value} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`, 'Learners']}
+                        contentStyle={tooltipStyle}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
 function QuizStatsChart({ data }) {
+    const { theme } = useTheme();
     if (!data?.length) return <EmptyChart label="No quiz lessons in this course" />;
 
-    const { theme } = useTheme();
     const tickColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
     const tooltipStyle = theme === 'dark'
         ? { fontSize: 12, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9' }
         : { fontSize: 12 };
 
+    const chartHeight = Math.max(260, data.length * 48);
+
     return (
-        <ResponsiveContainer width="100%" height={Math.max(160, data.length * 44)}>
-            <BarChart
-                data={data}
-                layout="vertical"
-                margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
-            >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-                <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    unit="%"
-                    tick={{ fontSize: 10, fill: tickColor }}
-                />
-                <YAxis
-                    type="category"
-                    dataKey="title"
-                    width={150}
-                    tick={{ fontSize: 11, fill: tickColor }}
-                    tickFormatter={v => v.length > 22 ? v.slice(0, 22) + '…' : v}
-                />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
-                <Bar dataKey="pass_rate" name="Pass Rate %" fill={CHART_COLORS.secondary} radius={[0, 2, 2, 0]} />
-                <Bar dataKey="avg_score" name="Avg Score %" fill={CHART_COLORS.accent} radius={[0, 2, 2, 0]} />
-            </BarChart>
-        </ResponsiveContainer>
+        <div className="h-auto" style={{ minHeight: chartHeight }}>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+                <BarChart
+                    data={data}
+                    layout="vertical"
+                    margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                >
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                    <XAxis
+                        type="number"
+                        domain={[0, 100]}
+                        unit="%"
+                        tick={{ fontSize: 10, fill: tickColor }}
+                    />
+                    <YAxis
+                        type="category"
+                        dataKey="title"
+                        width={150}
+                        tick={{ fontSize: 11, fill: tickColor }}
+                        tickFormatter={v => v.length > 22 ? v.slice(0, 22) + '…' : v}
+                    />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: '12px', color: tickColor }} />
+                    <Bar dataKey="pass_rate" name="Pass Rate %" fill={CHART_COLORS.secondary} radius={[0, 2, 2, 0]} />
+                    <Bar dataKey="avg_score" name="Avg Score %" fill={CHART_COLORS.accent} radius={[0, 2, 2, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
