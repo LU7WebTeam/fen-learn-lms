@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    private const SUSPENDED_MESSAGE = 'Your account has been suspended. Please contact admin for assistance.';
+
     /**
      * Determine if the user is authorised to make this request.
      */
@@ -42,6 +45,14 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $user = User::where('email', $this->string('email'))->first();
+
+        if ($user && $user->isSuspended()) {
+            throw ValidationException::withMessages([
+                'email' => self::SUSPENDED_MESSAGE,
+            ]);
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -63,7 +74,13 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $user = \App\Models\User::where('email', $this->input('email'))->first();
+        $user = User::where('email', $this->input('email'))->first();
+
+        if ($user && $user->isSuspended()) {
+            throw ValidationException::withMessages([
+                'email' => self::SUSPENDED_MESSAGE,
+            ]);
+        }
 
         if (!$user || !\Illuminate\Support\Facades\Hash::check($this->input('password'), $user->password)) {
             RateLimiter::hit($this->throttleKey());
