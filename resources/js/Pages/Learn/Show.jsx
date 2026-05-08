@@ -1102,17 +1102,20 @@ export default function LearnShow({
                             <Separator className="my-8" />
 
                             {/* Bottom navigation */}
-                            <div id="lesson-actions" ref={actionsRef} tabIndex={-1} className="flex items-center justify-between gap-4 focus:outline-none">
+                            <div id="lesson-actions" ref={actionsRef} tabIndex={-1} className="flex flex-wrap items-center justify-between gap-3 focus:outline-none sm:gap-4">
                                 <Button
                                     variant="outline"
+                                    className="max-w-full basis-full justify-start sm:basis-auto"
                                     disabled={!prevLesson}
                                     onClick={() => prevLesson && router.get(route('learn.lesson', [course.slug, prevLesson.id]))}
                                 >
                                     <ChevronLeft className="mr-1 h-4 w-4" />
-                                    {prevLesson ? tl(prevLesson, 'title', locale) : t('learn.lesson.previous')}
+                                    <span className="max-w-[72vw] truncate sm:max-w-none">
+                                        {prevLesson ? tl(prevLesson, 'title', locale) : t('learn.lesson.previous')}
+                                    </span>
                                 </Button>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
                                     {/* Complete button — video & text only */}
                                     {lesson.type !== 'quiz' && (
                                         completed ? (
