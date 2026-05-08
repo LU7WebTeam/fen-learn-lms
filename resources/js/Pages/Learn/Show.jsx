@@ -673,13 +673,41 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function SidebarContent({ course, lesson, completedIds, enrollment, lockedIds = [], locale }) {
+function SidebarContent({
+    course,
+    lesson,
+    completedIds,
+    enrollment,
+    lockedIds = [],
+    locale,
+    showBrand = false,
+    platformName = 'FEN Learn',
+    platformLogoUrl = null,
+    platformDarkLogoUrl = null,
+}) {
     const courseTitle = tl(course, 'title', locale);
     const courseDescription = tl(course, 'description', locale);
     const t = useT();
 
     return (
         <div className="flex h-full flex-col gap-3 p-3">
+            {showBrand && (
+                <Link
+                    href={route('home')}
+                    className="flex items-center rounded-xl bg-[#2a1548]/90 px-3 py-2.5 text-white shadow-sm"
+                >
+                    {(platformDarkLogoUrl || platformLogoUrl) ? (
+                        <img
+                            src={platformDarkLogoUrl || platformLogoUrl}
+                            alt={platformName}
+                            className="h-[24px] w-auto object-contain"
+                        />
+                    ) : (
+                        <span className="text-base font-black">{platformName}</span>
+                    )}
+                </Link>
+            )}
+
             {/* Course card */}
             <div className="rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
                 <Link href={route('courses.show', course.slug)} className="block overflow-hidden rounded-xl">
@@ -868,16 +896,20 @@ export default function LearnShow({
                                         enrollment={enrollment}
                                         lockedIds={lockedIds}
                                         locale={locale}
+                                        showBrand={true}
+                                        platformName={platformName}
+                                        platformLogoUrl={platformLogoUrl}
+                                        platformDarkLogoUrl={platformDarkLogoUrl}
                                     />
                                 </SheetContent>
                             </Sheet>
 
                             {(platformDarkLogoUrl || platformLogoUrl) ? (
-                                <Link href={route('home')} className="shrink-0">
+                                <Link href={route('home')} className="hidden shrink-0 sm:block">
                                     <img src={platformDarkLogoUrl || platformLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                                 </Link>
                             ) : (
-                                <Link href={route('home')} className="shrink-0 text-base font-black">{platformName}</Link>
+                                <Link href={route('home')} className="hidden shrink-0 text-base font-black sm:block">{platformName}</Link>
                             )}
 
                             <span className="hidden h-5 w-px bg-white/25 sm:block" />
