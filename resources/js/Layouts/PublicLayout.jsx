@@ -20,7 +20,7 @@ export default function PublicLayout({ children }) {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
+        <div className="min-h-screen bg-[#eceff3] text-[#0f1115] dark:bg-[#0b1020] dark:text-slate-100">
             <AnalyticsTracker />
 
             <header className="sticky top-0 z-50 px-5 pt-4 2xl:px-8">
