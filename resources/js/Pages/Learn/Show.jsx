@@ -1168,18 +1168,20 @@ export default function LearnShow({
                         </div>
 
                         {/* Footer — inside scrollable main so it flows with content */}
-                        <footer className="px-4 pb-4 pt-6 sm:px-8 sm:pb-6">
-                            <div className="w-full rounded-2xl bg-[#17191f] px-6 py-4 text-[#d4d8e2] sm:px-8">
-                                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                                    <div className="flex items-center gap-3">
+                        <footer className="mt-4 w-full px-5 pb-4 sm:pb-6 2xl:px-8">
+                            <div className="w-full rounded-2xl bg-[#17191f] px-6 py-7 text-[#d4d8e2] sm:px-8">
+                                <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+                                    <div className="flex flex-col items-center gap-1 text-center text-sm sm:flex-row sm:gap-3 sm:text-left">
                                         {platformDarkLogoUrl ? (
-                                            <img src={platformDarkLogoUrl} alt={platformName} className="h-5 w-auto object-contain" />
+                                            <img src={platformDarkLogoUrl} alt={platformName} className="h-[24px] w-auto object-contain sm:h-[30px]" />
                                         ) : (
-                                            <span className="font-bold text-white">{platformName.charAt(0)}</span>
+                                            <span className="text-lg font-bold text-white">{platformName.charAt(0)}</span>
                                         )}
+                                        {!platformDarkLogoUrl && <span className="hidden text-[#4a5060] sm:inline">|</span>}
                                         <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-5">
+
+                                    <div className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6">
                                         <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
                                         <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
                                         <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
