@@ -110,7 +110,7 @@ export default function PublicLayout({ children }) {
                         </div>
 
                         <div className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6">
-                            <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
+                            <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
                             <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
                             <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
                         </div>
