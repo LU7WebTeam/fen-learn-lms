@@ -1166,29 +1166,29 @@ export default function LearnShow({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Footer — inside scrollable main so it flows with content */}
+                        <footer className="px-4 pb-4 pt-6 sm:px-8 sm:pb-6">
+                            <div className="w-full rounded-2xl bg-[#17191f] px-6 py-4 text-[#d4d8e2] sm:px-8">
+                                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                                    <div className="flex items-center gap-3">
+                                        {platformDarkLogoUrl ? (
+                                            <img src={platformDarkLogoUrl} alt={platformName} className="h-5 w-auto object-contain" />
+                                        ) : (
+                                            <span className="font-bold text-white">{platformName.charAt(0)}</span>
+                                        )}
+                                        <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-5">
+                                        <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
+                                        <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
+                                        <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </footer>
                     </main>
                 </div>
-
-                {/* Footer */}
-                <footer className="shrink-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8">
-                    <div className="w-full rounded-2xl bg-[#17191f] px-6 py-4 text-[#d4d8e2] sm:px-8">
-                    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                        <div className="flex items-center gap-3">
-                            {platformDarkLogoUrl ? (
-                                <img src={platformDarkLogoUrl} alt={platformName} className="h-5 w-auto object-contain" />
-                            ) : (
-                                <span className="font-bold text-white">{platformName.charAt(0)}</span>
-                            )}
-                            <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-5">
-                            <a href="https://www.fenetwork.my" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
-                            <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
-                            <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
-                        </div>
-                    </div>
-                    </div>
-                </footer>
             </div>
 
         </>

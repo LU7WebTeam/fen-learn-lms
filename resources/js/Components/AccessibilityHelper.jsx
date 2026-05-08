@@ -139,9 +139,11 @@ export default function AccessibilityHelper({ locale = 'en' }) {
             }, 500);
         };
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
+        // Use capture phase on document so scroll events from overflow-y:auto
+        // containers (e.g. the lesson page <main>) are also detected.
+        document.addEventListener('scroll', handleScroll, { passive: true, capture: true });
         return () => {
-            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('scroll', handleScroll, { capture: true });
             if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
             if (bounceTimerRef.current) clearTimeout(bounceTimerRef.current);
         };
