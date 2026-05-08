@@ -931,6 +931,7 @@ export default function LearnShow({
                                 <GraduationCap className="h-4 w-4 shrink-0" />
                                 <span className="hidden sm:inline line-clamp-1 max-w-xs">{courseTitle}</span>
                             </Link>
+                            <span className="text-sm text-white/70 sm:hidden">{enrollment.progress}%</span>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -940,7 +941,7 @@ export default function LearnShow({
                                     {t('learn.lesson.completed')}
                                 </Badge>
                             )}
-                            <span className="text-sm text-white/70">{enrollment.progress}%</span>
+                            <span className="hidden text-sm text-white/70 sm:inline">{enrollment.progress}%</span>
                             <ThemeToggleButton className="h-9 w-9 text-white hover:bg-white/10 hover:text-white focus-visible:text-white active:text-white" />
                             <LangSwitcher className="border-white bg-white text-[#131722]" />
                             <UserMenu />
