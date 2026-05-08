@@ -13,8 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-    private const SUSPENDED_MESSAGE = 'Your account has been suspended. Please contact admin for assistance.';
-
     /**
      * Determine if the user is authorised to make this request.
      */
@@ -49,7 +47,7 @@ class LoginRequest extends FormRequest
 
         if ($user && $user->isSuspended()) {
             throw ValidationException::withMessages([
-                'email' => self::SUSPENDED_MESSAGE,
+                'email' => $this->suspendedMessage(),
             ]);
         }
 
@@ -78,7 +76,7 @@ class LoginRequest extends FormRequest
 
         if ($user && $user->isSuspended()) {
             throw ValidationException::withMessages([
-                'email' => self::SUSPENDED_MESSAGE,
+                'email' => $this->suspendedMessage(),
             ]);
         }
 
@@ -124,5 +122,12 @@ class LoginRequest extends FormRequest
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+
+    private function suspendedMessage(): string
+    {
+        return in_array(app()->getLocale(), ['ms', 'bm'], true)
+            ? 'Akaun anda telah digantung. Sila hubungi admin untuk bantuan.'
+            : 'Your account has been suspended. Please contact admin for assistance.';
     }
 }

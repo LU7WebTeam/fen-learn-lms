@@ -18,8 +18,12 @@ class EnsureNotSuspended
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
+            $message = in_array(app()->getLocale(), ['ms', 'bm'], true)
+                ? 'Akaun anda telah digantung. Sila hubungi admin untuk bantuan.'
+                : 'Your account has been suspended. Please contact admin for assistance.';
+
             return redirect()->route('login')
-                ->withErrors(['email' => 'Your account has been suspended. Please contact admin for assistance.']);
+                ->withErrors(['email' => $message]);
         }
 
         return $next($request);
