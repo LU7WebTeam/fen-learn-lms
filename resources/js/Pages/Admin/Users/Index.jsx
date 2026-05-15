@@ -123,6 +123,8 @@ function LearnerProfileDialog({ userId, open, onClose }) {
         occupation:   '',
         organization: '',
         organization_other: '',
+        student_id:   '',
+        field_of_study: '',
     });
 
     useEffect(() => {
@@ -150,6 +152,8 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                     occupation:   data.occupation   ?? '',
                     organization: organizationState.organization,
                     organization_other: organizationState.organization_other,
+                    student_id:   data.student_id   ?? '',
+                    field_of_study: data.field_of_study ?? '',
                 });
             })
             .finally(() => setLoading(false));
@@ -197,6 +201,8 @@ function LearnerProfileDialog({ userId, open, onClose }) {
             occupation:   profile.occupation   ?? '',
             organization: organizationState.organization,
             organization_other: organizationState.organization_other,
+            student_id:   profile.student_id   ?? '',
+            field_of_study: profile.field_of_study ?? '',
         });
         setEditing(false);
     }
@@ -213,6 +219,8 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                     race:         data.race,
                     state:        data.state,
                     occupation:   data.occupation,
+                    student_id:   data.student_id,
+                    field_of_study: data.field_of_study,
                     organization: usesOrganizationDropdown
                         ? (data.organization === ORGANIZATION_OTHER_VALUE ? data.organization_other : data.organization)
                         : data.organization,
@@ -330,6 +338,29 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                             <InputError message={errors.occupation} />
                         </div>
 
+                        {data.occupation === 'student' && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Student ID</label>
+                                    <Input
+                                        value={data.student_id}
+                                        onChange={e => setData('student_id', e.target.value)}
+                                        placeholder="Enter student ID"
+                                    />
+                                    <InputError message={errors.student_id} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Field of Study</label>
+                                    <Input
+                                        value={data.field_of_study}
+                                        onChange={e => setData('field_of_study', e.target.value)}
+                                        placeholder="Enter field of study"
+                                    />
+                                    <InputError message={errors.field_of_study} />
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-1">
                             <label className="text-xs font-medium">Organization / Institution</label>
                                 <label className="text-xs font-medium">Organisation / Institution</label>
@@ -421,7 +452,7 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                                         <div className="flex items-start gap-2">
                                             <User className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
                                             <div>
-                                                <p className="text-xs text-muted-foreground">Race / Ethnicity</p>
+                                                <p className="text-xs text-muted-foreground">Race/Ethnicity</p>
                                                 <p className="font-medium">{raceLabel}</p>
                                             </div>
                                         </div>
@@ -450,6 +481,24 @@ function LearnerProfileDialog({ userId, open, onClose }) {
                                             <div>
                                                 <p className="text-xs text-muted-foreground">Occupation</p>
                                                 <p className="font-medium">{occupationLabel}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {profile.occupation === 'student' && profile.student_id && (
+                                        <div className="flex items-start gap-2">
+                                            <GraduationCap className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Student ID</p>
+                                                <p className="font-medium">{profile.student_id}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {profile.occupation === 'student' && profile.field_of_study && (
+                                        <div className="flex items-start gap-2">
+                                            <BookOpen className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Field of Study</p>
+                                                <p className="font-medium">{profile.field_of_study}</p>
                                             </div>
                                         </div>
                                     )}

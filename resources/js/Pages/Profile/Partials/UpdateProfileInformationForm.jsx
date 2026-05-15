@@ -142,6 +142,9 @@ export default function UpdateProfileInformation({
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {t('profile.info.subtitle')}
                 </p>
+                <p className="mt-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded px-3 py-2 border border-amber-200 dark:border-amber-800">
+                    {t('profile.info.admin_notice')}
+                </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
@@ -173,7 +176,6 @@ export default function UpdateProfileInformation({
                         readOnly
                         autoComplete="username"
                     />
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('profile.info.email_locked')}</p>
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2">

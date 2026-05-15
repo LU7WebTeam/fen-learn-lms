@@ -1220,7 +1220,8 @@ export default function AnalyticsIndex({ courses, selectedCourse, analytics, fil
             const q = search.toLowerCase();
             list = list.filter(l =>
                 (l.user_name ?? '').toLowerCase().includes(q) ||
-                (l.user_email ?? '').toLowerCase().includes(q),
+                (l.user_email ?? '').toLowerCase().includes(q) ||
+                (l.user_field_of_study ?? '').toLowerCase().includes(q),
             );
         }
 
