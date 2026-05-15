@@ -272,26 +272,30 @@ export default function UpdateProfileInformation({
                         )}
 
                         {data.occupation === 'student' && (
-                            <>
-                                <InputLabel htmlFor="student_id" value={t('profile.info.student_id')} />
-                                <TextInput
-                                    id="student_id"
-                                    className={textFieldClass}
-                                    value={data.student_id}
-                                    onChange={(e) => setData('student_id', e.target.value)}
-                                />
-                                <InputError className="mt-2" message={errors.student_id} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel htmlFor="student_id" value={t('profile.info.student_id')} />
+                                    <TextInput
+                                        id="student_id"
+                                        className={textFieldClass}
+                                        value={data.student_id}
+                                        onChange={(e) => setData('student_id', e.target.value)}
+                                    />
+                                    <InputError className="mt-2" message={errors.student_id} />
+                                </div>
 
-                                <InputLabel htmlFor="field_of_study" value={t('profile.info.field_of_study')} className="mt-4" />
-                                <TextInput
-                                    id="field_of_study"
-                                    className={textFieldClass}
-                                    value={data.field_of_study}
-                                    onChange={(e) => setData('field_of_study', e.target.value)}
-                                    placeholder={t('profile.info.field_of_study_placeholder')}
-                                />
-                                <InputError className="mt-2" message={errors.field_of_study} />
-                            </>
+                                <div>
+                                    <InputLabel htmlFor="field_of_study" value={t('profile.info.field_of_study')} />
+                                    <TextInput
+                                        id="field_of_study"
+                                        className={textFieldClass}
+                                        value={data.field_of_study}
+                                        onChange={(e) => setData('field_of_study', e.target.value)}
+                                        placeholder={t('profile.info.field_of_study_placeholder')}
+                                    />
+                                    <InputError className="mt-2" message={errors.field_of_study} />
+                                </div>
+                            </div>
                         )}
                     </div>
 

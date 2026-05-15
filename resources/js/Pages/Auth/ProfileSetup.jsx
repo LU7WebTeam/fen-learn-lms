@@ -434,7 +434,7 @@ export default function ProfileSetup({ user }) {
                             )}
 
                             {data.occupation === 'student' && (
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField
                                         label={t('profile.info.student_id')}
                                         required
