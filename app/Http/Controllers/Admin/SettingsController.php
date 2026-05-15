@@ -53,11 +53,11 @@ class SettingsController extends Controller
         'invitation_email_cta_bm'       => 'Terima Undangan',
         'verification_email_subject' => 'Sahkan alamat e-mel anda',
         'verification_email_title'   => 'Sahkan alamat e-mel anda',
-        'verification_email_body'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+        'verification_email_body'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan klik butang di bawah.',
         'verification_email_cta'     => 'Sahkan Alamat E-mel',
         'verification_email_subject_bm' => 'Sahkan alamat e-mel anda',
         'verification_email_title_bm'   => 'Sahkan alamat e-mel anda',
-        'verification_email_body_bm'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+        'verification_email_body_bm'    => 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan klik butang di bawah.',
         'verification_email_cta_bm'     => 'Sahkan Alamat E-mel',
         'reset_email_subject'        => 'Tetapkan semula kata laluan anda',
         'reset_email_title'          => 'Tetapkan semula kata laluan anda',
@@ -602,7 +602,7 @@ class SettingsController extends Controller
                 $bodyText = EmailContent::get('verification_email_body', 'Please verify your email address for {{platform_name}} by clicking the button below.', $tokens);
                 $actionText = EmailContent::get('verification_email_cta', 'Verify Email Address', $tokens);
                 $titleBM = EmailContent::get('verification_email_title_bm', 'Sahkan alamat e-mel anda', $tokens);
-                $bodyTextBM = EmailContent::get('verification_email_body_bm', 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan mengklik butang di bawah.', $tokens);
+                $bodyTextBM = EmailContent::get('verification_email_body_bm', 'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan klik butang di bawah.', $tokens);
                 $actionTextBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
 
                 $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, 'Verify your email address', $tokens);
@@ -617,7 +617,7 @@ class SettingsController extends Controller
                 $expiresInLabel = EmailContent::get('verification_email_expires_in_label', 'Expires in', []);
                 $expiresInLabelBM = EmailContent::get('verification_email_expires_in_label_bm', 'Tamat tempoh dalam', []);
                 $buttonFallbackLabel = EmailContent::get('verification_email_button_fallback', 'If the button does not work, copy and paste this URL into your browser:', []);
-                $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', []);
+                $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda.', []);
 
                 Mail::send('emails.auth-verify-email', [
                     ...$branding,
@@ -630,6 +630,7 @@ class SettingsController extends Controller
                     'actionTextBM' => $actionTextBM,
                     'bodyTextBM' => $bodyTextBM,
                     'expiresInMinutes' => 60,
+                    'greetingName' => 'Test User',
                     'greetingLabel' => $greetingLabel,
                     'greetingLabelBM' => $greetingLabelBM,
                     'accountLabel' => $accountLabel,

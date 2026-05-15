@@ -83,6 +83,7 @@ export default function UpdateProfileInformation({
         occupation:   user.occupation ?? '',
         occupation_other: user.occupation_other ?? '',
         student_id:   user.student_id ?? '',
+        field_of_study: user.field_of_study ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -109,6 +110,7 @@ export default function UpdateProfileInformation({
             occupation: value,
             occupation_other: value === 'other' ? prev.occupation_other : '',
             student_id: value === 'student' ? prev.student_id : '',
+            field_of_study: value === 'student' ? prev.field_of_study : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -279,12 +281,25 @@ export default function UpdateProfileInformation({
                                     onChange={(e) => setData('student_id', e.target.value)}
                                 />
                                 <InputError className="mt-2" message={errors.student_id} />
+
+                                <InputLabel htmlFor="field_of_study" value={t('profile.info.field_of_study')} className="mt-4" />
+                                <TextInput
+                                    id="field_of_study"
+                                    className={textFieldClass}
+                                    value={data.field_of_study}
+                                    onChange={(e) => setData('field_of_study', e.target.value)}
+                                    placeholder={t('profile.info.field_of_study_placeholder')}
+                                />
+                                <InputError className="mt-2" message={errors.field_of_study} />
                             </>
                         )}
                     </div>
 
                     <div>
-                        <InputLabel htmlFor="organization" value={t('profile.info.organization')} />
+                        <InputLabel
+                            htmlFor="organization"
+                            value={data.occupation === 'student' ? t('profile.info.organization_student') : t('profile.info.organization')}
+                        />
                         {usesOrganizationDropdown ? (
                             <div className="mt-1 space-y-3">
                                 <SearchableSelect
@@ -294,7 +309,7 @@ export default function UpdateProfileInformation({
                                     ]}
                                     value={data.organization}
                                     onChange={(nextValue) => setData('organization', nextValue)}
-                                    placeholder={t('profile.info.select_organization')}
+                                    placeholder={data.occupation === 'student' ? t('profile.info.select_organization_student') : t('profile.info.select_organization')}
                                     searchPlaceholder={t('profile.info.select_organization')}
                                     className="mt-0 border-slate-300 bg-slate-50 text-gray-900 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                                 />
@@ -318,9 +333,20 @@ export default function UpdateProfileInformation({
                                 autoComplete="organization"
                             />
                         )}
+                        {usesOrganizationDropdown && (
+                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                {data.occupation === 'student'
+                                    ? t('profile_setup.organization_hint_student_select')
+                                    : t('profile_setup.organization_hint_select')}
+                            </p>
+                        )}
                         <InputError className="mt-2" message={errors.organization || errors.organization_other} />
                     </div>
                 </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t('profile_setup.analytics_privacy_notice')}
+                </p>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>

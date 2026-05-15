@@ -45,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             $branding = EmailBranding::data();
             $tokens = [
                 'platform_name' => $branding['platformName'],
+                'recipient_name' => trim((string) ($notifiable->name ?? '')),
             ];
             $titleEnFallback = 'Verify your email address';
             $bodyEnFallback = 'Please verify your email address for {{platform_name}} by clicking the button below.';
@@ -66,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
             $titleBM = EmailContent::get('verification_email_title_bm', 'Sahkan alamat email anda', $tokens);
             $bodyBM = EmailContent::get(
                 'verification_email_body_bm',
-                'Sila sahkan alamat email anda untuk {{platform_name}} dengan mengklik butang di bawah.',
+                'Sila sahkan alamat e-mel anda untuk {{platform_name}} dengan klik butang di bawah.',
                 $tokens,
             );
             $ctaBM = EmailContent::get('verification_email_cta_bm', 'Sahkan Alamat E-mel', $tokens);
@@ -81,7 +82,7 @@ class AppServiceProvider extends ServiceProvider
             $expiresInLabelBM = EmailContent::get('verification_email_expires_in_label_bm', 'Tamat tempoh dalam', $tokens);
 
             $buttonFallbackLabel = EmailContent::get('verification_email_button_fallback', $buttonFallbackEnFallback, $tokens);
-            $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda:', $tokens);
+            $buttonFallbackLabelBM = EmailContent::get('verification_email_button_fallback_bm', 'Jika butang tidak berfungsi, salin dan tampal URL ini ke pelayar anda.', $tokens);
 
             $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
             $body = EmailContent::resolveSecondaryEnglish($body, $bodyBM, $bodyEnFallback, $tokens);
@@ -100,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
                     'bodyText' => $body,
                     'bodyTextBM' => $bodyBM,
                     'expiresInMinutes' => (int) config('auth.verification.expire', 60),
+                    'greetingName' => $notifiable->name ?? null,
                     'greetingLabel' => $greetingLabel,
                     'greetingLabelBM' => $greetingLabelBM,
                     'accountLabel' => $accountLabel,

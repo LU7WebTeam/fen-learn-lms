@@ -37,6 +37,7 @@ class ProfileController extends Controller
             'occupation',
             'occupation_other',
             'student_id',
+            'field_of_study',
             'organization',
         ])->all());
 

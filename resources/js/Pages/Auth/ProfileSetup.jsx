@@ -155,6 +155,7 @@ export default function ProfileSetup({ user }) {
         occupation:   user?.occupation ?? '',
         occupation_other: user?.occupation_other ?? '',
         student_id:   user?.student_id ?? '',
+        field_of_study: user?.field_of_study ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -180,6 +181,7 @@ export default function ProfileSetup({ user }) {
             occupation: value,
             occupation_other: value === 'other' ? prev.occupation_other : '',
             student_id: value === 'student' ? prev.student_id : '',
+            field_of_study: value === 'student' ? prev.field_of_study : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -198,6 +200,7 @@ export default function ProfileSetup({ user }) {
             occupation: current.occupation,
             occupation_other: current.occupation_other,
             student_id: current.student_id,
+            field_of_study: current.field_of_study,
             organization: current.organization,
             organization_other: current.organization_other,
         }));
@@ -431,25 +434,41 @@ export default function ProfileSetup({ user }) {
                             )}
 
                             {data.occupation === 'student' && (
-                                <FormField
-                                    label={t('profile.info.student_id')}
-                                    required
-                                    error={errors.student_id}
-                                >
-                                    <Input
-                                        value={data.student_id}
-                                        onChange={e => setData('student_id', e.target.value)}
-                                        placeholder={t('profile.info.student_id_placeholder')}
-                                    />
-                                </FormField>
+                                <div className="space-y-4">
+                                    <FormField
+                                        label={t('profile.info.student_id')}
+                                        required
+                                        error={errors.student_id}
+                                    >
+                                        <Input
+                                            value={data.student_id}
+                                            onChange={e => setData('student_id', e.target.value)}
+                                            placeholder={t('profile.info.student_id_placeholder')}
+                                        />
+                                    </FormField>
+
+                                    <FormField
+                                        label={t('profile.info.field_of_study')}
+                                        required
+                                        error={errors.field_of_study}
+                                    >
+                                        <Input
+                                            value={data.field_of_study}
+                                            onChange={e => setData('field_of_study', e.target.value)}
+                                            placeholder={t('profile.info.field_of_study_placeholder')}
+                                        />
+                                    </FormField>
+                                </div>
                             )}
 
                             {/* Organization */}
                             <FormField
-                                label={t('profile.info.organization')}
+                                label={data.occupation === 'student' ? t('profile.info.organization_student') : t('profile.info.organization')}
                                 error={errors.organization || errors.organization_other}
                                 hint={usesOrganizationDropdown
-                                    ? t('profile_setup.organization_hint_select')
+                                    ? (data.occupation === 'student'
+                                        ? t('profile_setup.organization_hint_student_select')
+                                        : t('profile_setup.organization_hint_select'))
                                     : t('profile_setup.organization_hint_optional')}
                             >
                                 {usesOrganizationDropdown ? (
@@ -461,7 +480,7 @@ export default function ProfileSetup({ user }) {
                                             ]}
                                             value={data.organization}
                                             onChange={v => setData('organization', v)}
-                                            placeholder={t('profile.info.select_organization')}
+                                            placeholder={data.occupation === 'student' ? t('profile.info.select_organization_student') : t('profile.info.select_organization')}
                                             searchPlaceholder={t('profile_setup.organization_search')}
                                         />
 
@@ -481,6 +500,10 @@ export default function ProfileSetup({ user }) {
                                     />
                                 )}
                             </FormField>
+
+                            <p className="text-xs text-muted-foreground">
+                                {t('profile_setup.analytics_privacy_notice')}
+                            </p>
 
                             <div className="pt-2">
                                 <Button

@@ -9,7 +9,13 @@
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{{ $title }}</p>
     @endif
     
-    <p>{{ $greetingLabelBM ?: $greetingLabel }}</p>
+    <p>
+        @if (!empty($greetingName))
+            {{ $greetingName }},
+        @else
+            {{ $greetingLabelBM ?: $greetingLabel }},
+        @endif
+    </p>
     <p>{!! nl2br(e($bodyTextBM ?: $bodyText)) !!}</p>
     @if (!empty($bodyTextBM))
         <p style="font-style: italic; font-size: 0.9em; color: #666;">{!! nl2br(e($bodyText)) !!}</p>
