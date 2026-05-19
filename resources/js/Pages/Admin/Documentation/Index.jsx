@@ -534,62 +534,6 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
     const previewRef = useRef(null);
     const [isExportingDocx, setIsExportingDocx] = useState(false);
 
-    const [isExportingPdf, setIsExportingPdf] = useState(false);
-
-    const handleDownloadPdf = async () => {
-        if (!selectedDocument) return;
-        setIsExportingPdf(true);
-        try {
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-            const pageW = pdf.internal.pageSize.getWidth();
-            const pageH = pdf.internal.pageSize.getHeight();
-            const marginX = 48;
-            const marginTop = 56;
-            const marginBottom = 48;
-
-            pdf.setProperties({
-                title: selectedDocument.title,
-                subject: selectedDocument.summary || 'Documentation',
-                author: 'fen-learn-lms',
-            });
-
-            pdf.setFont('helvetica', 'normal');
-            pdf.setTextColor('#111827');
-
-            let cursorY = marginTop;
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(20);
-            pdf.text(selectedDocument.title, marginX, cursorY);
-            cursorY += 28;
-
-            if (selectedDocument.summary) {
-                pdf.setFont('helvetica', 'italic');
-                pdf.setFontSize(11);
-                cursorY = renderWrappedStyledText(pdf, tokenizeMarkdownInline(toPlainText(selectedDocument.summary)), {
-                    x: marginX,
-                    yStart: cursorY,
-                    maxWidth: pageW - marginX * 2,
-                    pageBottom: pageH - marginBottom,
-                    marginTop,
-                    lineHeight: 15,
-                    blockGap: 8,
-                });
-            }
-
-            cursorY = renderPdfMarkdown(pdf, selectedDocument.content, {
-                pageW,
-                pageH,
-                marginX,
-                marginTop: cursorY + 4,
-                marginBottom,
-            });
-
-            pdf.save(`${sanitizeFileName(selectedDocument.title)}.pdf`);
-        } finally {
-            setIsExportingPdf(false);
-        }
-    };
-
     const handleDownloadDocx = async () => {
         try {
             setIsExportingDocx(true);
@@ -652,10 +596,6 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isExportingPdf}>
-                                        <FileDown className="mr-2 h-4 w-4" />
-                                        {isExportingPdf ? 'Generating PDF...' : 'Download PDF'}
-                                    </Button>
                                     <Button type="button" variant="outline" size="sm" onClick={handleDownloadDocx} disabled={isExportingDocx}>
                                         <FileDown className="mr-2 h-4 w-4" />
                                         {isExportingDocx ? 'Generating...' : 'Download DOCX'}
