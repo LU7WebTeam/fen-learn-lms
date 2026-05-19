@@ -8,7 +8,6 @@ import remarkGfm from 'remark-gfm';
 import { BookText, FileText, FolderOpen, FileDown } from 'lucide-react';
 import { useRef, useState } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 
 const PDF_SAFE_COLOR_VARS = {
@@ -65,6 +64,55 @@ function toPlainText(markdownLine) {
         .replace(/__([^_]+)__/g, '$1')
         .replace(/_([^_]+)_/g, '$1')
         .trim();
+}
+
+function markdownToPdfLines(markdown) {
+    const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+    const pdfLines = [];
+    let inCodeBlock = false;
+
+    for (const rawLine of lines) {
+        const line = rawLine ?? '';
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith('```')) {
+            inCodeBlock = !inCodeBlock;
+            continue;
+        }
+
+        if (!trimmed) {
+            pdfLines.push('');
+            continue;
+        }
+
+        if (inCodeBlock) {
+            pdfLines.push(line);
+            continue;
+        }
+
+        const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+        if (headingMatch) {
+            pdfLines.push(toPlainText(headingMatch[2]).toUpperCase());
+            pdfLines.push('');
+            continue;
+        }
+
+        const bulletMatch = trimmed.match(/^[-*+]\s+(.+)$/);
+        if (bulletMatch) {
+            pdfLines.push(`• ${toPlainText(bulletMatch[1])}`);
+            continue;
+        }
+
+        const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+        if (orderedMatch) {
+            pdfLines.push(`- ${toPlainText(orderedMatch[1])}`);
+            continue;
+        }
+
+        pdfLines.push(toPlainText(trimmed));
+    }
+
+    return pdfLines;
 }
 
 function markdownToDocxParagraphs(markdown) {
@@ -196,39 +244,71 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
     const [isExportingPdf, setIsExportingPdf] = useState(false);
 
     const handleDownloadPdf = async () => {
-        const el = previewRef.current;
-        if (!el || !selectedDocument) return;
+        if (!selectedDocument) return;
         setIsExportingPdf(true);
         try {
-            const canvas = await html2canvas(el, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                onclone: (clonedDocument) => {
-                    applyPdfSafeColorVars(clonedDocument);
-                },
-            });
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
             const pageW = pdf.internal.pageSize.getWidth();
             const pageH = pdf.internal.pageSize.getHeight();
-            const margin = 40;
-            const contentW = pageW - margin * 2;
-            const imgH = (canvas.height * contentW) / canvas.width;
-            let remainingH = imgH;
-            let yOffset = margin;
-            let srcYPx = 0;
-            while (remainingH > 0) {
-                const sliceH = Math.min(remainingH, pageH - margin * 2);
-                const srcHPx = (sliceH / imgH) * canvas.height;
-                const sliceCanvas = document.createElement('canvas');
-                sliceCanvas.width = canvas.width;
-                sliceCanvas.height = Math.round(srcHPx);
-                const ctx = sliceCanvas.getContext('2d');
-                ctx.drawImage(canvas, 0, srcYPx, canvas.width, Math.round(srcHPx), 0, 0, canvas.width, Math.round(srcHPx));
-                pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, yOffset, contentW, sliceH);
-                remainingH -= sliceH;
-                srcYPx += Math.round(srcHPx);
-                if (remainingH > 0) { pdf.addPage(); yOffset = margin; }
+            const marginX = 48;
+            const marginTop = 56;
+            const marginBottom = 48;
+            const maxWidth = pageW - marginX * 2;
+            const pageBottom = pageH - marginBottom;
+            const lineHeight = 16;
+            const headingGap = 10;
+            const bodyGap = 6;
+            const contentLines = [];
+
+            contentLines.push(selectedDocument.title.toUpperCase());
+            if (selectedDocument.summary) {
+                contentLines.push('');
+                contentLines.push(toPlainText(selectedDocument.summary));
+            }
+            contentLines.push('');
+            contentLines.push(...markdownToPdfLines(selectedDocument.content));
+
+            pdf.setProperties({
+                title: selectedDocument.title,
+                subject: selectedDocument.summary || 'Documentation',
+                author: 'fen-learn-lms',
+            });
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor('#111827');
+
+            let cursorY = marginTop;
+            for (const line of contentLines) {
+                const trimmed = String(line || '').trimEnd();
+
+                if (!trimmed) {
+                    cursorY += bodyGap;
+                    continue;
+                }
+
+                const isHeading = trimmed === trimmed.toUpperCase() && trimmed.length > 1 && !trimmed.startsWith('• ');
+                if (isHeading) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(18);
+                } else {
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(11);
+                }
+
+                const wrappedLines = pdf.splitTextToSize(trimmed, maxWidth);
+                for (const wrappedLine of wrappedLines) {
+                    if (cursorY > pageBottom) {
+                        pdf.addPage();
+                        cursorY = marginTop;
+                    }
+
+                    pdf.text(wrappedLine, marginX, cursorY);
+                    cursorY += isHeading ? 24 : lineHeight;
+                }
+
+                if (isHeading) {
+                    cursorY += headingGap;
+                }
             }
             pdf.save(`${sanitizeFileName(selectedDocument.title)}.pdf`);
         } finally {
