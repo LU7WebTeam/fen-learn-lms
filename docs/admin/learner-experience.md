@@ -31,7 +31,7 @@ When a learner logs in, they land on the **My Learning** dashboard (`/dashboard`
 
 ## Course Player
 
-Learners access course content through the course player at `/learn/{course}/{lesson}`.
+Learners access course content through the course player at `/learn/{course:slug}/lesson/{lesson}`.
 
 ### What learners can do in the player
 

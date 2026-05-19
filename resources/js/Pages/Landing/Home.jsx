@@ -188,7 +188,7 @@ export default function Home() {
                                 <LangSwitcher className="border-white bg-white text-[#131722]" />
                             </div>
                             {auth?.user ? (
-                                <Link href={route('courses.show', 'fen-proaktif')} className="inline-flex min-w-[118px] items-center justify-center rounded-full bg-[#b53391] px-3.5 py-1.5 font-['Inter',sans-serif] text-[0.92rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1rem]">
+                                <Link href={route('dashboard')} className="inline-flex min-w-[118px] items-center justify-center rounded-full bg-[#b53391] px-3.5 py-1.5 font-['Inter',sans-serif] text-[0.92rem] font-semibold text-white transition hover:bg-[#9f2c80] sm:min-w-[160px] sm:px-5 sm:py-2.5 sm:text-[1rem]">
                                     {t('landing.cta.my_dashboard')}
                                 </Link>
                             ) : (
@@ -295,7 +295,7 @@ export default function Home() {
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                                 <Link
-                                    href={route('courses.show', 'fen-proaktif')}
+                                    href={route('dashboard')}
                                     className="inline-flex min-w-[160px] items-center justify-center gap-2 rounded-full bg-[#0353a1] px-5 py-2.5 font-['Inter',sans-serif] text-[1rem] font-semibold text-white transition hover:bg-[#024180]"
                                 >
                                     {t('landing.cta.view_course')}
@@ -480,10 +480,16 @@ export default function Home() {
                             <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
                         </div>
 
-                        <div className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6">
-                            <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
-                            <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
-                            <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                        <div className="flex flex-col items-center gap-2 text-sm md:items-end">
+                            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6 md:justify-end">
+                                <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
+                                <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
+                                <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                            </div>
+                            <p className="text-[#b8bdc8] text-center md:text-right">
+                                {t('landing.footer.support_text')}{' '}
+                                <a href="mailto:learn@fenetwork.my" className="transition hover:text-white">learn@fenetwork.my</a>
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -1,12 +1,14 @@
 ---
-title: Learner Course Activity Logging Plan
+title: Learner Course Activity Logging
 category: Operations
 order: 61
 slug: learner-course-activity-plan
-summary: Implementation roadmap for learner course activity capture, learner-facing history, and admin course-level visibility.
+summary: Current-state reference for learner activity capture, learner-facing history, and admin course-level visibility.
 ---
 
-# Learner Course Activity Logging Plan
+# Learner Course Activity Logging
+
+This page is retained as an implementation reference. The learner course activity capability is already active in production.
 
 ## Current Status
 
@@ -21,7 +23,7 @@ Recent localization behavior:
 - Activity item titles support BM (`title_ms`) when available.
 - Older events safely fall back to English title values.
 
-## Goal
+## Coverage
 
 Capture learner learning activity events (lesson completion, quiz attempts, course progress milestones) and expose them in two places:
 

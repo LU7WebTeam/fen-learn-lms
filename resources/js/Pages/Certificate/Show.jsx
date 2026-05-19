@@ -46,7 +46,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
                                 </Link>
 
                                 <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
-                                    <Link href={route('courses.show', 'fen-proaktif')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
+                                    <Link href={route('dashboard')} className="flex items-center gap-1.5 text-white/90 transition hover:text-white">
                                         <LayoutDashboard className="h-4 w-4" />
                                         {t('nav.my_dashboard')}
                                     </Link>
@@ -102,7 +102,7 @@ export default function CertificateShow({ certificate, template, customFont }) {
 
                     <div className="mt-6 text-center">
                         <Link
-                            href={route('courses.show', 'fen-proaktif')}
+                            href={route('dashboard')}
                             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />

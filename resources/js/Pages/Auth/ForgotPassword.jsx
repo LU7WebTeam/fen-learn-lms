@@ -6,6 +6,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import CaptchaField, { isCaptchaEnabled, resolveCaptchaToken } from '@/Components/CaptchaField';
 import { useT } from '@/lib/i18n';
+import { translateAuthError } from '@/lib/authErrorTranslations';
 
 export default function ForgotPassword({ status }) {
     const { props } = usePage();
@@ -70,7 +71,7 @@ export default function ForgotPassword({ status }) {
                         token={data.captcha_token}
                         onTokenChange={(value) => setData('captcha_token', value)}
                         onAvailabilityChange={setCaptchaUnavailable}
-                        error={errors.captcha_token || captchaClientError}
+                        error={translateAuthError(errors.captcha_token || captchaClientError, t)}
                         t={t}
                     />
                 </div>

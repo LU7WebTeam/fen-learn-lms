@@ -218,9 +218,9 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
                 {enrolled ? (
                     <Tabs defaultValue="main" className="w-full">
-                        <TabsList className="mb-2 grid w-full max-w-md grid-cols-2">
-                            <TabsTrigger value="main">{t('courses.show.tab_main')}</TabsTrigger>
-                            <TabsTrigger value="activity">{t('courses.show.tab_activity')}</TabsTrigger>
+                        <TabsList className="mb-2 grid w-full max-w-md grid-cols-2 bg-[#f4e6ef] dark:bg-[#2a1a24] p-1 rounded-lg">
+                            <TabsTrigger value="main" className="rounded-md data-[state=active]:bg-[#b53391] data-[state=active]:text-white data-[state=active]:shadow-sm font-medium transition-colors">{t('courses.show.tab_main')}</TabsTrigger>
+                            <TabsTrigger value="activity" className="rounded-md data-[state=active]:bg-[#b53391] data-[state=active]:text-white data-[state=active]:shadow-sm font-medium transition-colors">{t('courses.show.tab_activity')}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="main" className="space-y-4">

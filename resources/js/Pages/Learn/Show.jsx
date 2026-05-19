@@ -13,7 +13,7 @@ import { Progress } from '@/Components/ui/progress';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/Components/ui/sheet';
-import { Dialog, DialogContent, DialogClose } from '@/Components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/Components/ui/dialog';
 import ThemeToggleButton from '@/Components/ThemeToggleButton';
 import {
     Check, ChevronLeft, ChevronRight, Menu,
@@ -826,6 +826,8 @@ export default function LearnShow({
     const [completing, setCompleting]   = useState(false);
     const [videoWatched, setVideoWatched] = useState(isCompleted);
     const [a11yMediaPreferences, setA11yMediaPreferences] = useState(DEFAULT_A11Y_MEDIA_PREFERENCES);
+    const [showCongrats, setShowCongrats] = useState(false);
+    const wasCompletedRef = useRef(!!enrollment.completed_at);
     const sidebarRef = useRef(null);
     const mainRef = useRef(null);
     const actionsRef = useRef(null);
@@ -833,6 +835,13 @@ export default function LearnShow({
     useEffect(() => {
         setA11yMediaPreferences(getA11yMediaPreferences());
     }, []);
+
+    useEffect(() => {
+        if (!wasCompletedRef.current && enrollment.completed_at) {
+            wasCompletedRef.current = true;
+            setShowCongrats(true);
+        }
+    }, [enrollment.completed_at]);
 
     const handleComplete = useCallback(() => {
         if (completed || completing) return;
@@ -915,7 +924,7 @@ export default function LearnShow({
                             <span className="hidden h-5 w-px bg-white/25 sm:block" />
 
                             <Link
-                                href={route('courses.show', 'fen-proaktif')}
+                                href={route('dashboard')}
                                 className="hidden items-center gap-1.5 text-sm font-semibold text-white/90 transition hover:text-white sm:flex"
                             >
                                 <LayoutDashboard className="h-4 w-4" />
@@ -1184,10 +1193,16 @@ export default function LearnShow({
                                         <span className="text-[#b8bdc8]">&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
                                     </div>
 
-                                    <div className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6">
-                                        <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
-                                        <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
-                                        <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                                    <div className="flex flex-col items-center gap-2 text-sm md:items-end">
+                                        <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6 md:justify-end">
+                                            <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
+                                            <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
+                                            <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
+                                        </div>
+                                        <p className="text-[#b8bdc8] text-center md:text-right">
+                                            {t('landing.footer.support_text')}{' '}
+                                            <a href="mailto:learn@fenetwork.my" className="transition hover:text-white">learn@fenetwork.my</a>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1195,6 +1210,39 @@ export default function LearnShow({
                     </main>
                 </div>
             </div>
+
+            {/* ── Course Completion Congratulations Modal ─────────────────── */}
+            <Dialog open={showCongrats} onOpenChange={setShowCongrats}>
+                <DialogContent className="max-w-md text-center sm:text-center">
+                    <DialogHeader className="items-center">
+                        <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 mx-auto">
+                            <Award className="h-8 w-8" />
+                        </div>
+                        <DialogTitle className="text-2xl font-bold">
+                            {t('learn.congrats.title')}
+                        </DialogTitle>
+                        <DialogDescription className="mt-1 text-base">
+                            {t('learn.congrats.body')}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="mt-4 flex-col gap-2 sm:flex-col">
+                        {enrollment.certificate_uuid && (
+                            <Button asChild className="w-full bg-[#8B1A4A] hover:bg-[#7a1740] text-white">
+                                <Link href={`/certificate/${enrollment.certificate_uuid}`}>
+                                    <Award className="mr-2 h-4 w-4" />
+                                    {t('learn.congrats.view_certificate')}
+                                </Link>
+                            </Button>
+                        )}
+                        <Button asChild variant="outline" className="w-full">
+                            <Link href={route('courses.show', course.slug)}>
+                                {t('learn.congrats.back_to_course')}
+                            </Link>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
         </>
     );

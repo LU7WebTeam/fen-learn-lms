@@ -118,6 +118,16 @@ class CaptchaVerifier
             ]);
         }
 
+        // Allow users to skip CAPTCHA if it fails to load
+        if ($token === 'skipped') {
+            SystemLogger::write('warning', 'Captcha verification skipped by user', [
+                'captcha_action' => $action,
+                'captcha_provider' => $config['provider'],
+                'reason' => 'Script failed to load after retries',
+            ], $request);
+            return;
+        }
+
         $ok = self::verifyToken(
             provider: (string) $config['provider'],
             token: $token,
@@ -133,7 +143,7 @@ class CaptchaVerifier
             ], $request);
 
             throw ValidationException::withMessages([
-                'captcha_token' => 'Captcha verification failed. Please try again.',
+                'captcha_token' => 'Captcha verification failed. Please retry. If this keeps happening, try a different browser, disable blockers/VPN, or check your network.',
             ]);
         }
     }

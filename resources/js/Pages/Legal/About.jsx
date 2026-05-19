@@ -44,7 +44,7 @@ export default function About() {
                     <div className="flex items-center gap-3">
                         <LangSwitcher />
                         {auth?.user ? (
-                            <Link href={route('courses.show', 'fen-proaktif')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
+                            <Link href={route('dashboard')} className="bg-primary text-white px-6 py-2.5 rounded-full hover:bg-primary/90 transition font-medium">
                                 {t('dashboard.title')}
                             </Link>
                         ) : (
@@ -111,10 +111,16 @@ export default function About() {
                             <span>&copy; {new Date().getFullYear()} {name}. {t('common.all_rights_reserved')}</span>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-6">
-                            <Link href={route('about')} className="hover:text-white transition">{t('nav.about')}</Link>
-                            <Link href={route('terms')} className="hover:text-white transition">{t('nav.terms')}</Link>
-                            <Link href={route('privacy')} className="hover:text-white transition">{t('nav.privacy')}</Link>
+                        <div className="flex flex-col items-center gap-2 md:items-end">
+                            <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
+                                <Link href={route('about')} className="hover:text-white transition">{t('nav.about')}</Link>
+                                <Link href={route('terms')} className="hover:text-white transition">{t('nav.terms')}</Link>
+                                <Link href={route('privacy')} className="hover:text-white transition">{t('nav.privacy')}</Link>
+                            </div>
+                            <p className="text-center md:text-right">
+                                {t('landing.footer.support_text')}{' '}
+                                <a href="mailto:learn@fenetwork.my" className="hover:text-white transition">learn@fenetwork.my</a>
+                            </p>
                         </div>
                     </div>
                 </footer>

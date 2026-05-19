@@ -26,6 +26,7 @@ export function translateAuthError(message, t) {
         'The terms field must be accepted.': 'auth.errors.terms_accepted',
         'The captcha token field is required.': 'auth.errors.captcha_required',
         'The captcha token field is invalid.': 'auth.errors.captcha_invalid',
+        'Captcha verification failed. Please retry. If this keeps happening, try a different browser, disable blockers/VPN, or check your network.': 'auth.errors.captcha_invalid',
     };
 
     const key = exactMap[normalized];
@@ -82,6 +83,10 @@ export function translateAuthError(message, t) {
     }
 
     if (/^The captcha token(?: field)? is invalid\.$/.test(normalized)) {
+        return t('auth.errors.captcha_invalid');
+    }
+
+    if (normalized.startsWith('Captcha verification failed.')) {
         return t('auth.errors.captcha_invalid');
     }
 

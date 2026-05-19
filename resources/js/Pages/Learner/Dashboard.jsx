@@ -23,6 +23,9 @@ const LEARNER_ACTIVITY_EVENT_LABELS = {
     course_completed: 'Course Completed',
 };
 
+// Keep catalogue UI code available but hidden until re-enabled.
+const SHOW_CATALOGUE_CTA = false;
+
 function renderActivityResult(item) {
     const hasScore = item.properties?.percentage !== null && item.properties?.percentage !== undefined;
     const hasPassed = typeof item.properties?.passed === 'boolean';
@@ -56,6 +59,11 @@ function WelcomeHero({ user, inProgress, completed }) {
     const firstName = user?.name?.split(' ')[0] ?? 'there';
     const totalEnrolled = inProgress.length + completed.length;
     const activeCount   = inProgress.filter(e => e.progress > 0 && !e.is_completed).length;
+    const heroMessage = activeCount > 0
+        ? t(activeCount !== 1 ? 'dashboard.hero.active_p' : 'dashboard.hero.active_s', { n: activeCount })
+        : totalEnrolled === 0
+            ? t('dashboard.hero.no_enrollments')
+            : null;
 
     return (
         <Card className="mb-8 rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-[#111827] dark:ring-white/10">
@@ -69,24 +77,22 @@ function WelcomeHero({ user, inProgress, completed }) {
                                 {greetingText}, {firstName}!
                             </h1>
                         </div>
-                        <p className="text-muted-foreground text-sm">
-                            {activeCount > 0
-                                ? t(activeCount !== 1 ? 'dashboard.hero.active_p' : 'dashboard.hero.active_s', { n: activeCount })
-                                : totalEnrolled === 0
-                                    ? t('dashboard.hero.no_enrollments')
-                                    : t('dashboard.hero.all_caught_up')}
-                        </p>
+                        {heroMessage && (
+                            <p className="text-muted-foreground text-sm">{heroMessage}</p>
+                        )}
                     </div>
 
                     {/* Shortcuts */}
-                    <div className="flex flex-wrap gap-2 sm:shrink-0">
-                        <Button asChild size="sm" variant="outline">
-                            <Link href="/courses">
-                                <Library className="mr-2 h-4 w-4" />
-                                {t('dashboard.hero.browse_catalog')}
-                            </Link>
-                        </Button>
-                    </div>
+                    {SHOW_CATALOGUE_CTA && (
+                        <div className="flex flex-wrap gap-2 sm:shrink-0">
+                            <Button asChild size="sm" variant="outline">
+                                <Link href="/courses">
+                                    <Library className="mr-2 h-4 w-4" />
+                                    {t('dashboard.hero.browse_catalog')}
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Stat chips */}
@@ -271,8 +277,8 @@ export default function Dashboard({ inProgress, completed, learnerActivity = [] 
                     {inProgress.length === 0 ? (
                         <EmptyState
                             message={t('dashboard.empty.not_started')}
-                            actionLabel={t('dashboard.empty.browse_catalog')}
-                            actionHref="/courses"
+                            actionLabel={SHOW_CATALOGUE_CTA ? t('dashboard.empty.browse_catalog') : null}
+                            actionHref={SHOW_CATALOGUE_CTA ? '/courses' : null}
                         />
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

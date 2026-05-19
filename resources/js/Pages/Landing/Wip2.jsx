@@ -169,7 +169,7 @@ export default function Wip2() {
                             <Link href={route('register')} className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
                                 {t('landing.cta.register_enroll')}
                             </Link>
-                            <Link href={route('courses.show', 'fen-proaktif')} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
+                            <Link href={route('dashboard')} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
                                 {t('landing.cta.view_course')}
                             </Link>
                         </div>
@@ -351,12 +351,18 @@ export default function Wip2() {
                         <span>&copy; {new Date().getFullYear()} {platformName}. {t('common.all_rights_reserved')}</span>
                     </div>
                     
-                    <div className="flex flex-wrap items-center justify-center gap-6">
-                        <Link href={route('about')} className="hover:text-white transition">{t('landing.footer.about')}</Link>
-                        <Link href={route('terms')} className="hover:text-white transition">{t('landing.footer.terms')}</Link>
-                        <Link href={route('privacy')} className="hover:text-white transition">{t('landing.footer.privacy')}</Link>
-                        <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
-                        <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('landing.footer.browse_courses')}</Link>
+                    <div className="flex flex-col items-center gap-2 text-sm md:items-end">
+                        <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
+                            <Link href={route('about')} className="hover:text-white transition">{t('landing.footer.about')}</Link>
+                            <Link href={route('terms')} className="hover:text-white transition">{t('landing.footer.terms')}</Link>
+                            <Link href={route('privacy')} className="hover:text-white transition">{t('landing.footer.privacy')}</Link>
+                            <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
+                            <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('landing.footer.browse_courses')}</Link>
+                        </div>
+                        <p className="text-center md:text-right">
+                            {t('landing.footer.support_text')}{' '}
+                            <a href="mailto:learn@fenetwork.my" className="hover:text-white transition">learn@fenetwork.my</a>
+                        </p>
                     </div>
                 </div>
             </footer>

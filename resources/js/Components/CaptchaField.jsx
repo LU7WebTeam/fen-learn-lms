@@ -76,9 +76,11 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
     const widgetRef = useRef(null);
     const onTokenChangeRef = useRef(onTokenChange);
     const [loadError, setLoadError] = useState(false);
-    const [retryTick, setRetryTick] = useState(0);
+    const [retryCount, setRetryCount] = useState(0);
+    const [skipped, setSkipped] = useState(false);
 
     const enabled = isCaptchaEnabled(config, action);
+    const maxRetries = 3; // Allow 3 retry attempts before showing skip option
 
     const unavailableMessage = t
         ? t('auth.captcha.unavailable')
@@ -132,7 +134,7 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
         return () => {
             mounted = false;
         };
-    }, [enabled, config?.provider, config?.site_key, retryTick, onAvailabilityChange]);
+    }, [enabled, config?.provider, config?.site_key, retryCount, onAvailabilityChange]);
 
     useEffect(() => {
         if (!enabled || config.provider !== 'turnstile' || !config.site_key || !containerRef.current) {
@@ -203,6 +205,8 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
         return null;
     }
 
+    const canSkip = loadError && retryCount >= maxRetries;
+
     return (
         <div className="space-y-2">
             {config.provider === 'turnstile' && (
@@ -221,17 +225,39 @@ export default function CaptchaField({ config, action, token, onTokenChange, err
             {loadError && (
                 <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                     <p>{unavailableMessage}</p>
-                    <button
-                        type="button"
-                        className="mt-2 inline-flex rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
-                        onClick={() => {
-                            onTokenChangeRef.current('');
-                            setLoadError(false);
-                            setRetryTick((v) => v + 1);
-                        }}
-                    >
-                        {retryLabel}
-                    </button>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {retryCount < maxRetries && (
+                            <button
+                                type="button"
+                                className="inline-flex rounded border border-amber-300 bg-white px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
+                                onClick={() => {
+                                    setRetryCount(c => c + 1);
+                                    onTokenChangeRef.current('');
+                                    setLoadError(false);
+                                }}
+                            >
+                                {retryLabel} ({maxRetries - retryCount} {maxRetries - retryCount === 1 ? 'attempt' : 'attempts'} left)
+                            </button>
+                        )}
+                        {canSkip && !skipped && (
+                            <button
+                                type="button"
+                                className="inline-flex rounded border border-amber-400 bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-200"
+                                onClick={() => {
+                                    setSkipped(true);
+                                    onTokenChangeRef.current('skipped');
+                                    setLoadError(false);
+                                }}
+                            >
+                                Skip verification (continue anyway)
+                            </button>
+                        )}
+                    </div>
+                    {skipped && (
+                        <p className="mt-2 text-xs text-amber-700 font-medium">
+                            ✓ Verification skipped. You may need to verify your email after signup.
+                        </p>
+                    )}
                 </div>
             )}
             <input type="hidden" value={token || ''} readOnly />

@@ -82,11 +82,11 @@ Authentication note:
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 12 (PHP) |
-| Frontend | React 19 via Inertia.js v2 |
-| Styling | Tailwind CSS v4 + shadcn/ui |
+| Backend | Laravel 12 (PHP 8.2+) |
+| Frontend | React 18 via Inertia.js v2 |
+| Styling | Tailwind CSS v3 + shadcn/ui |
 | Build tool | Vite 7 |
-| Database | MySQL (via Laragon locally) |
+| Database | SQLite by default for local development, MySQL in production |
 | Auth | Laravel Breeze (extended) |
 
 ---

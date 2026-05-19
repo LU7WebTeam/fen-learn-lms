@@ -64,7 +64,7 @@ These fields control how outgoing emails connect to your mail provider:
 | **From Address** | Sender email address shown to recipients |
 | **From Name** | Sender name shown to recipients |
 
-> SMTP credentials are saved in the `settings` table. They can also be configured in `.env` if you prefer environment-level control — `.env` values take precedence.
+> SMTP credentials are saved in the `settings` table. If SMTP values are configured in Admin Settings, they are applied at runtime and override default mail config values for outgoing emails.
 
 Implementation notes:
 

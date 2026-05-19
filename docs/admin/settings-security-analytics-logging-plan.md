@@ -1,22 +1,24 @@
 ---
-title: Settings Feature Expansion Plan
+title: Settings Security, Analytics, and Logging
 category: Operations
 order: 62
 slug: settings-security-analytics-logging-plan
-summary: Roadmap for adding captcha protection, analytics integration, and system logging controls.
+summary: Current-state reference for captcha protection, analytics integration, and system logging controls.
 ---
 
-# Settings Feature Expansion Plan
+# Settings Security, Analytics, and Logging
 
-## Goal
+This page is retained as an implementation reference. The capabilities listed here are already available in the platform.
 
-Add three new settings capabilities in the admin panel:
+## Current Status
+
+The admin settings area currently supports:
 
 1. Captcha protection (Cloudflare Turnstile or Google reCAPTCHA)
 2. Google Analytics (GA4) integration
 3. System logging controls and visibility
 
-This plan is designed to fit the current settings architecture in the admin panel.
+Routes and screens are available under Admin Settings, Analytics, and System Logs.
 
 ---
 
