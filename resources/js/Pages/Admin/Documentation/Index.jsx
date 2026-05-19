@@ -5,8 +5,10 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { BookText, FileText, FolderOpen, Printer, FileDown } from 'lucide-react';
+import { BookText, FileText, FolderOpen, FileDown } from 'lucide-react';
 import { useRef, useState } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 
 function sanitizeFileName(value) {
@@ -155,41 +157,40 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
     const previewRef = useRef(null);
     const [isExportingDocx, setIsExportingDocx] = useState(false);
 
-    const handlePrint = () => {
-        const previewHtml = previewRef.current?.innerHTML;
-        if (!previewHtml) return;
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-        const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1024,height=768');
-        if (!printWindow) return;
-
-        printWindow.document.open();
-        printWindow.document.write(`
-            <!doctype html>
-            <html>
-                <head>
-                    <meta charset="utf-8" />
-                    <title>${selectedDocument.title}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 32px; color: #111827; }
-                        h1, h2, h3, h4, h5, h6 { margin: 1rem 0 0.5rem; }
-                        p, li { line-height: 1.6; }
-                        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-                        th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
-                        pre { background: #f3f4f6; padding: 12px; overflow-x: auto; }
-                        code { font-family: Consolas, 'Courier New', monospace; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${selectedDocument.title}</h1>
-                    ${selectedDocument.summary ? `<p>${selectedDocument.summary}</p>` : ''}
-                    <hr />
-                    ${previewHtml}
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
+    const handleDownloadPdf = async () => {
+        const el = previewRef.current;
+        if (!el || !selectedDocument) return;
+        setIsExportingPdf(true);
+        try {
+            const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const margin = 40;
+            const contentW = pageW - margin * 2;
+            const imgH = (canvas.height * contentW) / canvas.width;
+            let remainingH = imgH;
+            let yOffset = margin;
+            let srcYPx = 0;
+            while (remainingH > 0) {
+                const sliceH = Math.min(remainingH, pageH - margin * 2);
+                const srcHPx = (sliceH / imgH) * canvas.height;
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = Math.round(srcHPx);
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, srcYPx, canvas.width, Math.round(srcHPx), 0, 0, canvas.width, Math.round(srcHPx));
+                pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, yOffset, contentW, sliceH);
+                remainingH -= sliceH;
+                srcYPx += Math.round(srcHPx);
+                if (remainingH > 0) { pdf.addPage(); yOffset = margin; }
+            }
+            pdf.save(`${sanitizeFileName(selectedDocument.title)}.pdf`);
+        } finally {
+            setIsExportingPdf(false);
+        }
     };
 
     const handleDownloadDocx = async () => {
@@ -254,9 +255,9 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <Button type="button" variant="outline" size="sm" onClick={handlePrint}>
-                                        <Printer className="mr-2 h-4 w-4" />
-                                        Print / Save PDF
+                                    <Button type="button" variant="outline" size="sm" onClick={handleDownloadPdf} disabled={isExportingPdf}>
+                                        <FileDown className="mr-2 h-4 w-4" />
+                                        {isExportingPdf ? 'Generating PDF...' : 'Download PDF'}
                                     </Button>
                                     <Button type="button" variant="outline" size="sm" onClick={handleDownloadDocx} disabled={isExportingDocx}>
                                         <FileDown className="mr-2 h-4 w-4" />
