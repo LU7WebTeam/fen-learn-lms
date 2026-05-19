@@ -11,6 +11,42 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 
+const PDF_SAFE_COLOR_VARS = {
+    '--background': '#ffffff',
+    '--foreground': '#111827',
+    '--card': '#ffffff',
+    '--card-foreground': '#111827',
+    '--popover': '#ffffff',
+    '--popover-foreground': '#111827',
+    '--primary': '#2563eb',
+    '--primary-foreground': '#ffffff',
+    '--secondary': '#475569',
+    '--secondary-foreground': '#ffffff',
+    '--muted': '#f3f4f6',
+    '--muted-foreground': '#374151',
+    '--accent': '#e5e7eb',
+    '--accent-foreground': '#111827',
+    '--destructive': '#dc2626',
+    '--destructive-foreground': '#ffffff',
+    '--border': '#d1d5db',
+    '--input': '#d1d5db',
+    '--ring': '#2563eb',
+    '--chart-1': '#2563eb',
+    '--chart-2': '#475569',
+    '--chart-3': '#d97706',
+    '--chart-4': '#7c3aed',
+    '--chart-5': '#dc2626',
+};
+
+function applyPdfSafeColorVars(doc) {
+    const root = doc?.documentElement;
+    if (!root) return;
+
+    Object.entries(PDF_SAFE_COLOR_VARS).forEach(([name, value]) => {
+        root.style.setProperty(name, value);
+    });
+}
+
 function sanitizeFileName(value) {
     return String(value || 'document')
         .toLowerCase()
@@ -164,7 +200,14 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
         if (!el || !selectedDocument) return;
         setIsExportingPdf(true);
         try {
-            const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const canvas = await html2canvas(el, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                onclone: (clonedDocument) => {
+                    applyPdfSafeColorVars(clonedDocument);
+                },
+            });
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
             const pageW = pdf.internal.pageSize.getWidth();
             const pageH = pdf.internal.pageSize.getHeight();
