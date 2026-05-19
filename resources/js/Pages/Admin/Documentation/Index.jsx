@@ -10,42 +10,6 @@ import { useRef, useState } from 'react';
 import jsPDF from 'jspdf';
 import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 
-const PDF_SAFE_COLOR_VARS = {
-    '--background': '#ffffff',
-    '--foreground': '#111827',
-    '--card': '#ffffff',
-    '--card-foreground': '#111827',
-    '--popover': '#ffffff',
-    '--popover-foreground': '#111827',
-    '--primary': '#2563eb',
-    '--primary-foreground': '#ffffff',
-    '--secondary': '#475569',
-    '--secondary-foreground': '#ffffff',
-    '--muted': '#f3f4f6',
-    '--muted-foreground': '#374151',
-    '--accent': '#e5e7eb',
-    '--accent-foreground': '#111827',
-    '--destructive': '#dc2626',
-    '--destructive-foreground': '#ffffff',
-    '--border': '#d1d5db',
-    '--input': '#d1d5db',
-    '--ring': '#2563eb',
-    '--chart-1': '#2563eb',
-    '--chart-2': '#475569',
-    '--chart-3': '#d97706',
-    '--chart-4': '#7c3aed',
-    '--chart-5': '#dc2626',
-};
-
-function applyPdfSafeColorVars(doc) {
-    const root = doc?.documentElement;
-    if (!root) return;
-
-    Object.entries(PDF_SAFE_COLOR_VARS).forEach(([name, value]) => {
-        root.style.setProperty(name, value);
-    });
-}
-
 function sanitizeFileName(value) {
     return String(value || 'document')
         .toLowerCase()
@@ -66,53 +30,382 @@ function toPlainText(markdownLine) {
         .trim();
 }
 
-function markdownToPdfLines(markdown) {
+function tokenizeMarkdownInline(markdownLine) {
+    const pattern = /(\!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\)|`[^`]+`|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_)/g;
+    const tokens = [];
+    let lastIndex = 0;
+
+    for (const match of markdownLine.matchAll(pattern)) {
+        const index = match.index ?? 0;
+        const rawToken = match[0];
+
+        if (index > lastIndex) {
+            tokens.push({ text: markdownLine.slice(lastIndex, index), style: {} });
+        }
+
+        if (rawToken.startsWith('![')) {
+            const imageMatch = rawToken.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+            if (imageMatch) {
+                tokens.push({ text: imageMatch[1] || imageMatch[2], style: { italic: true } });
+            }
+        } else if (rawToken.startsWith('[')) {
+            const linkMatch = rawToken.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+            if (linkMatch) {
+                tokens.push({ text: linkMatch[1], style: { link: true, href: linkMatch[2], underline: true, color: '#2563eb' } });
+            }
+        } else if (rawToken.startsWith('```')) {
+            tokens.push({ text: rawToken.slice(3, -3), style: { code: true } });
+        } else if (rawToken.startsWith('***')) {
+            tokens.push({ text: rawToken.slice(3, -3), style: { bold: true, italic: true } });
+        } else if (rawToken.startsWith('**') || rawToken.startsWith('__')) {
+            tokens.push({ text: rawToken.slice(2, -2), style: { bold: true } });
+        } else if (rawToken.startsWith('*') || rawToken.startsWith('_')) {
+            tokens.push({ text: rawToken.slice(1, -1), style: { italic: true } });
+        } else {
+            tokens.push({ text: rawToken, style: {} });
+        }
+
+        lastIndex = index + rawToken.length;
+    }
+
+    if (lastIndex < markdownLine.length) {
+        tokens.push({ text: markdownLine.slice(lastIndex), style: {} });
+    }
+
+    return tokens.filter((token) => token.text.length > 0);
+}
+
+function parseMarkdownBlocks(markdown) {
     const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
-    const pdfLines = [];
+    const blocks = [];
+    let paragraphLines = [];
     let inCodeBlock = false;
+    let codeLines = [];
+
+    const flushParagraph = () => {
+        const text = paragraphLines.join(' ').replace(/\s+/g, ' ').trim();
+        if (text) {
+            blocks.push({ type: 'paragraph', text });
+        }
+        paragraphLines = [];
+    };
 
     for (const rawLine of lines) {
         const line = rawLine ?? '';
         const trimmed = line.trim();
 
         if (trimmed.startsWith('```')) {
+            if (inCodeBlock) {
+                blocks.push({ type: 'code', lines: codeLines.slice() });
+                codeLines = [];
+            } else {
+                flushParagraph();
+            }
             inCodeBlock = !inCodeBlock;
             continue;
         }
 
-        if (!trimmed) {
-            pdfLines.push('');
+        if (inCodeBlock) {
+            codeLines.push(line);
             continue;
         }
 
-        if (inCodeBlock) {
-            pdfLines.push(line);
+        if (!trimmed) {
+            flushParagraph();
             continue;
         }
 
         const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
         if (headingMatch) {
-            pdfLines.push(toPlainText(headingMatch[2]).toUpperCase());
-            pdfLines.push('');
+            flushParagraph();
+            blocks.push({
+                type: 'heading',
+                level: headingMatch[1].length,
+                text: toPlainText(headingMatch[2]),
+            });
             continue;
         }
 
-        const bulletMatch = trimmed.match(/^[-*+]\s+(.+)$/);
+        const bulletMatch = trimmed.match(/^([-*+])\s+(.+)$/);
         if (bulletMatch) {
-            pdfLines.push(`• ${toPlainText(bulletMatch[1])}`);
+            flushParagraph();
+            blocks.push({
+                type: 'listItem',
+                ordered: false,
+                text: toPlainText(bulletMatch[2]),
+            });
             continue;
         }
 
-        const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+        const orderedMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
         if (orderedMatch) {
-            pdfLines.push(`- ${toPlainText(orderedMatch[1])}`);
+            flushParagraph();
+            blocks.push({
+                type: 'listItem',
+                ordered: true,
+                index: Number(orderedMatch[1]),
+                text: toPlainText(orderedMatch[2]),
+            });
             continue;
         }
 
-        pdfLines.push(toPlainText(trimmed));
+        const blockquoteMatch = trimmed.match(/^>\s+(.+)$/);
+        if (blockquoteMatch) {
+            flushParagraph();
+            blocks.push({ type: 'blockquote', text: toPlainText(blockquoteMatch[1]) });
+            continue;
+        }
+
+        paragraphLines.push(trimmed);
     }
 
-    return pdfLines;
+    flushParagraph();
+
+    if (codeLines.length) {
+        blocks.push({ type: 'code', lines: codeLines.slice() });
+    }
+
+    return blocks;
+}
+
+function getPdfFontStyle(style) {
+    if (style.bold && style.italic) return 'bolditalic';
+    if (style.bold) return 'bold';
+    if (style.italic) return 'italic';
+    return 'normal';
+}
+
+function applyPdfTextStyle(pdf, style = {}) {
+    pdf.setFont(style.fontFamily || 'helvetica', getPdfFontStyle(style));
+    pdf.setFontSize(style.fontSize || 11);
+    pdf.setTextColor(style.color || '#111827');
+}
+
+function splitStyledSegments(pdf, segments, maxWidth) {
+    const lines = [];
+    let currentLine = [];
+    let currentWidth = 0;
+
+    const pushLine = () => {
+        if (currentLine.length) {
+            lines.push(currentLine);
+        }
+        currentLine = [];
+        currentWidth = 0;
+    };
+
+    for (const segment of segments) {
+        const parts = String(segment.text || '').split(/(\s+)/);
+
+        for (const part of parts) {
+            if (!part) continue;
+
+            if (part.includes('\n')) {
+                const newlineParts = part.split('\n');
+                newlineParts.forEach((newlinePart, index) => {
+                    if (newlinePart) {
+                        const textPart = { ...segment, text: newlinePart };
+                        applyPdfTextStyle(pdf, textPart.style || segment.style || {});
+                        const partWidth = pdf.getTextWidth(newlinePart);
+                        if (currentWidth > 0 && currentWidth + partWidth > maxWidth && newlinePart.trim()) {
+                            pushLine();
+                        }
+                        currentLine.push(textPart);
+                        currentWidth += partWidth;
+                    }
+
+                    if (index < newlineParts.length - 1) {
+                        pushLine();
+                    }
+                });
+                continue;
+            }
+
+            const text = part;
+            applyPdfTextStyle(pdf, segment.style || {});
+            const partWidth = pdf.getTextWidth(text);
+
+            if (currentWidth > 0 && currentWidth + partWidth > maxWidth && text.trim()) {
+                pushLine();
+            }
+
+            if (!currentLine.length && !text.trim()) {
+                continue;
+            }
+
+            currentLine.push({ ...segment, text });
+            currentWidth += partWidth;
+        }
+    }
+
+    if (currentLine.length) {
+        lines.push(currentLine);
+    }
+
+    return lines.length ? lines : [[]];
+}
+
+function renderStyledLine(pdf, segments, x, y) {
+    let cursorX = x;
+
+    for (const segment of segments) {
+        const style = segment.style || {};
+        applyPdfTextStyle(pdf, style);
+        pdf.text(segment.text, cursorX, y);
+
+        if (style.underline) {
+            const width = pdf.getTextWidth(segment.text);
+            pdf.setDrawColor(style.color || '#2563eb');
+            pdf.setLineWidth(0.6);
+            pdf.line(cursorX, y + 1.5, cursorX + width, y + 1.5);
+        }
+
+        cursorX += pdf.getTextWidth(segment.text);
+    }
+}
+
+function renderWrappedStyledText(pdf, segments, options) {
+    const { x, yStart, maxWidth, pageBottom, marginTop, lineHeight, blockGap = 0 } = options;
+    const lines = splitStyledSegments(pdf, segments, maxWidth);
+    let cursorY = yStart;
+
+    for (const lineSegments of lines) {
+        if (cursorY > pageBottom) {
+            pdf.addPage();
+            cursorY = marginTop;
+        }
+
+        renderStyledLine(pdf, lineSegments, x, cursorY);
+        cursorY += lineHeight;
+    }
+
+    return cursorY + blockGap;
+}
+
+function renderPdfMarkdown(pdf, markdown, options) {
+    const { pageW, pageH, marginX, marginTop, marginBottom } = options;
+    const maxWidth = pageW - marginX * 2;
+    const pageBottom = pageH - marginBottom;
+    const blocks = parseMarkdownBlocks(markdown);
+    let cursorY = marginTop;
+
+    const ensurePageBreak = (neededSpace = 0) => {
+        if (cursorY + neededSpace > pageBottom) {
+            pdf.addPage();
+            cursorY = marginTop;
+        }
+    };
+
+    for (const block of blocks) {
+        if (block.type === 'heading') {
+            const headingSizes = { 1: 20, 2: 17, 3: 15, 4: 13, 5: 12, 6: 11 };
+            const fontSize = headingSizes[block.level] || 15;
+            const lineHeight = fontSize + 5;
+            ensurePageBreak(lineHeight + 8);
+            pdf.setFont('helvetica', 'bold');
+            cursorY = renderWrappedStyledText(pdf, [{ text: block.text.toUpperCase(), style: { bold: true, fontSize } }], {
+                x: marginX,
+                yStart: cursorY,
+                maxWidth,
+                pageBottom,
+                marginTop,
+                lineHeight,
+                blockGap: 4,
+            });
+            cursorY += 6;
+            continue;
+        }
+
+        if (block.type === 'listItem') {
+            const marker = block.ordered ? `${block.index}.` : '•';
+            const indent = block.ordered ? 22 : 18;
+            const lineHeight = 16;
+            ensurePageBreak(lineHeight + 4);
+            pdf.setFont('helvetica', 'normal');
+            applyPdfTextStyle(pdf, { fontSize: 11 });
+            pdf.text(marker, marginX, cursorY);
+            cursorY = renderWrappedStyledText(pdf, tokenizeMarkdownInline(block.text), {
+                x: marginX + indent,
+                yStart: cursorY,
+                maxWidth: maxWidth - indent,
+                pageBottom,
+                marginTop,
+                lineHeight,
+                blockGap: 2,
+            });
+            cursorY += 2;
+            continue;
+        }
+
+        if (block.type === 'blockquote') {
+            const lineHeight = 16;
+            ensurePageBreak(lineHeight + 8);
+            pdf.setTextColor('#475569');
+            cursorY = renderWrappedStyledText(pdf, tokenizeMarkdownInline(block.text), {
+                x: marginX + 14,
+                yStart: cursorY,
+                maxWidth: maxWidth - 14,
+                pageBottom,
+                marginTop,
+                lineHeight,
+                blockGap: 4,
+            });
+            pdf.setTextColor('#111827');
+            pdf.setDrawColor('#d1d5db');
+            pdf.setLineWidth(1);
+            pdf.line(marginX + 2, cursorY - 20, marginX + 2, cursorY - 2);
+            cursorY += 4;
+            continue;
+        }
+
+        if (block.type === 'code') {
+            const codeFontSize = 10;
+            const lineHeight = 14;
+            const blockHeight = block.lines.length * lineHeight + 12;
+            ensurePageBreak(blockHeight + 8);
+            pdf.setFillColor('#f3f4f6');
+            pdf.setDrawColor('#e5e7eb');
+            pdf.roundedRect(marginX - 4, cursorY - 10, maxWidth + 8, blockHeight, 4, 4, 'FD');
+            pdf.setFont('courier', 'normal');
+            pdf.setFontSize(codeFontSize);
+            pdf.setTextColor('#111827');
+
+            let codeY = cursorY;
+            for (const codeLine of block.lines) {
+                const wrappedCodeLines = pdf.splitTextToSize(codeLine, maxWidth - 8);
+                for (const wrappedCodeLine of wrappedCodeLines) {
+                    if (codeY > pageBottom) {
+                        pdf.addPage();
+                        codeY = marginTop;
+                    }
+                    pdf.text(wrappedCodeLine, marginX + 4, codeY);
+                    codeY += lineHeight;
+                }
+            }
+
+            cursorY = codeY + 4;
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor('#111827');
+            continue;
+        }
+
+        if (block.type === 'paragraph') {
+            const lineHeight = 16;
+            ensurePageBreak(lineHeight + 4);
+            cursorY = renderWrappedStyledText(pdf, tokenizeMarkdownInline(block.text), {
+                x: marginX,
+                yStart: cursorY,
+                maxWidth,
+                pageBottom,
+                marginTop,
+                lineHeight,
+                blockGap: 4,
+            });
+            cursorY += 2;
+        }
+    }
+
+    return cursorY;
 }
 
 function markdownToDocxParagraphs(markdown) {
@@ -253,20 +546,6 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
             const marginX = 48;
             const marginTop = 56;
             const marginBottom = 48;
-            const maxWidth = pageW - marginX * 2;
-            const pageBottom = pageH - marginBottom;
-            const lineHeight = 16;
-            const headingGap = 10;
-            const bodyGap = 6;
-            const contentLines = [];
-
-            contentLines.push(selectedDocument.title.toUpperCase());
-            if (selectedDocument.summary) {
-                contentLines.push('');
-                contentLines.push(toPlainText(selectedDocument.summary));
-            }
-            contentLines.push('');
-            contentLines.push(...markdownToPdfLines(selectedDocument.content));
 
             pdf.setProperties({
                 title: selectedDocument.title,
@@ -278,38 +557,33 @@ export default function DocumentationIndex({ documentsByCategory, selectedDocume
             pdf.setTextColor('#111827');
 
             let cursorY = marginTop;
-            for (const line of contentLines) {
-                const trimmed = String(line || '').trimEnd();
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(20);
+            pdf.text(selectedDocument.title, marginX, cursorY);
+            cursorY += 28;
 
-                if (!trimmed) {
-                    cursorY += bodyGap;
-                    continue;
-                }
-
-                const isHeading = trimmed === trimmed.toUpperCase() && trimmed.length > 1 && !trimmed.startsWith('• ');
-                if (isHeading) {
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(18);
-                } else {
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(11);
-                }
-
-                const wrappedLines = pdf.splitTextToSize(trimmed, maxWidth);
-                for (const wrappedLine of wrappedLines) {
-                    if (cursorY > pageBottom) {
-                        pdf.addPage();
-                        cursorY = marginTop;
-                    }
-
-                    pdf.text(wrappedLine, marginX, cursorY);
-                    cursorY += isHeading ? 24 : lineHeight;
-                }
-
-                if (isHeading) {
-                    cursorY += headingGap;
-                }
+            if (selectedDocument.summary) {
+                pdf.setFont('helvetica', 'italic');
+                pdf.setFontSize(11);
+                cursorY = renderWrappedStyledText(pdf, tokenizeMarkdownInline(toPlainText(selectedDocument.summary)), {
+                    x: marginX,
+                    yStart: cursorY,
+                    maxWidth: pageW - marginX * 2,
+                    pageBottom: pageH - marginBottom,
+                    marginTop,
+                    lineHeight: 15,
+                    blockGap: 8,
+                });
             }
+
+            cursorY = renderPdfMarkdown(pdf, selectedDocument.content, {
+                pageW,
+                pageH,
+                marginX,
+                marginTop: cursorY + 4,
+                marginBottom,
+            });
+
             pdf.save(`${sanitizeFileName(selectedDocument.title)}.pdf`);
         } finally {
             setIsExportingPdf(false);
