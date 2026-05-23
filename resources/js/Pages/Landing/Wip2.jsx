@@ -169,7 +169,7 @@ export default function Wip2() {
                             <Link href={route('register')} className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
                                 {t('landing.cta.register_enroll')}
                             </Link>
-                            <Link href={route('dashboard')} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
+                            <Link href={route('courses.show', { course: 'fen-proaktif' })} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
                                 {t('landing.cta.view_course')}
                             </Link>
                         </div>

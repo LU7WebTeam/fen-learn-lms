@@ -295,7 +295,7 @@ export default function Home() {
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                                 <Link
-                                    href={route('dashboard')}
+                                    href={route('courses.show', { course: 'fen-proaktif' })}
                                     className="inline-flex min-w-[160px] items-center justify-center gap-2 rounded-full bg-[#0353a1] px-5 py-2.5 font-['Inter',sans-serif] text-[1rem] font-semibold text-white transition hover:bg-[#024180]"
                                 >
                                     {t('landing.cta.view_course')}
