@@ -2,6 +2,8 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { BookOpen, Award, CheckCircle, Clock, Globe } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
+import { useState } from 'react';
+import { Button } from '@/Components/ui/button';
 
 const HERO_IMAGE_VERSION = '20260402-2';
 const HERO_MOBILE_IMAGE_URL = `/images/FEN_learn-hero-mobile.webp?v=${HERO_IMAGE_VERSION}`;
@@ -43,7 +45,6 @@ const LEARN_ITEMS = [
 ];
 
 const FAQ_ITEMS = [
-    { qKey: 'landing.faq.item1.q', aKey: 'landing.faq.item1.a' },
     { qKey: 'landing.faq.item2.q', aKey: 'landing.faq.item2.a' },
     { qKey: 'landing.faq.item3.q', aKey: 'landing.faq.item3.a' },
     { qKey: 'landing.faq.item4.q', aKey: 'landing.faq.item4.a' },
@@ -54,10 +55,17 @@ export default function Wip2() {
     const { platform, auth, locale } = usePage().props;
     const platformName = platform?.name || 'FEN E-Learning Platform';
     const t = useT();
+    const [showStartPopup, setShowStartPopup] = useState(false);
     const posterLang = locale === 'ms' ? 'BM' : 'ENG';
     const posterSrc = posterLang === 'BM'
         ? '/images/FEN_PROAKTIF_20_BM.webp'
         : '/images/FEN_PROAKTIF_20_ENG.webp';
+
+    function handleStartProaktifClick(e) {
+        if (auth?.user) return;
+        e.preventDefault();
+        setShowStartPopup(true);
+    }
 
     return (
         <div className="min-h-screen bg-white font-['Lexend',sans-serif] text-slate-600">
@@ -166,7 +174,11 @@ export default function Wip2() {
                             <p>{t('landing.spotlight.p3')}</p>
                         </div>
                         <div className="pt-6 flex flex-wrap gap-4">
-                            <Link href={route('register')} className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md">
+                            <Link
+                                href={auth?.user ? route('courses.show', { course: 'fen-proaktif' }) : '#'}
+                                onClick={handleStartProaktifClick}
+                                className="bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary/90 transition font-medium shadow-md"
+                            >
                                 {t('landing.cta.register_enroll')}
                             </Link>
                             <Link href={route('courses.show', { course: 'fen-proaktif' })} className="bg-white text-slate-900 border border-slate-200 px-8 py-3.5 rounded-full hover:bg-slate-50 transition font-medium shadow-sm">
@@ -355,7 +367,6 @@ export default function Wip2() {
                         <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
                             <Link href={route('about')} className="hover:text-white transition">{t('landing.footer.about')}</Link>
                             <Link href={route('terms')} className="hover:text-white transition">{t('landing.footer.terms')}</Link>
-                            <Link href={route('privacy')} className="hover:text-white transition">{t('landing.footer.privacy')}</Link>
                             <span className="w-1 h-1 bg-slate-700 rounded-full hidden md:block"></span>
                             <Link href={route('courses.index')} className="hover:text-white transition font-medium">{t('landing.footer.browse_courses')}</Link>
                         </div>
@@ -366,6 +377,21 @@ export default function Wip2() {
                     </div>
                 </div>
             </footer>
+
+            {showStartPopup && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+                        <h3 className="text-lg font-bold text-[#131722] dark:text-slate-100">{t('landing.start_popup.title')}</h3>
+                        <p className="mt-2 text-sm text-[#545c6b] dark:text-slate-300">{t('landing.start_popup.body')}</p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setShowStartPopup(false)}>{t('common.close')}</Button>
+                            <Button asChild className="bg-[#b53391] hover:bg-[#9f2c80] text-white">
+                                <Link href={route('register')}>{t('landing.cta.register_free')}</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

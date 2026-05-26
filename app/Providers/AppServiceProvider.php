@@ -119,7 +119,7 @@ class AppServiceProvider extends ServiceProvider
                 'platform_name' => $branding['platformName'],
             ];
             $titleEnFallback = 'Reset your password';
-            $bodyEnFallback = 'We received a request to reset your password for {{platform_name}}.';
+            $bodyEnFallback = 'Do you want to reset your password? Click the button below to reset your password.';
             $ctaEnFallback = 'Reset Password';
             $greetingEnFallback = 'Hello';
             $accountLabelEnFallback = 'Account';
@@ -139,7 +139,7 @@ class AppServiceProvider extends ServiceProvider
             $titleBM = EmailContent::get('reset_email_title_bm', 'Tetapkan semula kata laluan anda', $tokens);
             $bodyBM = EmailContent::get(
                 'reset_email_body_bm',
-                'Kami menerima permintaan untuk menetapkan semula kata laluan anda untuk {{platform_name}}.',
+                'Anda ingin tetapkan semula kata laluan anda? Klik butang di bawah untuk tetapkan semula kata laluan anda.',
                 $tokens,
             );
             $ctaBM = EmailContent::get('reset_email_cta_bm', 'Tetapkan Semula Kata Laluan', $tokens);

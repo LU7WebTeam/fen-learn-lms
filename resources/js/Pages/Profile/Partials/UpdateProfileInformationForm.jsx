@@ -83,7 +83,6 @@ export default function UpdateProfileInformation({
         occupation:   user.occupation ?? '',
         occupation_other: user.occupation_other ?? '',
         student_id:   user.student_id ?? '',
-        field_of_study: user.field_of_study ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -110,7 +109,6 @@ export default function UpdateProfileInformation({
             occupation: value,
             occupation_other: value === 'other' ? prev.occupation_other : '',
             student_id: value === 'student' ? prev.student_id : '',
-            field_of_study: value === 'student' ? prev.field_of_study : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -274,7 +272,7 @@ export default function UpdateProfileInformation({
                         )}
 
                         {data.occupation === 'student' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <InputLabel htmlFor="student_id" value={t('profile.info.student_id')} />
                                     <TextInput
@@ -284,18 +282,6 @@ export default function UpdateProfileInformation({
                                         onChange={(e) => setData('student_id', e.target.value)}
                                     />
                                     <InputError className="mt-2" message={errors.student_id} />
-                                </div>
-
-                                <div>
-                                    <InputLabel htmlFor="field_of_study" value={t('profile.info.field_of_study')} />
-                                    <TextInput
-                                        id="field_of_study"
-                                        className={textFieldClass}
-                                        value={data.field_of_study}
-                                        onChange={(e) => setData('field_of_study', e.target.value)}
-                                        placeholder={t('profile.info.field_of_study_placeholder')}
-                                    />
-                                    <InputError className="mt-2" message={errors.field_of_study} />
                                 </div>
                             </div>
                         )}

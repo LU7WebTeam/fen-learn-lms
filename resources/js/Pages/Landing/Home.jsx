@@ -10,6 +10,7 @@ import {
 import LangSwitcher from '@/Components/LangSwitcher';
 import { useT } from '@/lib/i18n';
 import { useEffect, useState } from 'react';
+import { Button } from '@/Components/ui/button';
 
 const FEATURE_ITEMS = [
     {
@@ -47,7 +48,6 @@ const LEARN_ITEMS = [
 ];
 
 const FAQ_ITEMS = [
-    { qKey: 'landing.faq.item1.q', aKey: 'landing.faq.item1.a' },
     { qKey: 'landing.faq.item2.q', aKey: 'landing.faq.item2.a' },
     { qKey: 'landing.faq.item3.q', aKey: 'landing.faq.item3.a' },
     { qKey: 'landing.faq.item4.q', aKey: 'landing.faq.item4.a' },
@@ -67,7 +67,14 @@ export default function Home() {
     const firstLearnItem = LEARN_ITEMS[0];
     const [isScrolled, setIsScrolled] = useState(false);
     const [showAuthMenu, setShowAuthMenu] = useState(false);
+    const [showStartPopup, setShowStartPopup] = useState(false);
     const softCardTint = '#ffffff';
+
+    function handleStartProaktifClick(e) {
+        if (auth?.user) return;
+        e.preventDefault();
+        setShowStartPopup(true);
+    }
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -288,7 +295,8 @@ export default function Home() {
                             <p className="mt-3 text-[#505765]">{t('landing.spotlight.p3')}</p>
                             <div className="mt-6 flex flex-wrap gap-3">
                                 <Link
-                                    href={route('register')}
+                                    href={auth?.user ? route('courses.show', { course: 'fen-proaktif' }) : '#'}
+                                    onClick={handleStartProaktifClick}
                                     className="inline-flex min-w-[160px] items-center justify-center gap-2 rounded-full bg-[#b53391] px-5 py-2.5 font-['Inter',sans-serif] text-[1rem] font-semibold text-white transition hover:bg-[#9f2c80]"
                                 >
                                     {t('landing.cta.register_enroll')}
@@ -484,7 +492,6 @@ export default function Home() {
                             <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6 md:justify-end">
                                 <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
                                 <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
-                                <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
                             </div>
                             <p className="text-[#b8bdc8] text-center md:text-right">
                                 {t('landing.footer.support_text')}{' '}
@@ -494,6 +501,21 @@ export default function Home() {
                     </div>
                 </div>
             </footer>
+
+            {showStartPopup && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+                        <h3 className="text-lg font-bold text-[#131722] dark:text-slate-100">{t('landing.start_popup.title')}</h3>
+                        <p className="mt-2 text-sm text-[#545c6b] dark:text-slate-300">{t('landing.start_popup.body')}</p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setShowStartPopup(false)}>{t('common.close')}</Button>
+                            <Button asChild className="bg-[#b53391] hover:bg-[#9f2c80] text-white">
+                                <Link href={route('register')}>{t('landing.cta.register_free')}</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

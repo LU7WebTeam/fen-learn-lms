@@ -20,7 +20,6 @@ class ProfileUpdateRequest extends FormRequest
             'occupation'  => ['required', 'string', 'max:100'],
             'occupation_other' => ['nullable', 'string', 'max:150', 'required_if:occupation,other'],
             'student_id'  => ['nullable', 'string', 'max:100', 'required_if:occupation,student'],
-            'field_of_study' => ['nullable', 'string', 'max:150', 'required_if:occupation,student'],
             'avatar_file' => ['nullable', 'file', 'image', 'max:2048'],
             'avatar_clear'=> ['nullable', 'boolean'],
             'email'       => ['prohibited'],

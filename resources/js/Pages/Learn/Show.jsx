@@ -29,6 +29,38 @@ const DEFAULT_A11Y_MEDIA_PREFERENCES = {
     textFirstLearning: false,
 };
 
+function normalizeOptionLabel(option) {
+    if (typeof option === 'string') return option.toLowerCase();
+    if (option && typeof option === 'object') return String(option.label ?? '').toLowerCase();
+    return '';
+}
+
+function applySpecialMultiSelectRules(question, previousAnswers, toggledIndex) {
+    const previous = Array.isArray(previousAnswers) ? previousAnswers : [];
+    const base = previous.includes(toggledIndex)
+        ? previous.filter((x) => x !== toggledIndex)
+        : [...previous, toggledIndex];
+
+    const options = Array.isArray(question?.options) ? question.options : [];
+    if (options.length === 0) return base;
+
+    const labels = options.map(normalizeOptionLabel);
+    const lifeIndex = labels.findIndex((l) => l.includes('life insurance') || l.includes('family takaful'));
+    const medicalIndex = labels.findIndex((l) => l.includes('medical and health insurance') || l.includes('medical') || l.includes('health insurance'));
+    const exclusiveIndex = labels.findIndex((l) => l.includes('none of the above') || l.includes('tidak berkaitan') || l.includes('tidak berkenaan'));
+
+    if (lifeIndex < 0 || medicalIndex < 0 || exclusiveIndex < 0) {
+        return base;
+    }
+
+    // Business rule from UAT: allow either first two insurance options OR the exclusive option only.
+    if (base.includes(exclusiveIndex)) {
+        return [exclusiveIndex];
+    }
+
+    return base.filter((idx) => idx !== exclusiveIndex);
+}
+
 function getA11yMediaPreferences() {
     if (typeof window === 'undefined') {
         return DEFAULT_A11Y_MEDIA_PREFERENCES;
@@ -113,6 +145,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
     const attemptsLeft = maxAttempts > 0 ? maxAttempts - attemptsDone : Infinity;
     const limitReached = maxAttempts > 0 && attemptsDone >= maxAttempts;
     const canRetry = maxAttempts === 0 || attemptsDone < maxAttempts;
+    const lessonTitle = tl(lesson, 'title', locale) || t('learn.quiz.title');
 
     const { data, setData, post, processing } = useForm({ answers: {} });
 
@@ -273,6 +306,8 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                     <Lock className="h-4 w-4 shrink-0" />
                     {limitReached
                         ? t(maxAttempts === 1 ? 'learn.quiz.attempts_exhausted_s' : 'learn.quiz.attempts_exhausted_p', { n: maxAttempts })
+                        : maxAttempts === 1
+                            ? t('learn.quiz.attempt_once_only', { lesson: lessonTitle })
                         : t(attemptsLeft === 1 ? 'learn.quiz.attempts_remaining_s' : 'learn.quiz.attempts_remaining_p', { left: attemptsLeft, total: maxAttempts })}
                 </div>
             )}
@@ -319,7 +354,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                         ? (lastAttempt.passed ? 'border-green-200 bg-green-50 text-green-700' : 'border-amber-200 bg-amber-50 text-amber-700')
                         : 'border-blue-200 bg-blue-50 text-blue-700'
                 )}>
-                    <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.score}/{lastAttempt.max_score} ({lastAttempt.percentage}%)
+                    <span className="font-medium">{t('learn.quiz.last_attempt')}</span> {lastAttempt.percentage}% ({lastAttempt.score}/{lastAttempt.max_score})
                     {hasPassingScore
                         ? (lastAttempt.passed ? ` — ${t('learn.quiz.passed_check')}` : ` — ${t('learn.quiz.need_to_pass', { n: passingScore })}`)
                         : ''}
@@ -374,8 +409,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                                                 disabled={showResult}
                                                 checked={Array.isArray(data.answers[qi]) && data.answers[qi].includes(oi)}
                                                 onChange={() => {
-                                                    const prev = Array.isArray(data.answers[qi]) ? data.answers[qi] : [];
-                                                    const next = prev.includes(oi) ? prev.filter(x => x !== oi) : [...prev, oi];
+                                                    const next = applySpecialMultiSelectRules(q, data.answers[qi], oi);
                                                     setData('answers', { ...data.answers, [qi]: next });
                                                 }}
                                                 className="accent-primary shrink-0"
@@ -421,8 +455,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                                             onClick={() => {
                                                 if (showResult) return;
                                                 if (isMultiAnswer) {
-                                                    const prev = Array.isArray(data.answers[qi]) ? data.answers[qi] : [];
-                                                    const next = prev.includes(oi) ? prev.filter(x => x !== oi) : [...prev, oi];
+                                                    const next = applySpecialMultiSelectRules(q, data.answers[qi], oi);
                                                     setData('answers', { ...data.answers, [qi]: next });
                                                 } else {
                                                     setData('answers', { ...data.answers, [qi]: oi });
@@ -529,17 +562,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
 
                         {/* Score content */}
                         <div className="space-y-1.5 px-6 pb-6 pt-4 text-center">
-                            <div className={cn(
-                                'text-4xl font-bold tabular-nums',
-                                hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
-                            )}>
-                                {result.score} / {result.max_score}
-                            </div>
                             <p className={cn(
-                                'text-lg font-semibold tabular-nums',
+                                'text-3xl font-bold tabular-nums',
                                 hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                             )}>
-                                {result.percentage}%
+                                {result.percentage}% ({result.score}/{result.max_score})
                             </p>
                             {hasPassingScore && (
                                 <p className="text-sm text-muted-foreground">
@@ -552,7 +579,10 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                                 {canRetry && (
                                     <Button
                                         onClick={() => { setModalOpen(false); handleRetry(); }}
-                                        className="w-full"
+                                        className={cn(
+                                            'w-full',
+                                            hasPassingScore && !result?.passed && 'bg-[#8B1A4A] hover:bg-[#7a1740] text-white'
+                                        )}
                                         size="sm"
                                     >
                                         {t('learn.quiz.try_again')}
@@ -602,17 +632,11 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                             className="mx-auto block object-contain"
                             style={{ maxWidth: '220px' }}
                         />
-                        <div className={cn(
-                            'text-4xl font-bold tabular-nums',
-                            hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
-                        )}>
-                            {result.score} / {result.max_score}
-                        </div>
                         <p className={cn(
-                            'text-lg font-semibold tabular-nums',
+                            'text-3xl font-bold tabular-nums',
                             hasPassingScore ? (result?.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') : 'text-blue-600 dark:text-blue-400'
                         )}>
-                            {result.percentage}%
+                            {result.percentage}% ({result.score}/{result.max_score})
                         </p>
                         {hasPassingScore && (
                             <p className="text-sm text-muted-foreground">
@@ -626,7 +650,14 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                                 </Button>
                             )}
                             {canRetry && (
-                                <Button className="w-full" size="sm" onClick={handleRetry}>
+                                <Button
+                                    className={cn(
+                                        'w-full',
+                                        hasPassingScore && !result?.passed && 'bg-[#8B1A4A] hover:bg-[#7a1740] text-white'
+                                    )}
+                                    size="sm"
+                                    onClick={handleRetry}
+                                >
                                     {t('learn.quiz.try_again')}
                                 </Button>
                             )}
@@ -647,7 +678,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                         'font-semibold tabular-nums',
                         hasPassingScore ? (result?.passed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400') : 'text-blue-700 dark:text-blue-400'
                     )}>
-                        {result.score}/{result.max_score} &mdash; {result.percentage}%
+                        {result.percentage}% ({result.score}/{result.max_score})
                     </span>
                     <div className="flex items-center gap-3">
                         {hasPassingScore && (
@@ -1197,7 +1228,6 @@ export default function LearnShow({
                                         <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-6 md:justify-end">
                                             <a href="https://www.fenetwork.my/about/" target="_blank" rel="noreferrer" className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.about_fen')}</a>
                                             <Link href={route('terms')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.terms')}</Link>
-                                            <Link href={route('privacy')} className="text-[#b8bdc8] transition hover:text-white">{t('landing.footer.privacy')}</Link>
                                         </div>
                                         <p className="text-[#b8bdc8] text-center md:text-right">
                                             {t('landing.footer.support_text')}{' '}

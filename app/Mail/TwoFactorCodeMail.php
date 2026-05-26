@@ -40,7 +40,7 @@ class TwoFactorCodeMail extends Mailable implements ShouldQueue
         $tokens = [];
 
         $titleEnFallback = 'Login verification code';
-        $bodyEnFallback = 'You requested to log in to your account. To complete your sign in, please use the verification code below:';
+        $bodyEnFallback = 'Do you want to log in to your account? Use the verification code below to log in.';
         $expiryEnFallback = 'This code will expire in 10 minutes.';
         $securityEnFallback = 'If you did not request this code, please ignore this email and secure your account.';
         $greetingEnFallback = 'Hello';
@@ -51,7 +51,7 @@ class TwoFactorCodeMail extends Mailable implements ShouldQueue
         $title = EmailContent::resolveSecondaryEnglish($title, $titleBM, $titleEnFallback, $tokens);
 
         $bodyText = EmailContent::get('two_factor_email_body', $bodyEnFallback, $tokens);
-        $bodyTextBM = EmailContent::get('two_factor_email_body_bm', 'Anda telah meminta untuk log masuk ke akaun anda. Untuk melengkapkan log masuk anda, sila gunakan kod pengesahan di bawah:', $tokens);
+        $bodyTextBM = EmailContent::get('two_factor_email_body_bm', 'Anda ingin log masuk ke akaun anda? Gunakan kod pengesahan di bawah untuk log masuk.', $tokens);
         $bodyText = EmailContent::resolveSecondaryEnglish($bodyText, $bodyTextBM, $bodyEnFallback, $tokens);
 
         $expiryText = EmailContent::get('two_factor_email_expiry', $expiryEnFallback, $tokens);

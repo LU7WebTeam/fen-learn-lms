@@ -155,7 +155,6 @@ export default function ProfileSetup({ user }) {
         occupation:   user?.occupation ?? '',
         occupation_other: user?.occupation_other ?? '',
         student_id:   user?.student_id ?? '',
-        field_of_study: user?.field_of_study ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
     });
@@ -181,7 +180,6 @@ export default function ProfileSetup({ user }) {
             occupation: value,
             occupation_other: value === 'other' ? prev.occupation_other : '',
             student_id: value === 'student' ? prev.student_id : '',
-            field_of_study: value === 'student' ? prev.field_of_study : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
         }));
@@ -200,7 +198,6 @@ export default function ProfileSetup({ user }) {
             occupation: current.occupation,
             occupation_other: current.occupation_other,
             student_id: current.student_id,
-            field_of_study: current.field_of_study,
             organization: current.organization,
             organization_other: current.organization_other,
         }));
@@ -434,7 +431,7 @@ export default function ProfileSetup({ user }) {
                             )}
 
                             {data.occupation === 'student' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <FormField
                                         label={t('profile.info.student_id')}
                                         required
@@ -444,18 +441,6 @@ export default function ProfileSetup({ user }) {
                                             value={data.student_id}
                                             onChange={e => setData('student_id', e.target.value)}
                                             placeholder={t('profile.info.student_id_placeholder')}
-                                        />
-                                    </FormField>
-
-                                    <FormField
-                                        label={t('profile.info.field_of_study')}
-                                        required
-                                        error={errors.field_of_study}
-                                    >
-                                        <Input
-                                            value={data.field_of_study}
-                                            onChange={e => setData('field_of_study', e.target.value)}
-                                            placeholder={t('profile.info.field_of_study_placeholder')}
                                         />
                                     </FormField>
                                 </div>
