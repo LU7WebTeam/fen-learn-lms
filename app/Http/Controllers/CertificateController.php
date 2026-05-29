@@ -18,7 +18,7 @@ class CertificateController extends Controller
     {
         $enrollment = Enrollment::where('certificate_uuid', $uuid)
             ->whereNotNull('completed_at')
-            ->with(['user:id,name', 'course:id,title,slug,category,certificate_template'])
+            ->with(['user:id,name,organization', 'course:id,title,slug,category,certificate_template'])
             ->firstOrFail();
 
         $template = $enrollment->course->certificate_template
@@ -51,6 +51,8 @@ class CertificateController extends Controller
                 'course_slug'  => $enrollment->course->slug,
                 'category'     => $enrollment->course->category,
                 'completed_at' => $enrollment->completed_at->format('F j, Y'),
+                'university_college' => $enrollment->user->organization,
+                'organization_name' => $enrollment->user->organization,
                 'download_url' => route('certificate.download', $enrollment->certificate_uuid),
             ],
             'template'    => $template,
@@ -71,7 +73,7 @@ class CertificateController extends Controller
     {
         $enrollment = Enrollment::where('certificate_uuid', $uuid)
             ->whereNotNull('completed_at')
-            ->with(['user:id,name', 'course:id,title,slug,certificate_template'])
+            ->with(['user:id,name,organization', 'course:id,title,slug,certificate_template'])
             ->firstOrFail();
 
         $verifyUrl = config('app.url') . '/certificate/' . $enrollment->certificate_uuid;
@@ -111,6 +113,8 @@ class CertificateController extends Controller
             'course_title' => $enrollment->course->title,
             'completed_at' => $enrollment->completed_at->format('F j, Y'),
             'uuid'         => $enrollment->certificate_uuid,
+            'university_college' => $enrollment->user->organization,
+            'organization_name' => $enrollment->user->organization,
             'verify_url'   => $verifyUrl,
         ])->setPaper($size, $orientation);
 

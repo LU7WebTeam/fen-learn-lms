@@ -19,6 +19,45 @@ import {
 // ─── Live Preview ──────────────────────────────────────────────────────────────
 const PREVIEW_W = 520; // px target width
 
+function mergeTemplateWithDefaults(existingTemplate, defaultTemplate) {
+    if (!existingTemplate) return defaultTemplate;
+
+    const existingFields = existingTemplate.fields || [];
+    const defaultFields = defaultTemplate.fields || [];
+    const existingById = new Map(existingFields.map(field => [field.id, field]));
+
+    const mergedDefaultFields = defaultFields.map(field => {
+        const existing = existingById.get(field.id);
+        return existing ? { ...field, ...existing } : field;
+    });
+
+    const additionalExistingFields = existingFields.filter(
+        field => !defaultFields.some(defaultField => defaultField.id === field.id)
+    );
+
+    return {
+        ...defaultTemplate,
+        ...existingTemplate,
+        background: {
+            ...(defaultTemplate.background || {}),
+            ...(existingTemplate.background || {}),
+        },
+        branding: {
+            ...(defaultTemplate.branding || {}),
+            ...(existingTemplate.branding || {}),
+        },
+        signatory: {
+            ...(defaultTemplate.signatory || {}),
+            ...(existingTemplate.signatory || {}),
+        },
+        requirements: {
+            ...(defaultTemplate.requirements || {}),
+            ...(existingTemplate.requirements || {}),
+        },
+        fields: [...mergedDefaultFields, ...additionalExistingFields],
+    };
+}
+
 // CertPreview is a thin wrapper so the builder can pass sample data via dynamicValues.
 function CertPreview({ template, courseTitle, customFonts = [], platformName = 'Free LMS' }) {
     const signatory = template?.signatory || {};
@@ -27,6 +66,8 @@ function CertPreview({ template, courseTitle, customFonts = [], platformName = '
         course_title:    courseTitle || 'Sample Course Title',
         completion_date: formatKualaLumpurDate(new Date(), 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
         certificate_id:  'ABC-123-SAMPLE',
+        university_college: 'University of Malaya',
+        organization_name: 'FEN Network',
         signatory_name:  signatory.name  || '',
         signatory_title: signatory.title || '',
     };
@@ -190,7 +231,7 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
     const { platform } = usePage().props;
     const platformName = platform?.name || 'Free LMS';
     const existing = course.certificate_template;
-    const initial  = existing ?? defaultTemplate;
+    const initial  = mergeTemplateWithDefaults(existing, defaultTemplate);
 
     const { data, setData, patch, processing, isDirty, errors, reset } = useForm({
         certificate_template: initial,

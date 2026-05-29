@@ -16,6 +16,8 @@ export default function CertificateShow({ certificate, template, customFont }) {
         course_title,
         course_slug,
         completed_at,
+        university_college,
+        organization_name,
         download_url,
     } = certificate;
     const platformName = platform?.name || 'FENLearn';
@@ -26,6 +28,8 @@ export default function CertificateShow({ certificate, template, customFont }) {
         course_title:    course_title,
         completion_date: completed_at,
         certificate_id:  uuid,
+        university_college: university_college || '',
+        organization_name: organization_name || '',
     };
 
     return (

@@ -67,6 +67,8 @@
                 'course_title'    => $course_title  ?? '',
                 'completion_date' => $completed_at  ?? '',
                 'certificate_id'  => $uuid          ?? '',
+                'university_college' => $university_college ?? '',
+                'organization_name'  => $organization_name  ?? '',
                 'signatory_name'  => $signatory['name']  ?? '',
                 'signatory_title' => $signatory['title'] ?? '',
             ];
