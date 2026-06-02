@@ -70,4 +70,51 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_used_reset_password_link_is_rejected_on_screen_load(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'Password!1',
+                'password_confirmation' => 'Password!1',
+            ])->assertRedirect(route('login'));
+
+            $response = $this->get('/reset-password/'.$notification->token.'?email='.urlencode($user->email));
+
+            $response
+                ->assertRedirect(route('password.request'))
+                ->assertSessionHas('error');
+
+            return true;
+        });
+    }
+
+    public function test_logged_in_different_user_cannot_open_someone_elses_reset_link(): void
+    {
+        Notification::fake();
+
+        $resetTarget = User::factory()->create();
+        $differentLoggedInUser = User::factory()->create();
+
+        $this->post('/forgot-password', ['email' => $resetTarget->email]);
+
+        Notification::assertSentTo($resetTarget, ResetPassword::class, function ($notification) use ($resetTarget, $differentLoggedInUser) {
+            $response = $this->actingAs($differentLoggedInUser)
+                ->get('/reset-password/'.$notification->token.'?email='.urlencode($resetTarget->email));
+
+            $response
+                ->assertRedirect(route('password.request'))
+                ->assertSessionHas('error');
+
+            return true;
+        });
+    }
 }

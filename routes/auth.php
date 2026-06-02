@@ -37,12 +37,6 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email');
 
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
-
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.store');
-
     // Two-factor verification (after credentials verified but before session created)
     Route::get('verify-code', [TwoFactorVerificationController::class, 'show'])
         ->name('two-factor.verify');
@@ -55,6 +49,13 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:3,1')
         ->name('two-factor.resend');
 });
+
+// Allow password reset links to be opened even when already authenticated.
+Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->name('password.reset');
+
+Route::post('reset-password', [NewPasswordController::class, 'store'])
+    ->name('password.store');
 
 // Allow email verification links to be opened on any device, even when not logged in.
 Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)

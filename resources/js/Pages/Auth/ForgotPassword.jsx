@@ -11,6 +11,7 @@ import { translateAuthError } from '@/lib/authErrorTranslations';
 export default function ForgotPassword({ status }) {
     const { props } = usePage();
     const captchaConfig = props?.integrations?.captcha ?? {};
+    const flashError = props?.flash?.error;
     const [captchaClientError, setCaptchaClientError] = useState('');
     const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
     const t = useT();
@@ -48,6 +49,12 @@ export default function ForgotPassword({ status }) {
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
                     {status}
+                </div>
+            )}
+
+            {flashError && (
+                <div className="mb-4 text-sm font-medium text-red-600">
+                    {flashError}
                 </div>
             )}
 

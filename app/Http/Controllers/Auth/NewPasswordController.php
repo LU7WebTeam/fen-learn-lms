@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,8 +20,14 @@ class NewPasswordController extends Controller
     /**
      * Display the password reset view.
      */
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
+        if (! $this->isValidResetLinkRequest($request)) {
+            return redirect()
+                ->route('password.request')
+                ->with('error', trans('passwords.token'));
+        }
+
         return Inertia::render('Auth/ResetPassword', [
             'email' => $request->email,
             'token' => $request->route('token'),
@@ -43,6 +50,12 @@ class NewPasswordController extends Controller
                 Rules\Password::min(8)->letters()->mixedCase()->symbols(),
             ],
         ]);
+
+        if (! $this->isValidResetLinkRequest($request)) {
+            throw ValidationException::withMessages([
+                'email' => [trans('passwords.token')],
+            ]);
+        }
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
@@ -69,5 +82,30 @@ class NewPasswordController extends Controller
         throw ValidationException::withMessages([
             'email' => [trans($status)],
         ]);
+    }
+
+    protected function isValidResetLinkRequest(Request $request): bool
+    {
+        $email = (string) ($request->input('email') ?: $request->query('email'));
+        $token = (string) ($request->input('token') ?: $request->route('token'));
+
+        if ($email === '' || $token === '') {
+            return false;
+        }
+
+        $authenticatedUser = $request->user();
+
+        if ($authenticatedUser && strcasecmp((string) $authenticatedUser->email, $email) !== 0) {
+            return false;
+        }
+
+        $broker = Password::broker();
+        $user = $broker->getUser(['email' => $email]);
+
+        if (! $user instanceof CanResetPasswordContract) {
+            return false;
+        }
+
+        return $broker->tokenExists($user, $token);
     }
 }

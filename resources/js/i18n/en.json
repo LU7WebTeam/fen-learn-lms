@@ -64,7 +64,7 @@
   "auth.errors.email_required": "Email is required.",
   "auth.errors.email_invalid": "Please enter a valid email address.",
   "auth.errors.password_required": "Password is required.",
-  "auth.errors.password_min": "Password must be at least 8 characters.",
+  "auth.errors.password_min": "Password must fulfill the above criteria.",
   "auth.errors.password_letters": "Password must contain at least one letter.",
   "auth.errors.password_mixed": "Password must contain at least one uppercase and one lowercase letter.",
   "auth.errors.password_symbols": "Password must contain at least one symbol.",
