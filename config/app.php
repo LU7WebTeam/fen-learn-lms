@@ -52,13 +52,21 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://fen-learn-lms.test/'),
+    // APP_URL in .env takes priority (set to custom domain when one is configured).
+    // Falls back to REPLIT_DOMAINS (auto-managed by Replit) for dev/staging environments
+    // where no custom domain is set.
+    'url' => env('APP_URL')
+        ?: (env('REPLIT_DOMAINS')
+            ? 'https://' . explode(',', env('REPLIT_DOMAINS'))[0]
+            : 'http://fen-learn-lms.test/'),
 
-    // When running on Replit, use the public HTTPS domain for asset URLs so the
-    // browser can load JS/CSS (the internal PHP server only speaks HTTP).
-    'asset_url' => env('REPLIT_DEV_DOMAIN')
-        ? 'https://' . env('REPLIT_DEV_DOMAIN')
-        : env('ASSET_URL'),
+    // ASSET_URL in .env takes priority (set to custom domain when one is configured).
+    // Falls back to REPLIT_DOMAINS so assets always load from the correct public domain.
+    // Do NOT use REPLIT_DEV_DOMAIN — it is a fixed secret always holding the dev URL.
+    'asset_url' => env('ASSET_URL')
+        ?: (env('REPLIT_DOMAINS')
+            ? 'https://' . explode(',', env('REPLIT_DOMAINS'))[0]
+            : null),
 
     /*
     |--------------------------------------------------------------------------
