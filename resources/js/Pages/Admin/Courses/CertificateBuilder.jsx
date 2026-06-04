@@ -227,13 +227,22 @@ function FieldRow({ field, onChange }) {
 }
 
 // ─── Main exported builder ──────────────────────────────────────────────────
-export default function CertificateBuilder({ course, defaultTemplate, sections, customFonts = [], readOnly = false }) {
+export default function CertificateBuilder({
+    course,
+    defaultTemplate,
+    sections,
+    customFonts = [],
+    readOnly = false,
+    sourceTemplate = null,
+    saveRoute = null,
+    payloadKey = 'certificate_template',
+}) {
     const { platform } = usePage().props;
     const platformName = platform?.name || 'Free LMS';
-    const existing = course.certificate_template;
+    const existing = sourceTemplate || course.certificate_template;
     const initial  = mergeTemplateWithDefaults(existing, defaultTemplate);
 
-    const { data, setData, patch, processing, isDirty, errors, reset } = useForm({
+    const { data, setData, patch, processing, isDirty, errors, reset, transform } = useForm({
         certificate_template: initial,
     });
 
@@ -251,7 +260,9 @@ export default function CertificateBuilder({ course, defaultTemplate, sections, 
     function handleSubmit(e) {
         e.preventDefault();
         if (readOnly) return;
-        patch(route('admin.courses.certificate.update', course.slug));
+        const targetRoute = saveRoute || route('admin.courses.certificate.update', course.slug);
+        transform(() => ({ [payloadKey]: tpl }));
+        patch(targetRoute);
     }
 
     const reqType = tpl.requirements?.type || 'all_lessons';

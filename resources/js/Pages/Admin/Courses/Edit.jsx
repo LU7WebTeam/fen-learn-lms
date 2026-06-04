@@ -1326,7 +1326,7 @@ function CourseIntroductionForm({ course, readOnly = false }) {
     );
 }
 
-export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed }) {
+export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed, certifications = [] }) {
     const { url, auth } = usePage().props;
     const isCourseViewer = auth?.user?.role === 'course_viewer';
     const [addingSection, setAddingSection] = useState(false);
@@ -1336,6 +1336,32 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
     const [reordering, setReordering] = useState(false);
     const [activeTab, setActiveTab] = useState(() => resolveInitialTab(course.id, url));
     const [restrictionOpen, setRestrictionOpen] = useState(false);
+    const [selectedCertificationId, setSelectedCertificationId] = useState(() => certifications[0]?.id ?? null);
+
+    const addCertificationForm = useForm({
+        name: '',
+        code: '',
+        priority: 100,
+        occupation_values: '',
+        organization_values: '',
+        organization_mode: 'exact',
+        state_values: '',
+        age_min: '',
+        age_max: '',
+    });
+
+    const certificationSettingsForm = useForm({
+        name: '',
+        code: '',
+        priority: 100,
+        is_active: true,
+        occupation_values: '',
+        organization_values: '',
+        organization_mode: 'exact',
+        state_values: '',
+        age_min: '',
+        age_max: '',
+    });
 
     useEffect(() => {
         setSections([...course.sections].sort((a, b) => a.order - b.order));
@@ -1348,6 +1374,131 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
 
         window.sessionStorage.setItem(`admin-course-edit-tab-${course.id}`, activeTab);
     }, [course.id, activeTab]);
+
+    useEffect(() => {
+        if (!certifications.length) {
+            setSelectedCertificationId(null);
+            return;
+        }
+
+        const stillExists = certifications.some(c => c.id === selectedCertificationId);
+        if (!stillExists) {
+            setSelectedCertificationId(certifications[0].id);
+        }
+    }, [certifications, selectedCertificationId]);
+
+    const selectedCertification = certifications.find(c => c.id === selectedCertificationId) ?? null;
+
+    useEffect(() => {
+        if (!selectedCertification) {
+            return;
+        }
+
+        const conditions = selectedCertification.conditions_json ?? {};
+        const occupation = conditions.occupation ?? { enabled: false, values: [] };
+        const organization = conditions.organization ?? { enabled: false, mode: 'exact', values: [] };
+        const state = conditions.state ?? { enabled: false, values: [] };
+        const age = conditions.age ?? { enabled: false, min: null, max: null };
+
+        certificationSettingsForm.setData({
+            name: selectedCertification.name ?? '',
+            code: selectedCertification.code ?? '',
+            priority: selectedCertification.priority ?? 100,
+            is_active: !!selectedCertification.is_active,
+            occupation_values: (occupation.values ?? []).join(', '),
+            organization_values: (organization.values ?? []).join(', '),
+            organization_mode: organization.mode ?? 'exact',
+            state_values: (state.values ?? []).join(', '),
+            age_min: age.min ?? '',
+            age_max: age.max ?? '',
+        });
+    }, [selectedCertificationId]);
+
+    function csvToArray(value) {
+        return String(value ?? '')
+            .split(',')
+            .map(part => part.trim())
+            .filter(Boolean);
+    }
+
+    function buildConditionsFromForm(values) {
+        const occupationValues = csvToArray(values.occupation_values);
+        const organizationValues = csvToArray(values.organization_values);
+        const stateValues = csvToArray(values.state_values);
+        const hasAgeMin = values.age_min !== '' && values.age_min !== null;
+        const hasAgeMax = values.age_max !== '' && values.age_max !== null;
+
+        return {
+            occupation: {
+                enabled: occupationValues.length > 0,
+                values: occupationValues,
+            },
+            organization: {
+                enabled: organizationValues.length > 0,
+                mode: values.organization_mode || 'exact',
+                values: organizationValues,
+            },
+            state: {
+                enabled: stateValues.length > 0,
+                values: stateValues,
+            },
+            age: {
+                enabled: hasAgeMin || hasAgeMax,
+                min: hasAgeMin ? Number(values.age_min) : null,
+                max: hasAgeMax ? Number(values.age_max) : null,
+            },
+        };
+    }
+
+    function handleAddCertification(e) {
+        e.preventDefault();
+        if (isCourseViewer) return;
+
+        addCertificationForm.transform((data) => ({
+            name: data.name,
+            code: data.code || null,
+            priority: Number(data.priority || 100),
+            conditions_json: buildConditionsFromForm(data),
+        }));
+
+        addCertificationForm.post(route('admin.courses.certifications.store', course.slug), {
+            preserveScroll: true,
+            onSuccess: () => {
+                addCertificationForm.reset();
+                addCertificationForm.setData('organization_mode', 'exact');
+                addCertificationForm.setData('priority', 100);
+            },
+        });
+    }
+
+    function handleSaveCertificationSettings(e) {
+        e.preventDefault();
+        if (isCourseViewer || !selectedCertification) return;
+
+        certificationSettingsForm.transform((data) => ({
+            name: data.name,
+            code: data.code || null,
+            priority: Number(data.priority || 100),
+            is_active: !!data.is_active,
+            conditions_json: buildConditionsFromForm(data),
+        }));
+
+        certificationSettingsForm.patch(route('admin.courses.certifications.update', [course.slug, selectedCertification.id]), {
+            preserveScroll: true,
+        });
+    }
+
+    function handleDeleteCertification() {
+        if (isCourseViewer || !selectedCertification) return;
+
+        if (!window.confirm('Delete this certification?')) {
+            return;
+        }
+
+        router.delete(route('admin.courses.certifications.destroy', [course.slug, selectedCertification.id]), {
+            preserveScroll: true,
+        });
+    }
 
     function handleDragStart(e, id) {
         e.dataTransfer.effectAllowed = 'move';
@@ -1549,13 +1700,198 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
 
                     {/* ── Certificate tab ── */}
                     <TabsContent value="certificate" className="mt-6">
-                        <CertificateBuilder
-                            course={course}
-                            defaultTemplate={defaultTemplate}
-                            sections={course.sections}
-                            customFonts={customFonts}
-                            readOnly={isCourseViewer}
-                        />
+                        <div className="grid gap-6 xl:grid-cols-12">
+                            <Card className="xl:col-span-4">
+                                <CardHeader>
+                                    <CardTitle className="text-base">Certifications</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        {certifications.map((cert) => (
+                                            <button
+                                                key={cert.id}
+                                                type="button"
+                                                onClick={() => setSelectedCertificationId(cert.id)}
+                                                className={[
+                                                    'w-full rounded-md border px-3 py-2 text-left transition',
+                                                    selectedCertificationId === cert.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50',
+                                                ].join(' ')}
+                                            >
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-medium">{cert.name}</p>
+                                                        <p className="text-xs text-muted-foreground">Priority: {cert.priority ?? 100}</p>
+                                                    </div>
+                                                    <Badge variant={cert.is_active ? 'secondary' : 'outline'}>
+                                                        {cert.is_active ? 'Active' : 'Inactive'}
+                                                    </Badge>
+                                                </div>
+                                            </button>
+                                        ))}
+                                        {certifications.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">No certifications yet.</p>
+                                        )}
+                                    </div>
+
+                                    {!isCourseViewer && (
+                                        <form onSubmit={handleAddCertification} className="space-y-3 rounded-md border p-3">
+                                            <p className="text-sm font-semibold">Add Certification</p>
+                                            <div className="space-y-1.5">
+                                                <Label>Name</Label>
+                                                <Input value={addCertificationForm.data.name} onChange={(e) => addCertificationForm.setData('name', e.target.value)} required />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Code (optional)</Label>
+                                                <Input value={addCertificationForm.data.code} onChange={(e) => addCertificationForm.setData('code', e.target.value)} />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Priority</Label>
+                                                <Input type="number" min={1} value={addCertificationForm.data.priority} onChange={(e) => addCertificationForm.setData('priority', e.target.value)} />
+                                            </div>
+                                            <Separator />
+                                            <p className="text-xs font-medium text-muted-foreground">Conditions (comma-separated)</p>
+                                            <div className="space-y-1.5">
+                                                <Label>Occupation</Label>
+                                                <Input value={addCertificationForm.data.occupation_values} onChange={(e) => addCertificationForm.setData('occupation_values', e.target.value)} placeholder="student, educator" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Organization</Label>
+                                                <Input value={addCertificationForm.data.organization_values} onChange={(e) => addCertificationForm.setData('organization_values', e.target.value)} placeholder="University Malaya, FEN" />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Organization Match</Label>
+                                                <Select value={addCertificationForm.data.organization_mode} onValueChange={(v) => addCertificationForm.setData('organization_mode', v)}>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="exact">Exact</SelectItem>
+                                                        <SelectItem value="contains">Contains</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label>Location/State</Label>
+                                                <Input value={addCertificationForm.data.state_values} onChange={(e) => addCertificationForm.setData('state_values', e.target.value)} placeholder="Selangor, Sabah" />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1.5">
+                                                    <Label>Age Min</Label>
+                                                    <Input type="number" min={0} value={addCertificationForm.data.age_min} onChange={(e) => addCertificationForm.setData('age_min', e.target.value)} />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label>Age Max</Label>
+                                                    <Input type="number" min={0} value={addCertificationForm.data.age_max} onChange={(e) => addCertificationForm.setData('age_max', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <Button type="submit" disabled={addCertificationForm.processing} className="w-full">
+                                                {addCertificationForm.processing ? 'Adding...' : 'Add Certification'}
+                                            </Button>
+                                        </form>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <div className="space-y-4 xl:col-span-8">
+                                {selectedCertification && (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="text-base">Certification Settings</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <form onSubmit={handleSaveCertificationSettings} className="space-y-3">
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="space-y-1.5">
+                                                        <Label>Name</Label>
+                                                        <Input value={certificationSettingsForm.data.name} onChange={(e) => certificationSettingsForm.setData('name', e.target.value)} disabled={isCourseViewer} />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label>Code</Label>
+                                                        <Input value={certificationSettingsForm.data.code} onChange={(e) => certificationSettingsForm.setData('code', e.target.value)} disabled={isCourseViewer} />
+                                                    </div>
+                                                </div>
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="space-y-1.5">
+                                                        <Label>Priority</Label>
+                                                        <Input type="number" min={1} value={certificationSettingsForm.data.priority} onChange={(e) => certificationSettingsForm.setData('priority', e.target.value)} disabled={isCourseViewer} />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label>Status</Label>
+                                                        <Select value={certificationSettingsForm.data.is_active ? 'active' : 'inactive'} onValueChange={(v) => certificationSettingsForm.setData('is_active', v === 'active')} disabled={isCourseViewer}>
+                                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="active">Active</SelectItem>
+                                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                                <Separator />
+                                                <p className="text-xs font-medium text-muted-foreground">Conditions (comma-separated)</p>
+                                                <div className="space-y-1.5">
+                                                    <Label>Occupation</Label>
+                                                    <Input value={certificationSettingsForm.data.occupation_values} onChange={(e) => certificationSettingsForm.setData('occupation_values', e.target.value)} disabled={isCourseViewer} />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label>Organization</Label>
+                                                    <Input value={certificationSettingsForm.data.organization_values} onChange={(e) => certificationSettingsForm.setData('organization_values', e.target.value)} disabled={isCourseViewer} />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label>Organization Match</Label>
+                                                    <Select value={certificationSettingsForm.data.organization_mode} onValueChange={(v) => certificationSettingsForm.setData('organization_mode', v)} disabled={isCourseViewer}>
+                                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="exact">Exact</SelectItem>
+                                                            <SelectItem value="contains">Contains</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label>Location/State</Label>
+                                                    <Input value={certificationSettingsForm.data.state_values} onChange={(e) => certificationSettingsForm.setData('state_values', e.target.value)} disabled={isCourseViewer} />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="space-y-1.5">
+                                                        <Label>Age Min</Label>
+                                                        <Input type="number" min={0} value={certificationSettingsForm.data.age_min} onChange={(e) => certificationSettingsForm.setData('age_min', e.target.value)} disabled={isCourseViewer} />
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label>Age Max</Label>
+                                                        <Input type="number" min={0} value={certificationSettingsForm.data.age_max} onChange={(e) => certificationSettingsForm.setData('age_max', e.target.value)} disabled={isCourseViewer} />
+                                                    </div>
+                                                </div>
+                                                {!isCourseViewer && (
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <Button type="submit" disabled={certificationSettingsForm.processing}>
+                                                            {certificationSettingsForm.processing ? 'Saving...' : 'Save Settings'}
+                                                        </Button>
+                                                        <Button type="button" variant="destructive" onClick={handleDeleteCertification}>
+                                                            Delete Certification
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </form>
+                                        </CardContent>
+                                    </Card>
+                                )}
+
+                                {selectedCertification ? (
+                                    <CertificateBuilder
+                                        key={selectedCertification.id}
+                                        course={course}
+                                        sourceTemplate={selectedCertification.template_json}
+                                        saveRoute={route('admin.courses.certifications.template.update', [course.slug, selectedCertification.id])}
+                                        payloadKey="template_json"
+                                        defaultTemplate={defaultTemplate}
+                                        sections={course.sections}
+                                        customFonts={customFonts}
+                                        readOnly={isCourseViewer}
+                                    />
+                                ) : (
+                                    <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                                        Add a certification to start configuring template and criteria.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </TabsContent>
 
                     {/* ── Dashboard tab ── */}
