@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseCertification;
 use App\Models\Enrollment;
+use App\Models\EnrollmentCertification;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\QuizAttempt;
 use App\Support\LearnerCourseActivityLogger;
+use App\Models\User;
+use App\Support\CourseCertificationMatcher;
 use App\Support\CourseCompletionNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -211,62 +215,7 @@ class LearnController extends Controller
             );
         }
 
-        // Evaluate course completion based on certificate requirements
-        $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
-        $requirements = $template['requirements'] ?? ['type' => 'all_lessons'];
-        $reqType      = $requirements['type'] ?? 'all_lessons';
-
-        $total          = $course->lessons()->count();
-        $completedCount = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
-
-        $isComplete = match ($reqType) {
-            'percentage' => (function () use ($requirements, $total, $completedCount) {
-                $pct    = max(1, min(100, (int) ($requirements['percentage'] ?? 100)));
-                $needed = (int) ceil(($pct / 100) * $total);
-                return $total > 0 && $completedCount >= $needed;
-            })(),
-            'specific_sections' => (function () use ($requirements, $enrollment) {
-                $ids = $requirements['section_ids'] ?? [];
-                if (empty($ids)) return false;
-                $required  = \App\Models\Lesson::whereIn('section_id', $ids)->pluck('id');
-                $completed = $enrollment->lessonProgress()
-                    ->whereNotNull('completed_at')
-                    ->whereIn('lesson_id', $required)
-                    ->count();
-                return $required->count() > 0 && $completed >= $required->count();
-            })(),
-            'specific_lessons' => (function () use ($requirements, $enrollment) {
-                $ids = $requirements['lesson_ids'] ?? [];
-                if (empty($ids)) return false;
-                $completed = $enrollment->lessonProgress()
-                    ->whereNotNull('completed_at')
-                    ->whereIn('lesson_id', $ids)
-                    ->count();
-                return count($ids) > 0 && $completed >= count($ids);
-            })(),
-            default => $total > 0 && $completedCount >= $total, // all_lessons
-        };
-
-        if ($isComplete && !$enrollment->completed_at) {
-            $enrollment->update([
-                'completed_at'     => now(),
-                'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
-            ]);
-
-            LearnerCourseActivityLogger::record(
-                $request->user(),
-                $course,
-                $enrollment,
-                'course_completed',
-                'Completed course',
-                [
-                    'certificate_uuid' => $enrollment->certificate_uuid,
-                ],
-                $course
-            );
-
-            CourseCompletionNotifier::send($request->user(), $course, $enrollment);
-        }
+        $this->finalizeCompletionIfEligible($request->user(), $course, $enrollment);
 
         return back()->with('success', 'Lesson marked complete.');
     }
@@ -423,52 +372,7 @@ class LearnController extends Controller
                 );
             }
 
-            $template     = $course->certificate_template ?? \App\Models\Course::defaultCertificateTemplate();
-            $requirements = $template['requirements'] ?? ['type' => 'all_lessons'];
-            $reqType      = $requirements['type'] ?? 'all_lessons';
-            $totalLessons = $course->lessons()->count();
-            $completedCount = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
-
-            $isComplete = match ($reqType) {
-                'percentage' => (function () use ($requirements, $totalLessons, $completedCount) {
-                    $pct    = max(1, min(100, (int) ($requirements['percentage'] ?? 100)));
-                    $needed = (int) ceil(($pct / 100) * $totalLessons);
-                    return $totalLessons > 0 && $completedCount >= $needed;
-                })(),
-                'specific_sections' => (function () use ($requirements, $enrollment) {
-                    $ids      = $requirements['section_ids'] ?? [];
-                    $required = \App\Models\Lesson::whereIn('section_id', $ids)->pluck('id');
-                    $done     = $enrollment->lessonProgress()->whereNotNull('completed_at')->whereIn('lesson_id', $required)->count();
-                    return $required->count() > 0 && $done >= $required->count();
-                })(),
-                'specific_lessons' => (function () use ($requirements, $enrollment) {
-                    $ids  = $requirements['lesson_ids'] ?? [];
-                    $done = $enrollment->lessonProgress()->whereNotNull('completed_at')->whereIn('lesson_id', $ids)->count();
-                    return count($ids) > 0 && $done >= count($ids);
-                })(),
-                default => $totalLessons > 0 && $completedCount >= $totalLessons,
-            };
-
-            if ($isComplete && !$enrollment->completed_at) {
-                $enrollment->update([
-                    'completed_at'     => now(),
-                    'certificate_uuid' => ($template['enabled'] ?? true) ? (string) Str::uuid() : null,
-                ]);
-
-                LearnerCourseActivityLogger::record(
-                    $request->user(),
-                    $course,
-                    $enrollment,
-                    'course_completed',
-                    'Completed course',
-                    [
-                        'certificate_uuid' => $enrollment->certificate_uuid,
-                    ],
-                    $course
-                );
-
-                CourseCompletionNotifier::send($request->user(), $course, $enrollment);
-            }
+            $this->finalizeCompletionIfEligible($request->user(), $course, $enrollment);
         }
 
         $canReviewAnswers = $showAnswerFeedback
@@ -572,5 +476,123 @@ class LearnController extends Controller
         return Lesson::query()
             ->select(['id', 'title', 'title_ms'])
             ->find($lesson->prerequisite_lesson_id);
+    }
+
+    private function finalizeCompletionIfEligible(User $user, Course $course, Enrollment $enrollment): void
+    {
+        if ($enrollment->completed_at) {
+            return;
+        }
+
+        [$certification, $template, $requirements] = $this->resolveCertificationContext($user, $course);
+
+        if (! $this->meetsRequirements($requirements, $course, $enrollment)) {
+            return;
+        }
+
+        $legacyCertificateUuid = null;
+
+        if (($template['enabled'] ?? true) && $certification) {
+            $issued = EnrollmentCertification::create([
+                'enrollment_id' => $enrollment->id,
+                'course_certification_id' => $certification->id,
+                'certificate_uuid' => (string) Str::uuid(),
+                'issued_at' => now(),
+                'template_snapshot_json' => $template,
+                'recipient_snapshot_json' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'organization' => $user->organization,
+                    'occupation' => $user->occupation,
+                    'state' => $user->state,
+                    'birthdate' => optional($user->birthdate)?->toDateString(),
+                    'course_id' => $course->id,
+                    'course_title' => $course->title,
+                ],
+            ]);
+
+            // Keep legacy UUID during transition so existing reads keep working.
+            $legacyCertificateUuid = $issued->certificate_uuid;
+        }
+
+        $enrollment->update([
+            'completed_at' => now(),
+            'certificate_uuid' => $legacyCertificateUuid,
+        ]);
+
+        LearnerCourseActivityLogger::record(
+            $user,
+            $course,
+            $enrollment,
+            'course_completed',
+            'Completed course',
+            [
+                'certificate_uuid' => $enrollment->certificate_uuid,
+                'course_certification_id' => $certification?->id,
+                'course_certification_name' => $certification?->name,
+            ],
+            $course
+        );
+
+        CourseCompletionNotifier::send($user, $course, $enrollment);
+    }
+
+    private function resolveCertificationContext(User $user, Course $course): array
+    {
+        $activeCertifications = $course->certifications()
+            ->where('is_active', true)
+            ->get();
+
+        $matcher = new CourseCertificationMatcher();
+        $matched = $matcher->selectForUser($user, $activeCertifications);
+        $selected = $matched ?: $activeCertifications->first();
+
+        $template = $selected?->template_json
+            ?? $course->certificate_template
+            ?? Course::defaultCertificateTemplate();
+
+        $requirements = $selected?->requirements_json
+            ?? ($template['requirements'] ?? ['type' => 'all_lessons']);
+
+        return [$selected, $template, $requirements];
+    }
+
+    private function meetsRequirements(array $requirements, Course $course, Enrollment $enrollment): bool
+    {
+        $reqType = $requirements['type'] ?? 'all_lessons';
+        $total = $course->lessons()->count();
+        $completedCount = $enrollment->lessonProgress()->whereNotNull('completed_at')->count();
+
+        return match ($reqType) {
+            'percentage' => (function () use ($requirements, $total, $completedCount) {
+                $pct = max(1, min(100, (int) ($requirements['percentage'] ?? 100)));
+                $needed = (int) ceil(($pct / 100) * $total);
+                return $total > 0 && $completedCount >= $needed;
+            })(),
+            'specific_sections' => (function () use ($requirements, $enrollment) {
+                $ids = $requirements['section_ids'] ?? [];
+                if (empty($ids)) {
+                    return false;
+                }
+                $required = Lesson::whereIn('section_id', $ids)->pluck('id');
+                $done = $enrollment->lessonProgress()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('lesson_id', $required)
+                    ->count();
+                return $required->count() > 0 && $done >= $required->count();
+            })(),
+            'specific_lessons' => (function () use ($requirements, $enrollment) {
+                $ids = $requirements['lesson_ids'] ?? [];
+                if (empty($ids)) {
+                    return false;
+                }
+                $done = $enrollment->lessonProgress()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('lesson_id', $ids)
+                    ->count();
+                return count($ids) > 0 && $done >= count($ids);
+            })(),
+            default => $total > 0 && $completedCount >= $total,
+        };
     }
 }
