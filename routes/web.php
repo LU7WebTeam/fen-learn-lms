@@ -103,6 +103,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('
     // Courses
     Route::resource('courses', AdminCoursesController::class)->except(['show']);
     Route::patch('/courses/{course}/certificate', [AdminCoursesController::class, 'updateCertificate'])->name('courses.certificate.update');
+    Route::post('/courses/{course}/certifications', [AdminCoursesController::class, 'storeCertification'])->name('courses.certifications.store');
+    Route::patch('/courses/{course}/certifications/{certification}', [AdminCoursesController::class, 'updateCertification'])->name('courses.certifications.update');
+    Route::patch('/courses/{course}/certifications/{certification}/template', [AdminCoursesController::class, 'updateCertificationTemplate'])->name('courses.certifications.template.update');
+    Route::delete('/courses/{course}/certifications/{certification}', [AdminCoursesController::class, 'destroyCertification'])->name('courses.certifications.destroy');
     Route::patch('/courses/{course}/introduction', [AdminCoursesController::class, 'updateIntroduction'])->name('courses.introduction.update');
 
     // Users

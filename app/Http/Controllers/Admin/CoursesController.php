@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CourseCertification;
 use App\Models\CustomFont;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -100,6 +101,8 @@ class CoursesController extends Controller
                 $q2->orderBy('order')->select(['id', 'section_id', 'title', 'type', 'order']);
             }]);
         }]);
+
+        $certifications = $course->certifications()->get();
 
         // ── Analytics ──────────────────────────────────────────────────────────
         $totalLessons      = $course->lessons()->count();
@@ -423,6 +426,7 @@ class CoursesController extends Controller
 
         return Inertia::render('Admin/Courses/Edit', [
             'course'          => $course,
+            'certifications'  => $certifications,
             'defaultTemplate' => \App\Models\Course::defaultCertificateTemplate(),
             'customFonts'     => CustomFont::query()
                 ->where('is_active', true)
@@ -486,12 +490,132 @@ class CoursesController extends Controller
 
         $course->update(['certificate_template' => $validated['certificate_template']]);
 
+        $defaultCertification = $course->certifications()->where('code', 'default')->first();
+
+        if (! $defaultCertification) {
+            $defaultCertification = $course->certifications()->create([
+                'name' => 'Default Certificate',
+                'code' => 'default',
+                'is_active' => true,
+                'priority' => 100,
+                'conditions_json' => CourseCertification::defaultConditions(),
+                'template_json' => $validated['certificate_template'],
+                'requirements_json' => $validated['certificate_template']['requirements'] ?? [
+                    'type' => 'all_lessons',
+                    'percentage' => 80,
+                    'section_ids' => [],
+                    'lesson_ids' => [],
+                ],
+            ]);
+        } else {
+            $defaultCertification->update([
+                'template_json' => $validated['certificate_template'],
+                'requirements_json' => $validated['certificate_template']['requirements'] ?? [
+                    'type' => 'all_lessons',
+                    'percentage' => 80,
+                    'section_ids' => [],
+                    'lesson_ids' => [],
+                ],
+                'is_active' => (bool) ($validated['certificate_template']['enabled'] ?? true),
+            ]);
+        }
+
         ActivityLogger::record('Updated course certificate settings', $course, [
             'title' => $course->title,
             'updated_fields' => ['certificate_template'],
         ], 'updated');
 
         return back()->with('success', 'Certificate template saved.');
+    }
+
+    public function storeCertification(Request $request, Course $course): RedirectResponse
+    {
+        $this->authorizeCourseManagement($request);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:120',
+            'code' => ['nullable', 'string', 'max:120', Rule::unique('course_certifications', 'code')->where(fn ($q) => $q->where('course_id', $course->id))],
+            'is_active' => 'nullable|boolean',
+            'priority' => 'nullable|integer|min:1|max:10000',
+            'conditions_json' => 'nullable|array',
+            'template_json' => 'nullable|array',
+            'requirements_json' => 'nullable|array',
+        ]);
+
+        $template = $validated['template_json'] ?? Course::defaultCertificateTemplate();
+        $requirements = $validated['requirements_json'] ?? ($template['requirements'] ?? [
+            'type' => 'all_lessons',
+            'percentage' => 80,
+            'section_ids' => [],
+            'lesson_ids' => [],
+        ]);
+
+        $course->certifications()->create([
+            'name' => $validated['name'],
+            'code' => $validated['code'] ?? null,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
+            'priority' => (int) ($validated['priority'] ?? 100),
+            'conditions_json' => $validated['conditions_json'] ?? CourseCertification::defaultConditions(),
+            'template_json' => $template,
+            'requirements_json' => $requirements,
+        ]);
+
+        return back()->with('success', 'Certification added.');
+    }
+
+    public function updateCertification(Request $request, Course $course, CourseCertification $certification): RedirectResponse
+    {
+        $this->authorizeCourseManagement($request);
+        abort_unless($certification->course_id === $course->id, 404);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:120',
+            'code' => ['nullable', 'string', 'max:120', Rule::unique('course_certifications', 'code')->where(fn ($q) => $q->where('course_id', $course->id))->ignore($certification->id)],
+            'is_active' => 'sometimes|boolean',
+            'priority' => 'sometimes|integer|min:1|max:10000',
+            'conditions_json' => 'sometimes|array',
+            'requirements_json' => 'sometimes|array',
+        ]);
+
+        $certification->update($validated);
+
+        return back()->with('success', 'Certification settings updated.');
+    }
+
+    public function updateCertificationTemplate(Request $request, Course $course, CourseCertification $certification): RedirectResponse
+    {
+        $this->authorizeCourseManagement($request);
+        abort_unless($certification->course_id === $course->id, 404);
+
+        $validated = $request->validate([
+            'template_json' => 'required|array',
+        ]);
+
+        $certification->update([
+            'template_json' => $validated['template_json'],
+            'requirements_json' => $validated['template_json']['requirements'] ?? ($certification->requirements_json ?? [
+                'type' => 'all_lessons',
+                'percentage' => 80,
+                'section_ids' => [],
+                'lesson_ids' => [],
+            ]),
+        ]);
+
+        return back()->with('success', 'Certification template saved.');
+    }
+
+    public function destroyCertification(Request $request, Course $course, CourseCertification $certification): RedirectResponse
+    {
+        $this->authorizeCourseManagement($request);
+        abort_unless($certification->course_id === $course->id, 404);
+
+        if ($course->certifications()->count() <= 1) {
+            return back()->with('error', 'At least one certification must remain for a course.');
+        }
+
+        $certification->delete();
+
+        return back()->with('success', 'Certification deleted.');
     }
 
     public function update(Request $request, Course $course): RedirectResponse
