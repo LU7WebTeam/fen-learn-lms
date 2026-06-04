@@ -103,6 +103,13 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    public function certifications(): HasMany
+    {
+        return $this->hasMany(CourseCertification::class)
+            ->orderBy('priority')
+            ->orderBy('id');
+    }
+
     public function permittedUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'course_user_access')

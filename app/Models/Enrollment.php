@@ -42,6 +42,11 @@ class Enrollment extends Model
         return $this->hasMany(LessonProgress::class);
     }
 
+    public function issuedCertificates(): HasMany
+    {
+        return $this->hasMany(EnrollmentCertification::class);
+    }
+
     public function getProgressPercentageAttribute(): int
     {
         $total = $this->course->lessons()->count();
