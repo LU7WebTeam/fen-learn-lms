@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ProfileFieldOfStudyOptions;
 use App\Support\ProfileOrganizationOptions;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,6 +24,8 @@ class ProfileUpdateRequest extends FormRequest
             'avatar_file' => ['nullable', 'file', 'image', 'max:2048'],
             'avatar_clear'=> ['nullable', 'boolean'],
             'email'       => ['prohibited'],
-        ] + ProfileOrganizationOptions::rules($this);
+        ]
+            + ProfileOrganizationOptions::rules($this)
+            + ProfileFieldOfStudyOptions::rules($this);
     }
 }

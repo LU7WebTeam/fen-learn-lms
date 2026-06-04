@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Setting;
 use App\Support\CaptchaVerifier;
+use App\Support\ProfileFieldOfStudyOptions;
 use App\Support\ProfileOrganizationOptions;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -103,6 +104,9 @@ class HandleInertiaRequests extends Middleware
                 'organizationOptions' => ProfileOrganizationOptions::options(),
                 'organizationSelectOccupations' => ProfileOrganizationOptions::selectOccupations(),
                 'organizationOtherValue' => ProfileOrganizationOptions::OTHER_VALUE,
+                'fieldOfStudyOptions' => ProfileFieldOfStudyOptions::options(),
+                'fieldOfStudySelectOccupations' => ProfileFieldOfStudyOptions::selectOccupations(),
+                'fieldOfStudyOtherValue' => ProfileFieldOfStudyOptions::OTHER_VALUE,
             ],
         ];
     }

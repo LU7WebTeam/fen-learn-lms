@@ -3,7 +3,7 @@ title: Settings and Certificates
 category: Administration
 order: 50
 slug: settings-and-certificates
-summary: Platform branding, configurable email templates and SMTP, custom fonts, and per-course certificate management.
+summary: Platform branding, configurable email templates and SMTP, custom fonts, learner profile dropdown lists, and per-course multi-certification management.
 ---
 
 # Settings and Certificates
@@ -25,6 +25,21 @@ These settings control the appearance and identity of the platform across all pu
 | **Logo** | Uploaded image used in the guest layout header and certificates. |
 | **Favicon** | Small icon shown in browser tabs. |
 | **Custom fonts** | Upload `.ttf` or `.otf` font files for use in certificate templates. |
+| **Organisation / Institution list** | Newline-based options used as a dropdown for Student and Academic occupations. |
+| **Field of study list (Students)** | Newline-based options used as a dropdown for Student occupation only. |
+
+### Learner profile option lists
+
+**Location:** Admin → Settings → Profiles tab
+
+The Profiles tab allows admins to maintain two managed dropdown lists used during learner profile setup/edit:
+
+| List | Used for | Learner behavior |
+|---|---|---|
+| **Organization / Institution List** | Occupation = Student or Academic / Educator | Learner selects from list or chooses **Other** to type custom value |
+| **Field of Study List (Students)** | Occupation = Student | Learner selects from list or chooses **Other** to type custom value |
+
+Admins can add, remove, or reorder values by editing one item per line and saving.
 
 ### How settings are applied
 
@@ -204,7 +219,7 @@ Fonts are stored in the `custom_fonts` table and served from `storage/app/fonts/
 
 ## Certificates
 
-Certificates are configured at the **course level**, not globally. Each course can have its own certificate design.
+Certificates are configured at the **course level**, not globally. Each course can have its own certificate design and multiple certification rules.
 
 **Location:** Admin → Courses → [select course] → Certificate tab
 
@@ -217,13 +232,36 @@ Certificates are configured at the **course level**, not globally. Each course c
 | **Background image** | Upload a decorative background for the certificate PDF. |
 | **Branding** | Platform logo placement and sizing. |
 | **Text fields** | Customise the heading, body text, and completion message. |
+| **Completion Date language toggle** | In Completion Date field settings, choose English or Bahasa Melayu month naming. Format is `day month year` (example: `12 Jun 2026`). |
 | **Signatory** | Name, title, and signature image for the authorising person. |
 | **Font** | Choose from system fonts or uploaded custom fonts. |
-| **Completion requirements** | Minimum lesson completion percentage required before the certificate is issued. |
+| **Completion requirements** | Choose all lessons, percentage threshold, specific sections, or specific lessons. |
+
+### Multiple certifications per course
+
+Courses can now have more than one certification profile, each with its own criteria and template.
+
+**Location:** Admin → Courses → [course] → Certificate tab
+
+Each certification can define:
+
+- Name and priority
+- Recipient matching conditions (occupation, organization/institution, state, age range)
+- Template design (layout, fields, branding, signatory)
+- Completion requirement type
+
+During course completion, the system selects the first matching certification by priority and issues that certificate.
 
 ### Completion requirements
 
-By default, a learner must complete **100%** of lessons to earn a certificate. This threshold can be lowered per course if partial completion should qualify.
+By default, a learner must complete **100%** of lessons to earn a certificate. The requirement can be adjusted per certification profile.
+
+Supported requirement modes:
+
+- Complete all lessons
+- Complete a minimum percentage of lessons
+- Complete all lessons in selected sections
+- Complete selected lessons only
 
 ---
 

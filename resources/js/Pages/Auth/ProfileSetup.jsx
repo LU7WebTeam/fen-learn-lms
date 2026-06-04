@@ -18,6 +18,11 @@ import {
     splitOrganizationValue,
     usesOrganizationList,
 } from '@/lib/profileOrganizations';
+import {
+    FIELD_OF_STUDY_OTHER_VALUE,
+    splitFieldOfStudyValue,
+    usesFieldOfStudyList,
+} from '@/lib/profileFieldOfStudy';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -136,11 +141,19 @@ export default function ProfileSetup({ user }) {
     const initialBirthdateParts = splitBirthdateParts(user?.birthdate ?? '');
     const organizationOptions = profileOptions?.organizationOptions ?? [];
     const organizationSelectOccupations = profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
+    const fieldOfStudyOptions = profileOptions?.fieldOfStudyOptions ?? [];
+    const fieldOfStudySelectOccupations = profileOptions?.fieldOfStudySelectOccupations ?? ['student'];
     const initialOrganizationState = splitOrganizationValue(
         user?.occupation ?? '',
         user?.organization ?? '',
         organizationOptions,
         organizationSelectOccupations,
+    );
+    const initialFieldOfStudyState = splitFieldOfStudyValue(
+        user?.occupation ?? '',
+        user?.field_of_study ?? '',
+        fieldOfStudyOptions,
+        fieldOfStudySelectOccupations,
     );
 
     const { data, setData, post, transform, processing, errors } = useForm({
@@ -157,11 +170,14 @@ export default function ProfileSetup({ user }) {
         student_id:   user?.student_id ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
+        field_of_study: initialFieldOfStudyState.field_of_study,
+        field_of_study_other: initialFieldOfStudyState.field_of_study_other,
     });
 
     const maxSelectableDay = getDaysInMonth(data.birth_month, data.birth_year);
 
     const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+    const usesFieldOfStudyDropdown = usesFieldOfStudyList(data.occupation, fieldOfStudySelectOccupations);
 
     function handleOccupationChange(value) {
         const currentOrganizationValue = usesOrganizationDropdown
@@ -174,6 +190,16 @@ export default function ProfileSetup({ user }) {
             organizationOptions,
             organizationSelectOccupations,
         );
+        const currentFieldOfStudyValue = usesFieldOfStudyDropdown
+            ? (data.field_of_study === FIELD_OF_STUDY_OTHER_VALUE ? data.field_of_study_other : data.field_of_study)
+            : data.field_of_study;
+
+        const nextFieldOfStudyState = splitFieldOfStudyValue(
+            value,
+            currentFieldOfStudyValue,
+            fieldOfStudyOptions,
+            fieldOfStudySelectOccupations,
+        );
 
         setData(prev => ({
             ...prev,
@@ -182,6 +208,8 @@ export default function ProfileSetup({ user }) {
             student_id: value === 'student' ? prev.student_id : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
+            field_of_study: nextFieldOfStudyState.field_of_study,
+            field_of_study_other: nextFieldOfStudyState.field_of_study_other,
         }));
     }
 
@@ -200,6 +228,8 @@ export default function ProfileSetup({ user }) {
             student_id: current.student_id,
             organization: current.organization,
             organization_other: current.organization_other,
+            field_of_study: current.field_of_study,
+            field_of_study_other: current.field_of_study_other,
         }));
 
         post(route('profile.setup.store'));
@@ -485,6 +515,42 @@ export default function ProfileSetup({ user }) {
                                     />
                                 )}
                             </FormField>
+
+                            {data.occupation === 'student' && (
+                                <FormField
+                                    label={t('profile.info.field_of_study')}
+                                    error={errors.field_of_study || errors.field_of_study_other}
+                                >
+                                    {usesFieldOfStudyDropdown ? (
+                                        <div className="space-y-3">
+                                            <SearchableSelect
+                                                options={[
+                                                    ...fieldOfStudyOptions,
+                                                    { value: FIELD_OF_STUDY_OTHER_VALUE, label: t('profile.info.field_of_study_other') },
+                                                ]}
+                                                value={data.field_of_study}
+                                                onChange={v => setData('field_of_study', v)}
+                                                placeholder={t('profile.info.select_field_of_study')}
+                                                searchPlaceholder={t('profile_setup.field_of_study_search')}
+                                            />
+
+                                            {data.field_of_study === FIELD_OF_STUDY_OTHER_VALUE && (
+                                                <Input
+                                                    value={data.field_of_study_other}
+                                                    onChange={e => setData('field_of_study_other', e.target.value)}
+                                                    placeholder={t('profile.info.field_of_study_placeholder')}
+                                                />
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <Input
+                                            value={data.field_of_study}
+                                            onChange={e => setData('field_of_study', e.target.value)}
+                                            placeholder={t('profile.info.field_of_study_placeholder')}
+                                        />
+                                    )}
+                                </FormField>
+                            )}
 
                             <p className="text-xs text-muted-foreground">
                                 {t('profile_setup.analytics_privacy_notice')}

@@ -97,5 +97,13 @@ Learners can update their profile at any time via the **Profile** link in the na
 | **Date of birth** | Must be a past date. |
 | **Occupation** | Current job or role. |
 | **Organisation / Institution** | Optional — employer or school name. |
+| **Student ID** | Shown when occupation is Student. |
+| **Field of study** | Shown when occupation is Student; can be selected from admin-managed list. |
 
 > Admins can also edit a learner's profile fields directly from the admin user detail page.
+
+### Occupation-specific dropdown behavior
+
+- For **Student**, organisation/institution and field of study can be shown as managed dropdowns.
+- For **Academic / Educator**, organisation/institution can be shown as a managed dropdown.
+- Both dropdowns support an **Other** option for manual text entry.

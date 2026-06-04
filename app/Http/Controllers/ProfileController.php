@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Support\ProfileFieldOfStudyOptions;
 use App\Support\ProfileOrganizationOptions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +28,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $validated = ProfileOrganizationOptions::normalize($request->safe()->except('email'));
+        $validated = ProfileFieldOfStudyOptions::normalize($validated);
 
         $user->fill(collect($validated)->only([
             'name',

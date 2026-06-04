@@ -18,8 +18,8 @@ return new class extends Migration
             $table->json('recipient_snapshot_json')->nullable();
             $table->timestamps();
 
-            $table->unique(['enrollment_id', 'course_certification_id']);
-            $table->index(['course_certification_id', 'issued_at']);
+            $table->unique(['enrollment_id', 'course_certification_id'], 'enr_cert_enroll_course_uq');
+            $table->index(['course_certification_id', 'issued_at'], 'enr_cert_course_issued_idx');
         });
     }
 

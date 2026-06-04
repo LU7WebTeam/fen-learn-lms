@@ -76,6 +76,7 @@ Fields available for editing include:
 - Name and email address
 - Gender, race, and state
 - Birthdate and occupation
+- Student ID and field of study (for learners with student occupation)
 - Organisation (optional)
 
 ### Viewing Enrollment Details
@@ -202,6 +203,9 @@ Learners can update their own profile information from the **Profile** page, acc
 - Home state
 - Date of birth
 - Occupation and organisation
+- Student ID and field of study (when occupation is Student)
+
+For Student occupation, organisation/institution and field of study can be controlled by admin-managed dropdown lists in **Admin → Settings → Profiles**, with an **Other** fallback for manual entry.
 
 Admins can also edit these fields on behalf of a learner from the admin user detail page.
 

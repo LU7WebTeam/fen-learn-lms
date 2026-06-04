@@ -106,8 +106,19 @@ Duplication shortcuts speed up content creation when building similar courses or
 When a learner completes a course (finishes all required lessons or passes a required quiz):
 
 - A **completion record** is created in the database with a timestamp
-- If certificates are enabled for that course, a **certificate is automatically generated** and the learner can download it from the course page
+- If certificates are enabled for that course, a **matching certification profile is selected** and a certificate is generated automatically
 - **Automated notifications** can be triggered to inform the learner and/or admins of the completion
+
+### Certification profile matching
+
+If a course has multiple certification profiles, the system evaluates profiles by priority and issues the first matching one based on learner criteria such as:
+
+- Occupation
+- Organization / Institution
+- State
+- Age range
+
+Each certification profile can use its own template and completion requirement rules.
 
 ### Configuring completion notifications
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ProfileFieldOfStudyOptions;
 use App\Support\ProfileOrganizationOptions;
 use App\Support\UserHomeRoute;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class ProfileSetupController extends Controller
                 'occupation'   => $user->occupation,
                 'occupation_other' => $user->occupation_other,
                 'student_id'   => $user->student_id,
+                'field_of_study' => $user->field_of_study,
                 'organization' => $user->organization,
             ],
         ]);
@@ -45,9 +47,12 @@ class ProfileSetupController extends Controller
             'occupation'   => 'required|string|max:100',
             'occupation_other' => 'nullable|string|max:150|required_if:occupation,other',
             'student_id'   => 'nullable|string|max:100|required_if:occupation,student',
-        ] + ProfileOrganizationOptions::rules($request));
+        ]
+            + ProfileOrganizationOptions::rules($request)
+            + ProfileFieldOfStudyOptions::rules($request));
 
         $validated = ProfileOrganizationOptions::normalize($validated);
+        $validated = ProfileFieldOfStudyOptions::normalize($validated);
 
         $request->user()->update([
             'name'                 => $validated['name'],
@@ -58,6 +63,7 @@ class ProfileSetupController extends Controller
             'occupation'           => $validated['occupation'],
             'occupation_other'     => $validated['occupation_other'] ?? null,
             'student_id'           => $validated['student_id'] ?? null,
+            'field_of_study'       => $validated['field_of_study'] ?? null,
             'organization'         => $validated['organization'],
             'profile_completed_at' => now(),
         ]);

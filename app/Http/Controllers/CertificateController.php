@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Models\EnrollmentCertification;
 use App\Models\CustomFont;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -44,7 +45,8 @@ class CertificateController extends Controller
                     'course_title' => $enrollment->course->title,
                     'course_slug' => $enrollment->course->slug,
                     'category' => $enrollment->course->category,
-                    'completed_at' => optional($enrollment->completed_at)->format('F j, Y') ?? optional($issued->issued_at)->format('F j, Y'),
+                    'completed_at' => $this->formatCertificateDate($enrollment->completed_at, $template)
+                        ?? $this->formatCertificateDate($issued->issued_at, $template),
                     'university_college' => $enrollment->user->organization,
                     'organization_name' => $enrollment->user->organization,
                     'download_url' => route('certificate.download', $uuid),
@@ -78,7 +80,7 @@ class CertificateController extends Controller
                 'course_title' => $enrollment->course->title,
                 'course_slug'  => $enrollment->course->slug,
                 'category'     => $enrollment->course->category,
-                'completed_at' => $enrollment->completed_at->format('F j, Y'),
+                'completed_at' => $this->formatCertificateDate($enrollment->completed_at, $template),
                 'university_college' => $enrollment->user->organization,
                 'organization_name' => $enrollment->user->organization,
                 'download_url' => route('certificate.download', $enrollment->certificate_uuid),
@@ -130,7 +132,8 @@ class CertificateController extends Controller
                 'customFont' => $customFont,
                 'name' => $enrollment->user->name,
                 'course_title' => $enrollment->course->title,
-                'completed_at' => optional($enrollment->completed_at)->format('F j, Y') ?? optional($issued->issued_at)->format('F j, Y'),
+                'completed_at' => $this->formatCertificateDate($enrollment->completed_at, $template)
+                    ?? $this->formatCertificateDate($issued->issued_at, $template),
                 'uuid' => $uuid,
                 'university_college' => $enrollment->user->organization,
                 'organization_name' => $enrollment->user->organization,
@@ -166,7 +169,7 @@ class CertificateController extends Controller
             'customFont'   => $customFont,
             'name'         => $enrollment->user->name,
             'course_title' => $enrollment->course->title,
-            'completed_at' => $enrollment->completed_at->format('F j, Y'),
+            'completed_at' => $this->formatCertificateDate($enrollment->completed_at, $template),
             'uuid'         => $enrollment->certificate_uuid,
             'university_college' => $enrollment->user->organization,
             'organization_name' => $enrollment->user->organization,
@@ -204,5 +207,33 @@ class CertificateController extends Controller
         }
 
         return CustomFont::query()->where('is_active', true)->find($customFontId);
+    }
+
+    private function formatCertificateDate(?CarbonInterface $date, array $template): ?string
+    {
+        if (! $date) {
+            return null;
+        }
+
+        $locale = $this->resolveCertificateDateLocale($template);
+
+        return $date->copy()->locale($locale)->translatedFormat('j M Y');
+    }
+
+    private function resolveCertificateDateLocale(array $template): string
+    {
+        $completionDateField = collect($template['fields'] ?? [])->firstWhere('id', 'completion_date');
+        $configuredLocale = $completionDateField['date_locale'] ?? null;
+
+        if (in_array($configuredLocale, ['en', 'ms'], true)) {
+            return $configuredLocale;
+        }
+
+        $appLocale = app()->getLocale();
+        if ($appLocale === 'bm') {
+            return 'ms';
+        }
+
+        return $appLocale === 'ms' ? 'ms' : 'en';
     }
 }

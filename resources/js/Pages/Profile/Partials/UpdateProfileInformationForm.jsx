@@ -13,6 +13,11 @@ import {
     splitOrganizationValue,
     usesOrganizationList,
 } from '@/lib/profileOrganizations';
+import {
+    FIELD_OF_STUDY_OTHER_VALUE,
+    splitFieldOfStudyValue,
+    usesFieldOfStudyList,
+} from '@/lib/profileFieldOfStudy';
 
 const MALAYSIAN_STATES = [
     'Johor',
@@ -63,6 +68,8 @@ export default function UpdateProfileInformation({
     const user = page.auth.user;
     const organizationOptions = page.profileOptions?.organizationOptions ?? [];
     const organizationSelectOccupations = page.profileOptions?.organizationSelectOccupations ?? ['student', 'academic'];
+    const fieldOfStudyOptions = page.profileOptions?.fieldOfStudyOptions ?? [];
+    const fieldOfStudySelectOccupations = page.profileOptions?.fieldOfStudySelectOccupations ?? ['student'];
     const avatarInput = useRef(null);
     const [previewUrl, setPreviewUrl] = useState(user.avatar || null);
     const t = useT();
@@ -71,6 +78,12 @@ export default function UpdateProfileInformation({
         user.organization ?? '',
         organizationOptions,
         organizationSelectOccupations,
+    );
+    const initialFieldOfStudyState = splitFieldOfStudyValue(
+        user.occupation ?? '',
+        user.field_of_study ?? '',
+        fieldOfStudyOptions,
+        fieldOfStudySelectOccupations,
     );
 
     const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
@@ -85,9 +98,12 @@ export default function UpdateProfileInformation({
         student_id:   user.student_id ?? '',
         organization: initialOrganizationState.organization,
         organization_other: initialOrganizationState.organization_other,
+        field_of_study: initialFieldOfStudyState.field_of_study,
+        field_of_study_other: initialFieldOfStudyState.field_of_study_other,
     });
 
     const usesOrganizationDropdown = usesOrganizationList(data.occupation, organizationSelectOccupations);
+    const usesFieldOfStudyDropdown = usesFieldOfStudyList(data.occupation, fieldOfStudySelectOccupations);
     const fieldSurfaceClass = 'rounded-md border border-slate-300 bg-slate-50 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100';
     const dropdownFieldClass = `mt-1 block w-full ${fieldSurfaceClass}`;
     const textFieldClass = `mt-1 block w-full ${fieldSurfaceClass}`;
@@ -103,6 +119,16 @@ export default function UpdateProfileInformation({
             organizationOptions,
             organizationSelectOccupations,
         );
+        const currentFieldOfStudyValue = usesFieldOfStudyDropdown
+            ? (data.field_of_study === FIELD_OF_STUDY_OTHER_VALUE ? data.field_of_study_other : data.field_of_study)
+            : data.field_of_study;
+
+        const nextFieldOfStudyState = splitFieldOfStudyValue(
+            value,
+            currentFieldOfStudyValue,
+            fieldOfStudyOptions,
+            fieldOfStudySelectOccupations,
+        );
 
         setData(prev => ({
             ...prev,
@@ -111,6 +137,8 @@ export default function UpdateProfileInformation({
             student_id: value === 'student' ? prev.student_id : '',
             organization: nextOrganizationState.organization,
             organization_other: nextOrganizationState.organization_other,
+            field_of_study: nextFieldOfStudyState.field_of_study,
+            field_of_study_other: nextFieldOfStudyState.field_of_study_other,
         }));
     }
 
@@ -334,6 +362,44 @@ export default function UpdateProfileInformation({
                         )}
                         <InputError className="mt-2" message={errors.organization || errors.organization_other} />
                     </div>
+
+                    {data.occupation === 'student' && (
+                        <div>
+                            <InputLabel htmlFor="field_of_study" value={t('profile.info.field_of_study')} />
+                            {usesFieldOfStudyDropdown ? (
+                                <div className="mt-1 space-y-3">
+                                    <SearchableSelect
+                                        options={[
+                                            ...fieldOfStudyOptions,
+                                            { value: FIELD_OF_STUDY_OTHER_VALUE, label: t('profile.info.field_of_study_other') },
+                                        ]}
+                                        value={data.field_of_study}
+                                        onChange={(nextValue) => setData('field_of_study', nextValue)}
+                                        placeholder={t('profile.info.select_field_of_study')}
+                                        searchPlaceholder={t('profile_setup.field_of_study_search')}
+                                        className="mt-0 border-slate-300 bg-slate-50 text-gray-900 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                                    />
+
+                                    {data.field_of_study === FIELD_OF_STUDY_OTHER_VALUE && (
+                                        <TextInput
+                                            id="field_of_study_other"
+                                            className={`${fieldSurfaceClass} block w-full`}
+                                            value={data.field_of_study_other}
+                                            onChange={(e) => setData('field_of_study_other', e.target.value)}
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <TextInput
+                                    id="field_of_study"
+                                    className={textFieldClass}
+                                    value={data.field_of_study}
+                                    onChange={(e) => setData('field_of_study', e.target.value)}
+                                />
+                            )}
+                            <InputError className="mt-2" message={errors.field_of_study || errors.field_of_study_other} />
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400">

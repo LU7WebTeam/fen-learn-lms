@@ -35,6 +35,7 @@ class SettingsController extends Controller
         'require_email_verification' => '0',
         'default_locale'             => 'en',
         'profile_organization_options' => '',
+        'profile_field_of_study_options' => '',
         'mail_driver'                => 'smtp',
         'mail_host'                  => '',
         'mail_port'                  => '587',
@@ -288,9 +289,11 @@ class SettingsController extends Controller
     {
         $request->validate([
             'profile_organization_options' => 'nullable|string|max:50000',
+            'profile_field_of_study_options' => 'nullable|string|max:50000',
         ]);
 
         Setting::set('profile_organization_options', $request->input('profile_organization_options', ''));
+        Setting::set('profile_field_of_study_options', $request->input('profile_field_of_study_options', ''));
     }
 
     private function saveEmail(Request $request): void

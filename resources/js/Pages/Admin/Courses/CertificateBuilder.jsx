@@ -61,10 +61,12 @@ function mergeTemplateWithDefaults(existingTemplate, defaultTemplate) {
 // CertPreview is a thin wrapper so the builder can pass sample data via dynamicValues.
 function CertPreview({ template, courseTitle, customFonts = [], platformName = 'Free LMS' }) {
     const signatory = template?.signatory || {};
+    const completionDateField = (template?.fields || []).find(field => field.id === 'completion_date');
+    const completionDateLocale = completionDateField?.date_locale === 'ms' ? 'ms-MY' : 'en-GB';
     const sampleDynamic = {
         recipient_name:  'Jane Smith',
         course_title:    courseTitle || 'Sample Course Title',
-        completion_date: formatKualaLumpurDate(new Date(), 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        completion_date: formatKualaLumpurDate(new Date(), completionDateLocale, { day: 'numeric', month: 'short', year: 'numeric' }),
         certificate_id:  'ABC-123-SAMPLE',
         university_college: 'University of Malaya',
         organization_name: 'FEN Network',
@@ -155,6 +157,26 @@ function FieldRow({ field, onChange }) {
                         <p className="text-xs text-muted-foreground italic">
                             Content is filled automatically at generation time.
                         </p>
+                    )}
+
+                    {field.id === 'completion_date' && (
+                        <div className="space-y-1.5 rounded-md border bg-muted/20 px-3 py-2.5">
+                            <div className="flex items-start gap-2">
+                                <Checkbox
+                                    id={`date-locale-ms-${field.id}`}
+                                    checked={field.date_locale === 'ms'}
+                                    onCheckedChange={v => set('date_locale', v ? 'ms' : 'en')}
+                                />
+                                <div>
+                                    <Label htmlFor={`date-locale-ms-${field.id}`} className="cursor-pointer text-xs font-medium">
+                                        Use Bahasa Melayu month name
+                                    </Label>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Off: English (example: 12 Jun 2026). On: Bahasa Melayu (example: 12 Jun 2026).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
                     <div className="grid grid-cols-2 gap-3">

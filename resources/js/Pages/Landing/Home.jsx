@@ -189,7 +189,7 @@ export default function Home() {
 
                         <div className="flex items-center gap-3 text-sm font-semibold">
                             <a href="https://www.fenetwork.my" target="_blank" rel="noopener noreferrer" className="hidden sm:block">
-                                <img src="/images/fen-logo-.png" alt="FEN Network" className="h-7 w-auto" />
+                                <img src="/images/fen-logo-.png" alt="FEN Network" className="h-10 w-auto" />
                             </a>
                             <div className="block">
                                 <LangSwitcher className="border-white bg-white text-[#131722]" />

@@ -1076,10 +1076,12 @@ function LocalizationTab({ settings, onSave, processing }) {
 
 function ProfileTab({ settings, onSave, processing }) {
     const [organizationOptions, setOrganizationOptions] = useState(settings.profile_organization_options || '');
+    const [fieldOfStudyOptions, setFieldOfStudyOptions] = useState(settings.profile_field_of_study_options || '');
 
     function save() {
         onSave('profile', {
             profile_organization_options: organizationOptions,
+            profile_field_of_study_options: fieldOfStudyOptions,
         });
     }
 
@@ -1109,6 +1111,24 @@ function ProfileTab({ settings, onSave, processing }) {
                     </p>
                     <p className="text-xs text-muted-foreground">
                         This dropdown is shown only when occupation is Student or Academic / Educator.
+                    </p>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="profile-field-of-study-options">Field of Study List (Students)</Label>
+                    <textarea
+                        id="profile-field-of-study-options"
+                        value={fieldOfStudyOptions}
+                        onChange={(e) => setFieldOfStudyOptions(e.target.value)}
+                        rows={10}
+                        className="flex min-h-[220px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        placeholder={['Accounting', 'Business Administration', 'Computer Science', 'Engineering'].join('\n')}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Enter one field of study per line. Students can still choose Other and type a custom field.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        This dropdown is shown only when occupation is Student.
                     </p>
                 </div>
 
