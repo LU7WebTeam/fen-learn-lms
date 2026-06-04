@@ -15,10 +15,10 @@ class UploadController extends Controller
             'file' => 'required|file|image|max:8192',
         ]);
 
-        $path = $request->file('file')->store('uploads', 'public');
+        $path = $request->file('file')->store('uploads', 's3');
 
         return response()->json([
-            'url' => Storage::url($path),
+            'url' => Storage::disk('s3')->url($path),
         ]);
     }
 }

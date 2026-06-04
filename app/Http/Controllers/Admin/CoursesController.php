@@ -62,8 +62,8 @@ class CoursesController extends Controller
         ]);
 
         if ($request->hasFile('cover_image_file')) {
-            $path = $request->file('cover_image_file')->store('covers', 'public');
-            $validated['cover_image'] = Storage::url($path);
+            $path = $request->file('cover_image_file')->store('covers', 's3');
+            $validated['cover_image'] = Storage::disk('s3')->url($path);
         }
         unset($validated['cover_image_file']);
 
@@ -641,8 +641,8 @@ class CoursesController extends Controller
 
         if ($request->hasFile('cover_image_file')) {
             $this->deleteStoredFile($course->cover_image);
-            $path = $request->file('cover_image_file')->store('covers', 'public');
-            $validated['cover_image'] = Storage::url($path);
+            $path = $request->file('cover_image_file')->store('covers', 's3');
+            $validated['cover_image'] = Storage::disk('s3')->url($path);
         } elseif ($request->boolean('cover_image_clear')) {
             $this->deleteStoredFile($course->cover_image);
             $validated['cover_image'] = null;
@@ -726,6 +726,12 @@ class CoursesController extends Controller
         if (str_contains($url, '/storage/')) {
             $path = preg_replace('#^.*/storage/#', '', $url);
             Storage::disk('public')->delete($path);
+        } elseif (filter_var($url, FILTER_VALIDATE_URL)) {
+            $parsed = parse_url($url);
+            $path = ltrim($parsed['path'] ?? '', '/');
+            if ($path) {
+                Storage::disk('s3')->delete($path);
+            }
         }
     }
 

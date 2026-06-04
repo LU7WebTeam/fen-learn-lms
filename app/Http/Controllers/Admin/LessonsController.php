@@ -99,15 +99,15 @@ class LessonsController extends Controller
 
         if ($lesson->type === 'video' && $request->hasFile('video_file')) {
             $this->deleteStoredFile($lesson->video_url);
-            $path = $request->file('video_file')->store('videos', 'public');
-            $validated['video_url'] = Storage::url($path);
+            $path = $request->file('video_file')->store('videos', 's3');
+            $validated['video_url'] = Storage::disk('s3')->url($path);
         }
         unset($validated['video_file']);
 
         if ($lesson->type === 'pdf' && $request->hasFile('pdf_file')) {
             $this->deleteStoredFile($lesson->pdf_url);
-            $path = $request->file('pdf_file')->store('pdfs', 'public');
-            $validated['pdf_url'] = Storage::url($path);
+            $path = $request->file('pdf_file')->store('pdfs', 's3');
+            $validated['pdf_url'] = Storage::disk('s3')->url($path);
         }
         unset($validated['pdf_file']);
 
@@ -192,6 +192,12 @@ class LessonsController extends Controller
         if (str_contains($url, '/storage/')) {
             $path = preg_replace('#^.*/storage/#', '', $url);
             Storage::disk('public')->delete($path);
+        } elseif (filter_var($url, FILTER_VALIDATE_URL)) {
+            $parsed = parse_url($url);
+            $path = ltrim($parsed['path'] ?? '', '/');
+            if ($path) {
+                Storage::disk('s3')->delete($path);
+            }
         }
     }
 

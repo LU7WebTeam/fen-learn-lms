@@ -57,7 +57,7 @@ class CertificateController extends Controller
                     'id' => $customFont->id,
                     'family' => $customFont->family,
                     'regular_url' => $customFont->regular_path
-                        ? Storage::url($customFont->regular_path)
+                        ? Storage::disk('public')->url($customFont->regular_path)
                         : null,
                 ] : null,
             ]);
@@ -91,7 +91,7 @@ class CertificateController extends Controller
                 'id'          => $customFont->id,
                 'family'      => $customFont->family,
                 'regular_url' => $customFont->regular_path
-                    ? Storage::url($customFont->regular_path)
+                    ? Storage::disk('public')->url($customFont->regular_path)
                     : null,
             ] : null,
         ]);

@@ -44,16 +44,22 @@ class ProfileController extends Controller
         ])->all());
 
         if ($request->hasFile('avatar_file')) {
-            if ($user->avatar && str_contains($user->avatar, '/storage/')) {
-                $old = preg_replace('#^.*/storage/#', '', $user->avatar);
-                Storage::disk('public')->delete($old);
+            if ($user->avatar) {
+                if (str_contains($user->avatar, '/storage/')) {
+                    Storage::disk('public')->delete(preg_replace('#^.*/storage/#', '', $user->avatar));
+                } elseif (filter_var($user->avatar, FILTER_VALIDATE_URL)) {
+                    Storage::disk('s3')->delete(ltrim(parse_url($user->avatar, PHP_URL_PATH) ?? '', '/'));
+                }
             }
-            $path = $request->file('avatar_file')->store('avatars', 'public');
-            $user->avatar = Storage::url($path);
+            $path = $request->file('avatar_file')->store('avatars', 's3');
+            $user->avatar = Storage::disk('s3')->url($path);
         } elseif ($request->boolean('avatar_clear')) {
-            if ($user->avatar && str_contains($user->avatar, '/storage/')) {
-                $old = preg_replace('#^.*/storage/#', '', $user->avatar);
-                Storage::disk('public')->delete($old);
+            if ($user->avatar) {
+                if (str_contains($user->avatar, '/storage/')) {
+                    Storage::disk('public')->delete(preg_replace('#^.*/storage/#', '', $user->avatar));
+                } elseif (filter_var($user->avatar, FILTER_VALIDATE_URL)) {
+                    Storage::disk('s3')->delete(ltrim(parse_url($user->avatar, PHP_URL_PATH) ?? '', '/'));
+                }
             }
             $user->avatar = null;
         }

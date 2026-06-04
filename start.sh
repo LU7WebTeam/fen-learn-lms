@@ -18,6 +18,9 @@ php artisan migrate --force 2>/dev/null || echo "Note: DB migration skipped (con
 # Remove stale Vite hot-reload file so Laravel uses the production manifest
 rm -f public/hot
 
+# Ensure public/storage symlink exists for local public disk assets.
+php artisan storage:link --force 2>/dev/null || true
+
 # Rebuild config cache with correct APP_URL
 php artisan config:clear 2>/dev/null || true
 php artisan config:cache 2>/dev/null || true
