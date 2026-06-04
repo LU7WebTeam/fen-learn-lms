@@ -1,0 +1,1 @@
+const i="__other__";function u(e,_=[]){return _.includes(e)}function s(e,_,d=[],f=[]){const t=typeof _=="string"?_.trim():"";return u(e,f)?t?d.includes(t)?{field_of_study:t,field_of_study_other:""}:{field_of_study:i,field_of_study_other:t}:{field_of_study:"",field_of_study_other:""}:{field_of_study:t,field_of_study_other:""}}export{i as F,s,u};
