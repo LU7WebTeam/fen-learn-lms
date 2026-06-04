@@ -7,6 +7,7 @@ use App\Support\CaptchaVerifier;
 use App\Support\ProfileFieldOfStudyOptions;
 use App\Support\ProfileOrganizationOptions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -92,9 +93,9 @@ class HandleInertiaRequests extends Middleware
             'platform' => [
                 'name'        => $platformName,
                 'tagline'     => $platformTagline,
-                'logo_url'    => $logoPath ? asset('storage/' . $logoPath) : null,
-                'logo_dark_url' => $logoDarkPath ? asset('storage/' . $logoDarkPath) : null,
-                'favicon_url' => $faviconPath ? asset('storage/' . $faviconPath) : null,
+                'logo_url'    => $logoPath ? Storage::url($logoPath) : null,
+                'logo_dark_url' => $logoDarkPath ? Storage::url($logoDarkPath) : null,
+                'favicon_url' => $faviconPath ? Storage::url($faviconPath) : null,
             ],
             'integrations' => [
                 'captcha' => $captchaConfig,

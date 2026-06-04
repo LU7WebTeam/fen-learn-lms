@@ -9,6 +9,7 @@ use App\Models\CustomFont;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -56,7 +57,7 @@ class CertificateController extends Controller
                     'id' => $customFont->id,
                     'family' => $customFont->family,
                     'regular_url' => $customFont->regular_path
-                        ? asset('storage/' . $customFont->regular_path)
+                        ? Storage::url($customFont->regular_path)
                         : null,
                 ] : null,
             ]);
@@ -90,7 +91,7 @@ class CertificateController extends Controller
                 'id'          => $customFont->id,
                 'family'      => $customFont->family,
                 'regular_url' => $customFont->regular_path
-                    ? asset('storage/' . $customFont->regular_path)
+                    ? Storage::url($customFont->regular_path)
                     : null,
             ] : null,
         ]);

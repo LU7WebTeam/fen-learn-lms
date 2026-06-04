@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 
 class EmailBranding
 {
@@ -16,8 +17,8 @@ class EmailBranding
 
         return [
             'platformName' => $platformName,
-            'logoUrl' => ($emailLogoPath ?: $logoPath) ? asset('storage/'.($emailLogoPath ?: $logoPath)) : null,
-            'logoDarkUrl' => ($emailLogoDarkPath ?: $logoDarkPath) ? asset('storage/'.($emailLogoDarkPath ?: $logoDarkPath)) : null,
+            'logoUrl' => ($emailLogoPath ?: $logoPath) ? Storage::url($emailLogoPath ?: $logoPath) : null,
+            'logoDarkUrl' => ($emailLogoDarkPath ?: $logoDarkPath) ? Storage::url($emailLogoDarkPath ?: $logoDarkPath) : null,
             // These values mirror the app's visual direction for email-safe clients.
             'theme' => [
                 'primary' => '#B5236F',
