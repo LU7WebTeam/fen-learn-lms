@@ -918,7 +918,7 @@ function BrandingTab({ settings, onSave, processing }) {
                 <ImageUploadField
                     label="Logo"
                     description="Recommended: PNG or SVG, at least 200×60 px."
-                    currentUrl={settings.logo_path ? `/storage/${settings.logo_path}` : null}
+                    currentUrl={settings.logo_url ?? null}
                     onFileChange={handleLogoChange}
                     onClear={handleLogoClear}
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -927,7 +927,7 @@ function BrandingTab({ settings, onSave, processing }) {
                 <ImageUploadField
                     label="Dark Mode Logo"
                     description="Used on dark backgrounds when available."
-                    currentUrl={settings.logo_dark_path ? `/storage/${settings.logo_dark_path}` : null}
+                    currentUrl={settings.logo_dark_url ?? null}
                     onFileChange={handleLogoDarkChange}
                     onClear={handleLogoDarkClear}
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -938,7 +938,7 @@ function BrandingTab({ settings, onSave, processing }) {
                 <ImageUploadField
                     label="Email Header Logo"
                     description="Optional override for email header in light mode. Falls back to Logo."
-                    currentUrl={settings.email_logo_path ? `/storage/${settings.email_logo_path}` : null}
+                    currentUrl={settings.email_logo_url ?? null}
                     onFileChange={handleEmailLogoChange}
                     onClear={handleEmailLogoClear}
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -947,7 +947,7 @@ function BrandingTab({ settings, onSave, processing }) {
                 <ImageUploadField
                     label="Email Header Dark Logo"
                     description="Optional dark-mode variant for email header. Falls back to Dark Mode Logo."
-                    currentUrl={settings.email_logo_dark_path ? `/storage/${settings.email_logo_dark_path}` : null}
+                    currentUrl={settings.email_logo_dark_url ?? null}
                     onFileChange={handleEmailLogoDarkChange}
                     onClear={handleEmailLogoDarkClear}
                     accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -956,7 +956,7 @@ function BrandingTab({ settings, onSave, processing }) {
                 <ImageUploadField
                     label="Favicon"
                     description="Recommended: PNG or ICO, 32×32 px."
-                    currentUrl={settings.favicon_path ? `/storage/${settings.favicon_path}` : null}
+                    currentUrl={settings.favicon_url ?? null}
                     onFileChange={handleFaviconChange}
                     onClear={handleFaviconClear}
                     accept="image/png,image/x-icon,image/jpeg"

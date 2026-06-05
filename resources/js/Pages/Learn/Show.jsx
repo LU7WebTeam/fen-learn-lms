@@ -371,7 +371,7 @@ function QuizPlayer({ lesson, course, allAttempts = [], locale, latestQuizResult
                     <div key={qi} className="space-y-3">
                         <p className="font-medium">
                             <span className="mr-2 text-muted-foreground text-sm">Q{qi + 1}.</span>
-                            {q.text ?? q.question}
+                            {(q.text ?? q.question ?? '').replace(/\\n/g, '').trim()}
                         </p>
                         {isMultiAnswer && !showResult && (
                             <p className="text-xs text-muted-foreground">{t('learn.quiz.select_all_that_apply')}</p>

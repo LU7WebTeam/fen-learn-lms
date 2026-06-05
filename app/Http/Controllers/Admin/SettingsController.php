@@ -136,6 +136,12 @@ class SettingsController extends Controller
             ? '1'
             : '0';
 
+        // Compute S3 URLs for branding image previews via shared helper.
+        foreach (['logo_path', 'logo_dark_path', 'email_logo_path', 'email_logo_dark_path', 'favicon_path'] as $key) {
+            $urlKey = str_replace('_path', '_url', $key);
+            $settings[$urlKey] = EmailBranding::s3Url($settings[$key]);
+        }
+
         return Inertia::render('Admin/Settings/Index', [
             'settings'    => $settings,
             'customFonts' => CustomFont::query()
