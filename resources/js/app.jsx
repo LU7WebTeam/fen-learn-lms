@@ -23,10 +23,14 @@ createInertiaApp({
 
         function RootApp() {
             const [locale, setLocale] = useState(props?.initialPage?.props?.locale ?? 'en');
+            const [pageComponent, setPageComponent] = useState(props?.initialPage?.component ?? '');
+
+            const showAccessibilityHelper = !pageComponent.startsWith('Admin/');
 
             useEffect(() => {
                 const stopListening = router.on('success', (event) => {
                     setLocale(event?.detail?.page?.props?.locale ?? 'en');
+                    setPageComponent(event?.detail?.page?.component ?? '');
                 });
 
                 return () => {
@@ -39,7 +43,7 @@ createInertiaApp({
             return (
                 <ThemeProvider>
                     <App {...props} />
-                    <AccessibilityHelper locale={locale} />
+                    {showAccessibilityHelper && <AccessibilityHelper locale={locale} />}
                     <Toaster />
                 </ThemeProvider>
             );

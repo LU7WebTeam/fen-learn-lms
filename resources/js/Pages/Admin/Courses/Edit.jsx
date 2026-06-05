@@ -1701,11 +1701,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                     {/* ── Certificate tab ── */}
                     <TabsContent value="certificate" className="mt-6">
                         <div className="grid gap-6 xl:grid-cols-12">
-                            <Card className="xl:col-span-4">
+                            <Card className="xl:col-span-3">
                                 <CardHeader>
                                     <CardTitle className="text-base">Certifications</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
+                                <CardContent className="space-y-6">
                                     <div className="space-y-2">
                                         {certifications.map((cert) => (
                                             <button
@@ -1734,53 +1734,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                     </div>
 
                                     {!isCourseViewer && (
-                                        <form onSubmit={handleAddCertification} className="space-y-3 rounded-md border p-3">
+                                        <form onSubmit={handleAddCertification} className="space-y-3 rounded-md border pt-5 p-4">
                                             <p className="text-sm font-semibold">Add Certification</p>
                                             <div className="space-y-1.5">
                                                 <Label>Name</Label>
                                                 <Input value={addCertificationForm.data.name} onChange={(e) => addCertificationForm.setData('name', e.target.value)} required />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label>Code (optional)</Label>
-                                                <Input value={addCertificationForm.data.code} onChange={(e) => addCertificationForm.setData('code', e.target.value)} />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label>Priority</Label>
-                                                <Input type="number" min={1} value={addCertificationForm.data.priority} onChange={(e) => addCertificationForm.setData('priority', e.target.value)} />
-                                            </div>
-                                            <Separator />
-                                            <p className="text-xs font-medium text-muted-foreground">Conditions (comma-separated)</p>
-                                            <div className="space-y-1.5">
-                                                <Label>Occupation</Label>
-                                                <Input value={addCertificationForm.data.occupation_values} onChange={(e) => addCertificationForm.setData('occupation_values', e.target.value)} placeholder="student, educator" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label>Organization</Label>
-                                                <Input value={addCertificationForm.data.organization_values} onChange={(e) => addCertificationForm.setData('organization_values', e.target.value)} placeholder="University Malaya, FEN" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label>Organization Match</Label>
-                                                <Select value={addCertificationForm.data.organization_mode} onValueChange={(v) => addCertificationForm.setData('organization_mode', v)}>
-                                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="exact">Exact</SelectItem>
-                                                        <SelectItem value="contains">Contains</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <Label>Location/State</Label>
-                                                <Input value={addCertificationForm.data.state_values} onChange={(e) => addCertificationForm.setData('state_values', e.target.value)} placeholder="Selangor, Sabah" />
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="space-y-1.5">
-                                                    <Label>Age Min</Label>
-                                                    <Input type="number" min={0} value={addCertificationForm.data.age_min} onChange={(e) => addCertificationForm.setData('age_min', e.target.value)} />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <Label>Age Max</Label>
-                                                    <Input type="number" min={0} value={addCertificationForm.data.age_max} onChange={(e) => addCertificationForm.setData('age_max', e.target.value)} />
-                                                </div>
                                             </div>
                                             <Button type="submit" disabled={addCertificationForm.processing} className="w-full">
                                                 {addCertificationForm.processing ? 'Adding...' : 'Add Certification'}
@@ -1790,7 +1748,7 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                 </CardContent>
                             </Card>
 
-                            <div className="space-y-4 xl:col-span-8">
+                            <div className="space-y-4 xl:col-span-9">
                                 {selectedCertification && (
                                     <Card>
                                         <CardHeader>

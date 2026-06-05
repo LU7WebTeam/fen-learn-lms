@@ -199,66 +199,66 @@ class SettingsController extends Controller
 
         if ($request->hasFile('logo')) {
             $old = Setting::get('logo_path');
-            if ($old) Storage::disk('public')->delete($old);
-            $path = $request->file('logo')->store('branding', 'public');
+            if ($old) Storage::disk('s3')->delete($old);
+            $path = $request->file('logo')->store('branding', 's3');
             Setting::set('logo_path', $path);
         }
 
         if ($request->hasFile('logo_dark')) {
             $old = Setting::get('logo_dark_path');
-            if ($old) Storage::disk('public')->delete($old);
-            $path = $request->file('logo_dark')->store('branding', 'public');
+            if ($old) Storage::disk('s3')->delete($old);
+            $path = $request->file('logo_dark')->store('branding', 's3');
             Setting::set('logo_dark_path', $path);
         }
 
         if ($request->hasFile('email_logo')) {
             $old = Setting::get('email_logo_path');
-            if ($old) Storage::disk('public')->delete($old);
-            $path = $request->file('email_logo')->store('branding', 'public');
+            if ($old) Storage::disk('s3')->delete($old);
+            $path = $request->file('email_logo')->store('branding', 's3');
             Setting::set('email_logo_path', $path);
         }
 
         if ($request->hasFile('email_logo_dark')) {
             $old = Setting::get('email_logo_dark_path');
-            if ($old) Storage::disk('public')->delete($old);
-            $path = $request->file('email_logo_dark')->store('branding', 'public');
+            if ($old) Storage::disk('s3')->delete($old);
+            $path = $request->file('email_logo_dark')->store('branding', 's3');
             Setting::set('email_logo_dark_path', $path);
         }
 
         if ($request->hasFile('favicon')) {
             $old = Setting::get('favicon_path');
-            if ($old) Storage::disk('public')->delete($old);
-            $path = $request->file('favicon')->store('branding', 'public');
+            if ($old) Storage::disk('s3')->delete($old);
+            $path = $request->file('favicon')->store('branding', 's3');
             Setting::set('favicon_path', $path);
         }
 
         if ($request->input('clear_logo') === '1') {
             $old = Setting::get('logo_path');
-            if ($old) Storage::disk('public')->delete($old);
+            if ($old) Storage::disk('s3')->delete($old);
             Setting::set('logo_path', null);
         }
 
         if ($request->input('clear_logo_dark') === '1') {
             $old = Setting::get('logo_dark_path');
-            if ($old) Storage::disk('public')->delete($old);
+            if ($old) Storage::disk('s3')->delete($old);
             Setting::set('logo_dark_path', null);
         }
 
         if ($request->input('clear_email_logo') === '1') {
             $old = Setting::get('email_logo_path');
-            if ($old) Storage::disk('public')->delete($old);
+            if ($old) Storage::disk('s3')->delete($old);
             Setting::set('email_logo_path', null);
         }
 
         if ($request->input('clear_email_logo_dark') === '1') {
             $old = Setting::get('email_logo_dark_path');
-            if ($old) Storage::disk('public')->delete($old);
+            if ($old) Storage::disk('s3')->delete($old);
             Setting::set('email_logo_dark_path', null);
         }
 
         if ($request->input('clear_favicon') === '1') {
             $old = Setting::get('favicon_path');
-            if ($old) Storage::disk('public')->delete($old);
+            if ($old) Storage::disk('s3')->delete($old);
             Setting::set('favicon_path', null);
         }
     }
