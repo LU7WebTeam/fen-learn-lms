@@ -11,6 +11,7 @@ use App\Models\QuizAttempt;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,6 +56,7 @@ class AnalyticsController extends Controller
             'race'       => $this->normalizeFilterValues($request->input('race', [])),
             'state'      => $this->normalizeFilterValues($request->input('state', [])),
             'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'field_of_study' => $this->normalizeFilterValues($request->input('field_of_study', [])),
             'organization' => $this->normalizeFilterValues($request->input('organization', [])),
             'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
@@ -153,6 +155,7 @@ class AnalyticsController extends Controller
                 'state',
                 'birthdate',
                 'occupation',
+                'field_of_study',
                 'organization',
                 'enrolled_at',
                 'completed_at',
@@ -181,6 +184,7 @@ class AnalyticsController extends Controller
                     $learner['state'] ?? '',
                     $learner['birthdate'] ?? '',
                     $learner['occupation'] ?? '',
+                    $learner['field_of_study'] ?? '',
                     $learner['organization'] ?? '',
                     $achievements['enrolled_at'] ?? '',
                     $achievements['completed_at'] ?? '',
@@ -583,15 +587,17 @@ class AnalyticsController extends Controller
             ])
             ->values()->all();
 
+        $ageExpr = $this->ageInYearsExpression('users.birthdate');
+
         $byAgeGroup = (clone $demographicBase)
             ->selectRaw("
                 CASE
                     WHEN users.birthdate IS NULL THEN 'Unknown'
-                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18 THEN 'Under 18'
-                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24 THEN '18–24'
-                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34 THEN '25–34'
-                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44 THEN '35–44'
-                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54 THEN '45–54'
+                    WHEN {$ageExpr} < 18 THEN 'Under 18'
+                    WHEN {$ageExpr} BETWEEN 18 AND 24 THEN '18–24'
+                    WHEN {$ageExpr} BETWEEN 25 AND 34 THEN '25–34'
+                    WHEN {$ageExpr} BETWEEN 35 AND 44 THEN '35–44'
+                    WHEN {$ageExpr} BETWEEN 45 AND 54 THEN '45–54'
                     ELSE '55+'
                 END as label,
                 COUNT(*) as count
@@ -627,15 +633,24 @@ class AnalyticsController extends Controller
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
+    private function ageInYearsExpression(string $column = 'users.birthdate'): string
+    {
+        return DB::connection()->getDriverName() === 'pgsql'
+            ? "EXTRACT(YEAR FROM AGE(CURRENT_DATE, {$column}))"
+            : "TIMESTAMPDIFF(YEAR, {$column}, CURDATE())";
+    }
+
     private function applyAgeFilter($query, string $ageGroup)
     {
+        $ageExpr = $this->ageInYearsExpression('users.birthdate');
+
         return match ($ageGroup) {
-            'under_18' => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18'),
-            '18_24'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24'),
-            '25_34'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34'),
-            '35_44'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44'),
-            '45_54'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54'),
-            '55_plus'  => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) >= 55'),
+            'under_18' => $query->whereRaw("{$ageExpr} < 18"),
+            '18_24'    => $query->whereRaw("{$ageExpr} BETWEEN 18 AND 24"),
+            '25_34'    => $query->whereRaw("{$ageExpr} BETWEEN 25 AND 34"),
+            '35_44'    => $query->whereRaw("{$ageExpr} BETWEEN 35 AND 44"),
+            '45_54'    => $query->whereRaw("{$ageExpr} BETWEEN 45 AND 54"),
+            '55_plus'  => $query->whereRaw("{$ageExpr} >= 55"),
             default    => $query,
         };
     }
@@ -646,15 +661,17 @@ class AnalyticsController extends Controller
             return $query;
         }
 
-        return $query->where(function ($nested) use ($ageGroups) {
+        $ageExpr = $this->ageInYearsExpression('users.birthdate');
+
+        return $query->where(function ($nested) use ($ageGroups, $ageExpr) {
             foreach ($ageGroups as $ageGroup) {
                 match ($ageGroup) {
-                    'under_18' => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18'),
-                    '18_24'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24'),
-                    '25_34'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34'),
-                    '35_44'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44'),
-                    '45_54'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54'),
-                    '55_plus'  => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) >= 55'),
+                    'under_18' => $nested->orWhereRaw("{$ageExpr} < 18"),
+                    '18_24'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 18 AND 24"),
+                    '25_34'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 25 AND 34"),
+                    '35_44'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 35 AND 44"),
+                    '45_54'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 45 AND 54"),
+                    '55_plus'  => $nested->orWhereRaw("{$ageExpr} >= 55"),
                     default    => null,
                 };
             }
@@ -668,6 +685,7 @@ class AnalyticsController extends Controller
             ->when($filters['race'] ?? [], fn($q, $values) => $q->whereIn('users.race', $values))
             ->when($filters['state'] ?? [], fn($q, $values) => $q->whereIn('users.state', $values))
             ->when($filters['occupation'] ?? [], fn($q, $values) => $q->whereIn('users.occupation', $values))
+            ->when($filters['field_of_study'] ?? [], fn($q, $values) => $q->whereIn('users.field_of_study', $values))
             ->when($filters['organization'] ?? [], fn($q, $values) => $q->whereIn('users.organization', $values));
 
         if (!empty($filters['age_group'])) {
@@ -715,6 +733,7 @@ class AnalyticsController extends Controller
             'race'       => $this->normalizeFilterValues($request->input('race', [])),
             'state'      => $this->normalizeFilterValues($request->input('state', [])),
             'occupation' => $this->normalizeFilterValues($request->input('occupation', [])),
+            'field_of_study' => $this->normalizeFilterValues($request->input('field_of_study', [])),
             'organization' => $this->normalizeFilterValues($request->input('organization', [])),
             'age_group'  => $this->normalizeFilterValues($request->input('age_group', [])),
         ];
@@ -799,7 +818,7 @@ class AnalyticsController extends Controller
 
         return Enrollment::query()
             ->whereIn('id', $enrollmentIds)
-            ->with('user:id,name,email,gender,race,state,birthdate,occupation,organization')
+            ->with('user:id,name,email,gender,race,state,birthdate,occupation,field_of_study,organization')
             ->orderByDesc('enrolled_at')
             ->get()
             ->map(function (Enrollment $enrollment) use ($progressByEnrollment, $quizByEnrollment, $quizAvgByEnrollment, $quizMarksByEnrollment, $totalLessons) {
@@ -820,6 +839,7 @@ class AnalyticsController extends Controller
                     'state' => $enrollment->user?->state,
                     'birthdate' => $enrollment->user?->birthdate?->toDateString(),
                     'occupation' => $enrollment->user?->occupation,
+                    'field_of_study' => $enrollment->user?->field_of_study,
                     'organization' => $enrollment->user?->organization,
                     'achievements' => [
                         'enrolled_at' => $enrollment->enrolled_at?->toIso8601String(),
@@ -860,7 +880,7 @@ class AnalyticsController extends Controller
         return Enrollment::query()
             ->whereIn('id', $enrollmentIds)
             ->with([
-                'user:id,name,email,avatar,gender,race,state,birthdate,occupation,organization',
+                'user:id,name,email,avatar,gender,race,state,birthdate,occupation,field_of_study,organization',
                 'lessonProgress' => fn($q) => $q->whereNotNull('completed_at')
                     ->select('enrollment_id', 'lesson_id', 'completed_at'),
             ])
@@ -881,6 +901,7 @@ class AnalyticsController extends Controller
                     'user_birthdate'       => $enrollment->user?->birthdate?->format('M j, Y'),
                     'user_birthdate_raw'   => $enrollment->user?->birthdate?->format('Y-m-d'),
                     'user_occupation'      => $enrollment->user?->occupation,
+                    'user_field_of_study'  => $enrollment->user?->field_of_study,
                     'user_organization'    => $enrollment->user?->organization,
                     'enrolled_at'          => $enrollment->enrolled_at?->format('M j, Y'),
                     'enrolled_at_raw'      => $enrollment->enrolled_at?->toDateString(),
