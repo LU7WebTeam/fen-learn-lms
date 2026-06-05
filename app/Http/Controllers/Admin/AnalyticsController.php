@@ -546,7 +546,7 @@ class AnalyticsController extends Controller
             ->tap(fn($query) => $this->applyDemographicFilters($query, $filters));
 
         $byGender = (clone $demographicBase)
-            ->selectRaw('COALESCE(NULLIF(users.gender, ""), "unknown") as label, COUNT(*) as count')
+            ->selectRaw("COALESCE(NULLIF(users.gender, ''), 'unknown') as label, COUNT(*) as count")
             ->groupBy('label')
             ->orderByDesc('count')
             ->get()
@@ -554,7 +554,7 @@ class AnalyticsController extends Controller
             ->values()->all();
 
         $byRace = (clone $demographicBase)
-            ->selectRaw('COALESCE(NULLIF(users.race, ""), "unknown") as label, COUNT(*) as count')
+            ->selectRaw("COALESCE(NULLIF(users.race, ''), 'unknown') as label, COUNT(*) as count")
             ->groupBy('label')
             ->orderByDesc('count')
             ->get()
@@ -565,7 +565,7 @@ class AnalyticsController extends Controller
             ->values()->all();
 
         $byState = (clone $demographicBase)
-            ->selectRaw('COALESCE(NULLIF(users.state, ""), "Unknown") as label, COUNT(*) as count')
+            ->selectRaw("COALESCE(NULLIF(users.state, ''), 'Unknown') as label, COUNT(*) as count")
             ->groupBy('label')
             ->orderByDesc('count')
             ->get()
@@ -573,7 +573,7 @@ class AnalyticsController extends Controller
             ->values()->all();
 
         $byOccupation = (clone $demographicBase)
-            ->selectRaw('COALESCE(NULLIF(users.occupation, ""), "unknown") as label, COUNT(*) as count')
+            ->selectRaw("COALESCE(NULLIF(users.occupation, ''), 'unknown') as label, COUNT(*) as count")
             ->groupBy('label')
             ->orderByDesc('count')
             ->get()
@@ -587,11 +587,11 @@ class AnalyticsController extends Controller
             ->selectRaw("
                 CASE
                     WHEN users.birthdate IS NULL THEN 'Unknown'
-                    WHEN TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) < 18 THEN 'Under 18'
-                    WHEN TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 18 AND 24 THEN '18–24'
-                    WHEN TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 25 AND 34 THEN '25–34'
-                    WHEN TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 35 AND 44 THEN '35–44'
-                    WHEN TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 45 AND 54 THEN '45–54'
+                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18 THEN 'Under 18'
+                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24 THEN '18–24'
+                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34 THEN '25–34'
+                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44 THEN '35–44'
+                    WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54 THEN '45–54'
                     ELSE '55+'
                 END as label,
                 COUNT(*) as count
@@ -630,12 +630,12 @@ class AnalyticsController extends Controller
     private function applyAgeFilter($query, string $ageGroup)
     {
         return match ($ageGroup) {
-            'under_18' => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) < 18'),
-            '18_24'    => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 18 AND 24'),
-            '25_34'    => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 25 AND 34'),
-            '35_44'    => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 35 AND 44'),
-            '45_54'    => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 45 AND 54'),
-            '55_plus'  => $query->whereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) >= 55'),
+            'under_18' => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18'),
+            '18_24'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24'),
+            '25_34'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34'),
+            '35_44'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44'),
+            '45_54'    => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54'),
+            '55_plus'  => $query->whereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) >= 55'),
             default    => $query,
         };
     }
@@ -649,12 +649,12 @@ class AnalyticsController extends Controller
         return $query->where(function ($nested) use ($ageGroups) {
             foreach ($ageGroups as $ageGroup) {
                 match ($ageGroup) {
-                    'under_18' => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) < 18'),
-                    '18_24'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 18 AND 24'),
-                    '25_34'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 25 AND 34'),
-                    '35_44'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 35 AND 44'),
-                    '45_54'    => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) BETWEEN 45 AND 54'),
-                    '55_plus'  => $nested->orWhereRaw('TIMESTAMPDIFF(YEAR, users.birthdate, CURDATE()) >= 55'),
+                    'under_18' => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) < 18'),
+                    '18_24'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 18 AND 24'),
+                    '25_34'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 25 AND 34'),
+                    '35_44'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 35 AND 44'),
+                    '45_54'    => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) BETWEEN 45 AND 54'),
+                    '55_plus'  => $nested->orWhereRaw('EXTRACT(YEAR FROM AGE(CURRENT_DATE, users.birthdate)) >= 55'),
                     default    => null,
                 };
             }
@@ -782,7 +782,7 @@ class AnalyticsController extends Controller
 
         $quizByEnrollment = QuizAttempt::query()
             ->whereIn('enrollment_id', $enrollmentIds)
-            ->selectRaw('enrollment_id, COUNT(*) as attempts_count, SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_count')
+            ->selectRaw('enrollment_id, COUNT(*) as attempts_count, SUM(CASE WHEN passed = true THEN 1 ELSE 0 END) as passed_count')
             ->groupBy('enrollment_id')
             ->get()
             ->keyBy('enrollment_id');
