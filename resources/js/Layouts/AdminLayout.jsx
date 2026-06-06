@@ -43,6 +43,7 @@ import {
     SidebarTrigger,
 } from '@/Components/ui/sidebar';
 import { useTheme } from '@/Components/ThemeProvider';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { cn } from '@/lib/utils';
 
 const navSettings = [
@@ -313,6 +314,7 @@ function ThemeToggle() {
 export default function AdminLayout({ title, children }) {
     return (
         <SidebarProvider>
+            <AnalyticsTracker />
             <AppSidebar />
             <SidebarInset>
                 {/* ── Top header bar ── */}
