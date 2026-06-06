@@ -24,27 +24,29 @@ class HandleInertiaRequests extends Middleware
         $locale = 'en';
 
         try {
-            $platformName    = Setting::get('platform_name', 'Free LMS');
-            $platformTagline = Setting::get('platform_tagline', '');
-            $logoPath        = Setting::get('logo_path');
-            $logoDarkPath    = Setting::get('logo_dark_path');
-            $faviconPath     = Setting::get('favicon_path');
-            $defaultLocale   = (string) Setting::get('default_locale', 'en');
+            $settings = Setting::allAsArray();
+
+            $platformName    = trim((string) ($settings['platform_name'] ?? 'Free LMS'));
+            $platformTagline = trim((string) ($settings['platform_tagline'] ?? ''));
+            $logoPath        = $settings['logo_path'] ?? null;
+            $logoDarkPath    = $settings['logo_dark_path'] ?? null;
+            $faviconPath     = $settings['favicon_path'] ?? null;
+            $defaultLocale   = (string) ($settings['default_locale'] ?? 'en');
             $captchaConfig   = CaptchaVerifier::frontendConfig();
             $analyticsConfig = [
-                'enabled' => Setting::get('analytics_enabled', '0') === '1',
-                'measurement_id' => (string) Setting::get('ga4_measurement_id', ''),
-                'anonymize_ip' => Setting::get('ga4_anonymize_ip', '1') === '1',
-                'debug_mode' => Setting::get('ga4_debug_mode', '0') === '1',
+                'enabled' => ($settings['analytics_enabled'] ?? '0') === '1',
+                'measurement_id' => (string) ($settings['ga4_measurement_id'] ?? ''),
+                'anonymize_ip' => ($settings['ga4_anonymize_ip'] ?? '1') === '1',
+                'debug_mode' => ($settings['ga4_debug_mode'] ?? '0') === '1',
             ];
             $seoConfig = [
-                'default_title' => trim((string) Setting::get('seo_default_title', '')),
-                'default_description' => trim((string) Setting::get('seo_default_description', '')),
-                'default_image' => trim((string) Setting::get('seo_default_image', '')),
-                'home_title' => trim((string) Setting::get('seo_home_title', '')),
-                'home_description' => trim((string) Setting::get('seo_home_description', '')),
-                'courses_title' => trim((string) Setting::get('seo_courses_title', '')),
-                'courses_description' => trim((string) Setting::get('seo_courses_description', '')),
+                'default_title' => trim((string) ($settings['seo_default_title'] ?? '')),
+                'default_description' => trim((string) ($settings['seo_default_description'] ?? '')),
+                'default_image' => trim((string) ($settings['seo_default_image'] ?? '')),
+                'home_title' => trim((string) ($settings['seo_home_title'] ?? '')),
+                'home_description' => trim((string) ($settings['seo_home_description'] ?? '')),
+                'courses_title' => trim((string) ($settings['seo_courses_title'] ?? '')),
+                'courses_description' => trim((string) ($settings['seo_courses_description'] ?? '')),
             ];
 
             if (!in_array($defaultLocale, ['en', 'ms'], true)) {

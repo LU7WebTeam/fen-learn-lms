@@ -7,16 +7,18 @@
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         @php
-            $platformName = (string) \App\Models\Setting::get('platform_name', config('app.name', 'Free LMS'));
-            $platformTagline = (string) \App\Models\Setting::get('platform_tagline', '');
+            $settings = \App\Models\Setting::allAsArray();
 
-            $seoDefaultTitle = trim((string) \App\Models\Setting::get('seo_default_title', ''));
-            $seoDefaultDescription = trim((string) \App\Models\Setting::get('seo_default_description', ''));
-            $seoDefaultImage = trim((string) \App\Models\Setting::get('seo_default_image', ''));
-            $seoHomeTitle = trim((string) \App\Models\Setting::get('seo_home_title', ''));
-            $seoHomeDescription = trim((string) \App\Models\Setting::get('seo_home_description', ''));
-            $seoCoursesTitle = trim((string) \App\Models\Setting::get('seo_courses_title', ''));
-            $seoCoursesDescription = trim((string) \App\Models\Setting::get('seo_courses_description', ''));
+            $platformName = trim((string) ($settings['platform_name'] ?? config('app.name', 'Free LMS')));
+            $platformTagline = trim((string) ($settings['platform_tagline'] ?? ''));
+
+            $seoDefaultTitle = trim((string) ($settings['seo_default_title'] ?? ''));
+            $seoDefaultDescription = trim((string) ($settings['seo_default_description'] ?? ''));
+            $seoDefaultImage = trim((string) ($settings['seo_default_image'] ?? ''));
+            $seoHomeTitle = trim((string) ($settings['seo_home_title'] ?? ''));
+            $seoHomeDescription = trim((string) ($settings['seo_home_description'] ?? ''));
+            $seoCoursesTitle = trim((string) ($settings['seo_courses_title'] ?? ''));
+            $seoCoursesDescription = trim((string) ($settings['seo_courses_description'] ?? ''));
 
             $metaTitle = $seoDefaultTitle !== '' ? $seoDefaultTitle : $platformName;
             $metaDescription = $seoDefaultDescription !== '' ? $seoDefaultDescription : $platformTagline;
@@ -72,7 +74,7 @@
 
         <!-- Favicon -->
         @php
-            $faviconPath = \App\Models\Setting::get('favicon_path');
+            $faviconPath = (string) ($settings['favicon_path'] ?? '');
             $faviconUrl  = \App\Support\EmailBranding::s3Url($faviconPath);
         @endphp
         @if ($faviconUrl)
