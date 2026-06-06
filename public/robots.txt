@@ -1,2 +1,24 @@
 User-agent: *
-Disallow:
+
+# Allow public content by default.
+Allow: /
+
+# Block admin and private/authenticated areas.
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /profile-setup
+Disallow: /learn/
+
+# Block auth and tokenized/session flows.
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password/
+Disallow: /email/
+Disallow: /verify-code/
+Disallow: /invite/
+Disallow: /site-lock
+
+# Block temporary/development pages.
+Disallow: /backup-landing
