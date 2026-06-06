@@ -637,6 +637,8 @@ class CoursesController extends Controller
             'meta_title'       => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_image'       => 'nullable|string|max:500',
+            'meta_image_file'  => 'nullable|file|image|max:5120',
+            'meta_image_clear' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('cover_image_file')) {
@@ -648,6 +650,16 @@ class CoursesController extends Controller
             $validated['cover_image'] = null;
         }
         unset($validated['cover_image_file'], $validated['cover_image_clear']);
+
+        if ($request->hasFile('meta_image_file')) {
+            $this->deleteStoredFile($course->meta_image);
+            $path = $request->file('meta_image_file')->store('meta-images', 's3');
+            $validated['meta_image'] = Storage::disk('s3')->url($path);
+        } elseif ($request->boolean('meta_image_clear')) {
+            $this->deleteStoredFile($course->meta_image);
+            $validated['meta_image'] = null;
+        }
+        unset($validated['meta_image_file'], $validated['meta_image_clear']);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['title']);

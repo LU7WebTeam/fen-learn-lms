@@ -61,13 +61,27 @@ function Filters() {
 }
 
 export default function CoursesIndex({ courses, enrolledIds, categories, filters }) {
-    const { auth } = usePage().props;
+    const { auth, integrations, platform } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : PublicLayout;
     const t = useT();
+    const seo = integrations?.seo ?? {};
+    const metaTitle = seo.courses_title || seo.default_title || t('courses.index.title');
+    const metaDescription = seo.courses_description || seo.default_description || platform?.tagline || '';
+    const metaImage = seo.default_image || platform?.logo_dark_url || platform?.logo_url || '';
 
     return (
         <Layout>
-            <Head title={t('courses.index.title')} />
+            <Head title={metaTitle}>
+                {metaDescription && <meta name="description" content={metaDescription} />}
+                <meta property="og:title" content={metaTitle} />
+                {metaDescription && <meta property="og:description" content={metaDescription} />}
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta property="og:type" content="website" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                {metaDescription && <meta name="twitter:description" content={metaDescription} />}
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
+            </Head>
 
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

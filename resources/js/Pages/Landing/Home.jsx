@@ -57,7 +57,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function Home() {
-    const { auth, platform, locale } = usePage().props;
+    const { auth, platform, locale, integrations } = usePage().props;
+    const seo = integrations?.seo ?? {};
     const platformName = platform?.name || 'sorted';
     const platformDarkLogoUrl = platform?.logo_dark_url || platform?.logo_url || null;
     const t = useT();
@@ -70,6 +71,9 @@ export default function Home() {
     const [showAuthMenu, setShowAuthMenu] = useState(false);
     const [showStartPopup, setShowStartPopup] = useState(false);
     const softCardTint = '#ffffff';
+    const metaTitle = seo.home_title || seo.default_title || platformName;
+    const metaDescription = seo.home_description || seo.default_description || platform?.tagline || '';
+    const metaImage = seo.default_image || platformDarkLogoUrl || '';
 
     function handleStartProaktifClick(e) {
         if (auth?.user) return;
@@ -111,7 +115,16 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-[#eceff3] text-[#0f1115] font-['Inter',sans-serif]">
             <AnalyticsTracker />
-            <Head title={platformName}>
+            <Head title={metaTitle}>
+                {metaDescription && <meta name="description" content={metaDescription} />}
+                <meta property="og:title" content={metaTitle} />
+                {metaDescription && <meta property="og:description" content={metaDescription} />}
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta property="og:type" content="website" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                {metaDescription && <meta name="twitter:description" content={metaDescription} />}
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
                 <link

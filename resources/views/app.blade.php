@@ -6,6 +6,70 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        @php
+            $platformName = (string) \App\Models\Setting::get('platform_name', config('app.name', 'Free LMS'));
+            $platformTagline = (string) \App\Models\Setting::get('platform_tagline', '');
+
+            $seoDefaultTitle = trim((string) \App\Models\Setting::get('seo_default_title', ''));
+            $seoDefaultDescription = trim((string) \App\Models\Setting::get('seo_default_description', ''));
+            $seoDefaultImage = trim((string) \App\Models\Setting::get('seo_default_image', ''));
+            $seoHomeTitle = trim((string) \App\Models\Setting::get('seo_home_title', ''));
+            $seoHomeDescription = trim((string) \App\Models\Setting::get('seo_home_description', ''));
+            $seoCoursesTitle = trim((string) \App\Models\Setting::get('seo_courses_title', ''));
+            $seoCoursesDescription = trim((string) \App\Models\Setting::get('seo_courses_description', ''));
+
+            $metaTitle = $seoDefaultTitle !== '' ? $seoDefaultTitle : $platformName;
+            $metaDescription = $seoDefaultDescription !== '' ? $seoDefaultDescription : $platformTagline;
+            $metaImage = $seoDefaultImage;
+            $metaType = 'website';
+
+            if (request()->routeIs('home')) {
+                $metaTitle = $seoHomeTitle !== '' ? $seoHomeTitle : $metaTitle;
+                $metaDescription = $seoHomeDescription !== '' ? $seoHomeDescription : $metaDescription;
+            }
+
+            if (request()->routeIs('courses.index')) {
+                $metaTitle = $seoCoursesTitle !== '' ? $seoCoursesTitle : $metaTitle;
+                $metaDescription = $seoCoursesDescription !== '' ? $seoCoursesDescription : $metaDescription;
+            }
+
+            if (request()->routeIs('courses.show')) {
+                $courseParam = request()->route('course');
+                $course = $courseParam instanceof \App\Models\Course
+                    ? $courseParam
+                    : \App\Models\Course::query()->where('slug', (string) $courseParam)->first();
+
+                if ($course && $course->status === 'published') {
+                    $metaTitle = trim((string) ($course->meta_title ?: $course->title ?: $metaTitle));
+                    $metaDescription = trim((string) ($course->meta_description ?: $metaDescription));
+                    $metaImage = trim((string) ($course->meta_image ?: $course->cover_image ?: $metaImage));
+                    $metaType = 'article';
+                }
+            }
+        @endphp
+
+        @if ($metaDescription !== '')
+            <meta name="description" content="{{ $metaDescription }}">
+        @endif
+        <meta property="og:title" content="{{ $metaTitle }}">
+        @if ($metaDescription !== '')
+            <meta property="og:description" content="{{ $metaDescription }}">
+        @endif
+        @if ($metaImage !== '')
+            <meta property="og:image" content="{{ $metaImage }}">
+        @endif
+        <meta property="og:type" content="{{ $metaType }}">
+        <meta property="og:url" content="{{ request()->fullUrl() }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $metaTitle }}">
+        @if ($metaDescription !== '')
+            <meta name="twitter:description" content="{{ $metaDescription }}">
+        @endif
+        @if ($metaImage !== '')
+            <meta name="twitter:image" content="{{ $metaImage }}">
+        @endif
+        <link rel="canonical" href="{{ request()->url() }}">
+
         <!-- Favicon -->
         @php
             $faviconPath = \App\Models\Setting::get('favicon_path');

@@ -759,6 +759,8 @@ function CourseDetailsForm({ course, readOnly = false }) {
         meta_title:        course.meta_title ?? '',
         meta_description:  course.meta_description ?? '',
         meta_image:        course.meta_image ?? '',
+        meta_image_file:   null,
+        meta_image_clear:  false,
     });
 
     function handleSubmit(e) {
@@ -872,12 +874,18 @@ function CourseDetailsForm({ course, readOnly = false }) {
                         <p className="text-xs text-muted-foreground text-right mt-0.5">{data.meta_description.length}/500</p>
                     </Field>
 
-                    <Field label="OG Image URL" error={errors.meta_image} hint="The image shown when shared on social media. Defaults to cover image if blank.">
-                        <Input
+                    <Field label="OG Image" error={errors.meta_image || errors.meta_image_file} hint="The image shown when shared on social media. Defaults to cover image if blank.">
+                        <ImageUpload
                             value={data.meta_image}
-                            onChange={(e) => setData('meta_image', e.target.value)}
-                            placeholder="https://…"
-                            type="url"
+                            onFileChange={(file) => {
+                                setData('meta_image_file', file);
+                                setData('meta_image_clear', false);
+                            }}
+                            onClear={() => {
+                                setData('meta_image', '');
+                                setData('meta_image_file', null);
+                                setData('meta_image_clear', true);
+                            }}
                         />
                     </Field>
 

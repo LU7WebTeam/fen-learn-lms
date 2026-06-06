@@ -21,6 +21,7 @@ import {
     Globe,
     Mail,
     BarChart3,
+    Search,
     ScrollText,
     Award,
     Wrench,
@@ -244,6 +245,9 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                         <TabsTrigger value="analytics" className="gap-1.5">
                             <BarChart3 className="h-3.5 w-3.5" />Analytics
                         </TabsTrigger>
+                        <TabsTrigger value="seo" className="gap-1.5">
+                            <Search className="h-3.5 w-3.5" />SEO
+                        </TabsTrigger>
                         <TabsTrigger value="logging" className="gap-1.5">
                             <ScrollText className="h-3.5 w-3.5" />Logging
                         </TabsTrigger>
@@ -307,6 +311,11 @@ export default function SettingsIndex({ settings, customFonts = [] }) {
                     {/* ── ANALYTICS ── */}
                     <TabsContent value="analytics">
                         <AnalyticsTab settings={settings} onSave={submitGroup} processing={processing} />
+                    </TabsContent>
+
+                    {/* ── SEO ── */}
+                    <TabsContent value="seo">
+                        <SeoTab settings={settings} onSave={submitGroup} processing={processing} />
                     </TabsContent>
 
                     {/* ── LOGGING ── */}
@@ -575,6 +584,117 @@ function AnalyticsTab({ settings, onSave, processing }) {
 
                 <div className="flex justify-end pt-2">
                     <Button onClick={save} disabled={processing}>Save Analytics Settings</Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function SeoTab({ settings, onSave, processing }) {
+    const [defaultTitle, setDefaultTitle] = useState(settings.seo_default_title || '');
+    const [defaultDescription, setDefaultDescription] = useState(settings.seo_default_description || '');
+    const [defaultImage, setDefaultImage] = useState(settings.seo_default_image || '');
+    const [defaultImageFile, setDefaultImageFile] = useState(null);
+    const [defaultImageClear, setDefaultImageClear] = useState(false);
+    const [homeTitle, setHomeTitle] = useState(settings.seo_home_title || '');
+    const [homeDescription, setHomeDescription] = useState(settings.seo_home_description || '');
+    const [coursesTitle, setCoursesTitle] = useState(settings.seo_courses_title || '');
+    const [coursesDescription, setCoursesDescription] = useState(settings.seo_courses_description || '');
+
+    function save() {
+        onSave('seo', {
+            seo_default_title: defaultTitle,
+            seo_default_description: defaultDescription,
+            seo_default_image: defaultImage,
+            seo_default_image_clear: defaultImageClear ? '1' : '0',
+            seo_home_title: homeTitle,
+            seo_home_description: homeDescription,
+            seo_courses_title: coursesTitle,
+            seo_courses_description: coursesDescription,
+        }, {
+            seo_default_image_file: defaultImageFile,
+        });
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Search className="h-4 w-4" /> Search Engine Optimization
+                </CardTitle>
+                <CardDescription>
+                    Configure default metadata for public pages. Course-specific SEO is managed in each course editor.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="seo_default_title">Default Meta Title</Label>
+                    <Input id="seo_default_title" value={defaultTitle} onChange={(e) => setDefaultTitle(e.target.value)} placeholder="Used when no page-specific title is set" />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="seo_default_description">Default Meta Description</Label>
+                    <textarea
+                        id="seo_default_description"
+                        className="min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        value={defaultDescription}
+                        onChange={(e) => setDefaultDescription(e.target.value)}
+                        placeholder="Used when no page-specific description is set"
+                    />
+                </div>
+
+                <ImageUploadField
+                    label="Default OG Image"
+                    description="Used for social sharing when a page-specific image is not set. Uploaded to S3."
+                    currentUrl={defaultImage || null}
+                    onFileChange={(file) => {
+                        setDefaultImageFile(file);
+                        setDefaultImageClear(false);
+                    }}
+                    onClear={() => {
+                        setDefaultImage('');
+                        setDefaultImageFile(null);
+                        setDefaultImageClear(true);
+                    }}
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                />
+
+                <Separator />
+
+                <div className="space-y-2">
+                    <Label htmlFor="seo_home_title">Homepage Meta Title</Label>
+                    <Input id="seo_home_title" value={homeTitle} onChange={(e) => setHomeTitle(e.target.value)} placeholder="Leave blank to use default title" />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="seo_home_description">Homepage Meta Description</Label>
+                    <textarea
+                        id="seo_home_description"
+                        className="min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        value={homeDescription}
+                        onChange={(e) => setHomeDescription(e.target.value)}
+                        placeholder="Leave blank to use default description"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="seo_courses_title">Courses Listing Meta Title</Label>
+                    <Input id="seo_courses_title" value={coursesTitle} onChange={(e) => setCoursesTitle(e.target.value)} placeholder="Leave blank to use default title" />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="seo_courses_description">Courses Listing Meta Description</Label>
+                    <textarea
+                        id="seo_courses_description"
+                        className="min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        value={coursesDescription}
+                        onChange={(e) => setCoursesDescription(e.target.value)}
+                        placeholder="Leave blank to use default description"
+                    />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <Button onClick={save} disabled={processing}>Save SEO Settings</Button>
                 </div>
             </CardContent>
         </Card>

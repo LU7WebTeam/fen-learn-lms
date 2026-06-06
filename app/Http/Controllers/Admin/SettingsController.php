@@ -107,6 +107,13 @@ class SettingsController extends Controller
         'ga4_measurement_id'         => '',
         'ga4_anonymize_ip'           => '1',
         'ga4_debug_mode'             => '0',
+        'seo_default_title'          => '',
+        'seo_default_description'    => '',
+        'seo_default_image'          => '',
+        'seo_home_title'             => '',
+        'seo_home_description'       => '',
+        'seo_courses_title'          => '',
+        'seo_courses_description'    => '',
         'system_logging_enabled'     => '1',
         'system_log_level'           => 'info',
         'system_log_retention_days'  => '180',
@@ -166,6 +173,7 @@ class SettingsController extends Controller
             'role_access'  => $this->saveRoleAccess($request),
             'security'     => $this->saveSecurity($request),
             'analytics'    => $this->saveAnalytics($request),
+            'seo'          => $this->saveSeo($request),
             'logging'      => $this->saveLogging($request),
             default        => null,
         };
@@ -957,6 +965,61 @@ class SettingsController extends Controller
         Setting::set('ga4_measurement_id', $measurementId);
         Setting::set('ga4_anonymize_ip', $validated['ga4_anonymize_ip']);
         Setting::set('ga4_debug_mode', $validated['ga4_debug_mode']);
+    }
+
+    private function saveSeo(Request $request): void
+    {
+        $validated = $request->validate([
+            'seo_default_title' => 'nullable|string|max:255',
+            'seo_default_description' => 'nullable|string|max:500',
+            'seo_default_image' => 'nullable|string|max:1000',
+            'seo_default_image_file' => 'nullable|file|image|max:5120',
+            'seo_default_image_clear' => 'nullable|in:0,1',
+            'seo_home_title' => 'nullable|string|max:255',
+            'seo_home_description' => 'nullable|string|max:500',
+            'seo_courses_title' => 'nullable|string|max:255',
+            'seo_courses_description' => 'nullable|string|max:500',
+        ]);
+
+        $existingImageUrl = trim((string) Setting::get('seo_default_image', ''));
+        $clearDefaultImage = ($validated['seo_default_image_clear'] ?? '0') === '1';
+
+        if ($request->hasFile('seo_default_image_file')) {
+            if ($existingImageUrl !== '') {
+                $this->deleteS3FileByUrl($existingImageUrl);
+            }
+            $path = $request->file('seo_default_image_file')->store('seo', 's3');
+            Setting::set('seo_default_image', Storage::disk('s3')->url($path));
+        } elseif ($clearDefaultImage) {
+            if ($existingImageUrl !== '') {
+                $this->deleteS3FileByUrl($existingImageUrl);
+            }
+            Setting::set('seo_default_image', '');
+        } else {
+            Setting::set('seo_default_image', trim((string) ($validated['seo_default_image'] ?? '')));
+        }
+
+        Setting::set('seo_default_title', trim((string) ($validated['seo_default_title'] ?? '')));
+        Setting::set('seo_default_description', trim((string) ($validated['seo_default_description'] ?? '')));
+        Setting::set('seo_home_title', trim((string) ($validated['seo_home_title'] ?? '')));
+        Setting::set('seo_home_description', trim((string) ($validated['seo_home_description'] ?? '')));
+        Setting::set('seo_courses_title', trim((string) ($validated['seo_courses_title'] ?? '')));
+        Setting::set('seo_courses_description', trim((string) ($validated['seo_courses_description'] ?? '')));
+    }
+
+    private function deleteS3FileByUrl(string $url): void
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return;
+        }
+
+        $parsed = parse_url($url);
+        $path = ltrim((string) ($parsed['path'] ?? ''), '/');
+        if ($path === '') {
+            return;
+        }
+
+        Storage::disk('s3')->delete($path);
     }
 
     private function saveLogging(Request $request): void

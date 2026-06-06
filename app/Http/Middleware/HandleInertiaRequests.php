@@ -37,6 +37,15 @@ class HandleInertiaRequests extends Middleware
                 'anonymize_ip' => Setting::get('ga4_anonymize_ip', '1') === '1',
                 'debug_mode' => Setting::get('ga4_debug_mode', '0') === '1',
             ];
+            $seoConfig = [
+                'default_title' => trim((string) Setting::get('seo_default_title', '')),
+                'default_description' => trim((string) Setting::get('seo_default_description', '')),
+                'default_image' => trim((string) Setting::get('seo_default_image', '')),
+                'home_title' => trim((string) Setting::get('seo_home_title', '')),
+                'home_description' => trim((string) Setting::get('seo_home_description', '')),
+                'courses_title' => trim((string) Setting::get('seo_courses_title', '')),
+                'courses_description' => trim((string) Setting::get('seo_courses_description', '')),
+            ];
 
             if (!in_array($defaultLocale, ['en', 'ms'], true)) {
                 $defaultLocale = 'en';
@@ -73,6 +82,15 @@ class HandleInertiaRequests extends Middleware
                 'anonymize_ip' => true,
                 'debug_mode' => false,
             ];
+            $seoConfig = [
+                'default_title' => '',
+                'default_description' => '',
+                'default_image' => '',
+                'home_title' => '',
+                'home_description' => '',
+                'courses_title' => '',
+                'courses_description' => '',
+            ];
 
             $locale = (string) $request->session()->get('locale', 'en');
         }
@@ -100,6 +118,7 @@ class HandleInertiaRequests extends Middleware
             'integrations' => [
                 'captcha' => $captchaConfig,
                 'analytics' => $analyticsConfig,
+                'seo' => $seoConfig,
             ],
             'profileOptions' => [
                 'organizationOptions' => ProfileOrganizationOptions::options(),

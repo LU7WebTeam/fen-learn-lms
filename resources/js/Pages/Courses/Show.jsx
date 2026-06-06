@@ -100,9 +100,10 @@ function LessonRow({ lesson, completed, courseSlug, enrolled, completedIds }) {
 }
 
 export default function CourseShow({ course, totalLessons, enrollment, completedIds, firstLessonId, learnerActivity = [] }) {
-    const { auth, locale } = usePage().props;
+    const { auth, locale, integrations, platform } = usePage().props;
     const Layout = auth?.user ? AuthenticatedLayout : PublicLayout;
     const t = useT();
+    const seo = integrations?.seo ?? {};
 
     const courseTitle       = tl(course, 'title', locale);
     const courseDescription = tl(course, 'description', locale);
@@ -114,9 +115,9 @@ export default function CourseShow({ course, totalLessons, enrollment, completed
 
     const enrolled = !!enrollment;
 
-    const metaTitle = course.meta_title || courseTitle;
-    const metaDesc  = course.meta_description || (typeof courseDescription === 'string' ? courseDescription : '');
-    const metaImage = course.meta_image || course.cover_image || '';
+    const metaTitle = course.meta_title || seo.default_title || courseTitle;
+    const metaDesc  = course.meta_description || seo.default_description || (typeof courseDescription === 'string' ? courseDescription : '') || platform?.tagline || '';
+    const metaImage = course.meta_image || course.cover_image || seo.default_image || platform?.logo_dark_url || platform?.logo_url || '';
 
     return (
         <Layout>
