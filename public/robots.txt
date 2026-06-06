@@ -22,3 +22,10 @@ Disallow: /site-lock
 
 # Block temporary/development pages.
 Disallow: /backup-landing
+
+# Explicit allowlist for social scrapers used by sharing debuggers.
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /

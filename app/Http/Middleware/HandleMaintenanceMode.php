@@ -28,6 +28,14 @@ class HandleMaintenanceMode
         '/site-lock',
     ];
 
+    private array $crawlerAllowedPrefixes = [
+        '/',
+        '/courses',
+        '/about',
+        '/terms',
+        '/privacy',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         if ($this->shouldBypassForAdmin($request)) {
@@ -41,7 +49,11 @@ class HandleMaintenanceMode
             return $next($request);
         }
 
-        if ($siteLockEnabled === '1' && !$this->shouldBypassSiteLock($request) && !$this->hasValidSiteLockSession($request)) {
+        if ($siteLockEnabled === '1'
+            && !$this->shouldBypassSiteLock($request)
+            && !$this->hasValidSiteLockSession($request)
+            && !$this->shouldBypassSiteLockForCrawler($request)
+        ) {
             if ($request->header('X-Inertia')) {
                 return Inertia::location(route('site-lock.show'));
             }
@@ -108,6 +120,58 @@ class HandleMaintenanceMode
         $currentHash = (string) Setting::get('site_lock_password_hash', '');
 
         return $sessionHash !== '' && hash_equals($sessionHash, $currentHash);
+    }
+
+    private function shouldBypassSiteLockForCrawler(Request $request): bool
+    {
+        if (!$request->isMethod('GET') && !$request->isMethod('HEAD')) {
+            return false;
+        }
+
+        $ua = strtolower((string) $request->userAgent());
+        if ($ua === '') {
+            return false;
+        }
+
+        $crawlerTokens = [
+            'facebookexternalhit',
+            'facebot',
+            'twitterbot',
+            'linkedinbot',
+            'slackbot',
+            'discordbot',
+            'whatsapp',
+            'googlebot',
+            'bingbot',
+        ];
+
+        $isCrawler = false;
+        foreach ($crawlerTokens as $token) {
+            if (str_contains($ua, $token)) {
+                $isCrawler = true;
+                break;
+            }
+        }
+
+        if (!$isCrawler) {
+            return false;
+        }
+
+        $path = '/' . ltrim($request->path(), '/');
+        foreach ($this->crawlerAllowedPrefixes as $prefix) {
+            if ($prefix === '/') {
+                if ($path === '/') {
+                    return true;
+                }
+                continue;
+            }
+
+            if (str_starts_with($path, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }
