@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import LangSwitcher from '@/Components/LangSwitcher';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { useT } from '@/lib/i18n';
 import { useEffect, useState } from 'react';
 
@@ -37,6 +38,7 @@ export default function Terms() {
     return (
         <>
             <Head title={t('terms.title', { name })} />
+            <AnalyticsTracker />
 
             <div className="min-h-screen bg-[#eceff3] text-[#0f1115]">
                 <header className="sticky top-0 z-50 px-5 pt-4 2xl:px-8">

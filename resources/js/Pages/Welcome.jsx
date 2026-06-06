@@ -9,6 +9,7 @@ import {
     ChevronDown,
 } from 'lucide-react';
 import ThemeToggleButton from '@/Components/ThemeToggleButton';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 
 function Heading({ as: Tag = 'h2', className = '', children }) {
     return <Tag className={`font-heading font-bold tracking-tight ${className}`}>{children}</Tag>;
@@ -473,4 +474,6 @@ export default function Welcome({ auth, platform }) {
             </div>
         </>
     );
+
+            <AnalyticsTracker />
 }

@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { GraduationCap, BookOpen, Award, Globe } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { useT } from '@/lib/i18n';
 
 export default function About() {
@@ -17,6 +18,7 @@ export default function About() {
     return (
         <>
             <Head title={t('about.title', { name })} />
+            <AnalyticsTracker />
 
             <div className="min-h-screen bg-white text-slate-600">
                 <nav className="flex justify-between items-center py-5 px-8 max-w-7xl mx-auto bg-white">

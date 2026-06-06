@@ -8,6 +8,7 @@ import {
     CheckCircle,
 } from 'lucide-react';
 import LangSwitcher from '@/Components/LangSwitcher';
+import AnalyticsTracker from '@/Components/AnalyticsTracker';
 import { useT } from '@/lib/i18n';
 import { useEffect, useState } from 'react';
 import { Button } from '@/Components/ui/button';
@@ -109,6 +110,7 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-[#eceff3] text-[#0f1115] font-['Inter',sans-serif]">
+            <AnalyticsTracker />
             <Head title={platformName}>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
