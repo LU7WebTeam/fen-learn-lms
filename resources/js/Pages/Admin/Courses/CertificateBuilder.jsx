@@ -483,6 +483,7 @@ export default function CertificateBuilder({
                                             value={tpl.background?.image_url || ''}
                                             onChange={url => setNested('background', { image_url: url })}
                                             aspectRatio="h-36"
+                                            disabled={readOnly}
                                         />
                                         <p className="text-xs text-muted-foreground">
                                             Recommended: 1920×1080 px or larger for best quality.

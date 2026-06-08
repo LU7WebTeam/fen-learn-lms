@@ -70,7 +70,15 @@ async function uploadImageToBN(file) {
         },
         body: formData,
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+        if (res.status === 403) {
+            throw new Error('You do not have permission to upload images.');
+        }
+        if (res.status === 419) {
+            throw new Error('Your session expired. Please refresh and sign in again.');
+        }
+        throw new Error('Upload failed');
+    }
     const json = await res.json();
     return json.url.startsWith('http') ? json.url : (window.location.origin + json.url);
 }

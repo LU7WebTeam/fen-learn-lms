@@ -15,12 +15,20 @@ export async function uploadImageFile(file) {
         headers: { 'X-XSRF-TOKEN': getCsrfToken() },
         body: formData,
     });
-    if (!res.ok) throw new Error('Upload failed');
+    if (!res.ok) {
+        if (res.status === 403) {
+            throw new Error('You do not have permission to upload images.');
+        }
+        if (res.status === 419) {
+            throw new Error('Your session expired. Please refresh and sign in again.');
+        }
+        throw new Error('Upload failed');
+    }
     const json = await res.json();
     return json.url;
 }
 
-export default function ImageUploadWithUrl({ value, onChange, className = '', aspectRatio = 'h-48' }) {
+export default function ImageUploadWithUrl({ value, onChange, className = '', aspectRatio = 'h-48', disabled = false }) {
     const inputRef  = useRef();
     const [loading, setLoading] = useState(false);
     const [error,   setError]   = useState(null);
@@ -28,14 +36,14 @@ export default function ImageUploadWithUrl({ value, onChange, className = '', as
     const displaySrc = typeof value === 'string' && value ? value : null;
 
     async function handleFile(file) {
-        if (!file) return;
+        if (!file || disabled) return;
         setLoading(true);
         setError(null);
         try {
             const url = await uploadImageFile(file);
             onChange(url);
-        } catch {
-            setError('Upload failed — try again.');
+        } catch (err) {
+            setError(err?.message || 'Upload failed — try again.');
         } finally {
             setLoading(false);
             if (inputRef.current) inputRef.current.value = '';
@@ -44,6 +52,7 @@ export default function ImageUploadWithUrl({ value, onChange, className = '', as
 
     function handleDrop(e) {
         e.preventDefault();
+        if (disabled) return;
         const file = e.dataTransfer.files[0];
         if (file && file.type.startsWith('image/')) handleFile(file);
     }
@@ -67,8 +76,8 @@ export default function ImageUploadWithUrl({ value, onChange, className = '', as
                 </div>
             ) : (
                 <div
-                    className={`flex ${aspectRatio} cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-muted-foreground transition-colors hover:border-primary hover:text-primary ${loading ? 'opacity-60 pointer-events-none' : ''}`}
-                    onClick={() => !loading && inputRef.current?.click()}
+                    className={`flex ${aspectRatio} cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-muted-foreground transition-colors hover:border-primary hover:text-primary ${(loading || disabled) ? 'opacity-60 pointer-events-none' : ''}`}
+                    onClick={() => !loading && !disabled && inputRef.current?.click()}
                     onDrop={handleDrop}
                     onDragOver={(e) => e.preventDefault()}
                 >
@@ -86,7 +95,7 @@ export default function ImageUploadWithUrl({ value, onChange, className = '', as
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={loading}
+                    disabled={loading || disabled}
                     onClick={() => inputRef.current?.click()}
                 >
                     {loading
@@ -101,6 +110,7 @@ export default function ImageUploadWithUrl({ value, onChange, className = '', as
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
                 className="hidden"
+                disabled={disabled}
                 onChange={(e) => handleFile(e.target.files[0])}
             />
         </div>

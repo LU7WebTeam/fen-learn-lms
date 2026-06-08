@@ -7,6 +7,7 @@ use App\Models\CourseCertification;
 use App\Models\Enrollment;
 use App\Models\EnrollmentCertification;
 use App\Models\CustomFont;
+use App\Models\User;
 use App\Support\CourseCertificationMatcher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
