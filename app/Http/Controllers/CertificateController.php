@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseCertification;
 use App\Models\Enrollment;
 use App\Models\EnrollmentCertification;
 use App\Models\CustomFont;
+use App\Support\CourseCertificationMatcher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Response;
@@ -31,10 +33,11 @@ class CertificateController extends Controller
 
         if ($issued && $issued->enrollment && $issued->enrollment->completed_at) {
             $enrollment = $issued->enrollment;
-            $template = $issued->template_snapshot_json
-                ?? $issued->certification?->template_json
-                ?? $enrollment->course->certificate_template
-                ?? Course::defaultCertificateTemplate();
+            [$selectedCertification, $template] = $this->resolveDisplayCertificationContext(
+                $enrollment->user,
+                $enrollment->course,
+                $issued->template_snapshot_json
+            );
 
             $template = $this->applySignatoryFallbacks($template);
             $customFont = $this->resolveCustomFont($template);
@@ -115,10 +118,11 @@ class CertificateController extends Controller
             $enrollment = $issued->enrollment;
             $verifyUrl = config('app.url') . '/certificate/' . $uuid;
 
-            $template = $issued->template_snapshot_json
-                ?? $issued->certification?->template_json
-                ?? $enrollment->course->certificate_template
-                ?? Course::defaultCertificateTemplate();
+            [, $template] = $this->resolveDisplayCertificationContext(
+                $enrollment->user,
+                $enrollment->course,
+                $issued->template_snapshot_json
+            );
 
             $template = $this->applySignatoryFallbacks($template);
             $customFont = $this->resolveCustomFont($template);
@@ -182,6 +186,24 @@ class CertificateController extends Controller
         return $pdf->download($filename);
     }
 
+    private function resolveDisplayCertificationContext(User $user, Course $course, ?array $fallbackTemplate = null): array
+    {
+        $activeCertifications = $course->certifications()
+            ->where('is_active', true)
+            ->get();
+
+        $matcher = new CourseCertificationMatcher();
+        $matched = $matcher->selectForUser($user, $activeCertifications);
+        $selected = $matched ?: $activeCertifications->firstWhere('code', 'default') ?: $activeCertifications->first();
+
+        $template = $selected?->template_json
+            ?? $fallbackTemplate
+            ?? $course->certificate_template
+            ?? Course::defaultCertificateTemplate();
+
+        return [$selected, $template];
+    }
+
     private function applySignatoryFallbacks(array $template): array
     {
         $signatory = $template['signatory'] ?? [];
@@ -197,6 +219,38 @@ class CertificateController extends Controller
             })->all();
 
         return $template;
+    }
+
+    private function resolveCertificateTemplateContext(Enrollment $enrollment, ?EnrollmentCertification $issued = null): array
+    {
+        $activeCertifications = $enrollment->course->certifications()
+            ->where('is_active', true)
+            ->get();
+
+        $matcher = new CourseCertificationMatcher();
+        $matched = $matcher->selectForUser($enrollment->user, $activeCertifications);
+        $selected = $matched ?: $activeCertifications->firstWhere('code', 'default') ?: $activeCertifications->first();
+
+        if ($selected instanceof CourseCertification) {
+            $template = $selected->template_json
+                ?? $enrollment->course->certificate_template
+                ?? Course::defaultCertificateTemplate();
+
+            return [
+                'selected' => $selected,
+                'template' => $template,
+            ];
+        }
+
+        $template = $issued?->template_snapshot_json
+            ?? $issued?->certification?->template_json
+            ?? $enrollment->course->certificate_template
+            ?? Course::defaultCertificateTemplate();
+
+        return [
+            'selected' => null,
+            'template' => $template,
+        ];
     }
 
     private function resolveCustomFont(array $template): ?CustomFont

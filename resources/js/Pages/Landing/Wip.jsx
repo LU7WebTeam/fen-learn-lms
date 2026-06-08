@@ -58,10 +58,6 @@ const modules = [
 
 const faqs = [
     {
-        q: 'What do I need to register?',
-        a: 'Students: Full name, email, student ID, university or institution, and field of study. Individuals: Full name and email.',
-    },
-    {
         q: 'What if I forget my password?',
         a: 'You can reset it easily using the Forgot Password option.',
     },
@@ -71,11 +67,11 @@ const faqs = [
     },
     {
         q: 'What is the passing score?',
-        a: 'You need at least 60% to earn a certificate. You may repeat the pre survey and post survey if you have not achieved the required score.',
+        a: 'You need at least 60% to earn a certificate. You may repeat the post survey if you have not achieved the required score.',
     },
     {
         q: 'How do I get my certificate?',
-        a: 'You can download it from the platform or receive it by email.',
+        a: 'You will receive a course completion email with a link to download your certificate from the course dashboard.',
     },
 ];
 

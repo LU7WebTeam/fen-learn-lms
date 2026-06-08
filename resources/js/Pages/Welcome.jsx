@@ -349,11 +349,6 @@ function Features() {
 
 const faqs = [
     {
-        question: '1. What do I need to register?',
-        answer: 'Students: Full name, email, student ID, university/institution, field of study',
-        answer2: 'Individuals: Full name and email',
-    },
-    {
         question: '2. What if I forget my password?',
         answer: 'You can reset it easily using the "Forgot Password" option.',
     },
@@ -363,11 +358,11 @@ const faqs = [
     },
     {
         question: '4. What is the passing score?',
-        answer: 'You need at least 60% to earn a certificate. You may repeat the pre survey and post survey if you have not achieved the required score.',
+        answer: 'You need at least 60% to earn a certificate. You may repeat the post survey if you have not achieved the required score.',
     },
     {
         question: '5. How do I get my certificate?',
-        answer: 'You can download it from the platform or receive it by email.',
+        answer: 'You will receive a course completion email with a link to download your certificate from the course dashboard.',
     },
 ];
 

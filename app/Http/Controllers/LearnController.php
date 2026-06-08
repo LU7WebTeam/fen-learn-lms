@@ -545,7 +545,7 @@ class LearnController extends Controller
 
         $matcher = new CourseCertificationMatcher();
         $matched = $matcher->selectForUser($user, $activeCertifications);
-        $selected = $matched ?: $activeCertifications->first();
+        $selected = $matched ?: $activeCertifications->firstWhere('code', 'default') ?: $activeCertifications->first();
 
         $template = $selected?->template_json
             ?? $course->certificate_template

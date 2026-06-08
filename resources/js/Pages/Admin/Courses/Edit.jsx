@@ -9,6 +9,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import SearchableSelect from '@/Components/SearchableSelect';
 import {
     Dialog,
     DialogContent,
@@ -23,6 +24,7 @@ import CertificateBuilder from './CertificateBuilder';
 import CourseDashboard from './CourseDashboard';
 import BlockNoteEditor from '@/Components/BlockNoteEditor';
 import { useState, useEffect } from 'react';
+import { useT } from '@/lib/i18n';
 import {
     Loader2, Plus, Pencil, Trash2, GripVertical, Copy,
     Video, FileText, HelpCircle, ChevronDown, ChevronRight, Check,
@@ -63,6 +65,38 @@ const LESSON_ICONS = {
     quiz:  HelpCircle,
     pdf:   FileText,
 };
+
+const MALAYSIAN_STATES = [
+    'Johor',
+    'Kedah',
+    'Kelantan',
+    'Melaka',
+    'Negeri Sembilan',
+    'Pahang',
+    'Perak',
+    'Perlis',
+    'Pulau Pinang',
+    'Sabah',
+    'Sarawak',
+    'Selangor',
+    'Terengganu',
+    'Wilayah Persekutuan Kuala Lumpur',
+    'Wilayah Persekutuan Labuan',
+    'Wilayah Persekutuan Putrajaya',
+];
+
+const OCCUPATIONS = [
+    { value: 'student', labelKey: 'profile.info.occupation.student' },
+    { value: 'government', labelKey: 'profile.info.occupation.government' },
+    { value: 'private', labelKey: 'profile.info.occupation.private' },
+    { value: 'self_employed', labelKey: 'profile.info.occupation.self_employed' },
+    { value: 'professional', labelKey: 'profile.info.occupation.professional' },
+    { value: 'academic', labelKey: 'profile.info.occupation.academic' },
+    { value: 'homemaker', labelKey: 'profile.info.occupation.homemaker' },
+    { value: 'retired', labelKey: 'profile.info.occupation.retired' },
+    { value: 'unemployed', labelKey: 'profile.info.occupation.unemployed' },
+    { value: 'other', labelKey: 'profile.info.occupation.other' },
+];
 
 function Field({ label, error, children, hint }) {
     return (
@@ -1336,6 +1370,7 @@ function CourseIntroductionForm({ course, readOnly = false }) {
 
 export default function EditCourse({ course, flash, defaultTemplate, analytics, students, lessonStats, customFonts, learnerActivityFeed, certifications = [] }) {
     const { url, auth } = usePage().props;
+    const t = useT();
     const isCourseViewer = auth?.user?.role === 'course_viewer';
     const [addingSection, setAddingSection] = useState(false);
     const [sections, setSections] = useState(course.sections.sort((a, b) => a.order - b.order));
@@ -1350,10 +1385,10 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
         name: '',
         code: '',
         priority: 100,
-        occupation_values: '',
+        occupation_values: [],
         organization_values: '',
         organization_mode: 'exact',
-        state_values: '',
+        state_values: [],
         age_min: '',
         age_max: '',
     });
@@ -1363,10 +1398,10 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
         code: '',
         priority: 100,
         is_active: true,
-        occupation_values: '',
+        occupation_values: [],
         organization_values: '',
         organization_mode: 'exact',
-        state_values: '',
+        state_values: [],
         age_min: '',
         age_max: '',
     });
@@ -1413,16 +1448,20 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
             code: selectedCertification.code ?? '',
             priority: selectedCertification.priority ?? 100,
             is_active: !!selectedCertification.is_active,
-            occupation_values: (occupation.values ?? []).join(', '),
+            occupation_values: occupation.values ?? [],
             organization_values: (organization.values ?? []).join(', '),
             organization_mode: organization.mode ?? 'exact',
-            state_values: (state.values ?? []).join(', '),
+            state_values: state.values ?? [],
             age_min: age.min ?? '',
             age_max: age.max ?? '',
         });
     }, [selectedCertificationId]);
 
-    function csvToArray(value) {
+    function normalizeMultiSelectValues(value) {
+        if (Array.isArray(value)) {
+            return value.map(item => String(item).trim()).filter(Boolean);
+        }
+
         return String(value ?? '')
             .split(',')
             .map(part => part.trim())
@@ -1430,9 +1469,9 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
     }
 
     function buildConditionsFromForm(values) {
-        const occupationValues = csvToArray(values.occupation_values);
-        const organizationValues = csvToArray(values.organization_values);
-        const stateValues = csvToArray(values.state_values);
+        const occupationValues = normalizeMultiSelectValues(values.occupation_values);
+        const organizationValues = normalizeMultiSelectValues(values.organization_values);
+        const stateValues = normalizeMultiSelectValues(values.state_values);
         const hasAgeMin = values.age_min !== '' && values.age_min !== null;
         const hasAgeMax = values.age_max !== '' && values.age_max !== null;
 
@@ -1478,6 +1517,11 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
             },
         });
     }
+
+    const occupationConditionOptions = OCCUPATIONS.map((occupation) => ({
+        value: occupation.value,
+        label: t(occupation.labelKey),
+    }));
 
     function handleSaveCertificationSettings(e) {
         e.preventDefault();
@@ -1791,13 +1835,23 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                                     </div>
                                                 </div>
                                                 <Separator />
-                                                <p className="text-xs font-medium text-muted-foreground">Conditions (comma-separated)</p>
+                                                <p className="text-xs font-medium text-muted-foreground">Conditions</p>
                                                 <div className="space-y-1.5">
-                                                    <Label>Occupation</Label>
-                                                    <Input value={certificationSettingsForm.data.occupation_values} onChange={(e) => certificationSettingsForm.setData('occupation_values', e.target.value)} disabled={isCourseViewer} />
+                                                    <Label>{t('profile.info.occupation')}</Label>
+                                                    <SearchableSelect
+                                                        multiple
+                                                        options={occupationConditionOptions}
+                                                        values={certificationSettingsForm.data.occupation_values}
+                                                        onValuesChange={(values) => certificationSettingsForm.setData('occupation_values', values)}
+                                                        placeholder={t('profile.info.select_occupation')}
+                                                        searchPlaceholder={t('profile.info.select_occupation')}
+                                                        className="border-slate-300 bg-slate-50 text-gray-900 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                                                        contentClassName="z-50"
+                                                        disabled={isCourseViewer}
+                                                    />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label>Organization</Label>
+                                                    <Label>{t('profile.info.organization')}</Label>
                                                     <Input value={certificationSettingsForm.data.organization_values} onChange={(e) => certificationSettingsForm.setData('organization_values', e.target.value)} disabled={isCourseViewer} />
                                                 </div>
                                                 <div className="space-y-1.5">
@@ -1811,8 +1865,18 @@ export default function EditCourse({ course, flash, defaultTemplate, analytics, 
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label>Location/State</Label>
-                                                    <Input value={certificationSettingsForm.data.state_values} onChange={(e) => certificationSettingsForm.setData('state_values', e.target.value)} disabled={isCourseViewer} />
+                                                    <Label>{t('profile.info.state')}</Label>
+                                                    <SearchableSelect
+                                                        multiple
+                                                        options={MALAYSIAN_STATES}
+                                                        values={certificationSettingsForm.data.state_values}
+                                                        onValuesChange={(values) => certificationSettingsForm.setData('state_values', values)}
+                                                        placeholder={t('profile.info.select_state')}
+                                                        searchPlaceholder={t('profile.info.select_state')}
+                                                        className="border-slate-300 bg-slate-50 text-gray-900 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                                                        contentClassName="z-50"
+                                                        disabled={isCourseViewer}
+                                                    />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div className="space-y-1.5">
