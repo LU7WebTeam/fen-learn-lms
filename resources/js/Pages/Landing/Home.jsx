@@ -56,11 +56,11 @@ const FAQ_ITEMS = [
                 {locale === 'ms'
                     ? 'Anda boleh menonton video panduan platform FEN Learning '
                     : 'You can watch the FEN Learning platform guide video '}
-                <a href="#" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">
+                <a href="https://youtu.be/qmFUbS9OwN4" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">
                     {locale === 'ms' ? 'di sini' : 'here'}
                 </a>
                 {locale === 'ms' ? ' atau muat turun ' : ' or download '}
-                <a href="#" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">
+                <a href="https://www.fenetwork.my/fenlearn-guides" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">
                     {locale === 'ms' ? 'PDF ini' : 'this PDF'}
                 </a>.
             </span>
