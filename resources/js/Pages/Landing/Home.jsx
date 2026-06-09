@@ -49,6 +49,17 @@ const LEARN_ITEMS = [
 ];
 
 const FAQ_ITEMS = [
+    {
+        qKey: 'landing.faq.item1.q',
+        aJsx: () => (
+            <span>
+                Anda boleh menonton video panduan platform FEN Learning{' '}
+                <a href="#" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">di sini</a>
+                {' '}atau muat turun{' '}
+                <a href="#" className="font-semibold text-[#b53391] underline hover:text-[#9f2c80]">PDF ini</a>.
+            </span>
+        ),
+    },
     { qKey: 'landing.faq.item2.q', aKey: 'landing.faq.item2.a' },
     { qKey: 'landing.faq.item3.q', aKey: 'landing.faq.item3.a' },
     { qKey: 'landing.faq.item4.q', aKey: 'landing.faq.item4.a' },
@@ -479,7 +490,7 @@ export default function Home() {
                                             <ChevronDown className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" />
                                         </summary>
                                         <div className="whitespace-pre-line border-t border-slate-200 px-4 py-4 text-base leading-relaxed text-[#545c6b]">
-                                            {t(item.aKey)}
+                                            {item.aJsx ? item.aJsx() : t(item.aKey)}
                                         </div>
                                     </details>
                                 ))}
