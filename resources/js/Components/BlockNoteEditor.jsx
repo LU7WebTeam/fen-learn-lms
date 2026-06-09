@@ -59,28 +59,17 @@ const schema = BlockNoteSchema.create({
 async function uploadImageToBN(file) {
     const formData = new FormData();
     formData.append('file', file);
-    const token = document.cookie
-        .split('; ')
-        .find(r => r.startsWith('XSRF-TOKEN='))
-        ?.split('=')[1];
-    const res = await fetch('/admin/upload-image', {
-        method: 'POST',
-        headers: {
-            'X-XSRF-TOKEN': token ? decodeURIComponent(token) : '',
-        },
-        body: formData,
-    });
-    if (!res.ok) {
-        if (res.status === 403) {
-            throw new Error('You do not have permission to upload images.');
-        }
-        if (res.status === 419) {
-            throw new Error('Your session expired. Please refresh and sign in again.');
-        }
-        throw new Error('Upload failed');
+    try {
+        const res = await window.axios.post('/media/content-asset', formData);
+        const url = res.data?.url ?? '';
+        return url.startsWith('http') ? url : (window.location.origin + url);
+    } catch (err) {
+        const status = err?.response?.status;
+        if (status === 403) throw new Error('You do not have permission to upload images.');
+        if (status === 419) throw new Error('Your session expired. Please refresh and sign in again.');
+        if (status === 422) throw new Error('Invalid file. Please upload an image under 8 MB.');
+        throw new Error('Upload failed. Please try again.');
     }
-    const json = await res.json();
-    return json.url.startsWith('http') ? json.url : (window.location.origin + json.url);
 }
 
 export default function BlockNoteEditor({ initialContent, onChange, readOnly = false }) {
