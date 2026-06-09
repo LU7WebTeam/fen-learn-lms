@@ -63,7 +63,6 @@ export default function Terms() {
                                 </Link>
                                 <nav className="hidden items-center gap-5 text-sm font-semibold lg:flex">
                                     <Link href={route('terms')} className="opacity-95 transition hover:opacity-100">{t('nav.terms')}</Link>
-                                    <Link href={route('privacy')} className="opacity-80 transition hover:opacity-100">{t('nav.privacy')}</Link>
                                 </nav>
                             </div>
 
