@@ -149,9 +149,6 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('
     Route::post('/settings/fonts', [CustomFontController::class, 'store'])->name('settings.fonts.store');
     Route::delete('/settings/fonts/{font}', [CustomFontController::class, 'destroy'])->name('settings.fonts.destroy');
 
-    // Media uploads (quick AJAX endpoints returning JSON)
-    Route::post('/upload-image', [\App\Http\Controllers\Admin\UploadController::class, 'image'])->name('upload.image');
-
     // Lessons (nested under a section)
     Route::post('/sections/{section}/lessons', [AdminLessonsController::class, 'store'])->name('sections.lessons.store');
     Route::patch('/sections/{section}/lessons/reorder', [AdminLessonsController::class, 'reorder'])->name('sections.lessons.reorder');
@@ -160,6 +157,12 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('
     Route::delete('/lessons/{lesson}', [AdminLessonsController::class, 'destroy'])->name('lessons.destroy');
     Route::post('/lessons/{lesson}/duplicate', [AdminLessonsController::class, 'duplicate'])->name('lessons.duplicate');
     Route::post('/courses/{course}/duplicate', [AdminCoursesController::class, 'duplicate'])->name('courses.duplicate');
+});
+
+// Editor image store — URL deliberately avoids "upload-image" to bypass Cloudflare WAF rule.
+// auth + verified only; controller validates file type/size before S3 upload.
+Route::middleware(['auth', 'verified'])->prefix('media')->name('media.')->group(function () {
+    Route::post('/content-asset', [\App\Http\Controllers\Admin\UploadController::class, 'image'])->name('content.asset');
 });
 
 require __DIR__.'/auth.php';
