@@ -40,7 +40,6 @@ export default function About() {
                     <div className="hidden md:flex items-center gap-8 font-medium">
                         <Link href={route('about')} className="hover:text-slate-900 transition">{t('nav.about')}</Link>
                         <Link href={route('terms')} className="hover:text-slate-900 transition">{t('nav.terms')}</Link>
-                        <Link href={route('privacy')} className="hover:text-slate-900 transition">{t('nav.privacy')}</Link>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -120,7 +119,6 @@ export default function About() {
                             <div className="flex flex-wrap items-center justify-center gap-6 md:justify-end">
                                 <Link href={route('about')} className="hover:text-white transition">{t('nav.about')}</Link>
                                 <Link href={route('terms')} className="hover:text-white transition">{t('nav.terms')}</Link>
-                                <Link href={route('privacy')} className="hover:text-white transition">{t('nav.privacy')}</Link>
                             </div>
                             <p className="text-center md:text-right">
                                 {t('landing.footer.support_text')}{' '}
