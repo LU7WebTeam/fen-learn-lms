@@ -187,12 +187,7 @@ export default function Register() {
                                     {t('auth.register.agree_prefix')}{' '}
                                     <Link href={route('terms')} className="font-medium text-gray-800 hover:text-gray-900 underline underline-offset-2">
                                         {t('auth.register.terms')}
-                                    </Link>{' '}
-                                    {t('auth.register.and')}{' '}
-                                    <Link href={route('privacy')} className="font-medium text-gray-800 hover:text-gray-900 underline underline-offset-2">
-                                        {t('auth.register.privacy')}
-                                    </Link>
-                                    .
+                                    </Link>.
                                 </span>
                             </label>
                             <InputError message={translateAuthError(errors.agree_terms, t)} />
