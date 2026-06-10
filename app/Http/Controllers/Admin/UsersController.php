@@ -335,4 +335,85 @@ class UsersController extends Controller
 
         return back()->with('success', "{$deletedName} has been deleted.");
     }
+
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:suspend,unsuspend,delete,send_reset_link',
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'required|integer|exists:users,id',
+        ]);
+
+        $action = $validated['action'];
+        $ids    = $validated['ids'];
+        $actor  = $request->user();
+
+        if (in_array($action, ['delete', 'send_reset_link']) && ! $actor->isSuperAdmin()) {
+            abort(403, 'Only super admins can perform this action.');
+        }
+
+        // Never affect the acting admin's own account
+        $users = User::whereIn('id', $ids)
+            ->where('id', '!=', $actor->id)
+            ->get();
+
+        $count = $users->count();
+
+        switch ($action) {
+            case 'suspend':
+                $applied = 0;
+                foreach ($users as $user) {
+                    if (! $user->suspended_at) {
+                        $user->update(['suspended_at' => now(), 'suspension_reason' => 'Bulk action by admin']);
+                        ActivityLogger::record('Suspended user (bulk)', $user, ['title' => $user->name], 'updated');
+                        $applied++;
+                    }
+                }
+                return back()->with('success', "Suspended {$applied} user(s).");
+
+            case 'unsuspend':
+                $applied = 0;
+                foreach ($users as $user) {
+                    if ($user->suspended_at) {
+                        $user->update(['suspended_at' => null, 'suspension_reason' => null]);
+                        ActivityLogger::record('Unsuspended user (bulk)', $user, ['title' => $user->name], 'updated');
+                        $applied++;
+                    }
+                }
+                return back()->with('success', "Reinstated {$applied} user(s).");
+
+            case 'send_reset_link':
+                $sent = 0;
+                foreach ($users as $user) {
+                    $status = Password::sendResetLink(['email' => $user->email]);
+                    if ($status === Password::RESET_LINK_SENT) {
+                        ActivityLogger::record('Sent password reset link (bulk)', $user, ['title' => $user->name], 'updated');
+                        $sent++;
+                    }
+                }
+                return back()->with('success', "Sent password reset links to {$sent} user(s).");
+
+            case 'delete':
+                $deleted = 0;
+                $superAdminCount = User::where('role', 'super_admin')->count();
+                foreach ($users as $user) {
+                    if ($user->isSuperAdmin() && $superAdminCount <= 1) {
+                        continue; // Never delete the last super admin
+                    }
+                    if ($user->isSuperAdmin()) {
+                        $superAdminCount--;
+                    }
+                    ActivityLogger::record('Deleted user (bulk)', $user, [
+                        'title' => $user->name,
+                        'email' => $user->email,
+                        'role'  => $user->role,
+                    ], 'deleted');
+                    $user->delete();
+                    $deleted++;
+                }
+                return back()->with('success', "Deleted {$deleted} user(s).");
+        }
+
+        return back();
+    }
 }
