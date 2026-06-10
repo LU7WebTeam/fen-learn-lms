@@ -58,6 +58,8 @@ import {
     SlidersHorizontal,
     ChevronDown,
     ChevronUp,
+    Filter,
+    RotateCcw,
 } from 'lucide-react';
 import {
     ORGANIZATION_OTHER_VALUE,
@@ -90,6 +92,18 @@ const RACES = [
     { value: 'indian',           label: 'Indian' },
     { value: 'other_bumiputera', label: 'Other Bumiputera' },
     { value: 'other',            label: 'Other' },
+];
+const AGE_GROUPS = [
+    { value: 'under_18', label: 'Under 18' },
+    { value: '18_24',    label: '18–24' },
+    { value: '25_34',    label: '25–34' },
+    { value: '35_44',    label: '35–44' },
+    { value: '45_54',    label: '45–54' },
+    { value: '55_plus',  label: '55+' },
+];
+const GENDER_OPTIONS = [
+    { value: 'male',   label: 'Male' },
+    { value: 'female', label: 'Female' },
 ];
 
 function UserAvatar({ name, src, size = 'md' }) {
@@ -842,45 +856,90 @@ function SuspendedBadge() {
 }
 
 function UserFilterBar({ filters, availableCourses, activeTab, onApply }) {
-    const [local, setLocal] = useState({
-        status:      filters.status      ?? 'all',
-        joined_from: filters.joined_from ?? '',
-        joined_to:   filters.joined_to   ?? '',
-        course_id:   filters.course_id   ?? '',
-        staff_role:  filters.staff_role  ?? 'all',
+    const { profileOptions } = usePage().props;
+    const organizationOptions = profileOptions?.organizationOptions ?? [];
+    const fieldOfStudyOptions  = profileOptions?.fieldOfStudyOptions  ?? [];
+
+    const EMPTY = {
+        status:        'all',
+        joined_from:   '',
+        joined_to:     '',
+        course_id:     '',
+        staff_role:    'all',
+        gender:        [],
+        race:          [],
+        state:         [],
+        occupation:    [],
+        field_of_study:[],
+        organization:  [],
+        age_group:     [],
+    };
+
+    const fromFilters = () => ({
+        status:        filters.status        ?? 'all',
+        joined_from:   filters.joined_from   ?? '',
+        joined_to:     filters.joined_to     ?? '',
+        course_id:     filters.course_id     ?? '',
+        staff_role:    filters.staff_role    ?? 'all',
+        gender:        filters.gender        ?? [],
+        race:          filters.race          ?? [],
+        state:         filters.state         ?? [],
+        occupation:    filters.occupation    ?? [],
+        field_of_study:filters.field_of_study ?? [],
+        organization:  filters.organization  ?? [],
+        age_group:     filters.age_group     ?? [],
     });
 
-    // Sync if server filters change (e.g. after navigation)
-    useEffect(() => {
-        setLocal({
-            status:      filters.status      ?? 'all',
-            joined_from: filters.joined_from ?? '',
-            joined_to:   filters.joined_to   ?? '',
-            course_id:   filters.course_id   ?? '',
-            staff_role:  filters.staff_role  ?? 'all',
-        });
-    }, [filters.status, filters.joined_from, filters.joined_to, filters.course_id, filters.staff_role]);
+    const [local, setLocal] = useState(fromFilters);
+    const [expanded, setExpanded] = useState(() => {
+        const f = filters;
+        return (f.gender ?? []).length > 0 || (f.race ?? []).length > 0 ||
+            (f.state ?? []).length > 0 || (f.occupation ?? []).length > 0 ||
+            (f.field_of_study ?? []).length > 0 || (f.organization ?? []).length > 0 ||
+            (f.age_group ?? []).length > 0;
+    });
 
-    const set = (key, val) => setLocal(p => ({ ...p, [key]: val }));
+    useEffect(() => { setLocal(fromFilters()); }, [
+        filters.status, filters.joined_from, filters.joined_to,
+        filters.course_id, filters.staff_role,
+        (filters.gender ?? []).join(','),
+        (filters.race ?? []).join(','),
+        (filters.state ?? []).join(','),
+        (filters.occupation ?? []).join(','),
+        (filters.field_of_study ?? []).join(','),
+        (filters.organization ?? []).join(','),
+        (filters.age_group ?? []).join(','),
+    ]);
+
+    const set    = (key, val) => setLocal(p => ({ ...p, [key]: val }));
+    const setArr = (key, vals) => setLocal(p => ({ ...p, [key]: vals }));
+
+    const hasProfileFilters = activeTab === 'students' && (
+        local.gender.length > 0 || local.race.length > 0 || local.state.length > 0 ||
+        local.occupation.length > 0 || local.field_of_study.length > 0 ||
+        local.organization.length > 0 || local.age_group.length > 0
+    );
 
     const hasActive = local.status !== 'all' || local.joined_from || local.joined_to ||
-        (activeTab === 'students' && local.course_id) ||
+        (activeTab === 'students' && (local.course_id || hasProfileFilters)) ||
         (activeTab === 'staff' && local.staff_role !== 'all');
 
     function reset() {
-        const cleared = { status: 'all', joined_from: '', joined_to: '', course_id: '', staff_role: 'all' };
-        setLocal(cleared);
-        onApply(cleared);
+        setLocal(EMPTY);
+        onApply(EMPTY);
     }
 
+    const dateInputClass = "h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
     return (
-        <div className="rounded-xl border bg-card p-4">
-            <div className="flex flex-wrap items-end gap-3">
+        <div className="bg-card border border-border rounded-xl shadow-sm">
+            {/* ── Top row ── */}
+            <div className="flex flex-wrap items-end gap-3 p-4">
                 {/* Status */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</label>
+                <div>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1">Status</label>
                     <Select value={local.status} onValueChange={v => set('status', v)}>
-                        <SelectTrigger className="h-8 w-36 text-sm">
+                        <SelectTrigger className="w-36">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -891,34 +950,24 @@ function UserFilterBar({ filters, availableCourses, activeTab, onApply }) {
                     </Select>
                 </div>
 
-                {/* Joined from */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Joined from</label>
-                    <input
-                        type="date"
-                        value={local.joined_from}
-                        onChange={e => set('joined_from', e.target.value)}
-                        className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                {/* Date range */}
+                <div className="flex gap-2 items-end">
+                    <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">Joined from</label>
+                        <input type="date" value={local.joined_from} onChange={e => set('joined_from', e.target.value)} className={dateInputClass} />
+                    </div>
+                    <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">To</label>
+                        <input type="date" value={local.joined_to} min={local.joined_from || undefined} onChange={e => set('joined_to', e.target.value)} className={dateInputClass} />
+                    </div>
                 </div>
 
-                {/* Joined to */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">To</label>
-                    <input
-                        type="date"
-                        value={local.joined_to}
-                        onChange={e => set('joined_to', e.target.value)}
-                        className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                </div>
-
-                {/* Course — students only */}
+                {/* Course — students tab */}
                 {activeTab === 'students' && availableCourses.length > 0 && (
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Enrolled in</label>
+                    <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">Enrolled in</label>
                         <Select value={local.course_id || 'all'} onValueChange={v => set('course_id', v === 'all' ? '' : v)}>
-                            <SelectTrigger className="h-8 w-52 text-sm">
+                            <SelectTrigger className="w-52">
                                 <SelectValue placeholder="Any course" />
                             </SelectTrigger>
                             <SelectContent>
@@ -931,12 +980,12 @@ function UserFilterBar({ filters, availableCourses, activeTab, onApply }) {
                     </div>
                 )}
 
-                {/* Role — staff only */}
+                {/* Role — staff tab */}
                 {activeTab === 'staff' && (
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</label>
+                    <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">Role</label>
                         <Select value={local.staff_role || 'all'} onValueChange={v => set('staff_role', v)}>
-                            <SelectTrigger className="h-8 w-44 text-sm">
+                            <SelectTrigger className="w-44">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -949,20 +998,72 @@ function UserFilterBar({ filters, availableCourses, activeTab, onApply }) {
                     </div>
                 )}
 
+                {/* Profile filters toggle — students only */}
+                {activeTab === 'students' && (
+                    <Button variant="outline" size="sm" className={`gap-1.5 self-end${hasProfileFilters ? ' border-indigo-400 text-indigo-600' : ''}`} onClick={() => setExpanded(x => !x)}>
+                        <Filter className="h-3.5 w-3.5" />
+                        User Filters
+                        {hasProfileFilters && <span className="ml-0.5 rounded-full bg-indigo-100 px-1.5 py-px text-[10px] font-semibold text-indigo-700">{
+                            local.gender.length + local.race.length + local.state.length +
+                            local.occupation.length + local.field_of_study.length +
+                            local.organization.length + local.age_group.length
+                        }</span>}
+                        {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </Button>
+                )}
+
                 {/* Actions */}
-                <div className="flex gap-2">
-                    <Button size="sm" className="h-8 gap-1.5" onClick={() => onApply(local)}>
-                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                <div className="flex gap-2 self-end ml-auto">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={reset}>
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Reset
+                    </Button>
+                    <Button size="sm" className="gap-1.5" onClick={() => onApply(local)}>
                         Apply
                     </Button>
-                    {hasActive && (
-                        <Button size="sm" variant="ghost" className="h-8 gap-1 text-muted-foreground" onClick={reset}>
-                            <X className="h-3.5 w-3.5" />
-                            Reset
-                        </Button>
-                    )}
                 </div>
             </div>
+
+            {/* ── Expandable profile filters (students only) ── */}
+            {activeTab === 'students' && expanded && (
+                <>
+                    <Separator />
+                    <div className="flex flex-wrap gap-3 p-4">
+                        <div className="min-w-[130px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Gender</label>
+                            <SearchableSelect multiple options={GENDER_OPTIONS} values={local.gender} onValuesChange={v => setArr('gender', v)} placeholder="All genders" searchPlaceholder="Search genders..." contentClassName="w-[200px]" />
+                        </div>
+                        <div className="min-w-[160px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Race / Ethnicity</label>
+                            <SearchableSelect multiple options={RACES} values={local.race} onValuesChange={v => setArr('race', v)} placeholder="All races" searchPlaceholder="Search races..." />
+                        </div>
+                        <div className="min-w-[200px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">State</label>
+                            <SearchableSelect multiple options={MALAYSIAN_STATES} values={local.state} onValuesChange={v => setArr('state', v)} placeholder="All states" searchPlaceholder="Search states..." />
+                        </div>
+                        <div className="min-w-[180px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Occupation</label>
+                            <SearchableSelect multiple options={OCCUPATIONS} values={local.occupation} onValuesChange={v => setArr('occupation', v)} placeholder="All occupations" searchPlaceholder="Search occupations..." />
+                        </div>
+                        {fieldOfStudyOptions.length > 0 && (
+                            <div className="min-w-[200px]">
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Field of Study</label>
+                                <SearchableSelect multiple options={fieldOfStudyOptions} values={local.field_of_study} onValuesChange={v => setArr('field_of_study', v)} placeholder="All fields" searchPlaceholder="Search fields..." />
+                            </div>
+                        )}
+                        {organizationOptions.length > 0 && (
+                            <div className="min-w-[220px]">
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Organisation</label>
+                                <SearchableSelect multiple options={organizationOptions} values={local.organization} onValuesChange={v => setArr('organization', v)} placeholder="All organizations" searchPlaceholder="Search organizations..." />
+                            </div>
+                        )}
+                        <div className="min-w-[140px]">
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Age Group</label>
+                            <SearchableSelect multiple options={AGE_GROUPS} values={local.age_group} onValuesChange={v => setArr('age_group', v)} placeholder="All ages" searchPlaceholder="Search age groups..." />
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
@@ -1574,16 +1675,26 @@ export default function UsersIndex({ staff, students, counts, filters, available
     }
 
     function buildParams(overrides = {}) {
+        const merged = {
+            search:         filters.search          ?? '',
+            status:         filters.status          ?? 'all',
+            joined_from:    filters.joined_from     ?? '',
+            joined_to:      filters.joined_to       ?? '',
+            course_id:      filters.course_id       ?? '',
+            staff_role:     filters.staff_role      ?? 'all',
+            gender:         filters.gender          ?? [],
+            race:           filters.race            ?? [],
+            state:          filters.state           ?? [],
+            occupation:     filters.occupation      ?? [],
+            field_of_study: filters.field_of_study  ?? [],
+            organization:   filters.organization    ?? [],
+            age_group:      filters.age_group       ?? [],
+            ...overrides,
+        };
         return Object.fromEntries(
-            Object.entries({
-                search:      filters.search      ?? '',
-                status:      filters.status      ?? 'all',
-                joined_from: filters.joined_from ?? '',
-                joined_to:   filters.joined_to   ?? '',
-                course_id:   filters.course_id   ?? '',
-                staff_role:  filters.staff_role  ?? 'all',
-                ...overrides,
-            }).filter(([, v]) => v !== '' && v !== 'all')
+            Object.entries(merged).filter(([, v]) =>
+                Array.isArray(v) ? v.length > 0 : v !== '' && v !== 'all'
+            )
         );
     }
 
