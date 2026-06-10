@@ -10,7 +10,7 @@ function getCsrfToken() {
 export async function uploadImageFile(file) {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(route('admin.upload.image'), {
+    const res = await fetch(route('media.content.asset'), {
         method: 'POST',
         headers: { 'X-XSRF-TOKEN': getCsrfToken() },
         body: formData,
