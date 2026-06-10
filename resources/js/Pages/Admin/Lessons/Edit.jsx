@@ -13,7 +13,7 @@ import InputError from '@/Components/InputError';
 import PdfUpload from '@/Components/PdfUpload';
 import { uploadImageFile } from '@/Components/ImageUploadWithUrl';
 import { useRef, useState } from 'react';
-import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2, Image as ImageIcon, Type, Lock } from 'lucide-react';
+import { Loader2, Check, Plus, Trash2, Video, FileText, HelpCircle, Upload, Link2, Image as ImageIcon, Type, Lock, GripVertical } from 'lucide-react';
 
 const TYPE_META = {
     video: { icon: Video,       label: 'Video',     color: 'text-blue-500'   },
@@ -562,6 +562,42 @@ function QuizEditor({ data, setData, errors, lang }) {
         save(qs);
     }
 
+    // ── Drag-and-drop reorder ────────────────────────────────────────────────
+    const [draggedIdx, setDraggedIdx]   = useState(null);
+    const [dragOverIdx, setDragOverIdx] = useState(null);
+
+    function handleQDragStart(e, idx) {
+        e.dataTransfer.effectAllowed = 'move';
+        setDraggedIdx(idx);
+    }
+
+    function handleQDragOver(e, idx) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedIdx === null || draggedIdx === idx) return;
+        setDragOverIdx(idx);
+    }
+
+    function handleQDrop(e, targetIdx) {
+        e.preventDefault();
+        if (draggedIdx === null || draggedIdx === targetIdx) {
+            setDraggedIdx(null);
+            setDragOverIdx(null);
+            return;
+        }
+        const newQs = [...questions];
+        const [moved] = newQs.splice(draggedIdx, 1);
+        newQs.splice(targetIdx, 0, moved);
+        setDraggedIdx(null);
+        setDragOverIdx(null);
+        save(newQs);
+    }
+
+    function handleQDragEnd() {
+        setDraggedIdx(null);
+        setDragOverIdx(null);
+    }
+
     return (
         <div className="space-y-6">
             {errors.content && <InputError message={errors.content} />}
@@ -659,8 +695,22 @@ function QuizEditor({ data, setData, errors, lang }) {
             ) : (
                 <div className="space-y-4">
                     {questions.map((q, qIdx) => (
-                        <Card key={q.id} className="overflow-visible">
+                        <Card
+                            key={q.id}
+                            className={[
+                                'overflow-visible transition-opacity',
+                                draggedIdx === qIdx ? 'opacity-40' : '',
+                                dragOverIdx === qIdx ? 'ring-2 ring-primary' : '',
+                            ].join(' ')}
+                            draggable
+                            onDragStart={e => handleQDragStart(e, qIdx)}
+                            onDragOver={e => handleQDragOver(e, qIdx)}
+                            onDrop={e => handleQDrop(e, qIdx)}
+                            onDragLeave={() => setDragOverIdx(null)}
+                            onDragEnd={handleQDragEnd}
+                        >
                             <CardHeader className="flex flex-row items-center gap-2 pb-2">
+                                <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab shrink-0" />
                                 <div className="flex-1">
                                     <Label className="text-sm font-medium">Question {qIdx + 1}</Label>
                                 </div>
