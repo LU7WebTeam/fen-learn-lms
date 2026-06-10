@@ -838,11 +838,104 @@ function SuspendedBadge() {
     );
 }
 
-function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile, onResetPassword, onDelete, isSuperAdmin }) {
+function BulkActionBar({ count, onSuspend, onUnsuspend, onSendReset, onDelete, onClear, isSuperAdmin }) {
+    if (count === 0) return null;
+    return (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 mb-3">
+            <span className="text-sm font-semibold text-indigo-700">{count} selected</span>
+            <div className="hidden sm:block h-4 w-px bg-indigo-200" />
+            <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onSuspend}>
+                    <Ban className="h-3.5 w-3.5" />Suspend
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={onUnsuspend}>
+                    <CircleCheck className="h-3.5 w-3.5" />Reinstate
+                </Button>
+                {isSuperAdmin && (
+                    <>
+                        <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs text-amber-600 border-amber-200 hover:bg-amber-50" onClick={onSendReset}>
+                            <Send className="h-3.5 w-3.5" />Reset Links
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/5" onClick={onDelete}>
+                            <Trash2 className="h-3.5 w-3.5" />Delete
+                        </Button>
+                    </>
+                )}
+            </div>
+            <Button size="sm" variant="ghost" className="ml-auto h-7 gap-1 text-xs text-muted-foreground" onClick={onClear}>
+                <X className="h-3.5 w-3.5" />Clear
+            </Button>
+        </div>
+    );
+}
+
+function BulkConfirmDialog({ open, action, count, onConfirm, onClose, processing }) {
+    const configs = {
+        suspend: {
+            title: 'Suspend Users',
+            description: `Suspend ${count} selected user${count !== 1 ? 's' : ''}? They will lose access until reinstated.`,
+            confirmLabel: 'Suspend',
+            variant: 'destructive',
+            destructive: true,
+        },
+        unsuspend: {
+            title: 'Reinstate Users',
+            description: `Reinstate ${count} selected user${count !== 1 ? 's' : ''}? They will regain platform access immediately.`,
+            confirmLabel: 'Reinstate',
+            variant: 'default',
+            destructive: false,
+        },
+        send_reset_link: {
+            title: 'Send Reset Links',
+            description: `Send password reset emails to ${count} user${count !== 1 ? 's' : ''}? Each will receive a link valid for 24 hours.`,
+            confirmLabel: 'Send Links',
+            variant: 'default',
+            destructive: false,
+        },
+        delete: {
+            title: 'Delete Users',
+            description: `Permanently delete ${count} selected user${count !== 1 ? 's' : ''}? This cannot be undone.`,
+            confirmLabel: 'Delete',
+            variant: 'destructive',
+            destructive: true,
+        },
+    };
+    const cfg = configs[action] ?? {};
+    return (
+        <Dialog open={open} onOpenChange={v => !v && !processing && onClose()}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className={cfg.destructive ? 'flex items-center gap-2 text-destructive' : ''}>
+                        {cfg.destructive && <TriangleAlert className="h-4 w-4" />}
+                        {cfg.title}
+                    </DialogTitle>
+                    <DialogDescription>{cfg.description}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose} disabled={processing}>Cancel</Button>
+                    <Button variant={cfg.variant} onClick={onConfirm} disabled={processing}>
+                        {processing ? 'Processing…' : cfg.confirmLabel}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile, onResetPassword, onDelete, isSuperAdmin, selected, onToggle }) {
     const isSuspended = !!user.suspended_at;
     return (
         <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
-            <td className="py-3 pl-4 pr-3">
+            <td className="py-3 pl-3 pr-1 w-8">
+                <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => onToggle(user.id)}
+                    className="h-4 w-4 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+                    onClick={e => e.stopPropagation()}
+                />
+            </td>
+            <td className="py-3 pl-2 pr-3">
                 <div>
                     <div className="flex items-center gap-2">
                         <button
@@ -911,12 +1004,22 @@ function StudentRow({ user, onChangeRole, onSuspend, onUnsuspend, onViewProfile,
     );
 }
 
-function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, currentUserId, onResetPassword, onDelete, isSuperAdmin }) {
+function StaffRow({ user, onChangeRole, onManageAccess, onSuspend, onUnsuspend, currentUserId, onResetPassword, onDelete, isSuperAdmin, selected, onToggle }) {
     const isSelf = user.id === currentUserId;
     const isSuspended = !!user.suspended_at;
     return (
         <tr className={`border-b transition-colors hover:bg-muted/30 ${isSuspended ? 'opacity-60' : ''}`}>
-            <td className="py-3 pl-4 pr-3">
+            <td className="py-3 pl-3 pr-1 w-8">
+                <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => !isSelf && onToggle(user.id)}
+                    disabled={isSelf}
+                    className="h-4 w-4 rounded border-gray-300 accent-indigo-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={e => e.stopPropagation()}
+                />
+            </td>
+            <td className="py-3 pl-2 pr-3">
                 <div className="flex items-center gap-2">
                     <div>
                         <div className="flex items-center gap-2">
@@ -1285,6 +1388,56 @@ export default function UsersIndex({ staff, students, counts, filters, available
     const [deleteUser, setDeleteUser] = useState(null);
     const isSuperAdmin = auth.user.role === 'super_admin';
 
+    // Bulk selection
+    const [selectedStudents, setSelectedStudents] = useState(new Set());
+    const [selectedStaff, setSelectedStaff] = useState(new Set());
+    const [bulkDialog, setBulkDialog] = useState(null); // { action, tab }
+    const [bulkProcessing, setBulkProcessing] = useState(false);
+
+    function toggleStudent(id) {
+        setSelectedStudents(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
+    function toggleAllStudents() {
+        setSelectedStudents(prev =>
+            prev.size === students.data.length
+                ? new Set()
+                : new Set(students.data.map(u => u.id))
+        );
+    }
+    function toggleStaffMember(id) {
+        setSelectedStaff(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
+    function toggleAllStaff() {
+        const selectable = staff.data.filter(u => u.id !== auth.user.id).map(u => u.id);
+        setSelectedStaff(prev =>
+            prev.size === selectable.length
+                ? new Set()
+                : new Set(selectable)
+        );
+    }
+    function handleBulkConfirm() {
+        if (!bulkDialog) return;
+        const { action, tab } = bulkDialog;
+        const ids = Array.from(tab === 'students' ? selectedStudents : selectedStaff);
+        setBulkProcessing(true);
+        router.post(route('admin.users.bulk-action'), { action, ids }, {
+            onSuccess: () => {
+                if (tab === 'students') setSelectedStudents(new Set());
+                else setSelectedStaff(new Set());
+                setBulkDialog(null);
+            },
+            onFinish: () => setBulkProcessing(false),
+        });
+    }
+
     function handleUnsuspend(user) {
         if (!window.confirm(`Reinstate ${user.name}'s account?`)) return;
         router.patch(route('admin.users.unsuspend', user.id));
@@ -1417,6 +1570,15 @@ export default function UsersIndex({ staff, students, counts, filters, available
 
                     {/* ── Students ── */}
                     <TabsContent value="students" className="mt-4">
+                        <BulkActionBar
+                            count={selectedStudents.size}
+                            onSuspend={() => setBulkDialog({ action: 'suspend', tab: 'students' })}
+                            onUnsuspend={() => setBulkDialog({ action: 'unsuspend', tab: 'students' })}
+                            onSendReset={() => setBulkDialog({ action: 'send_reset_link', tab: 'students' })}
+                            onDelete={() => setBulkDialog({ action: 'delete', tab: 'students' })}
+                            onClear={() => setSelectedStudents(new Set())}
+                            isSuperAdmin={isSuperAdmin}
+                        />
                         <div className="rounded-xl border bg-card">
                             {students.data.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -1431,7 +1593,15 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="border-b bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                                <th className="py-2.5 pl-4 pr-3">Student</th>
+                                                <th className="py-2.5 pl-3 pr-1 w-8">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={students.data.length > 0 && selectedStudents.size === students.data.length}
+                                                        onChange={toggleAllStudents}
+                                                        className="h-4 w-4 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+                                                    />
+                                                </th>
+                                                <th className="py-2.5 pl-2 pr-3">Student</th>
                                                 <th className="px-3 py-2.5">Joined</th>
                                                 <th className="px-3 py-2.5">Courses</th>
                                                 <th className="px-3 py-2.5">Role</th>
@@ -1450,6 +1620,8 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                                     onResetPassword={setResetPasswordUser}
                                                     onDelete={setDeleteUser}
                                                     isSuperAdmin={isSuperAdmin}
+                                                    selected={selectedStudents.has(user.id)}
+                                                    onToggle={toggleStudent}
                                                 />
                                             ))}
                                         </tbody>
@@ -1466,6 +1638,15 @@ export default function UsersIndex({ staff, students, counts, filters, available
 
                     {/* ── Staff ── */}
                     <TabsContent value="staff" className="mt-4">
+                        <BulkActionBar
+                            count={selectedStaff.size}
+                            onSuspend={() => setBulkDialog({ action: 'suspend', tab: 'staff' })}
+                            onUnsuspend={() => setBulkDialog({ action: 'unsuspend', tab: 'staff' })}
+                            onSendReset={() => setBulkDialog({ action: 'send_reset_link', tab: 'staff' })}
+                            onDelete={() => setBulkDialog({ action: 'delete', tab: 'staff' })}
+                            onClear={() => setSelectedStaff(new Set())}
+                            isSuperAdmin={isSuperAdmin}
+                        />
                         <div className="rounded-xl border bg-card">
                             {staff.data.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -1480,7 +1661,15 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="border-b bg-muted/40 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                                <th className="py-2.5 pl-4 pr-3">Staff Member</th>
+                                                <th className="py-2.5 pl-3 pr-1 w-8">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={staff.data.filter(u => u.id !== auth.user.id).length > 0 && selectedStaff.size === staff.data.filter(u => u.id !== auth.user.id).length}
+                                                        onChange={toggleAllStaff}
+                                                        className="h-4 w-4 rounded border-gray-300 accent-indigo-600 cursor-pointer"
+                                                    />
+                                                </th>
+                                                <th className="py-2.5 pl-2 pr-3">Staff Member</th>
                                                 <th className="px-3 py-2.5">Role</th>
                                                 <th className="px-3 py-2.5">Joined</th>
                                                 <th className="py-2.5 pl-3 pr-4 text-right">Actions</th>
@@ -1499,6 +1688,8 @@ export default function UsersIndex({ staff, students, counts, filters, available
                                                     onResetPassword={setResetPasswordUser}
                                                     onDelete={setDeleteUser}
                                                     isSuperAdmin={isSuperAdmin}
+                                                    selected={selectedStaff.has(user.id)}
+                                                    onToggle={toggleStaffMember}
                                                 />
                                             ))}
                                         </tbody>
@@ -1567,6 +1758,15 @@ export default function UsersIndex({ staff, students, counts, filters, available
                     onClose={() => setDeleteUser(null)}
                 />
             )}
+
+            <BulkConfirmDialog
+                open={!!bulkDialog}
+                action={bulkDialog?.action}
+                count={bulkDialog?.tab === 'students' ? selectedStudents.size : selectedStaff.size}
+                onConfirm={handleBulkConfirm}
+                onClose={() => setBulkDialog(null)}
+                processing={bulkProcessing}
+            />
         </AdminLayout>
     );
 }
