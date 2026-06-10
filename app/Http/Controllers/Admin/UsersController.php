@@ -32,13 +32,23 @@ class UsersController extends Controller
             }
         }
 
-        $search = $request->input('search', '');
+        $search     = $request->input('search', '');
+        $status     = $request->input('status', 'all');      // all|active|suspended
+        $joinedFrom = $request->input('joined_from', '');
+        $joinedTo   = $request->input('joined_to', '');
+        $courseId   = $request->input('course_id', '');      // students only
+        $staffRole  = $request->input('staff_role', 'all');  // staff only
 
         $staff = User::whereIn('role', ['super_admin', 'content_editor', 'course_viewer'])
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'like', "%{$search}%")
                    ->orWhere('email', 'like', "%{$search}%");
             }))
+            ->when($status === 'active',    fn($q) => $q->whereNull('suspended_at'))
+            ->when($status === 'suspended', fn($q) => $q->whereNotNull('suspended_at'))
+            ->when($joinedFrom, fn($q) => $q->whereDate('created_at', '>=', $joinedFrom))
+            ->when($joinedTo,   fn($q) => $q->whereDate('created_at', '<=', $joinedTo))
+            ->when($staffRole !== 'all' && $staffRole, fn($q) => $q->where('role', $staffRole))
             ->with(['permittedCourses:id,title,slug'])
             ->withCount('permittedCourses')
             ->withCount('enrollments')
@@ -51,6 +61,11 @@ class UsersController extends Controller
                 $q2->where('name', 'like', "%{$search}%")
                    ->orWhere('email', 'like', "%{$search}%");
             }))
+            ->when($status === 'active',    fn($q) => $q->whereNull('suspended_at'))
+            ->when($status === 'suspended', fn($q) => $q->whereNotNull('suspended_at'))
+            ->when($joinedFrom, fn($q) => $q->whereDate('created_at', '>=', $joinedFrom))
+            ->when($joinedTo,   fn($q) => $q->whereDate('created_at', '<=', $joinedTo))
+            ->when($courseId, fn($q) => $q->whereHas('enrollments', fn($eq) => $eq->where('course_id', (int) $courseId)))
             ->withCount([
                 'enrollments',
                 'enrollments as completed_enrollments_count' => fn($q) =>
@@ -76,7 +91,14 @@ class UsersController extends Controller
             'staff'    => $staff,
             'students' => $students,
             'counts'   => $counts,
-            'filters'  => ['search' => $search],
+            'filters'  => [
+                'search'      => $search,
+                'status'      => $status,
+                'joined_from' => $joinedFrom,
+                'joined_to'   => $joinedTo,
+                'course_id'   => $courseId,
+                'staff_role'  => $staffRole,
+            ],
             'availableCourses' => $availableCourses,
         ]);
     }
