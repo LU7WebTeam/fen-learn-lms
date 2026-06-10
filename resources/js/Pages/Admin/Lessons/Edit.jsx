@@ -585,11 +585,25 @@ function QuizEditor({ data, setData, errors, lang }) {
             setDragOverIdx(null);
             return;
         }
+        const from = draggedIdx;
+        const to   = targetIdx;
         const newQs = [...questions];
-        const [moved] = newQs.splice(draggedIdx, 1);
-        newQs.splice(targetIdx, 0, moved);
+        const [moved] = newQs.splice(from, 1);
+        newQs.splice(to, 0, moved);
         setDraggedIdx(null);
         setDragOverIdx(null);
+
+        // Keep BM questions in sync — apply the same reorder to content_ms
+        try {
+            const msParsed = JSON.parse(data.content_ms || '{}');
+            if (Array.isArray(msParsed.questions) && msParsed.questions.length > 0) {
+                const msQs = [...msParsed.questions];
+                const [msMoved] = msQs.splice(from, 1);
+                msQs.splice(to, 0, msMoved);
+                setData('content_ms', JSON.stringify({ ...msParsed, questions: msQs }));
+            }
+        } catch { /* no BM content — nothing to sync */ }
+
         save(newQs);
     }
 
