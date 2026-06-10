@@ -55,6 +55,9 @@ import {
     KeyRound,
     Trash2,
     TriangleAlert,
+    SlidersHorizontal,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import {
     ORGANIZATION_OTHER_VALUE,
@@ -838,6 +841,132 @@ function SuspendedBadge() {
     );
 }
 
+function UserFilterBar({ filters, availableCourses, activeTab, onApply }) {
+    const [local, setLocal] = useState({
+        status:      filters.status      ?? 'all',
+        joined_from: filters.joined_from ?? '',
+        joined_to:   filters.joined_to   ?? '',
+        course_id:   filters.course_id   ?? '',
+        staff_role:  filters.staff_role  ?? 'all',
+    });
+
+    // Sync if server filters change (e.g. after navigation)
+    useEffect(() => {
+        setLocal({
+            status:      filters.status      ?? 'all',
+            joined_from: filters.joined_from ?? '',
+            joined_to:   filters.joined_to   ?? '',
+            course_id:   filters.course_id   ?? '',
+            staff_role:  filters.staff_role  ?? 'all',
+        });
+    }, [filters.status, filters.joined_from, filters.joined_to, filters.course_id, filters.staff_role]);
+
+    const set = (key, val) => setLocal(p => ({ ...p, [key]: val }));
+
+    const hasActive = local.status !== 'all' || local.joined_from || local.joined_to ||
+        (activeTab === 'students' && local.course_id) ||
+        (activeTab === 'staff' && local.staff_role !== 'all');
+
+    function reset() {
+        const cleared = { status: 'all', joined_from: '', joined_to: '', course_id: '', staff_role: 'all' };
+        setLocal(cleared);
+        onApply(cleared);
+    }
+
+    return (
+        <div className="rounded-xl border bg-card p-4">
+            <div className="flex flex-wrap items-end gap-3">
+                {/* Status */}
+                <div className="space-y-1.5">
+                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</label>
+                    <Select value={local.status} onValueChange={v => set('status', v)}>
+                        <SelectTrigger className="h-8 w-36 text-sm">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All users</SelectItem>
+                            <SelectItem value="active">Active only</SelectItem>
+                            <SelectItem value="suspended">Suspended only</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Joined from */}
+                <div className="space-y-1.5">
+                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Joined from</label>
+                    <input
+                        type="date"
+                        value={local.joined_from}
+                        onChange={e => set('joined_from', e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                </div>
+
+                {/* Joined to */}
+                <div className="space-y-1.5">
+                    <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">To</label>
+                    <input
+                        type="date"
+                        value={local.joined_to}
+                        onChange={e => set('joined_to', e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                </div>
+
+                {/* Course — students only */}
+                {activeTab === 'students' && availableCourses.length > 0 && (
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Enrolled in</label>
+                        <Select value={local.course_id || 'all'} onValueChange={v => set('course_id', v === 'all' ? '' : v)}>
+                            <SelectTrigger className="h-8 w-52 text-sm">
+                                <SelectValue placeholder="Any course" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Any course</SelectItem>
+                                {availableCourses.map(c => (
+                                    <SelectItem key={c.id} value={String(c.id)}>{c.title}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
+                {/* Role — staff only */}
+                {activeTab === 'staff' && (
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</label>
+                        <Select value={local.staff_role || 'all'} onValueChange={v => set('staff_role', v)}>
+                            <SelectTrigger className="h-8 w-44 text-sm">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All roles</SelectItem>
+                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                                <SelectItem value="content_editor">Content Editor</SelectItem>
+                                <SelectItem value="course_viewer">Course Viewer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                    <Button size="sm" className="h-8 gap-1.5" onClick={() => onApply(local)}>
+                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                        Apply
+                    </Button>
+                    {hasActive && (
+                        <Button size="sm" variant="ghost" className="h-8 gap-1 text-muted-foreground" onClick={reset}>
+                            <X className="h-3.5 w-3.5" />
+                            Reset
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function BulkActionBar({ count, onSuspend, onUnsuspend, onSendReset, onDelete, onClear, isSuperAdmin }) {
     if (count === 0) return null;
     return (
@@ -1379,6 +1508,7 @@ function ResetPasswordDialog({ user, open, onClose }) {
 export default function UsersIndex({ staff, students, counts, filters, availableCourses }) {
     const { auth } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [activeTab, setActiveTab] = useState('students');
     const [dialogUser, setDialogUser] = useState(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [suspendUser, setSuspendUser] = useState(null);
@@ -1443,14 +1573,37 @@ export default function UsersIndex({ staff, students, counts, filters, available
         router.patch(route('admin.users.unsuspend', user.id));
     }
 
+    function buildParams(overrides = {}) {
+        return Object.fromEntries(
+            Object.entries({
+                search:      filters.search      ?? '',
+                status:      filters.status      ?? 'all',
+                joined_from: filters.joined_from ?? '',
+                joined_to:   filters.joined_to   ?? '',
+                course_id:   filters.course_id   ?? '',
+                staff_role:  filters.staff_role  ?? 'all',
+                ...overrides,
+            }).filter(([, v]) => v !== '' && v !== 'all')
+        );
+    }
+
+    function handleApplyFilters(newFilters) {
+        setSelectedStudents(new Set());
+        setSelectedStaff(new Set());
+        router.get(route('admin.users.index'), buildParams({ ...newFilters, search }), {
+            preserveState: true,
+            replace: true,
+        });
+    }
+
     function handleSearch(e) {
         e.preventDefault();
-        router.get(route('admin.users.index'), { search }, { preserveState: true });
+        router.get(route('admin.users.index'), buildParams({ search }), { preserveState: true, replace: true });
     }
 
     function clearSearch() {
         setSearch('');
-        router.get(route('admin.users.index'), {}, { preserveState: true });
+        router.get(route('admin.users.index'), buildParams({ search: '' }), { preserveState: true, replace: true });
     }
 
     const flash = usePage().props.flash ?? {};
@@ -1553,8 +1706,16 @@ export default function UsersIndex({ staff, students, counts, filters, available
                     </div>
                 </div>
 
+                {/* Filter bar */}
+                <UserFilterBar
+                    filters={filters}
+                    availableCourses={availableCourses}
+                    activeTab={activeTab}
+                    onApply={handleApplyFilters}
+                />
+
                 {/* Tabs */}
-                <Tabs defaultValue="students">
+                <Tabs value={activeTab} onValueChange={tab => { setActiveTab(tab); setSelectedStudents(new Set()); setSelectedStaff(new Set()); }}>
                     <TabsList>
                         <TabsTrigger value="students" className="gap-2">
                             <GraduationCap className="h-4 w-4" />
