@@ -39,6 +39,15 @@ class UsersController extends Controller
         $courseId   = $request->input('course_id', '');      // students only
         $staffRole  = $request->input('staff_role', 'all');  // staff only
 
+        // Profile filters (students only — staff don't have profile fields)
+        $gender       = $this->normalizeFilterValues($request->input('gender', []));
+        $race         = $this->normalizeFilterValues($request->input('race', []));
+        $state        = $this->normalizeFilterValues($request->input('state', []));
+        $occupation   = $this->normalizeFilterValues($request->input('occupation', []));
+        $fieldOfStudy = $this->normalizeFilterValues($request->input('field_of_study', []));
+        $organization = $this->normalizeFilterValues($request->input('organization', []));
+        $ageGroup     = $this->normalizeFilterValues($request->input('age_group', []));
+
         $staff = User::whereIn('role', ['super_admin', 'content_editor', 'course_viewer'])
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'like', "%{$search}%")
@@ -56,7 +65,7 @@ class UsersController extends Controller
             ->paginate(20, ['*'], 'staff_page')
             ->withQueryString();
 
-        $students = User::where('role', 'learner')
+        $studentsQuery = User::where('role', 'learner')
             ->when($search, fn($q) => $q->where(function ($q2) use ($search) {
                 $q2->where('name', 'like', "%{$search}%")
                    ->orWhere('email', 'like', "%{$search}%");
@@ -66,6 +75,18 @@ class UsersController extends Controller
             ->when($joinedFrom, fn($q) => $q->whereDate('created_at', '>=', $joinedFrom))
             ->when($joinedTo,   fn($q) => $q->whereDate('created_at', '<=', $joinedTo))
             ->when($courseId, fn($q) => $q->whereHas('enrollments', fn($eq) => $eq->where('course_id', (int) $courseId)))
+            ->when($gender,       fn($q) => $q->whereIn('gender', $gender))
+            ->when($race,         fn($q) => $q->whereIn('race', $race))
+            ->when($state,        fn($q) => $q->whereIn('state', $state))
+            ->when($occupation,   fn($q) => $q->whereIn('occupation', $occupation))
+            ->when($fieldOfStudy, fn($q) => $q->whereIn('field_of_study', $fieldOfStudy))
+            ->when($organization, fn($q) => $q->whereIn('organization', $organization));
+
+        if ($ageGroup) {
+            $this->applyAgeGroupFilters($studentsQuery, $ageGroup);
+        }
+
+        $students = $studentsQuery
             ->withCount([
                 'enrollments',
                 'enrollments as completed_enrollments_count' => fn($q) =>
@@ -92,12 +113,19 @@ class UsersController extends Controller
             'students' => $students,
             'counts'   => $counts,
             'filters'  => [
-                'search'      => $search,
-                'status'      => $status,
-                'joined_from' => $joinedFrom,
-                'joined_to'   => $joinedTo,
-                'course_id'   => $courseId,
-                'staff_role'  => $staffRole,
+                'search'        => $search,
+                'status'        => $status,
+                'joined_from'   => $joinedFrom,
+                'joined_to'     => $joinedTo,
+                'course_id'     => $courseId,
+                'staff_role'    => $staffRole,
+                'gender'        => $gender,
+                'race'          => $race,
+                'state'         => $state,
+                'occupation'    => $occupation,
+                'field_of_study'=> $fieldOfStudy,
+                'organization'  => $organization,
+                'age_group'     => $ageGroup,
             ],
             'availableCourses' => $availableCourses,
         ]);
@@ -437,5 +465,40 @@ class UsersController extends Controller
         }
 
         return back();
+    }
+
+    private function normalizeFilterValues(mixed $values): array
+    {
+        $items = is_array($values) ? $values : [$values];
+        return collect($items)
+            ->map(fn($v) => trim((string) $v))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function applyAgeGroupFilters($query, array $ageGroups): mixed
+    {
+        if ($ageGroups === []) {
+            return $query;
+        }
+
+        $ageExpr = \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql'
+            ? 'EXTRACT(YEAR FROM AGE(CURRENT_DATE, birthdate))'
+            : 'TIMESTAMPDIFF(YEAR, birthdate, CURDATE())';
+
+        return $query->where(function ($nested) use ($ageGroups, $ageExpr) {
+            foreach ($ageGroups as $ageGroup) {
+                match ($ageGroup) {
+                    'under_18' => $nested->orWhereRaw("{$ageExpr} < 18"),
+                    '18_24'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 18 AND 24"),
+                    '25_34'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 25 AND 34"),
+                    '35_44'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 35 AND 44"),
+                    '45_54'    => $nested->orWhereRaw("{$ageExpr} BETWEEN 45 AND 54"),
+                    '55_plus'  => $nested->orWhereRaw("{$ageExpr} >= 55"),
+                    default    => null,
+                };
+            }
+        });
     }
 }
