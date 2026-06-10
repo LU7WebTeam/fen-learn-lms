@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.course-scope'])->prefix('
     Route::patch('/courses/{course}/introduction', [AdminCoursesController::class, 'updateIntroduction'])->name('courses.introduction.update');
 
     // Users
+    Route::post('/users/bulk-action', [\App\Http\Controllers\Admin\UsersController::class, 'bulkAction'])->name('users.bulk-action');
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update-role');
     Route::patch('/users/{user}/course-access', [\App\Http\Controllers\Admin\UsersController::class, 'updateCourseAccess'])->name('users.update-course-access');
