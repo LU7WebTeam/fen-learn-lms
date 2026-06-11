@@ -109,7 +109,23 @@ function YouTubePlayer({ videoId, onWatchComplete, captionsDefault, allowSeeking
                         } else {
                             clearInterval(timerRef.current);
                         }
-                        if (e.data === ENDED) markDone();
+                        if (e.data === ENDED) {
+                            // When seek-restriction is on, YouTube also fires ENDED
+                            // if the user drags the scrubber to the very end.
+                            // Guard against that: only accept ENDED as completion if
+                            // the learner has genuinely watched enough of the video.
+                            if (!allowSeeking) {
+                                const p   = playerRef.current;
+                                const dur = p?.getDuration?.() || 0;
+                                if (dur > 0 && maxRef.current / dur < COMPLETION_THRESHOLD) {
+                                    // They skipped to end — send them back and keep playing
+                                    p.seekTo(maxRef.current, true);
+                                    p.playVideo();
+                                    return;
+                                }
+                            }
+                            markDone();
+                        }
                     },
                 },
             });
